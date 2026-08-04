@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import LoadingIndicator from "./LoadingIndicator";
 
 export default function LoadingScreen() {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(true);
   const [isFading, setIsFading] = useState(false);
   const playerRef = useRef<any>(null);
 

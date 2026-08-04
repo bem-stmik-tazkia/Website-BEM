@@ -32,13 +32,13 @@ export default function Hero() {
       currentPanX += (targetPanX - currentPanX) * 0.05;
 
       // Apply background position directly to DOM
-      imageElement.style.backgroundPosition = `${currentPanX}% center`;
+      imageElement.style.backgroundPosition = `${currentPanX}% 0%`;
 
       animationFrameId = requestAnimationFrame(update);
     };
 
     // Initial positioning
-    imageElement.style.backgroundPosition = "50% center";
+    imageElement.style.backgroundPosition = "50% 0%";
     animationFrameId = requestAnimationFrame(update);
 
     return () => {
@@ -63,6 +63,7 @@ export default function Hero() {
     >
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-black/40 z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
         <div
           ref={imageRef}
           className="w-full h-full bg-cover bg-no-repeat origin-center will-change-[background-position]"
