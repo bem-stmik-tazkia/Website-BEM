@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiX, FiGithub, FiLinkedin, FiInstagram, FiGlobe, FiBriefcase, FiMail, FiCheck, FiFolder, FiStar, FiExternalLink, FiSend, FiShare2, FiCopy } from "react-icons/fi";
 import Image from "next/image";
+import Link from "next/link";
 import ProjectCard, { ProjectData } from "./ProjectCard";
 import { MahasiswaProfile } from "./MahasiswaCard";
 
@@ -11,12 +12,14 @@ interface MahasiswaProfileDrawerProps {
   mahasiswa: MahasiswaProfile | null;
   projects: ProjectData[];
   onClose: () => void;
+  onShowFullProfile?: () => void;
 }
 
 export default function MahasiswaProfileDrawer({
   mahasiswa,
   projects,
   onClose,
+  onShowFullProfile,
 }: MahasiswaProfileDrawerProps) {
   const [activeTab, setActiveTab] = useState<"projects" | "skills">("projects");
   const [showShareModal, setShowShareModal] = useState(false);
@@ -242,9 +245,19 @@ export default function MahasiswaProfileDrawer({
             <div className="space-y-4">
                 {projects.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {projects.map((project) => (
+                    {projects.slice(0, 3).map((project) => (
                       <ProjectCard key={project.id} project={project} />
                     ))}
+                    {projects.length > 3 && (
+                      <button 
+                        onClick={onShowFullProfile}
+                        className="bg-surface border-2 border-dashed border-primary/40 rounded-2xl flex flex-col items-center justify-center p-6 text-primary cursor-pointer hover:bg-primary/5 hover:border-primary hover:scale-[1.02] transition-all group shadow-sm"
+                      >
+                         <FiFolder className="w-10 h-10 mb-2 group-hover:scale-110 transition-transform" />
+                         <span className="font-bold text-sm">+{projects.length - 3} Karya Lainnya</span>
+                         <span className="text-xs opacity-70 mt-1 text-center">Lihat Profil Lengkap</span>
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-12 px-4 rounded-2xl bg-surface-variant/30 border border-dashed border-outline-variant">

@@ -1,14 +1,12 @@
 import React from "react";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import DashboardKaryaList from "./DashboardKaryaList";
-import DashboardHeader from "./DashboardHeader";
-import DashboardCardPanel from "./DashboardCardPanel";
-import CarAnimation from "./CarAnimation";
+import ProfileView from "@/components/mahasiswa/ProfileView";
+import { ProjectData } from "@/components/mahasiswa/ProjectCard";
 
 export const revalidate = 0;
 
-export default async function UserDashboardPage() {
+export default async function DashboardProfilePage() {
   const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
@@ -16,34 +14,71 @@ export default async function UserDashboardPage() {
     redirect("/login");
   }
 
-  // Get user profile
-  const { data: profile } = await supabase
-    .from("profiles")
+  // Get user profile from mahasiswa_profiles (public profile data)
+  let { data: profile } = await supabase
+    .from("mahasiswa_profiles")
     .select("*")
-    .eq("id", user.id)
+    .eq("user_id", user.id)
     .single();
+    
+  if (!profile) {
+    // If no public profile exists yet, fetch basic profile for fallback
+    const { data: basicProfile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+      
+    if (basicProfile) {
+      profile = {
+        id: basicProfile.id,
+        user_id: user.id,
+        full_name: basicProfile.full_name,
+        email: basicProfile.email,
+        avatar_url: basicProfile.avatar_url,
+      };
+    } else {
+      // Create a dummy profile just in case
+      profile = {
+        full_name: "User",
+        user_id: user.id,
+      };
+    }
+  }
 
-  // Get user's karya (owned OR collaborated)
+  // Get user's public projects
   const { data: karyaList } = await supabase
     .from("karya")
     .select("*")
+    .eq("status", "approved")
     .or(`user_id.eq.${user.id},team.cs.[{"user_id":"${user.id}"}]`)
     .order("created_at", { ascending: false });
 
-  return (
-    <div className="w-full">
-      <div className="w-full">
-        
-        {/* Header — animated client component */}
-        <DashboardHeader name={profile?.full_name || 'User'} />
+  // Map to ProjectData
+  const projects: ProjectData[] = (karyaList || []).map((k: any) => ({
+    id: k.id,
+    title: k.title,
+    description: k.description,
+    cover_image: k.image_url,
+    category: k.category,
+    tech_stack: k.tech_stack || [],
+    tags: k.tags || [],
+    github_url: k.github_url,
+    demo_url: k.demo_url,
+    drive_url: k.drive_url,
+    figma_url: k.figma_url,
+    youtube_url: k.youtube_url,
+    likes_count: k.likes_count || 0,
+    views_count: k.views_count || 0,
+  }));
 
-        <div className="relative mt-8">
-          <CarAnimation />
-          <DashboardCardPanel>
-            <DashboardKaryaList initialKaryaList={karyaList || []} />
-          </DashboardCardPanel>
-        </div>
-      </div>
+  return (
+    <div className="-mx-4 md:-mx-8 -mt-24 md:-mt-28 min-h-screen">
+      <ProfileView
+        profile={profile}
+        projects={projects}
+        isOwnProfile={true}
+      />
     </div>
   );
 }

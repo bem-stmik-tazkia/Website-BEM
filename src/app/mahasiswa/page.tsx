@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import MahasiswaHero from "@/components/mahasiswa/MahasiswaHero";
 import MahasiswaCard, { MahasiswaProfile } from "@/components/mahasiswa/MahasiswaCard";
 import MahasiswaProfileDrawer from "@/components/mahasiswa/MahasiswaProfileDrawer";
+import ProfileOverlay from "@/components/mahasiswa/ProfileOverlay";
 import { ProjectData } from "@/components/mahasiswa/ProjectCard";
 import { createClient } from "@/utils/supabase/client";
 import Footer from "@/components/layout/Footer";
@@ -18,6 +19,7 @@ function MahasiswaShowcaseContent() {
   const [selectedAngkatan, setSelectedAngkatan] = useState<number | null>(null);
   const [selectedProdi, setSelectedProdi] = useState("Semua Prodi");
   const [selectedMahasiswa, setSelectedMahasiswa] = useState<MahasiswaProfile | null>(null);
+  const [showFullProfile, setShowFullProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
   const idFromUrl = searchParams.get("id");
@@ -88,6 +90,7 @@ function MahasiswaShowcaseContent() {
       if (match) {
         autoOpenedRef.current = true;
         setSelectedMahasiswa(match);
+        setShowFullProfile(false);
       }
     }
   }, [idFromUrl, mahasiswaList]);
@@ -95,7 +98,7 @@ function MahasiswaShowcaseContent() {
   // Extract available Angkatan dynamically
   const availableAngkatan = useMemo(() => {
     const years = Array.from(new Set(mahasiswaList.map((m) => m.angkatan))).sort((a, b) => b - a);
-    return years.length > 0 ? years : [2021, 2022, 2023, 2024, 2025];
+    return years;
   }, [mahasiswaList]);
 
   // Filter logic
@@ -151,6 +154,7 @@ function MahasiswaShowcaseContent() {
         totalMahasiswa={mahasiswaList.length}
         totalProjects={projectList.length}
         availableAngkatan={availableAngkatan}
+        isLoading={isLoading}
       />
 
       {/* Main Grid Content */}
@@ -158,19 +162,55 @@ function MahasiswaShowcaseContent() {
         {/* Section Title Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-on-surface flex items-center gap-2">
-              <FiUsers className="text-primary" />
-              {selectedAngkatan ? `Mahasiswa Angkatan ${selectedAngkatan}` : "Seluruh Mahasiswa"}
-            </h2>
-            <p className="text-on-surface-variant text-sm mt-1">
-              {filteredMahasiswa.length} mahasiswa ditemukan
-              {selectedProdi !== "Semua Prodi" ? ` (${selectedProdi})` : ""}
-            </p>
+            {isLoading ? (
+              <div className="animate-pulse space-y-2">
+                <div className="h-8 bg-surface-variant/60 rounded-xl w-64" />
+                <div className="h-4 bg-surface-variant/40 rounded-lg w-36" />
+              </div>
+            ) : (
+              <>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-on-surface flex items-center gap-2">
+                  <FiUsers className="text-primary" />
+                  {selectedAngkatan ? `Mahasiswa Angkatan ${selectedAngkatan}` : "Seluruh Mahasiswa"}
+                </h2>
+                <p className="text-on-surface-variant text-sm mt-1">
+                  {filteredMahasiswa.length} mahasiswa ditemukan
+                  {selectedProdi !== "Semua Prodi" ? ` (${selectedProdi})` : ""}
+                </p>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Mahasiswa Grid */}
-        {filteredMahasiswa.length > 0 ? (
+        {/* Skeleton Loading Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <div
+                key={n}
+                className="bg-surface border border-outline-variant/20 rounded-2xl overflow-hidden shadow-sm animate-pulse"
+              >
+                {/* Avatar/Cover area */}
+                <div className="h-32 bg-surface-variant/60" />
+                {/* Avatar circle */}
+                <div className="px-4 -mt-8 mb-3">
+                  <div className="w-16 h-16 rounded-2xl bg-surface-variant/80 border-4 border-surface" />
+                </div>
+                {/* Name & role */}
+                <div className="px-4 pb-4 space-y-2">
+                  <div className="h-4 bg-surface-variant/70 rounded-md w-3/4" />
+                  <div className="h-3 bg-surface-variant/40 rounded-md w-1/2" />
+                  <div className="h-3 bg-surface-variant/40 rounded-md w-2/3" />
+                  {/* Tags */}
+                  <div className="flex gap-2 pt-1">
+                    <div className="h-5 w-14 bg-surface-variant/50 rounded-full" />
+                    <div className="h-5 w-16 bg-surface-variant/50 rounded-full" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredMahasiswa.length > 0 ? (
           <motion.div
             layout
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
@@ -213,12 +253,29 @@ function MahasiswaShowcaseContent() {
         )}
       </main>
 
-      {/* Student Profile Drawer / Modal Showcase */}
+      {/* Student Profile Drawer */}
       <MahasiswaProfileDrawer
         mahasiswa={selectedMahasiswa}
         projects={selectedMahasiswa ? projectList.filter((p) => p.mahasiswa_id === selectedMahasiswa.id) : []}
-        onClose={() => setSelectedMahasiswa(null)}
+        onClose={() => {
+          setSelectedMahasiswa(null);
+          setShowFullProfile(false);
+        }}
+        onShowFullProfile={() => setShowFullProfile(true)}
       />
+
+      {/* Full-screen Profile Overlay (when "+ Karya Lainnya" diklik) */}
+      <AnimatePresence>
+        {showFullProfile && selectedMahasiswa && (
+          <ProfileOverlay
+            key="public-profile-overlay"
+            profile={selectedMahasiswa}
+            projects={projectList.filter((p) => p.mahasiswa_id === selectedMahasiswa.id)}
+            onClose={() => setShowFullProfile(false)}
+            isOwnProfile={false}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

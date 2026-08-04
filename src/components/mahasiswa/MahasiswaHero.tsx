@@ -18,6 +18,7 @@ interface MahasiswaHeroProps {
   totalMahasiswa: number;
   totalProjects: number;
   availableAngkatan: number[];
+  isLoading?: boolean;
 }
 
 export default function MahasiswaHero({
@@ -30,6 +31,7 @@ export default function MahasiswaHero({
   totalMahasiswa,
   totalProjects,
   availableAngkatan,
+  isLoading = false,
 }: MahasiswaHeroProps) {
   const prodiOptions = [
     "Semua Prodi",
@@ -112,8 +114,17 @@ export default function MahasiswaHero({
                 />
               </div>
               <div className="text-left">
-                <p className="text-xl font-extrabold text-primary">{totalMahasiswa}</p>
-                <p className="text-xs font-medium text-on-surface-variant">Mahasiswa</p>
+                {isLoading ? (
+                  <div className="animate-pulse space-y-1.5">
+                    <div className="h-6 w-10 bg-primary/20 rounded-lg" />
+                    <div className="h-3 w-16 bg-surface-variant/60 rounded" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xl font-extrabold text-primary">{totalMahasiswa}</p>
+                    <p className="text-xs font-medium text-on-surface-variant">Mahasiswa</p>
+                  </>
+                )}
               </div>
             </div>
 
@@ -129,8 +140,17 @@ export default function MahasiswaHero({
                 />
               </div>
               <div className="text-left">
-                <p className="text-xl font-extrabold text-secondary">{totalProjects}</p>
-                <p className="text-xs font-medium text-on-surface-variant">Proyek Diupload</p>
+                {isLoading ? (
+                  <div className="animate-pulse space-y-1.5">
+                    <div className="h-6 w-10 bg-secondary/20 rounded-lg" />
+                    <div className="h-3 w-20 bg-surface-variant/60 rounded" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xl font-extrabold text-secondary">{totalProjects}</p>
+                    <p className="text-xs font-medium text-on-surface-variant">Proyek Diupload</p>
+                  </>
+                )}
               </div>
             </div>
 
@@ -146,8 +166,17 @@ export default function MahasiswaHero({
                 />
               </div>
               <div className="text-left">
-                <p className="text-xl font-extrabold text-primary">{availableAngkatan.length}</p>
-                <p className="text-xs font-medium text-on-surface-variant">Angkatan Aktif</p>
+                {isLoading ? (
+                  <div className="animate-pulse space-y-1.5">
+                    <div className="h-6 w-8 bg-primary/20 rounded-lg" />
+                    <div className="h-3 w-20 bg-surface-variant/60 rounded" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xl font-extrabold text-primary">{availableAngkatan.length}</p>
+                    <p className="text-xs font-medium text-on-surface-variant">Angkatan Aktif</p>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
@@ -201,19 +230,25 @@ export default function MahasiswaHero({
               >
                 Semua
               </button>
-              {availableAngkatan.map((angkatan) => (
-                <button
-                  key={angkatan}
-                  onClick={() => setSelectedAngkatan(angkatan)}
-                  className={`px-4 py-2 rounded-full text-xs md:text-sm font-bold transition-all ${
-                    selectedAngkatan === angkatan
-                      ? "bg-primary text-white shadow-md"
-                      : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  {angkatan}
-                </button>
-              ))}
+              {isLoading ? (
+                [1, 2, 3, 4].map(n => (
+                  <div key={n} className="w-16 h-8 md:h-9 bg-surface-variant/60 rounded-full animate-pulse" />
+                ))
+              ) : (
+                availableAngkatan.map((angkatan) => (
+                  <button
+                    key={angkatan}
+                    onClick={() => setSelectedAngkatan(angkatan)}
+                    className={`px-4 py-2 rounded-full text-xs md:text-sm font-bold transition-all ${
+                      selectedAngkatan === angkatan
+                        ? "bg-primary text-white shadow-md"
+                        : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {angkatan}
+                  </button>
+                ))
+              )}
             </div>
 
             {/* Prodi Filter Pills */}

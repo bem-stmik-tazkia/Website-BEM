@@ -1,0 +1,477 @@
+"use client";
+
+import React, { useState } from "react";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import {
+  FiGithub, FiLinkedin, FiGlobe, FiFolder,
+  FiSend, FiShare2, FiCopy, FiCheck, FiX,
+  FiEdit2, FiAward, FiCode, FiExternalLink,
+} from "react-icons/fi";
+import ProjectCard, { ProjectData } from "@/components/mahasiswa/ProjectCard";
+
+export interface ProfileViewData {
+  id?: string;
+  full_name: string;
+  prodi?: string;
+  angkatan?: number | string;
+  avatar_url?: string;
+  bio?: string;
+  skills?: string[];
+  status_badge?: string;
+  github_url?: string;
+  linkedin_url?: string;
+  instagram_url?: string;
+  website_url?: string;
+  contact_email?: string;
+  email?: string;
+}
+
+interface ProfileViewProps {
+  profile: ProfileViewData;
+  projects: ProjectData[];
+  isOwnProfile?: boolean;
+  onEditProfile?: () => void;
+}
+
+const CATEGORY_LABEL: Record<string, string> = {
+  Technology: "Web & Sistem",
+  Programming: "Mobile",
+  Research: "KTI & Jurnal",
+  IoT: "IoT",
+  Multimedia: "Desain",
+};
+
+export default function ProfileView({
+  profile,
+  projects,
+  isOwnProfile = false,
+  onEditProfile,
+}: ProfileViewProps) {
+  const [projectFilter, setProjectFilter] = useState("Semua");
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/mahasiswa/${profile.id}`
+      : "";
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const categories: string[] = [
+    "Semua",
+    ...Array.from(
+      new Set(
+        projects
+          .map((p) => p.category)
+          .filter((c): c is string => Boolean(c))
+      )
+    ),
+  ];
+
+  const filteredProjects =
+    projectFilter === "Semua"
+      ? projects
+      : projects.filter((p) => p.category === projectFilter);
+
+  return (
+    <>
+      <div className="relative min-h-full pb-24 w-full">
+          {/* ── TOP HEADER STRIP (Banner) ── */}
+          <div className="relative h-40 sm:h-52 bg-primary overflow-hidden">
+            {/* Animated dot grid */}
+            <motion.div
+              animate={{ x: [0, -28], y: [0, -28] }}
+              transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 w-[170%] h-[170%] pointer-events-none"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle, rgba(255,255,255,0.1) 1.5px, transparent 1.5px)",
+                backgroundSize: "26px 26px",
+              }}
+            />
+            {/* Shimmer */}
+            <motion.div
+              animate={{ x: ["-140%", "400%"] }}
+              transition={{
+                duration: 4.5,
+                repeat: Infinity,
+                repeatDelay: 4,
+                ease: "easeInOut",
+              }}
+              className="absolute top-0 bottom-0 left-0 w-1/5 bg-gradient-to-r from-transparent via-white/12 to-transparent -skew-x-12 pointer-events-none"
+            />
+            {/* Bottom fade into surface */}
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface to-transparent pointer-events-none" />
+
+            {/* CTA Kolaborasi — inside banner, only public view */}
+            {!isOwnProfile && (
+              <div className="absolute top-6 sm:top-8 right-[72px] md:right-[90px] z-10 hidden sm:flex items-center gap-3">
+                <p className="text-white/90 text-sm font-semibold hidden md:block">Tertarik berkolaborasi?</p>
+                <a
+                  href={`mailto:${profile.contact_email || profile.email}`}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-secondary text-white font-extrabold text-xs hover:bg-secondary/90 hover:scale-105 transition-all shadow-md shadow-secondary/20 border border-secondary"
+                >
+                  <FiSend size={14} />
+                  Kirim Email
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* ── MAIN BODY ── */}
+          <div className="max-w-6xl mx-auto px-5 md:px-8 flex flex-col lg:flex-row gap-8 lg:gap-12 relative z-10">
+
+            {/* ════ LEFT SIDEBAR ════ */}
+            <aside className="w-full lg:w-72 xl:w-80 flex-shrink-0 relative">
+              
+              <div className="lg:sticky lg:top-28 lg:pb-10">
+                {/* Avatar — negative margin to overlap banner */}
+                <div className="-mt-16 sm:-mt-24 mb-5 relative">
+                  <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-[6px] border-surface shadow-lg bg-surface">
+                    {profile.avatar_url ? (
+                      <Image
+                        src={profile.avatar_url}
+                        alt={profile.full_name}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-secondary to-[#F97316] text-white flex items-center justify-center text-4xl sm:text-5xl font-extrabold">
+                        {profile.full_name?.charAt(0)?.toUpperCase() ?? "?"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              {/* Info Text */}
+              <div className="mb-6">
+                {profile.status_badge && (
+                  <span className="inline-block mb-3 px-3 py-1 rounded-md bg-secondary/10 text-secondary text-[11px] font-extrabold tracking-widest uppercase border border-secondary/20">
+                    {profile.status_badge}
+                  </span>
+                )}
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface leading-tight mb-2">
+                  {profile.full_name}
+                </h1>
+                <div className="flex flex-wrap items-center gap-2 text-base font-semibold text-on-surface-variant">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary/60" />
+                    {profile.prodi}
+                  </span>
+                  {profile.angkatan && (
+                    <>
+                      <span className="w-1 h-1 rounded-full bg-outline-variant/60 mx-1" />
+                      <span className="text-primary/90">Angkatan {profile.angkatan}</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Stats mini row */}
+                <div className="flex items-center gap-3 mt-4 text-sm text-on-surface-variant font-bold">
+                  <div className="flex items-center gap-1.5">
+                    <FiAward size={14} className="text-primary" />
+                    {projects.length} karya
+                  </div>
+                  {profile.skills && profile.skills.length > 0 && (
+                    <>
+                      <div className="w-px h-3 bg-outline-variant/50" />
+                      <div className="flex items-center gap-1.5">
+                        <FiCode size={14} className="text-primary" />
+                        {profile.skills.length} keahlian
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mb-8 flex flex-col gap-3">
+                {isOwnProfile ? (
+                  <button
+                    onClick={onEditProfile}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-secondary text-secondary font-bold text-sm hover:bg-secondary hover:text-white transition-all shadow-sm"
+                  >
+                    <FiEdit2 size={16} />
+                    Edit Profil
+                  </button>
+                ) : (
+                  <a
+                    href={`mailto:${profile.contact_email || profile.email}`}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-white font-bold text-sm hover:bg-secondary/90 transition-all shadow-md shadow-secondary/20"
+                  >
+                    <FiSend size={16} />
+                    Kirim Email
+                  </a>
+                )}
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-outline-variant/30 text-on-surface-variant font-bold text-sm hover:border-secondary/50 hover:text-secondary transition-all"
+                >
+                  <FiShare2 size={15} />
+                  Bagikan Profil
+                </button>
+              </div>
+
+              {/* Social Links */}
+              {(profile.github_url || profile.linkedin_url || profile.website_url) && (
+                <div className="mb-8 space-y-2">
+                  <p className="text-[11px] font-extrabold text-on-surface-variant/70 uppercase tracking-[0.15em] mb-4">Tautan</p>
+                  {profile.github_url && (
+                    <a
+                      href={profile.github_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 py-2.5 px-4 rounded-xl text-sm font-bold text-on-surface hover:bg-primary/8 hover:text-primary border border-transparent hover:border-primary/10 transition-all group"
+                    >
+                      <FiGithub size={18} className="shrink-0 text-on-surface-variant group-hover:text-primary" />
+                      <span className="truncate">GitHub</span>
+                      <FiExternalLink size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  )}
+                  {profile.linkedin_url && (
+                    <a
+                      href={profile.linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 py-2.5 px-4 rounded-xl text-sm font-bold text-on-surface hover:bg-primary/8 hover:text-primary border border-transparent hover:border-primary/10 transition-all group"
+                    >
+                      <FiLinkedin size={18} className="shrink-0 text-on-surface-variant group-hover:text-primary" />
+                      <span className="truncate">LinkedIn</span>
+                      <FiExternalLink size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  )}
+                  {profile.website_url && (
+                    <a
+                      href={profile.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 py-2.5 px-4 rounded-xl text-sm font-bold text-on-surface hover:bg-primary/8 hover:text-primary border border-transparent hover:border-primary/10 transition-all group"
+                    >
+                      <FiGlobe size={18} className="shrink-0 text-on-surface-variant group-hover:text-primary" />
+                      <span className="truncate">Website</span>
+                      <FiExternalLink size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Bio */}
+              <div className="mb-8">
+                <p className="text-[11px] font-extrabold text-on-surface-variant/70 uppercase tracking-[0.15em] mb-3">
+                  Tentang
+                </p>
+                <p className="text-[15px] text-on-surface-variant leading-relaxed">
+                  {profile.bio ||
+                    "Halo! Saya mahasiswa BEM STMIK Tazkia yang siap berkolaborasi dan terus belajar hal-hal baru di bidang teknologi."}
+                </p>
+              </div>
+
+              {/* Skills */}
+              {profile.skills && profile.skills.length > 0 && (
+                <div className="mb-8">
+                  <p className="text-[11px] font-extrabold text-on-surface-variant/70 uppercase tracking-[0.15em] mb-3">
+                    Keahlian
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.skills.map((skill, idx) => (
+                      <motion.span
+                        key={idx}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: idx * 0.04 }}
+                        whileHover={{ scale: 1.05 }}
+                        className="px-3 py-1.5 rounded-lg bg-surface-variant text-on-surface-variant text-xs font-bold border border-outline-variant/30 hover:bg-primary hover:text-white hover:border-primary cursor-default transition-colors"
+                      >
+                        {skill}
+                      </motion.span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              </div>
+            </aside>
+
+            {/* ════ RIGHT CONTENT: Projects ════ */}
+            <main className="flex-1 lg:pt-5 pb-10">
+
+              {/* CTA Kolaborasi — mobile only (banner has it on desktop) */}
+              {!isOwnProfile && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-8 sm:hidden rounded-2xl border border-secondary/20 bg-secondary/5 p-4 flex items-center justify-between gap-3 shadow-sm"
+                >
+                  <div>
+                    <p className="text-sm font-extrabold text-secondary">Tertarik berkolaborasi?</p>
+                    <p className="text-[11px] text-on-surface-variant mt-0.5">
+                      Hubungi via email untuk kerja sama.
+                    </p>
+                  </div>
+                  <a
+                    href={`mailto:${profile.contact_email || profile.email}`}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-secondary text-white font-bold text-xs hover:bg-secondary/90 transition-all shadow-md shadow-secondary/20 shrink-0"
+                  >
+                    <FiSend size={12} />
+                    Email
+                  </a>
+                </motion.div>
+              )}
+
+              {/* Projects header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <FiFolder size={20} className="text-primary" />
+                  <h2 className="text-lg font-extrabold text-on-surface">
+                    Proyek & Repository
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-extrabold ml-1">
+                    {projects.length}
+                  </span>
+                </div>
+
+                {/* Filter chips */}
+                {projects.length > 0 && categories.length > 1 && (
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map((cat: string) => (
+                      <button
+                        key={cat}
+                        onClick={() => setProjectFilter(cat)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                          projectFilter === cat
+                            ? "bg-primary text-white shadow-md shadow-primary/20"
+                            : "bg-surface-variant text-on-surface-variant hover:bg-primary/10 hover:text-primary"
+                        }`}
+                      >
+                        {cat in CATEGORY_LABEL ? CATEGORY_LABEL[cat] : cat}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Project Grid */}
+              {projects.length > 0 ? (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                  <AnimatePresence mode="popLayout">
+                    {filteredProjects.map((project, idx) => (
+                      <motion.div
+                        key={project.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2, delay: idx * 0.05 }}
+                      >
+                        <ProjectCard project={project} />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+
+                  {filteredProjects.length === 0 && (
+                    <div className="col-span-2 text-center py-12 bg-surface-variant/20 rounded-2xl border border-dashed border-outline-variant/50">
+                      <p className="text-on-surface-variant text-sm font-medium">
+                        Tidak ada proyek dalam kategori ini.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-20 px-4 rounded-3xl bg-surface-variant/20 border-2 border-dashed border-outline-variant/40">
+                  <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center mx-auto mb-4 text-primary/40">
+                    <FiFolder size={32} />
+                  </div>
+                  <p className="font-bold text-xl text-on-surface mb-2">
+                    Belum ada karya publik
+                  </p>
+                  <p className="text-sm text-on-surface-variant max-w-sm mx-auto">
+                    {isOwnProfile
+                      ? "Karya yang telah kamu unggah dan disetujui akan tampil di sini."
+                      : "Mahasiswa ini belum mengunggah proyek yang berstatus publik."}
+                  </p>
+                  {isOwnProfile && (
+                    <Link
+                      href="/dashboard/upload"
+                      className="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all shadow-md shadow-primary/20"
+                    >
+                      Upload Karya Pertama
+                    </Link>
+                  )}
+                </div>
+              )}
+            </main>
+          </div>
+        </div>
+
+      {/* ── Share Modal ── */}
+      <AnimatePresence>
+        {showShareModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowShareModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 16 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative bg-surface p-6 rounded-3xl w-full max-w-sm shadow-2xl border border-outline-variant/30 flex flex-col items-center z-10"
+            >
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="absolute top-4 right-4 p-2 bg-surface-variant text-on-surface-variant hover:text-primary rounded-full transition-colors"
+              >
+                <FiX size={18} />
+              </button>
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3 mt-1">
+                <FiShare2 size={22} />
+              </div>
+              <h3 className="text-xl font-extrabold text-primary mb-1 text-center">
+                Bagikan Profil
+              </h3>
+              <p className="text-sm text-on-surface-variant text-center mb-5">
+                Scan QR code atau salin tautan untuk membagikan portofolio ini.
+              </p>
+              <div className="bg-white p-3 rounded-2xl shadow-sm border border-outline-variant/20 mb-5">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}&margin=0`}
+                  alt="QR Code"
+                  className="w-40 h-40"
+                />
+              </div>
+              <div className="w-full flex items-center bg-surface-variant/40 border border-outline-variant/40 rounded-xl overflow-hidden p-1.5 gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={shareUrl}
+                  className="flex-1 bg-transparent px-3 py-2 text-xs text-on-surface-variant outline-none min-w-0"
+                />
+                <button
+                  onClick={handleCopyLink}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                    copiedLink
+                      ? "bg-green-500 text-white"
+                      : "bg-secondary text-white hover:bg-secondary/90"
+                  }`}
+                >
+                  {copiedLink ? <FiCheck size={13} /> : <FiCopy size={13} />}
+                  {copiedLink ? "Tersalin!" : "Salin"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
