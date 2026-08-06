@@ -7,8 +7,9 @@ import Link from "next/link";
 import {
   FiGithub, FiLinkedin, FiGlobe, FiFolder,
   FiSend, FiShare2, FiCopy, FiCheck, FiX,
-  FiEdit2, FiAward, FiCode, FiExternalLink,
+  FiEdit2, FiAward, FiCode, FiExternalLink, FiDownload
 } from "react-icons/fi";
+import { FaWhatsapp, FaTelegram, FaXTwitter } from "react-icons/fa6";
 import ProjectCard, { ProjectData } from "@/components/mahasiswa/ProjectCard";
 
 export interface ProfileViewData {
@@ -52,6 +53,28 @@ export default function ProfileView({
   const [projectFilter, setProjectFilter] = useState("Semua");
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [activeProjectIdx, setActiveProjectIdx] = useState(0);
+  const [downloadedQR, setDownloadedQR] = useState(false);
+
+  const SKILL_COLORS = [
+    "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600",
+    "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600",
+    "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-500 hover:text-white hover:border-amber-500",
+    "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 hover:bg-fuchsia-600 hover:text-white hover:border-fuchsia-600",
+    "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600",
+    "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-600 hover:text-white hover:border-rose-600",
+  ];
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (filteredProjects.length === 0) return;
+    const cardWidth = el.scrollWidth / filteredProjects.length;
+    const newIdx = Math.min(
+      filteredProjects.length - 1,
+      Math.max(0, Math.round(el.scrollLeft / cardWidth))
+    );
+    if (newIdx !== activeProjectIdx) setActiveProjectIdx(newIdx);
+  };
 
   const shareUrl =
     typeof window !== "undefined"
@@ -62,6 +85,29 @@ export default function ProfileView({
     navigator.clipboard.writeText(shareUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleDownloadQR = async () => {
+    try {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(shareUrl)}&margin=2`;
+      const response = await fetch(qrUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = `QR_Profile_${profile.full_name.replace(/\s+/g, "_")}.png`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      setDownloadedQR(true);
+      setTimeout(() => setDownloadedQR(false), 3000);
+    } catch (error) {
+      console.error("Error downloading QR:", error);
+      alert("Gagal mengunduh QR Code. Silakan coba lagi.");
+    }
   };
 
   const categories: string[] = [
@@ -82,7 +128,7 @@ export default function ProfileView({
 
   return (
     <>
-      <div className="relative min-h-full pb-24 w-full">
+      <div className="relative min-h-full pb-8 w-full">
           {/* ── TOP HEADER STRIP (Banner) ── */}
           <div className="relative h-40 sm:h-52 bg-primary overflow-hidden">
             {/* Animated dot grid */}
@@ -194,13 +240,13 @@ export default function ProfileView({
               {/* Action Buttons */}
               <div className="mb-8 flex flex-col gap-3">
                 {isOwnProfile ? (
-                  <button
-                    onClick={onEditProfile}
+                  <Link
+                    href="/dashboard/profile"
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-secondary text-secondary font-bold text-sm hover:bg-secondary hover:text-white transition-all shadow-sm"
                   >
                     <FiEdit2 size={16} />
                     Edit Profil
-                  </button>
+                  </Link>
                 ) : (
                   <a
                     href={`mailto:${profile.contact_email || profile.email}`}
@@ -287,7 +333,7 @@ export default function ProfileView({
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: idx * 0.04 }}
                         whileHover={{ scale: 1.05 }}
-                        className="px-3 py-1.5 rounded-lg bg-surface-variant text-on-surface-variant text-xs font-bold border border-outline-variant/30 hover:bg-primary hover:text-white hover:border-primary cursor-default transition-colors"
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border cursor-default transition-colors shadow-sm ${SKILL_COLORS[idx % SKILL_COLORS.length]}`}
                       >
                         {skill}
                       </motion.span>
@@ -338,12 +384,16 @@ export default function ProfileView({
 
                 {/* Filter chips */}
                 {projects.length > 0 && categories.length > 1 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-row gap-2 overflow-x-auto pb-3 -mx-5 px-5 md:mx-0 md:px-0 md:pb-0 scrollbar-hide snap-x scroll-pl-5 relative">
+                    <div className="w-0 shrink-0 md:hidden" /> {/* Spacer for left edge */}
                     {categories.map((cat: string) => (
                       <button
                         key={cat}
-                        onClick={() => setProjectFilter(cat)}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                        onClick={() => {
+                          setProjectFilter(cat);
+                          setActiveProjectIdx(0);
+                        }}
+                        className={`shrink-0 snap-start px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                           projectFilter === cat
                             ? "bg-primary text-white shadow-md shadow-primary/20"
                             : "bg-surface-variant text-on-surface-variant hover:bg-primary/10 hover:text-primary"
@@ -352,13 +402,19 @@ export default function ProfileView({
                         {cat in CATEGORY_LABEL ? CATEGORY_LABEL[cat] : cat}
                       </button>
                     ))}
+                    <div className="w-4 shrink-0 md:hidden" /> {/* Spacer for right edge */}
                   </div>
                 )}
               </div>
 
               {/* Project Grid */}
               {projects.length > 0 ? (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <>
+                <div 
+                  onScroll={handleScroll}
+                  className="flex xl:grid xl:grid-cols-2 gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scroll-pl-5 scrollbar-hide -mx-5 px-5 md:mx-0 md:px-0 md:overflow-visible md:pb-0 md:snap-none md:flex-wrap"
+                >
+                  <div className="w-0 shrink-0 md:hidden" /> {/* Spacer for left edge */}
                   <AnimatePresence mode="popLayout">
                     {filteredProjects.map((project, idx) => (
                       <motion.div
@@ -368,11 +424,13 @@ export default function ProfileView({
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.2, delay: idx * 0.05 }}
+                        className="w-[85vw] sm:w-[320px] snap-center shrink-0 xl:w-auto xl:shrink flex-none"
                       >
                         <ProjectCard project={project} />
                       </motion.div>
                     ))}
                   </AnimatePresence>
+                  <div className="w-1 shrink-0 md:hidden" /> {/* Spacer for right edge */}
 
                   {filteredProjects.length === 0 && (
                     <div className="col-span-2 text-center py-12 bg-surface-variant/20 rounded-2xl border border-dashed border-outline-variant/50">
@@ -382,6 +440,23 @@ export default function ProfileView({
                     </div>
                   )}
                 </div>
+
+                {/* Mobile Indicators */}
+                {filteredProjects.length > 1 && (
+                  <div className="flex justify-center gap-1.5 mt-2 mb-6 xl:hidden">
+                    {filteredProjects.map((_, i) => (
+                      <div 
+                        key={i} 
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          i === activeProjectIdx 
+                            ? "w-4 bg-primary" 
+                            : "w-1.5 bg-outline-variant/50"
+                        }`} 
+                      />
+                    ))}
+                  </div>
+                )}
+                </>
               ) : (
                 <div className="text-center py-20 px-4 rounded-3xl bg-surface-variant/20 border-2 border-dashed border-outline-variant/40">
                   <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center mx-auto mb-4 text-primary/40">
@@ -440,16 +515,58 @@ export default function ProfileView({
                 Bagikan Profil
               </h3>
               <p className="text-sm text-on-surface-variant text-center mb-5">
-                Scan QR code atau salin tautan untuk membagikan portofolio ini.
+                Scan QR code atau bagikan portofolio ini.
               </p>
-              <div className="bg-white p-3 rounded-2xl shadow-sm border border-outline-variant/20 mb-5">
+              
+              {/* QR Code */}
+              <div className="bg-white p-3 rounded-2xl shadow-sm border border-outline-variant/20 mb-4 flex flex-col items-center w-full">
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}&margin=0`}
                   alt="QR Code"
-                  className="w-40 h-40"
+                  className="w-40 h-40 mb-3"
+                  crossOrigin="anonymous"
+                  id="qr-code-img"
                 />
+                <button
+                  onClick={handleDownloadQR}
+                  className={`flex items-center justify-center gap-2 w-full py-2 rounded-xl text-xs font-bold transition-all border ${
+                    downloadedQR 
+                      ? "bg-secondary/10 border-secondary/30 text-secondary" 
+                      : "bg-surface-variant hover:bg-primary/10 text-primary border-primary/20"
+                  }`}
+                >
+                  {downloadedQR ? <FiCheck size={14} /> : <FiDownload size={14} />}
+                  {downloadedQR ? "QR Code Berhasil Diunduh!" : "Unduh QR Code"}
+                </button>
               </div>
-              <div className="w-full flex items-center bg-surface-variant/40 border border-outline-variant/40 rounded-xl overflow-hidden p-1.5 gap-2">
+
+              {/* Social Share Buttons */}
+              <div className="flex gap-2 w-full mb-4">
+                <button
+                  onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Lihat profil portofolio ${profile.full_name} di: ${shareUrl}`)}`, '_blank')}
+                  className="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
+                  title="Bagikan ke WhatsApp"
+                >
+                  <FaWhatsapp size={18} />
+                </button>
+                <button
+                  onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Lihat profil portofolio ${profile.full_name}`)}`, '_blank')}
+                  className="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-[#229ED9]/10 text-[#229ED9] hover:bg-[#229ED9]/20 transition-colors"
+                  title="Bagikan ke Telegram"
+                >
+                  <FaTelegram size={18} />
+                </button>
+                <button
+                  onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Lihat profil portofolio ${profile.full_name}`)}`, '_blank')}
+                  className="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-surface-variant text-on-surface hover:bg-outline-variant transition-colors"
+                  title="Bagikan ke X (Twitter)"
+                >
+                  <FaXTwitter size={16} />
+                </button>
+              </div>
+
+              {/* Copy Link Input */}
+              <div className="w-full flex items-center bg-surface-variant/30 border border-outline-variant/50 rounded-xl overflow-hidden p-1.5 gap-2">
                 <input
                   type="text"
                   readOnly
@@ -458,14 +575,14 @@ export default function ProfileView({
                 />
                 <button
                   onClick={handleCopyLink}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0 ${
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
                     copiedLink
-                      ? "bg-green-500 text-white"
-                      : "bg-secondary text-white hover:bg-secondary/90"
+                      ? "bg-secondary text-white"
+                      : "bg-primary text-white hover:bg-primary/90"
                   }`}
                 >
                   {copiedLink ? <FiCheck size={13} /> : <FiCopy size={13} />}
-                  {copiedLink ? "Tersalin!" : "Salin"}
+                  {copiedLink ? "Tersalin" : "Salin Link"}
                 </button>
               </div>
             </motion.div>

@@ -45,7 +45,7 @@ export default function Footer() {
 
         {/* Main Footer Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
-          <div className="md:col-span-5 flex flex-col gap-6">
+          <div className="md:col-span-4 flex flex-col gap-6">
             <div className="bg-surface p-2 rounded-xl mb-6 shadow-sm inline-block w-fit">
               <Image
                 src="/images/logo.png"
@@ -64,7 +64,7 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="md:col-span-4 flex flex-col gap-6">
+          <div className="md:col-span-3 flex flex-col gap-6">
             <h4 className="text-lg text-white font-bold tracking-wide">Layanan & Sekertariat BEM</h4>
             <div className="flex flex-col gap-4 text-white/80 text-sm">
               <a
@@ -84,7 +84,19 @@ export default function Footer() {
           </div>
 
           <div className="md:col-span-3 flex flex-col gap-6">
+            <h4 className="text-lg text-white font-bold tracking-wide">Navigasi</h4>
+            <div className="flex flex-col gap-3 text-white/80 text-sm">
+              <Link href="/kabinet" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">Kabinet BEM</Link>
+              <Link href="/mahasiswa" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">Portal Mahasiswa</Link>
+              <Link href="/karya" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">Karya & Inovasi</Link>
+              <Link href="/berita" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">Berita & Publikasi</Link>
+              <Link href="/#saran" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">Kotak Saran & Aduan</Link>
+            </div>
+          </div>
+
+          <div className="md:col-span-3 flex flex-col gap-6">
             <h4 className="text-lg text-white font-bold tracking-wide">Sosial Media Resmi</h4>
+
             <div className="flex gap-4 text-white/80 mt-2 flex-wrap">
               <a
                 className="hover:text-[#E1306C] hover:-translate-y-1 hover:scale-110 transition-all duration-300 p-2 bg-white/10 rounded-xl hover:bg-white"

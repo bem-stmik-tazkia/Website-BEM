@@ -73,7 +73,7 @@ export default async function DashboardProfilePage() {
   }));
 
   return (
-    <div className="-mx-4 md:-mx-8 -mt-24 md:-mt-28 min-h-screen">
+    <div className="-mx-4 md:-mx-8 -mt-24 md:-mt-28">
       <ProfileView
         profile={profile}
         projects={projects}

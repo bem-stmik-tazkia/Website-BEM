@@ -139,13 +139,13 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
               <div className="flex-grow space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">
                   {getIcon(field.type)} 
-                  {field.type === 'text' && 'Teks Pendek'}
-                  {field.type === 'textarea' && 'Teks Panjang / Paragraf'}
-                  {field.type === 'number' && 'Angka'}
-                  {field.type === 'email' && 'Alamat Email'}
-                  {field.type === 'tel' && 'Nomor Telepon / WA'}
-                  {field.type === 'file' && 'Upload Dokumen / File'}
-                  {field.type === 'image' && 'Upload Gambar'}
+                  {field.type === 'text' && <span>Teks Pendek <span className="text-[10px] font-normal text-on-surface-variant/70 normal-case ml-1">(Maks. 100 karakter)</span></span>}
+                  {field.type === 'textarea' && <span>Teks Panjang / Paragraf <span className="text-[10px] font-normal text-on-surface-variant/70 normal-case ml-1">(Maks. 500 karakter)</span></span>}
+                  {field.type === 'number' && <span>Angka <span className="text-[10px] font-normal text-on-surface-variant/70 normal-case ml-1">(Maks. 20 digit)</span></span>}
+                  {field.type === 'email' && <span>Alamat Email <span className="text-[10px] font-normal text-on-surface-variant/70 normal-case ml-1">(Maks. 100 karakter)</span></span>}
+                  {field.type === 'tel' && <span>Nomor Telepon / WA <span className="text-[10px] font-normal text-on-surface-variant/70 normal-case ml-1">(Maks. 15 digit)</span></span>}
+                  {field.type === 'file' && <span>Upload Dokumen / File <span className="text-[10px] font-normal text-on-surface-variant/70 normal-case ml-1">(Maks. 5MB)</span></span>}
+                  {field.type === 'image' && <span>Upload Gambar <span className="text-[10px] font-normal text-on-surface-variant/70 normal-case ml-1">(Maks. 5MB)</span></span>}
                 </div>
                 
                 <input 

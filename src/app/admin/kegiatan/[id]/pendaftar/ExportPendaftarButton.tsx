@@ -3,6 +3,17 @@
 import React, { useState } from "react";
 import { FiDownload, FiX, FiFileText } from "react-icons/fi";
 
+const formatDateWithTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  const day = date.getDate();
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${day} ${month} ${year}, ${hours}:${minutes}`;
+};
+
 export default function ExportPendaftarButton({ applications, fields, agendaTitle }: { applications: any[], fields: any[], agendaTitle: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -12,7 +23,7 @@ export default function ExportPendaftarButton({ applications, fields, agendaTitl
     
     // 2. Rows
     const rows = applications.map(app => {
-      const date = new Date(app.created_at).toLocaleString("id-ID");
+      const date = formatDateWithTime(app.created_at);
       const rowData = [`"${date}"`];
       
       fields.forEach(field => {
@@ -67,8 +78,9 @@ export default function ExportPendaftarButton({ applications, fields, agendaTitl
             </div>
             
             <div className="p-6 overflow-auto flex-1 bg-surface-variant/5">
-              <p className="text-sm text-on-surface-variant mb-4">
-                Berikut adalah pratinjau 5 data pertama yang akan di-export ke dalam format CSV (bisa dibuka di Excel):
+              <p className="text-sm text-on-surface-variant mb-4 font-medium bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-200">
+                <strong className="text-blue-900">Perhatian:</strong> Berikut ini hanyalah <strong className="text-blue-900">pratinjau (preview) 5 data teratas</strong>. 
+                Saat tombol Download ditekan, <strong className="text-blue-900">seluruh {applications.length} data pendaftar</strong> akan ter-export ke dalam Excel secara utuh.
               </p>
               
               <div className="bg-surface border border-outline-variant/30 rounded-xl overflow-x-auto">
@@ -84,7 +96,7 @@ export default function ExportPendaftarButton({ applications, fields, agendaTitl
                   <tbody className="divide-y divide-outline-variant/20">
                     {applications.slice(0, 5).map((app: any) => (
                       <tr key={app.id}>
-                        <td className="p-3 text-xs whitespace-nowrap">{new Date(app.created_at).toLocaleString("id-ID")}</td>
+                        <td className="p-3 text-xs whitespace-nowrap font-medium">{formatDateWithTime(app.created_at)}</td>
                         {fields.map(field => (
                           <td key={field.id} className="p-3 text-xs truncate max-w-[200px]" title={app.responses[field.id]}>
                             {app.responses[field.id] || "-"}

@@ -32,12 +32,12 @@ export default async function DashboardKaryaPage() {
 
   return (
     <div className="w-full">
-      <div className="w-full">
+      <div className="w-full flex flex-col gap-16 md:gap-12">
         
         {/* Header — animated client component */}
         <DashboardHeader name={profile?.full_name || 'User'} />
 
-        <div className="relative mt-8">
+        <div className="relative">
           <CarAnimation />
           <DashboardCardPanel>
             <DashboardKaryaList initialKaryaList={karyaList || []} />

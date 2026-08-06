@@ -16,6 +16,7 @@ export interface AgendaKegiatan {
   is_urgent: boolean; // for volunteer
   is_published: boolean; // Live / Draft
   gallery?: string[]; // for finished event documentation
+  video_url?: string | null; // for youtube/instagram video link
   online_link?: string | null; // for online event link
   form_schema?: DynamicFormField[]; // Dynamic form for volunteer applications
   speakers?: { name: string; role: string; photo: string }[]; // Array of event speakers

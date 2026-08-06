@@ -8,6 +8,7 @@ const DotLottieReact = dynamic(
   () => import("@lottiefiles/dotlottie-react").then((mod) => mod.DotLottieReact),
   { ssr: false }
 );
+
 interface MahasiswaHeroProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -37,236 +38,219 @@ export default function MahasiswaHero({
     "Semua Prodi",
     "Teknik Informatika",
     "Sistem Informasi",
-    "Bisnis Digital",
   ];
 
   return (
-    <section className="relative pt-28 pb-10 md:pt-36 md:pb-12 bg-background border-b border-outline-variant/20 overflow-hidden">
+    <section className="relative pt-28 md:pt-36 pb-8 md:pb-12 bg-background border-b border-outline-variant/20 overflow-hidden">
       <div className="max-w-7xl mx-auto px-5 md:px-10 relative">
-        
-        {/* Left Character - karakter.lottie */}
+
+        {/* Left Character */}
         <motion.div
           initial={{ opacity: 0, x: -80 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ type: "spring", damping: 20, stiffness: 100, delay: 0.2 }}
           className="hidden xl:block absolute bottom-0 left-0 z-0 pointer-events-none"
         >
-          <DotLottieReact
-            src="/animations/karakter.lottie"
-            autoplay
-            loop
-            style={{ width: 280, height: 280 }}
-          />
+          <DotLottieReact src="/animations/karakter.lottie" autoplay loop style={{ width: 280, height: 280 }} />
         </motion.div>
 
-        {/* Right Character - rocket.lottie (flipped) */}
+        {/* Right Character */}
         <motion.div
           initial={{ opacity: 0, x: 80 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ type: "spring", damping: 20, stiffness: 100, delay: 0.3 }}
           className="hidden xl:block absolute bottom-12 right-4 z-0 pointer-events-none"
         >
-          <DotLottieReact
-            src="/animations/rocket.lottie"
-            autoplay
-            loop
-            style={{ width: 220, height: 220, transform: "scaleX(-1)" }}
-          />
+          <DotLottieReact src="/animations/rocket.lottie" autoplay loop style={{ width: 220, height: 220, transform: "scaleX(-1)" }} />
         </motion.div>
 
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto relative z-10">
-          {/* Main Title - Pure 2 Brand Colors (Primary & Secondary) */}
+          {/* Title */}
           <motion.h1
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight mb-4 text-primary"
+            className="text-2xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight mb-3 md:mb-4 text-primary"
           >
             Direktori Mahasiswa &{" "}
-            <span className="text-secondary">
-              Karya Per Angkatan
-            </span>
+            <span className="text-secondary">Karya Per Angkatan</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="text-on-surface-variant text-sm sm:text-lg max-w-2xl leading-relaxed mb-8"
+            className="text-on-surface-variant text-sm sm:text-lg max-w-2xl leading-relaxed mb-6 md:mb-8"
           >
             Temukan profil pengembang, desainer, dan inovator STMIK Tazkia. Jelajahi portofolio dan repositori karya per angkatan.
           </motion.p>
 
-          {/* Stats Summary Card - Interactive 3D Lottie Animations */}
+          {/* Stats Card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.15 }}
-            className="flex flex-wrap justify-center items-center gap-4 sm:gap-8 mb-8 p-4 md:px-8 rounded-2xl bg-surface border border-outline-variant/30 shadow-sm"
+            className="grid grid-cols-3 divide-x divide-outline-variant/30 mb-6 md:mb-8 py-4 px-2 sm:px-4 rounded-2xl bg-surface border border-outline-variant/30 shadow-sm w-full max-w-3xl mx-auto"
           >
-            {/* Left: People Lottie */}
-            <div className="flex items-center gap-3 px-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center p-1 overflow-hidden shrink-0">
-                <DotLottieReact
-                  src="/animations/people.lottie"
-                  autoplay
-                  loop
-                />
+            {/* Mahasiswa */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-1 sm:px-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-primary/10 flex items-center justify-center p-1 sm:p-2 overflow-hidden shrink-0">
+                <DotLottieReact src="/animations/people.lottie" autoplay loop />
               </div>
-              <div className="text-left">
+              <div className="text-center sm:text-left">
                 {isLoading ? (
-                  <div className="animate-pulse space-y-1.5">
-                    <div className="h-6 w-10 bg-primary/20 rounded-lg" />
-                    <div className="h-3 w-16 bg-surface-variant/60 rounded" />
+                  <div className="animate-pulse space-y-1">
+                    <div className="h-5 w-8 bg-primary/20 rounded-lg mx-auto sm:mx-0" />
+                    <div className="h-3 w-16 bg-surface-variant/60 rounded mx-auto sm:mx-0" />
                   </div>
                 ) : (
                   <>
-                    <p className="text-xl font-extrabold text-primary">{totalMahasiswa}</p>
-                    <p className="text-xs font-medium text-on-surface-variant">Mahasiswa</p>
+                    <p className="text-lg sm:text-2xl font-extrabold text-primary leading-none">{totalMahasiswa}</p>
+                    <p className="text-[10px] sm:text-xs font-semibold text-on-surface-variant mt-1">Mahasiswa</p>
                   </>
                 )}
               </div>
             </div>
 
-            <div className="w-px h-8 bg-outline-variant/30 hidden sm:block" />
-
-            {/* Middle: Project Lottie */}
-            <div className="flex items-center gap-3 px-3">
-              <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center p-1 overflow-hidden shrink-0">
-                <DotLottieReact
-                  src="/animations/project.lottie"
-                  autoplay
-                  loop
-                />
+            {/* Proyek */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-1 sm:px-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-secondary/10 flex items-center justify-center p-1 sm:p-2 overflow-hidden shrink-0">
+                <DotLottieReact src="/animations/project.lottie" autoplay loop />
               </div>
-              <div className="text-left">
+              <div className="text-center sm:text-left">
                 {isLoading ? (
-                  <div className="animate-pulse space-y-1.5">
-                    <div className="h-6 w-10 bg-secondary/20 rounded-lg" />
-                    <div className="h-3 w-20 bg-surface-variant/60 rounded" />
+                  <div className="animate-pulse space-y-1">
+                    <div className="h-5 w-8 bg-secondary/20 rounded-lg mx-auto sm:mx-0" />
+                    <div className="h-3 w-16 bg-surface-variant/60 rounded mx-auto sm:mx-0" />
                   </div>
                 ) : (
                   <>
-                    <p className="text-xl font-extrabold text-secondary">{totalProjects}</p>
-                    <p className="text-xs font-medium text-on-surface-variant">Proyek Diupload</p>
+                    <p className="text-lg sm:text-2xl font-extrabold text-secondary leading-none">{totalProjects}</p>
+                    <p className="text-[10px] sm:text-xs font-semibold text-on-surface-variant mt-1">Proyek</p>
                   </>
                 )}
               </div>
             </div>
 
-            <div className="w-px h-8 bg-outline-variant/30 hidden sm:block" />
-
-            {/* Right: College Lottie */}
-            <div className="flex items-center gap-3 px-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center p-1 overflow-hidden shrink-0">
-                <DotLottieReact
-                  src="/animations/college.lottie"
-                  autoplay
-                  loop
-                />
+            {/* Angkatan */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 px-1 sm:px-4">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl bg-primary/10 flex items-center justify-center p-1 sm:p-2 overflow-hidden shrink-0">
+                <DotLottieReact src="/animations/college.lottie" autoplay loop />
               </div>
-              <div className="text-left">
+              <div className="text-center sm:text-left">
                 {isLoading ? (
-                  <div className="animate-pulse space-y-1.5">
-                    <div className="h-6 w-8 bg-primary/20 rounded-lg" />
-                    <div className="h-3 w-20 bg-surface-variant/60 rounded" />
+                  <div className="animate-pulse space-y-1">
+                    <div className="h-5 w-6 bg-primary/20 rounded-lg mx-auto sm:mx-0" />
+                    <div className="h-3 w-16 bg-surface-variant/60 rounded mx-auto sm:mx-0" />
                   </div>
                 ) : (
                   <>
-                    <p className="text-xl font-extrabold text-primary">{availableAngkatan.length}</p>
-                    <p className="text-xs font-medium text-on-surface-variant">Angkatan Aktif</p>
+                    <p className="text-lg sm:text-2xl font-extrabold text-primary leading-none">{availableAngkatan.length}</p>
+                    <p className="text-[10px] sm:text-xs font-semibold text-on-surface-variant mt-1">Angkatan</p>
                   </>
                 )}
               </div>
             </div>
           </motion.div>
 
-          {/* Real-time Search Box */}
+          {/* Search Box */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
-            className="w-full max-w-2xl relative mb-6"
+            className="w-full max-w-2xl relative mb-5 md:mb-6"
           >
             <div className="relative flex items-center">
-              <FiSearch className="absolute left-5 text-on-surface-variant/70 text-lg pointer-events-none" />
+              <FiSearch className="absolute left-4 text-on-surface-variant/70 text-base pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari nama mahasiswa, skill (Next.js, Python), atau judul proyek..."
-                className="w-full pl-13 pr-12 py-3.5 md:py-4 rounded-full bg-surface border border-outline-variant/30 text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm text-sm font-medium"
+                placeholder="Cari nama, skill, atau proyek..."
+                className="w-full pl-11 pr-10 py-3 md:py-4 rounded-full bg-surface border border-outline-variant/30 text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm text-sm font-medium"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-4 p-1.5 text-on-surface-variant hover:text-on-surface rounded-full bg-surface-variant transition-all"
+                  className="absolute right-3 p-1.5 text-on-surface-variant hover:text-on-surface rounded-full bg-surface-variant transition-all"
                 >
-                  <FiX size={16} />
+                  <FiX size={14} />
                 </button>
               )}
             </div>
           </motion.div>
 
-          {/* Filter Pills (Angkatan & Prodi) */}
+          {/* Filters */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.25 }}
-            className="w-full flex flex-col gap-3 items-center"
+            className="w-full flex flex-col gap-3 items-start sm:items-center"
           >
-            {/* Angkatan Filter Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="text-xs text-on-surface-variant font-bold uppercase tracking-wider flex items-center gap-1.5 mr-2">
-                <FiFilter size={14} className="text-primary" /> Angkatan:
-              </span>
-              <button
-                onClick={() => setSelectedAngkatan(null)}
-                className={`px-4 py-2 rounded-full text-xs md:text-sm font-bold transition-all ${
-                  selectedAngkatan === null
-                    ? "bg-primary text-white shadow-md"
-                    : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary hover:text-primary"
-                }`}
-              >
-                Semua
-              </button>
-              {isLoading ? (
-                [1, 2, 3, 4].map(n => (
-                  <div key={n} className="w-16 h-8 md:h-9 bg-surface-variant/60 rounded-full animate-pulse" />
-                ))
-              ) : (
-                availableAngkatan.map((angkatan) => (
+            {/* Angkatan */}
+            <div className="relative w-full">
+              <div className="w-full overflow-x-auto scrollbar-hide pb-1">
+                <div className="flex items-center sm:justify-center gap-2 min-w-max px-1">
+                  <span className="text-xs text-on-surface-variant font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+                    <FiFilter size={13} className="text-primary" /> Angkatan:
+                    <span className="text-[9px] text-primary/70 animate-pulse ml-0.5 sm:hidden normal-case font-medium tracking-normal">(Geser ➔)</span>
+                  </span>
                   <button
-                    key={angkatan}
-                    onClick={() => setSelectedAngkatan(angkatan)}
-                    className={`px-4 py-2 rounded-full text-xs md:text-sm font-bold transition-all ${
-                      selectedAngkatan === angkatan
+                    onClick={() => setSelectedAngkatan(null)}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ${
+                      selectedAngkatan === null
                         ? "bg-primary text-white shadow-md"
                         : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary hover:text-primary"
                     }`}
                   >
-                    {angkatan}
+                    Semua
                   </button>
-                ))
-              )}
+                  {isLoading
+                    ? [1, 2, 3].map(n => <div key={n} className="w-14 h-7 bg-surface-variant/60 rounded-full animate-pulse shrink-0" />)
+                    : availableAngkatan.map((angkatan) => (
+                        <button
+                          key={angkatan}
+                          onClick={() => setSelectedAngkatan(angkatan)}
+                          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ${
+                            selectedAngkatan === angkatan
+                              ? "bg-primary text-white shadow-md"
+                              : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary hover:text-primary"
+                          }`}
+                        >
+                          {angkatan}
+                        </button>
+                      ))}
+                </div>
+              </div>
+              {/* Fade indicator for scroll */}
+              <div className="absolute right-0 top-0 bottom-1 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" />
             </div>
 
-            {/* Prodi Filter Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
-              <span className="text-xs text-on-surface-variant font-bold uppercase tracking-wider mr-2">Prodi:</span>
-              {prodiOptions.map((prodi) => (
-                <button
-                  key={prodi}
-                  onClick={() => setSelectedProdi(prodi)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    selectedProdi === prodi
-                      ? "bg-secondary text-white font-bold shadow-sm"
-                      : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-secondary hover:text-secondary"
-                  }`}
-                >
-                  {prodi}
-                </button>
-              ))}
+            {/* Prodi */}
+            <div className="relative w-full">
+              <div className="w-full overflow-x-auto scrollbar-hide pb-1">
+                <div className="flex items-center sm:justify-center gap-2 min-w-max px-1">
+                  <span className="text-xs text-on-surface-variant font-bold uppercase tracking-wider shrink-0 flex items-center">
+                    Prodi:
+                    <span className="text-[9px] text-primary/70 animate-pulse ml-1 sm:hidden normal-case font-medium tracking-normal">(Geser ➔)</span>
+                  </span>
+                  {prodiOptions.map((prodi) => (
+                    <button
+                      key={prodi}
+                      onClick={() => setSelectedProdi(prodi)}
+                      className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 ${
+                        selectedProdi === prodi
+                          ? "bg-secondary text-white shadow-sm"
+                          : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-secondary hover:text-secondary"
+                      }`}
+                    >
+                      {prodi}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Fade indicator for scroll */}
+              <div className="absolute right-0 top-0 bottom-1 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" />
             </div>
           </motion.div>
         </div>

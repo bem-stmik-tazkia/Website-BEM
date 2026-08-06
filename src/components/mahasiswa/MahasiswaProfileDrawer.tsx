@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiX, FiGithub, FiLinkedin, FiInstagram, FiGlobe, FiBriefcase, FiMail, FiCheck, FiFolder, FiStar, FiExternalLink, FiSend, FiShare2, FiCopy } from "react-icons/fi";
+import { FiX, FiGithub, FiLinkedin, FiInstagram, FiGlobe, FiBriefcase, FiMail, FiCheck, FiFolder, FiStar, FiExternalLink, FiSend, FiShare2, FiCopy, FiDownload } from "react-icons/fi";
+import { FaWhatsapp, FaTelegram, FaXTwitter } from "react-icons/fa6";
 import Image from "next/image";
 import Link from "next/link";
 import ProjectCard, { ProjectData } from "./ProjectCard";
@@ -24,6 +25,7 @@ export default function MahasiswaProfileDrawer({
   const [activeTab, setActiveTab] = useState<"projects" | "skills">("projects");
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [downloadedQR, setDownloadedQR] = useState(false);
 
   useEffect(() => {
     if (mahasiswa) {
@@ -45,6 +47,30 @@ export default function MahasiswaProfileDrawer({
     navigator.clipboard.writeText(shareUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleDownloadQR = async () => {
+    try {
+      // Fetch higher res QR for download
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(shareUrl)}&margin=2`;
+      const response = await fetch(qrUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = `QR_Profile_${mahasiswa.full_name.replace(/\s+/g, "_")}.png`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      setDownloadedQR(true);
+      setTimeout(() => setDownloadedQR(false), 3000);
+    } catch (error) {
+      console.error("Error downloading QR:", error);
+      alert("Gagal mengunduh QR Code. Silakan coba lagi.");
+    }
   };
 
   return (
@@ -298,12 +324,48 @@ export default function MahasiswaProfileDrawer({
             </p>
 
             {/* QR Code from free API */}
-            <div className="bg-white p-3 rounded-2xl shadow-sm border border-outline-variant/20 mb-6">
+            <div className="bg-white p-3 rounded-2xl shadow-sm border border-outline-variant/20 mb-4 flex flex-col items-center">
               <img 
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}&margin=0`} 
                 alt="QR Code"
-                className="w-40 h-40"
+                className="w-40 h-40 mb-3"
               />
+              <button
+                onClick={handleDownloadQR}
+                className={`flex items-center justify-center gap-2 w-full py-2 rounded-xl text-xs font-bold transition-all border ${
+                  downloadedQR 
+                    ? "bg-secondary/10 border-secondary/30 text-secondary" 
+                    : "bg-surface-variant hover:bg-primary/10 text-primary border-primary/20"
+                }`}
+              >
+                {downloadedQR ? <FiCheck size={14} /> : <FiDownload size={14} />}
+                {downloadedQR ? "QR Code Berhasil Diunduh!" : "Unduh QR Code"}
+              </button>
+            </div>
+
+            {/* Social Share Buttons */}
+            <div className="flex gap-2 w-full mb-4">
+              <button
+                onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Lihat profil portofolio ${mahasiswa.full_name} di: ${shareUrl}`)}`, '_blank')}
+                className="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
+                title="Bagikan ke WhatsApp"
+              >
+                <FaWhatsapp size={18} />
+              </button>
+              <button
+                onClick={() => window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Lihat profil portofolio ${mahasiswa.full_name}`)}`, '_blank')}
+                className="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-[#229ED9]/10 text-[#229ED9] hover:bg-[#229ED9]/20 transition-colors"
+                title="Bagikan ke Telegram"
+              >
+                <FaTelegram size={18} />
+              </button>
+              <button
+                onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Lihat profil portofolio ${mahasiswa.full_name}`)}`, '_blank')}
+                className="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-surface-variant text-on-surface hover:bg-outline-variant transition-colors"
+                title="Bagikan ke X (Twitter)"
+              >
+                <FaXTwitter size={16} />
+              </button>
             </div>
 
             {/* Copy Link Input */}

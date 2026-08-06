@@ -24,8 +24,13 @@ export default function DynamicGreeting({ name }: { name: string }) {
   }, []);
 
   return (
-    <span className="inline-flex items-center gap-1.5 transition-all">
-      {greeting}, <span className="font-semibold text-on-surface">{name}</span> {icon}
-    </span>
+    <div className="flex flex-col">
+      <span className="transition-all text-sm md:text-base opacity-80 mb-0.5">
+        {greeting} {icon},
+      </span>
+      <span className="font-bold text-on-surface text-lg md:text-xl">
+        {name}
+      </span>
+    </div>
   );
 }

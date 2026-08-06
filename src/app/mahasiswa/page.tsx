@@ -21,6 +21,7 @@ function MahasiswaShowcaseContent() {
   const [selectedMahasiswa, setSelectedMahasiswa] = useState<MahasiswaProfile | null>(null);
   const [showFullProfile, setShowFullProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [displayLimit, setDisplayLimit] = useState(12);
   const searchParams = useSearchParams();
   const idFromUrl = searchParams.get("id");
   const router = useRouter();
@@ -135,6 +136,11 @@ function MahasiswaShowcaseContent() {
     });
   }, [mahasiswaList, projectList, searchQuery, selectedAngkatan, selectedProdi]);
 
+  // Reset pagination on filter change
+  useEffect(() => {
+    setDisplayLimit(12);
+  }, [searchQuery, selectedAngkatan, selectedProdi]);
+
   // Active student's projects for drawer modal
   const selectedStudentProjects = useMemo(() => {
     if (!selectedMahasiswa) return [];
@@ -158,7 +164,7 @@ function MahasiswaShowcaseContent() {
       />
 
       {/* Main Grid Content */}
-      <main className="max-w-7xl mx-auto px-5 md:px-10 py-12 flex-1 w-full">
+      <main className="max-w-7xl mx-auto px-4 md:px-10 py-8 flex-1 w-full pb-40 lg:pb-12">
         {/* Section Title Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -184,7 +190,7 @@ function MahasiswaShowcaseContent() {
 
         {/* Skeleton Loading Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
               <div
                 key={n}
@@ -211,20 +217,39 @@ function MahasiswaShowcaseContent() {
             ))}
           </div>
         ) : filteredMahasiswa.length > 0 ? (
-          <motion.div
+          <>
+            <motion.div
             layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
           >
             <AnimatePresence>
-              {filteredMahasiswa.map((mahasiswa) => (
+              {filteredMahasiswa.slice(0, displayLimit).map((mahasiswa) => (
                 <MahasiswaCard
                   key={mahasiswa.id}
                   mahasiswa={mahasiswa}
+                  searchQuery={searchQuery}
                   onSelect={(m) => setSelectedMahasiswa(m)}
                 />
               ))}
             </AnimatePresence>
           </motion.div>
+          
+          {/* Load More Button */}
+          {filteredMahasiswa.length > displayLimit && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-10 flex justify-center w-full"
+            >
+              <button
+                onClick={() => setDisplayLimit((prev) => prev + 12)}
+                className="px-8 py-3 rounded-full bg-surface border border-outline-variant/30 text-primary font-bold hover:bg-primary/5 hover:border-primary/50 transition-all shadow-sm flex items-center gap-2"
+              >
+                Muat Lebih Banyak Mahasiswa
+              </button>
+            </motion.div>
+          )}
+          </>
         ) : (
           /* Empty State */
           <motion.div

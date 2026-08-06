@@ -183,7 +183,7 @@ export default function SaranAduan() {
           .from('system_settings')
           .select('value')
           .eq('key', 'google_sheets_webhook_url')
-          .single();
+          .maybeSingle();
         
         if (settingData && settingData.value) {
           await fetch('/api/saran-webhook', {

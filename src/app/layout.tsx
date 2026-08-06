@@ -20,7 +20,7 @@ export default async function RootLayout({
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <html lang="id" className="light overflow-x-hidden w-full max-w-full" suppressHydrationWarning>
+    <html lang="id" className="light" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -34,7 +34,7 @@ export default async function RootLayout({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
       </head>
-      <body className="bg-background text-on-background font-sans antialiased overflow-x-hidden w-full max-w-full transition-colors duration-300" suppressHydrationWarning>
+      <body className="bg-background text-on-background font-sans antialiased transition-colors duration-300" suppressHydrationWarning>
         <ThemeProvider defaultTheme="system">
           <ToastProvider>
             <LayoutClientWrapper isLoggedIn={!!user}>{children}</LayoutClientWrapper>

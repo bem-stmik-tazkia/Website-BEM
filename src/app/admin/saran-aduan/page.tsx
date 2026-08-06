@@ -55,7 +55,7 @@ export default function SaranAduanAdminPage() {
   };
 
   const fetchWebhookUrl = async () => {
-    const { data } = await supabase.from('system_settings').select('value').eq('key', 'google_sheets_webhook_url').single();
+    const { data } = await supabase.from('system_settings').select('value').eq('key', 'google_sheets_webhook_url').maybeSingle();
     if (data) setWebhookUrl(data.value);
   };
 

@@ -213,6 +213,7 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
                       <input 
                         type={field.type} 
                         required={field.required}
+                        maxLength={field.type === 'number' ? 20 : 100}
                         value={responses[field.id] || ""}
                         onChange={(e) => handleChange(field.id, e.target.value)}
                         placeholder={field.placeholder || "Ketik jawabanmu..."}
@@ -228,6 +229,7 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
                         <input 
                           type="tel" 
                           required={field.required}
+                          maxLength={15}
                           value={responses[field.id] ? responses[field.id].replace(/^\+62/, '') : ""}
                           onChange={(e) => {
                              const val = e.target.value.replace(/\D/g, ""); // only digits
@@ -246,6 +248,7 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
                     {field.type === 'textarea' && (
                       <textarea 
                         required={field.required}
+                        maxLength={500}
                         value={responses[field.id] || ""}
                         onChange={(e) => handleChange(field.id, e.target.value)}
                         placeholder={field.placeholder || "Ketik jawabanmu..."}

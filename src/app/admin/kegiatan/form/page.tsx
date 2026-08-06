@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiSave, FiArrowLeft, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiArrowLeft, FiAlertCircle, FiUpload } from "react-icons/fi";
 import Link from "next/link";
 import { getKegiatanById, saveKegiatan } from "../actions";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,6 +10,8 @@ import { AgendaKegiatan, DynamicFormField } from "@/types/agenda";
 import ImageUpload from "@/components/ui/ImageUpload";
 import { useToast } from "@/components/ui/Toast";
 import FormBuilder from "./FormBuilder";
+import { createClient } from "@/utils/supabase/client";
+import { compressImage } from "@/lib/imageCompression";
 
 export default function KegiatanFormPage() {
   const router = useRouter();
@@ -46,7 +48,9 @@ export default function KegiatanFormPage() {
   const [initialData, setInitialData] = useState<Partial<AgendaKegiatan>>(initialFormState);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const toastShown = React.useRef(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const supabase = createClient();
 
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
@@ -132,6 +136,59 @@ export default function KegiatanFormPage() {
     }
   };
 
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    e.target.value = "";
+
+    toast(`Memulai proses upload ${files.length} foto...`, "success");
+
+    let successCount = 0;
+    const errors: string[] = [];
+    
+    const uploading = files.map(async (file) => {
+      if (!file.type.startsWith("image/")) {
+        errors.push(`${file.name} bukan gambar.`);
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        errors.push(`${file.name} melebihi 5MB.`);
+        return;
+      }
+
+      try {
+        const compressedFile = await compressImage(file, 1, 1920);
+        const ext = compressedFile.name.split(".").pop();
+        const fileName = `${Math.random().toString(36).slice(2)}_${Date.now()}.${ext}`;
+        
+        const { error } = await supabase.storage.from("public_images").upload(`kabinet/${fileName}`, compressedFile, { cacheControl: "3600" });
+        if (error) throw error;
+        
+        const { data: { publicUrl } } = supabase.storage.from("public_images").getPublicUrl(`kabinet/${fileName}`);
+        
+        setFormData((prev) => ({
+          ...prev,
+          gallery: [...(prev.gallery || []).filter(Boolean), publicUrl],
+        }));
+        successCount++;
+      } catch (err: any) {
+        errors.push(`Gagal upload ${file.name}: ${err.message}`);
+      }
+    });
+
+    await Promise.all(uploading);
+    
+    if (successCount > 0) {
+      if (formErrors.gallery) setFormErrors((errs) => { const n = { ...errs }; delete n.gallery; return n; });
+      toast(`${successCount} dari ${files.length} foto berhasil diunggah!`, "success");
+    }
+    
+    if (errors.length > 0) {
+      toast(`Gagal mengunggah ${errors.length} foto. Cek ukuran/tipe file.`, "error");
+      console.error("Upload errors:", errors);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -148,13 +205,22 @@ export default function KegiatanFormPage() {
       if (!formData.location?.trim()) newErrors.location = "Lokasi wajib diisi";
       if (!formData.description?.trim()) newErrors.description = "Deskripsi wajib diisi";
       
-      if (formData.type === 'event' || formData.type === 'dokumentasi') {
+      if (formData.type === 'event') {
         if (!formData.speakers || formData.speakers.length === 0) {
           newErrors.speakers = "Minimal wajib mengisi 1 pembicara";
         } else {
           formData.speakers.forEach((s, idx) => {
             if (!s.name?.trim()) newErrors[`speaker_${idx}_name`] = "Nama wajib diisi";
             if (!s.role?.trim()) newErrors[`speaker_${idx}_role`] = "Profesi wajib diisi";
+          });
+        }
+      } else if (formData.type === 'dokumentasi') {
+        if (formData.speakers && formData.speakers.length > 0) {
+          formData.speakers.forEach((s, idx) => {
+            if (s.name?.trim() || s.role?.trim() || s.photo?.trim()) {
+              if (!s.name?.trim()) newErrors[`speaker_${idx}_name`] = "Nama wajib diisi";
+              if (!s.role?.trim()) newErrors[`speaker_${idx}_role`] = "Profesi wajib diisi";
+            }
           });
         }
       }
@@ -169,7 +235,6 @@ export default function KegiatanFormPage() {
       if (!formData.title?.trim()) newErrors.title = "Judul/Posisi wajib diisi";
       if (!formData.category?.trim()) newErrors.category = "Kategori wajib diisi";
       if (!formData.deadline) newErrors.deadline = "Deadline pendaftaran wajib diisi";
-      if (!formData.location?.trim()) newErrors.location = "Lokasi wajib diisi";
       if (!formData.description?.trim()) newErrors.description = "Deskripsi wajib diisi";
     }
 
@@ -202,6 +267,11 @@ export default function KegiatanFormPage() {
     if (formData.type === 'event' && !requiresRegistration) {
       formData.form_schema = [];
       formData.max_participants = null;
+    }
+    
+    // Filter pembicara yang kosong
+    if (formData.speakers) {
+      formData.speakers = formData.speakers.filter(s => s.name?.trim() || s.role?.trim() || s.photo?.trim());
     }
     // ---------------------
     
@@ -274,10 +344,6 @@ export default function KegiatanFormPage() {
                     <span className="text-sm text-on-surface">Agenda / Event</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="type" value="dokumentasi" checked={formData.type === 'dokumentasi'} onChange={handleChange} className="w-4 h-4 text-primary focus:ring-primary" />
-                    <span className="text-sm text-on-surface">Dokumentasi</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
                     <input type="radio" name="type" value="volunteer" checked={formData.type === 'volunteer'} onChange={handleChange} className="w-4 h-4 text-primary focus:ring-primary" />
                     <span className="text-sm text-on-surface">Open Recruitment</span>
                   </label>
@@ -330,7 +396,31 @@ export default function KegiatanFormPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div id="field-category" className="space-y-2">
                     <label className="text-sm font-bold text-on-surface">Kategori <span className="text-red-500">*</span></label>
-                    <input type="text" name="category" value={formData.category || ""} onChange={handleChange} className={`w-full bg-background border ${formErrors.category ? "border-red-500 bg-red-50" : "border-outline-variant/50"} rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} placeholder="Contoh: Kaderisasi, Teknologi, Sosial" />
+                    <select name="category" value={formData.category || ""} onChange={handleChange} className={`w-full bg-background border ${formErrors.category ? "border-red-500 bg-red-50" : "border-outline-variant/50"} rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`}>
+                      <option value="" disabled>Pilih Kategori</option>
+                      {formData.type === 'volunteer' ? (
+                        <>
+                          <option value="Kepanitiaan">Kepanitiaan</option>
+                          <option value="Pengurus BEM">Pengurus BEM</option>
+                          <option value="Relawan / Volunteer">Relawan / Volunteer</option>
+                          <option value="Magang / Internship">Magang / Internship</option>
+                          <option value="Delegasi / Lomba">Delegasi / Lomba</option>
+                          <option value="Lainnya">Lainnya</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="Kaderisasi">Kaderisasi</option>
+                          <option value="Teknologi">Teknologi</option>
+                          <option value="Sosial Masyarakat">Sosial Masyarakat</option>
+                          <option value="Akademik & Pendidikan">Akademik & Pendidikan</option>
+                          <option value="Olahraga">Olahraga</option>
+                          <option value="Seni & Budaya">Seni & Budaya</option>
+                          <option value="Keagamaan">Keagamaan</option>
+                          <option value="Kewirausahaan">Kewirausahaan</option>
+                          <option value="Lainnya">Lainnya</option>
+                        </>
+                      )}
+                    </select>
                     {formErrors.category && <p className="text-xs text-red-500 mt-1">{formErrors.category}</p>}
                   </div>
                 </div>
@@ -359,7 +449,7 @@ export default function KegiatanFormPage() {
                 <div id="field-speakers" className="space-y-4 md:col-span-2 border-t border-outline-variant/30 pt-4 mt-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-bold text-on-surface">Detail Pembicara / Pemateri <span className="text-red-500">*</span> <span className="font-normal text-on-surface-variant text-xs">(Min. 1)</span></h4>
+                      <h4 className="text-sm font-bold text-on-surface">Detail Pembicara / Pemateri {formData.type === 'event' ? <><span className="text-red-500">*</span> <span className="font-normal text-on-surface-variant text-xs">(Min. 1)</span></> : <span className="font-normal text-on-surface-variant text-xs">(Opsional)</span>}</h4>
                       {formErrors.speakers && <p className="text-xs text-red-500 mt-1">{formErrors.speakers}</p>}
                     </div>
                     <button 
@@ -394,7 +484,7 @@ export default function KegiatanFormPage() {
                           </button>
                           
                           <div className="space-y-2">
-                            <label className="text-xs font-bold text-on-surface">Nama Pembicara <span className="text-red-500">*</span></label>
+                            <label className="text-xs font-bold text-on-surface">Nama Pembicara {formData.type === 'event' && <span className="text-red-500">*</span>}</label>
                             <input 
                               type="text" 
                               name={`speaker_${index}_name`}
@@ -413,7 +503,7 @@ export default function KegiatanFormPage() {
                             {formErrors[`speaker_${index}_name`] && <p className="text-xs text-red-500 mt-1">{formErrors[`speaker_${index}_name`]}</p>}
                           </div>
                           <div className="space-y-2">
-                            <label className="text-xs font-bold text-on-surface">Profesi / Jabatan <span className="text-red-500">*</span></label>
+                            <label className="text-xs font-bold text-on-surface">Profesi / Jabatan {formData.type === 'event' && <span className="text-red-500">*</span>}</label>
                             <input 
                               type="text" 
                               name={`speaker_${index}_role`}
@@ -476,11 +566,13 @@ export default function KegiatanFormPage() {
               </div>
             )}
 
-            <div id="field-location" className="space-y-2">
-              <label className="text-sm font-bold text-on-surface">Lokasi <span className="text-red-500">*</span></label>
-              <input type="text" name="location" value={formData.location || ""} onChange={handleChange} className={`w-full bg-background border ${formErrors.location ? "border-red-500 bg-red-50" : "border-outline-variant/50"} rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} placeholder="Contoh: Auditorium STMIK Tazkia (Isi 'Online' jika via Zoom)" />
-              {formErrors.location && <p className="text-xs text-red-500 mt-1">{formErrors.location}</p>}
-            </div>
+            {(formData.type === 'event' || formData.type === 'dokumentasi') && (
+              <div id="field-location" className="space-y-2">
+                <label className="text-sm font-bold text-on-surface">Lokasi <span className="text-red-500">*</span></label>
+                <input type="text" name="location" value={formData.location || ""} onChange={handleChange} className={`w-full bg-background border ${formErrors.location ? "border-red-500 bg-red-50" : "border-outline-variant/50"} rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} placeholder="Contoh: Auditorium STMIK Tazkia (Isi 'Online' jika via Zoom)" />
+                {formErrors.location && <p className="text-xs text-red-500 mt-1">{formErrors.location}</p>}
+              </div>
+            )}
           </div>
 
           <hr className="border-outline-variant/20" />
@@ -549,7 +641,17 @@ export default function KegiatanFormPage() {
                 </div>
             </div>
             
-            {/* Gallery Section */}
+            {/* Video & Gallery Section */}
+            {(formData.type === 'event' || formData.type === 'dokumentasi') && (
+              <div className="space-y-6 pt-4 border-t border-outline-variant/20">
+                <div id="field-video_url" className="space-y-2">
+                  <label className="text-sm font-bold text-on-surface">Link Video Dokumentasi <span className="font-normal text-on-surface-variant text-xs">(Opsional)</span></label>
+                  <input type="text" name="video_url" value={formData.video_url || ""} onChange={handleChange} className="w-full bg-background border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none" placeholder="Contoh: Link YouTube, Instagram, TikTok, atau Google Drive" />
+                  <p className="text-xs text-on-surface-variant mt-1">Masukkan link video dari platform eksternal (termasuk Google Drive) agar database tidak berat.</p>
+                </div>
+              </div>
+            )}
+
             {(formData.type === 'event' || formData.type === 'dokumentasi') && (
               <div id="field-gallery" className="space-y-4 pt-4 border-t border-outline-variant/20">
                 <div className="flex items-center justify-between">
@@ -562,16 +664,33 @@ export default function KegiatanFormPage() {
                     </p>
                     {formErrors.gallery && <p className="text-xs text-red-500 mt-1">{formErrors.gallery}</p>}
                   </div>
-                  <button 
-                    type="button" 
-                    onClick={() => {
-                      const newGallery = [...(formData.gallery || []), ""];
-                      setFormData(prev => ({...prev, gallery: newGallery}));
-                    }}
-                    className="text-xs font-bold bg-secondary-container text-secondary px-3 py-1.5 rounded-lg hover:bg-secondary/20 transition-colors"
-                  >
-                    + Tambah Foto
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleBulkUpload}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-all shadow-sm"
+                    >
+                      <FiUpload size={14} /> Upload Sekaligus
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        const newGallery = [...(formData.gallery || []), ""];
+                        setFormData(prev => ({...prev, gallery: newGallery}));
+                      }}
+                      className="text-xs font-bold bg-secondary-container text-secondary px-3 py-1.5 rounded-lg hover:bg-secondary/20 transition-colors"
+                    >
+                      + Tambah Slot Foto
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

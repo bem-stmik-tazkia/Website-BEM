@@ -95,7 +95,7 @@ export default function IoTComponentSelect({ value, onChange, error }: IoTCompon
         <div className="flex flex-wrap gap-2 items-center min-h-[28px]">
           {selectedLabels.length === 0 && (
             <span className="text-on-surface-variant/50 select-none text-sm">
-              Pilih komponen hardware / software IoT...
+              Pilih komponen...
             </span>
           )}
 

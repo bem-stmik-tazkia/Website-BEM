@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
-import { FiArrowLeft, FiSave, FiPlus, FiX, FiUpload, FiImage, FiLoader } from "react-icons/fi";
+import { AnimatePresence, motion } from "framer-motion";
+import { FiArrowLeft, FiSave, FiPlus, FiX, FiUpload, FiImage, FiLoader, FiAlertCircle } from "react-icons/fi";
 import { saveKegiatan } from "@/app/admin/kegiatan/actions";
 import { createClient } from "@/utils/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
@@ -138,9 +139,59 @@ export default function TambahDokumentasiPage() {
     time_range: "",
     location: "",
     description: "",
+    video_url: "",
     is_published: true,
     gallery: [] as string[],
   });
+
+  const toastShown = useRef(false);
+  const draftKey = "dokumentasi_draft_new";
+
+  // Load draft
+  useEffect(() => {
+    const saved = localStorage.getItem(draftKey);
+    if (saved) {
+      try {
+        setForm(JSON.parse(saved));
+        if (!toastShown.current) {
+          toast("Draft tersimpan dimuat ulang.", "success");
+          toastShown.current = true;
+        }
+      } catch(e) {}
+    }
+  }, [toast]);
+
+  // Save draft
+  useEffect(() => {
+    localStorage.setItem(draftKey, JSON.stringify(form));
+  }, [form]);
+
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+
+  const [initialForm] = useState(form);
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  const handleBackNavigation = (e: React.MouseEvent, url: string) => {
+    if (isDirty) {
+      e.preventDefault();
+      setPendingUrl(url);
+      setShowLeaveConfirm(true);
+    } else {
+      router.push(url);
+    }
+  };
 
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -169,41 +220,48 @@ export default function TambahDokumentasiPage() {
     if (!files.length) return;
     e.target.value = "";
 
+    toast(`Memulai proses upload ${files.length} foto...`, "success");
+
+    let successCount = 0;
     const errors: string[] = [];
+    
     const uploading = files.map(async (file) => {
       if (!file.type.startsWith("image/")) {
         errors.push(`${file.name} bukan gambar.`);
-        return null;
+        return;
       }
       if (file.size > 5 * 1024 * 1024) {
         errors.push(`${file.name} melebihi 5MB.`);
-        return null;
+        return;
       }
 
-      // Kompres file sebelum upload (max 1MB, 1920px)
-      const compressedFile = await compressImage(file, 1, 1920);
-      
-      const ext = compressedFile.name.split(".").pop();
-      const fileName = `${Math.random().toString(36).slice(2)}_${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("public_images").upload(`kabinet/${fileName}`, compressedFile, { cacheControl: "3600" });
-      if (error) {
-        errors.push(`Gagal upload ${file.name}: ${error.message}`);
-        return null;
+      try {
+        // Kompres file sebelum upload (max 1MB, 1920px)
+        const compressedFile = await compressImage(file, 1, 1920);
+        const ext = compressedFile.name.split(".").pop();
+        const fileName = `${Math.random().toString(36).slice(2)}_${Date.now()}.${ext}`;
+        
+        const { error } = await supabase.storage.from("public_images").upload(`kabinet/${fileName}`, compressedFile, { cacheControl: "3600" });
+        if (error) throw error;
+        
+        const { data: { publicUrl } } = supabase.storage.from("public_images").getPublicUrl(`kabinet/${fileName}`);
+        
+        // Update state per foto yang selesai, agar muncul satu-satu (lebih interaktif)
+        setForm((prev) => ({
+          ...prev,
+          gallery: [...prev.gallery.filter(Boolean), publicUrl],
+        }));
+        successCount++;
+      } catch (err: any) {
+        errors.push(`Gagal upload ${file.name}: ${err.message}`);
       }
-      const { data: { publicUrl } } = supabase.storage.from("public_images").getPublicUrl(`kabinet/${fileName}`);
-      return publicUrl;
     });
 
-    const results = await Promise.all(uploading);
-    const urls = results.filter((url): url is string => url !== null);
+    await Promise.all(uploading);
     
-    if (urls.length > 0) {
-      setForm((prev) => ({
-        ...prev,
-        gallery: [...prev.gallery.filter(Boolean), ...urls],
-      }));
+    if (successCount > 0) {
       if (formErrors.gallery) setFormErrors((e) => { const n = { ...e }; delete n.gallery; return n; });
-      toast(`${urls.length} foto berhasil diunggah!`, "success");
+      toast(`${successCount} dari ${files.length} foto berhasil diunggah!`, "success");
     }
     
     if (errors.length > 0) {
@@ -246,10 +304,12 @@ export default function TambahDokumentasiPage() {
         location: form.location || "-",
         time_range: form.time_range || "-",
         is_published: form.is_published,
+        video_url: form.video_url || null,
         gallery: form.gallery.filter(Boolean),
         speakers: [],
       });
 
+      localStorage.removeItem(draftKey);
       toast("Dokumentasi berhasil disimpan!", "success");
       router.push("/admin/dokumentasi");
     } catch (err: any) {
@@ -269,12 +329,13 @@ export default function TambahDokumentasiPage() {
   const uploadedCount = form.gallery.filter(Boolean).length;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl pb-12">
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl pb-12">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button
           type="button"
-          onClick={() => router.push("/admin/dokumentasi")}
+          onClick={(e) => handleBackNavigation(e, "/admin/dokumentasi")}
           className="p-2 text-on-surface-variant hover:bg-surface-variant/50 rounded-xl transition-colors"
         >
           <FiArrowLeft size={20} />
@@ -389,6 +450,20 @@ export default function TambahDokumentasiPage() {
           />
         </div>
 
+        {/* Video Link */}
+        <div className="space-y-2">
+          <label className="text-sm font-bold text-on-surface">
+            Link Video <span className="text-on-surface-variant font-normal">(opsional)</span>
+          </label>
+          <input
+            type="text"
+            value={form.video_url}
+            onChange={(e) => handleChange("video_url", e.target.value)}
+            className={inputClass("video_url")}
+            placeholder="Contoh: https://youtube.com/watch?v=... atau link Instagram Reels/TikTok"
+          />
+        </div>
+
         {/* ─── Gallery Upload ──────────────────────────────────────────── */}
         <div id="field-gallery" className="space-y-4 pt-4 border-t border-outline-variant/20">
           {/* Header row */}
@@ -468,7 +543,7 @@ export default function TambahDokumentasiPage() {
       <div className="flex justify-end gap-3">
         <button
           type="button"
-          onClick={() => router.push("/admin/dokumentasi")}
+          onClick={(e) => handleBackNavigation(e, "/admin/dokumentasi")}
           className="px-6 py-3 rounded-xl font-bold text-on-surface-variant hover:bg-surface-variant/30 transition-colors"
         >
           Batal
@@ -487,5 +562,49 @@ export default function TambahDokumentasiPage() {
         </button>
       </div>
     </form>
+
+      {/* Leave Confirmation Modal */}
+      <AnimatePresence>
+        {showLeaveConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-surface rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center border border-outline-variant/20"
+            >
+              <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mb-4">
+                <FiAlertCircle size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-on-surface mb-2">Perubahan Belum Disimpan</h3>
+              <p className="text-on-surface-variant text-sm mb-8">Apakah kamu yakin ingin keluar? Semua isian pada form ini akan hilang jika belum disimpan.</p>
+              <div className="flex w-full gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowLeaveConfirm(false)}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-on-surface bg-surface-variant hover:bg-outline-variant transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (pendingUrl) router.push(pendingUrl);
+                  }}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
+                >
+                  Ya, Keluar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

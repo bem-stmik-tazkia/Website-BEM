@@ -44,7 +44,7 @@ export default function UploadKaryaPage() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [invalidField, setInvalidField] = useState<string | null>(null);
+  const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const { toast } = useToast();
 
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -118,11 +118,11 @@ export default function UploadKaryaPage() {
   // Dynamic labels based on type
   let isKTI = typeParam === "Research";
   let isLainnya = typeParam === "Multimedia";
-  let techStackLabel = isKTI ? "Metodologi / Tools Penelitian" : (typeParam === "IoT" ? "Komponen Hardware / Software" : (isLainnya ? "Tools / Aplikasi yang Digunakan" : "Tech Stack / Tools yang Digunakan"));
-  let techStackPlaceholder = isKTI ? "Contoh: SPSS, Studi Literatur, Kuantitatif..." : (typeParam === "IoT" ? "Contoh: ESP32, Arduino, Sensor Suhu, MQTT..." : (isLainnya ? "Contoh: Premiere Pro, Photoshop, Canva..." : "Contoh: React, Node.js, Figma..."));
-  let liveUrlLabel = isKTI ? "Link Jurnal / Makalah (Google Drive)" : (typeParam === "Programming" ? "Link Live Demo / App / Play Store" : (typeParam === "IoT" ? "Link Video Demo / Simulasi Wokwi" : (isLainnya ? "Link Hasil Karya (YouTube / Google Drive)" : "Live Demo / Website URL")));
-  let featuresLabel = isKTI ? "Temuan Utama / Poin Penting Penelitian" : (isLainnya ? "Detail / Konsep Karya" : (typeParam === "IoT" ? "Fitur / Fungsi Utama Alat" : "Fitur Utama Karya"));
-  let featuresDesc = isKTI ? "Jelaskan poin-poin penting atau temuan dari hasil penelitianmu." : (isLainnya ? "Jelaskan detail, elemen, atau konsep penting dari karyamu." : (typeParam === "IoT" ? "Jelaskan fungsi dan cara kerja alat yang dibuat." : "Jelaskan fitur-fitur penting yang ada di dalam karyamu agar orang lain mengerti fungsinya."));
+  let techStackLabel = isKTI ? "Metode / Tools Penelitian" : (typeParam === "IoT" ? "Komponen Hardware / Software" : (isLainnya ? "Aplikasi yang Digunakan" : "Tech Stack / Tools"));
+  let techStackPlaceholder = isKTI ? "Contoh: SPSS, Kuantitatif..." : (typeParam === "IoT" ? "Contoh: ESP32, Arduino, MQTT..." : (isLainnya ? "Contoh: Premiere Pro, Canva..." : "Contoh: React, Node.js, Figma..."));
+  let liveUrlLabel = isKTI ? "Link Jurnal / Makalah" : (typeParam === "Programming" ? "Link Live Demo / App" : (typeParam === "IoT" ? "Link Video / Simulasi" : (isLainnya ? "Link Karya (YouTube/Drive)" : "Live Demo / Website URL")));
+  let featuresLabel = isKTI ? "Temuan Utama Penelitian" : (isLainnya ? "Detail / Konsep Karya" : (typeParam === "IoT" ? "Fitur Utama Alat" : "Fitur Utama Karya"));
+  let featuresDesc = isKTI ? "Jelaskan poin-poin penting atau temuan dari hasil penelitianmu." : (isLainnya ? "Jelaskan detail, elemen, atau konsep penting dari karyamu." : (typeParam === "IoT" ? "Jelaskan fungsi dan cara kerja alat yang dibuat." : "Jelaskan fitur-fitur penting yang ada di dalam karyamu."));
   
   let techSectionTitle = isKTI ? "Metodologi & Referensi" : (typeParam === "IoT" ? "Komponen & Tautan" : (isLainnya ? "Tools & Tautan" : "Tech Stack & Tautan"));
   
@@ -182,20 +182,23 @@ export default function UploadKaryaPage() {
   }, [supabase]);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, id } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (id) setInvalidFields(prev => prev.filter(fieldId => fieldId !== id));
   };
 
   const handleFitur = (index: number, field: "title" | "desc", value: string) => {
     const updated = [...formData.features];
     updated[index][field] = value;
     setFormData(prev => ({ ...prev, features: updated }));
+    setInvalidFields(prev => prev.filter(id => id !== `input-feature-0-title`));
   };
 
   const handleTim = (index: number, field: "name" | "role" | "avatar" | "user_id", value: string) => {
     const updated = [...formData.team];
     updated[index][field] = value;
     setFormData(prev => ({ ...prev, team: updated }));
+    setInvalidFields(prev => prev.filter(id => id !== `input-team-0-name`));
   };
 
   const addFitur = () => {
@@ -226,6 +229,7 @@ export default function UploadKaryaPage() {
     const updated = [...formData.gallery];
     updated[index][field] = value;
     setFormData(prev => ({ ...prev, gallery: updated }));
+    setInvalidFields(prev => prev.filter(id => id !== `input-gallery-0-url`));
   };
 
   const isValidUrl = (urlString: string) => {
@@ -240,40 +244,36 @@ export default function UploadKaryaPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
-    setInvalidField(null);
+    setInvalidFields([]);
 
-    const scrollToAndSetInvalid = (id: string, msg: string) => {
-      setInvalidField(id);
-      toast(msg, "error");
-      document.getElementById(id)?.focus();
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
-    };
+    const fields: string[] = [];
 
-    if (!formData.image_url) {
-      setInvalidField("section-image");
-      toast("Foto Utama Karya wajib diupload!", "error");
-      document.getElementById("section-image")?.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
-    }
+    if (!formData.image_url) fields.push("section-image");
+    if (!formData.title.trim()) fields.push("input-title");
+    if (!formData.category) fields.push("input-category");
+    if (!formData.description.trim()) fields.push("input-description");
+    if (!formData.tech_stack.trim()) fields.push("input-tech-stack");
     
-    if (!formData.title.trim()) return scrollToAndSetInvalid("input-title", "Judul Karya wajib diisi!");
-    if (!formData.category) return scrollToAndSetInvalid("input-category", "Kategori wajib dipilih!");
-    if (!formData.description.trim()) return scrollToAndSetInvalid("input-description", "Deskripsi/Abstrak wajib diisi!");
-    if (!formData.tech_stack.trim()) return scrollToAndSetInvalid("input-tech-stack", "Tools / Metodologi wajib diisi!");
-    
-    if (formData.github_url.trim() && !isValidUrl(formData.github_url.trim())) return scrollToAndSetInvalid("input-github-url", "Format GitHub URL tidak valid!");
-    
-    if (!formData.live_url.trim()) return scrollToAndSetInvalid("input-live-url", "Link Utama Karya wajib diisi!");
-    else if (!isValidUrl(formData.live_url.trim())) return scrollToAndSetInvalid("input-live-url", "Format Link Utama URL tidak valid!");
+    if (formData.github_url.trim() && !isValidUrl(formData.github_url.trim())) fields.push("input-github-url");
+    if (!formData.live_url.trim()) fields.push("input-live-url");
+    else if (!isValidUrl(formData.live_url.trim())) fields.push("input-live-url");
     
     const validFeatures = formData.features.filter(f => f.title.trim() !== "" && f.desc.trim() !== "");
-    if (validFeatures.length === 0) return scrollToAndSetInvalid("input-feature-0-title", `Minimal 1 ${isKTI ? "Temuan Utama" : (isLainnya ? "Detail/Konsep" : "Fitur Utama")} harus diisi (Judul & Deskripsi)!`);
+    if (validFeatures.length === 0) fields.push("input-feature-0-title");
 
     const validTeam = formData.team.filter(t => t.name.trim() !== "" && t.role.trim() !== "");
-    if (validTeam.length === 0) return scrollToAndSetInvalid("input-team-0-name", "Minimal 1 Anggota Tim harus diisi (Nama & Peran)!");
+    if (validTeam.length === 0) fields.push("input-team-0-name");
 
     const validGallery = formData.gallery.filter(g => g.url.trim() !== "");
-    if (validGallery.length === 0) return scrollToAndSetInvalid("input-gallery-0-url", "Minimal 1 Foto Dokumentasi wajib diupload!");
+    if (validGallery.length === 0) fields.push("input-gallery-0-url");
+
+    if (fields.length > 0) {
+      setInvalidFields(fields);
+      toast("Harap lengkapi semua kolom yang ditandai merah!", "error");
+      document.getElementById(fields[0])?.scrollIntoView({ behavior: "smooth", block: "center" });
+      document.getElementById(fields[0])?.focus();
+      return;
+    }
 
     setIsLoading(true);
 
@@ -320,14 +320,14 @@ export default function UploadKaryaPage() {
   };
 
   const getInputClass = (id: string) => `w-full px-4 py-3 bg-surface-variant/20 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${
-    invalidField === id 
+    invalidFields.includes(id) 
       ? "border-red-500 focus:ring-red-500/40 focus:border-red-500 bg-red-50/50" 
       : "border-outline-variant/30 focus:ring-[var(--color-primary)]/40 focus:border-[var(--color-primary)]"
   }`;
   const labelClass = "block text-sm font-semibold text-on-surface mb-1.5";
 
   return (
-    <div className="w-full">
+    <div className="w-full pt-20 md:pt-28 pb-24 md:pb-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <Link href="/dashboard" onClick={(e) => handleBackNavigation(e, "/dashboard")} className="inline-flex items-center gap-2 text-on-surface-variant hover:text-[var(--color-primary)] transition-colors text-sm font-medium mb-4">
@@ -352,10 +352,10 @@ export default function UploadKaryaPage() {
             <h3 className="text-sm font-bold text-[var(--color-primary)] uppercase tracking-wider mb-4 flex items-center gap-2">
               <span className="w-1 h-4 bg-[var(--color-secondary)] rounded-full block" /> Foto Utama Karya <span className="text-red-400 normal-case">*</span>
             </h3>
-            <div className={`mb-2 p-1 rounded-[1.25rem] transition-all ${invalidField === 'section-image' ? 'border-2 border-red-500 bg-red-50/50 shadow-[0_0_0_4px_rgba(239,68,68,0.15)]' : 'border-2 border-transparent'}`}>
+            <div className={`mb-2 p-1 rounded-[1.25rem] transition-all ${invalidFields.includes('section-image') ? 'border-2 border-red-500 bg-red-50/50 shadow-[0_0_0_4px_rgba(239,68,68,0.15)]' : 'border-2 border-transparent'}`}>
               <ImageUpload
                 value={formData.image_url}
-                onChange={(url) => { setFormData(prev => ({ ...prev, image_url: url })); if(invalidField === 'section-image') setInvalidField(null); }}
+                onChange={(url) => { setFormData(prev => ({ ...prev, image_url: url })); setInvalidFields(prev => prev.filter(id => id !== 'section-image')); }}
               />
             </div>
             <p className="text-xs text-on-surface-variant mt-1 px-1">Format: JPG/PNG, maksimal 2MB.</p>
@@ -397,48 +397,48 @@ export default function UploadKaryaPage() {
                     value={formData.tech_stack}
                     onChange={(val) => {
                       setFormData(prev => ({ ...prev, tech_stack: val }));
-                      if (invalidField === "input-tech-stack") setInvalidField(null);
+                      setInvalidFields(prev => prev.filter(id => id !== "input-tech-stack"));
                     }}
-                    error={invalidField === "input-tech-stack"}
+                    error={invalidFields.includes("input-tech-stack")}
                   />
                 ) : typeParam === "IoT" ? (
                   <IoTComponentSelect
                     value={formData.tech_stack}
                     onChange={(val) => {
                       setFormData(prev => ({ ...prev, tech_stack: val }));
-                      if (invalidField === "input-tech-stack") setInvalidField(null);
+                      setInvalidFields(prev => prev.filter(id => id !== "input-tech-stack"));
                     }}
-                    error={invalidField === "input-tech-stack"}
+                    error={invalidFields.includes("input-tech-stack")}
                   />
                 ) : isLainnya ? (
                   <MultimediaToolsSelect
                     value={formData.tech_stack}
                     onChange={(val) => {
                       setFormData(prev => ({ ...prev, tech_stack: val }));
-                      if (invalidField === "input-tech-stack") setInvalidField(null);
+                      setInvalidFields(prev => prev.filter(id => id !== "input-tech-stack"));
                     }}
-                    error={invalidField === "input-tech-stack"}
+                    error={invalidFields.includes("input-tech-stack")}
                   />
                 ) : (
                   <TechStackSelect 
                     value={formData.tech_stack} 
                     onChange={(val) => {
                       setFormData(prev => ({ ...prev, tech_stack: val }));
-                      if (invalidField === "input-tech-stack") setInvalidField(null);
+                      setInvalidFields(prev => prev.filter(id => id !== "input-tech-stack"));
                     }}
-                    error={invalidField === "input-tech-stack"}
+                    error={invalidFields.includes("input-tech-stack")}
                   />
                 )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="input-live-url" className={labelClass}>{liveUrlLabel} <span className="text-red-400">*</span></label>
-                  <input id="input-live-url" type="url" value={formData.live_url} onChange={(e) => setFormData(prev => ({ ...prev, live_url: e.target.value }))} placeholder="https://..." className={getInputClass("input-live-url")} />
+                  <input id="input-live-url" name="live_url" type="url" value={formData.live_url} onChange={handleInput} placeholder="https://..." className={getInputClass("input-live-url")} />
                 </div>
                 {showGithub && (
                   <div>
                     <label htmlFor="input-github-url" className={labelClass}>GitHub Repository (Opsional)</label>
-                    <input id="input-github-url" type="url" value={formData.github_url} onChange={(e) => setFormData(prev => ({ ...prev, github_url: e.target.value }))} placeholder="https://github.com/..." className={getInputClass("input-github-url")} />
+                    <input id="input-github-url" name="github_url" type="url" value={formData.github_url} onChange={handleInput} placeholder="https://github.com/..." className={getInputClass("input-github-url")} />
                   </div>
                 )}
               </div>

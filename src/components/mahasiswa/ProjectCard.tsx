@@ -140,25 +140,25 @@ export default function ProjectCard({ project, onLike }: ProjectCardProps) {
         </p>
 
         {/* Stats */}
-        <div className="flex items-center gap-4 mt-auto mb-4 text-on-surface-variant text-sm">
+        <div className="flex items-center gap-4 mt-auto mb-4 text-on-surface-variant text-xs font-medium">
           <div
             onClick={handleLike}
             className="flex items-center gap-1.5 group/stat cursor-pointer hover:text-red-500 transition-colors"
           >
-            <div className="w-5 h-5 flex items-center justify-center shrink-0 -ml-1">
+            <div className="w-4 h-4 flex items-center justify-center shrink-0 -ml-1">
               {liked ? (
                 <DotLottieReact src="/animations/Heart Animated.lottie" autoplay loop={false} />
               ) : (
-                <FiHeart className="text-on-surface-variant/70 group-hover/stat:text-red-500 transition-colors" />
+                <FiHeart size={14} className="text-on-surface-variant/70 group-hover/stat:text-red-500 transition-colors" />
               )}
             </div>
             <span className={liked ? "text-red-500 font-bold" : "text-on-surface-variant"}>
-              {likes}
+              {likes} Suka
             </span>
           </div>
           <div className="flex items-center gap-1.5 group/stat cursor-pointer hover:text-blue-500 transition-colors">
-            <FiEye className="text-on-surface-variant/70 group-hover/stat:text-blue-500 transition-colors" />
-            <span>{project.views_count || (project as any).views || 0}</span>
+            <FiEye size={14} className="text-on-surface-variant/70 group-hover/stat:text-blue-500 transition-colors" />
+            <span>{project.views_count || (project as any).views || 0} Dilihat</span>
           </div>
         </div>
 

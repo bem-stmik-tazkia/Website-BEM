@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { FiHome, FiAward, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid, FiX } from "react-icons/fi";
+import { FiHome, FiAward, FiCalendar, FiBookOpen, FiUser, FiUsers, FiLogOut, FiChevronDown, FiGrid, FiX } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import UserNotificationBell from "@/components/layout/UserNotificationBell";
@@ -12,7 +12,7 @@ import AdminNotificationBell from "@/app/admin/AdminNotificationBell";
 
 export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeBottomSheet, setActiveBottomSheet] = useState<'publikasi' | 'profil' | null>(null);
+  const [activeBottomSheet, setActiveBottomSheet] = useState<'more' | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -31,8 +31,8 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        const { data: mhsProfile } = await supabase.from('mahasiswa_profiles').select('angkatan').eq('user_id', user.id).single();
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+        const { data: mhsProfile } = await supabase.from('mahasiswa_profiles').select('angkatan').eq('user_id', user.id).maybeSingle();
         setUserProfile({ ...user, ...profile, has_completed_profile: !!mhsProfile?.angkatan });
       } else {
         setUserProfile(null);
@@ -124,7 +124,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
     <>
       <nav
         id="navbar"
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ease-in-out border-b ${isScrolled || !isHome
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ease-in-out border-b ${isScrolled
             ? "bg-surface border-outline-variant/50 shadow-md"
             : "bg-transparent border-transparent"
           }`}
@@ -151,13 +151,13 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
             </div>
             <div className="hidden sm:flex flex-row items-center gap-1.5">
               <span
-                className={`font-bold leading-none text-lg md:text-xl transition-colors duration-300 ${isScrolled || !isHome ? "text-primary" : "text-white"
+                className={`font-bold leading-none text-lg md:text-xl transition-colors duration-300 ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"
                   }`}
               >
                 BEM STMIK
               </span>
               <span
-                className={`font-bold leading-none text-lg md:text-xl transition-colors duration-300 ${isScrolled || !isHome ? "text-secondary" : "text-white"
+                className={`font-bold leading-none text-lg md:text-xl transition-colors duration-300 ${isScrolled ? "text-secondary" : isHome ? "text-white" : "text-secondary"
                   }`}
               >
                 Tazkia
@@ -174,10 +174,12 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                   <div key={link.name} className="relative group">
                     <button
                       className={`flex items-center gap-1 py-2 transition-colors duration-300 after:absolute after:bottom-[-4px] after:left-0 after:h-1 after:rounded-full after:transition-all after:duration-300 ${isActive
-                          ? `font-bold after:w-full after:bg-secondary ${isScrolled || !isHome ? "text-primary" : "text-white"}`
-                          : isScrolled || !isHome
+                          ? `font-bold after:w-full after:bg-secondary ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"}`
+                          : isScrolled
                             ? "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
-                            : "text-white/80 after:w-0 hover:after:w-full after:bg-surface hover:text-white"
+                            : isHome
+                              ? "text-white/80 after:w-0 hover:after:w-full after:bg-surface hover:text-white"
+                              : "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
                         }`}
                     >
                       {link.name}
@@ -209,10 +211,12 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                   key={link.name}
                   href={link.path!}
                   className={`relative py-2 transition-colors duration-300 after:absolute after:bottom-[-4px] after:left-0 after:h-1 after:rounded-full after:transition-all after:duration-300 ${isActive
-                      ? `font-bold after:w-full after:bg-secondary ${isScrolled || !isHome ? "text-primary" : "text-white"}`
-                      : isScrolled || !isHome
+                      ? `font-bold after:w-full after:bg-secondary ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"}`
+                      : isScrolled
                         ? "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
-                        : "text-white/80 after:w-0 hover:after:w-full after:bg-surface hover:text-white"
+                        : isHome
+                          ? "text-white/80 after:w-0 hover:after:w-full after:bg-surface hover:text-white"
+                          : "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
                     }`}
                 >
                   {link.name}
@@ -235,9 +239,11 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className={`flex items-center md:gap-2 md:pl-2 md:pr-4 md:py-1.5 rounded-full md:border transition-all md:hover:shadow-soft ${
-                    isScrolled || !isHome
+                    isScrolled
                       ? "md:bg-surface md:border-outline-variant/50 text-on-surface hover:text-primary md:hover:border-primary"
-                      : "md:bg-surface/10 md:backdrop-blur-md md:border-white/20 text-white hover:text-white/80 md:hover:bg-surface/20"
+                      : isHome
+                        ? "md:bg-surface/10 md:backdrop-blur-md md:border-white/20 text-white hover:text-white/80 md:hover:bg-surface/20"
+                        : "md:bg-surface/80 md:backdrop-blur-md md:border-outline-variant/30 text-on-surface hover:text-primary md:hover:border-primary"
                   }`}
                 >
                   <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-sm">
@@ -249,7 +255,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                   </div>
                   <div className="hidden md:flex flex-col items-start max-w-[120px]">
                     <span className="text-xs font-bold truncate w-full block">{userProfile.full_name || 'User'}</span>
-                    <span className={`text-[10px] uppercase font-bold tracking-wider ${isScrolled || !isHome ? "text-primary" : "text-white/70"}`}>
+                    <span className={`text-[10px] uppercase font-bold tracking-wider ${isScrolled ? "text-primary" : isHome ? "text-white/70" : "text-primary"}`}>
                       {userProfile.role || 'USER'}
                     </span>
                   </div>
@@ -313,9 +319,11 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
             ) : (
               <Link
                 href="/login"
-                className={`ml-2 md:ml-4 px-5 py-2 md:px-8 md:py-3 rounded-full font-semibold text-sm md:text-base transition-all hover:-translate-y-0.5 shadow-soft ${isScrolled || !isHome
+                className={`ml-2 md:ml-4 px-5 py-2 md:px-8 md:py-3 rounded-full font-semibold text-sm md:text-base transition-all hover:-translate-y-0.5 shadow-soft ${isScrolled
                     ? "bg-secondary text-on-primary hover:bg-secondary/90 shadow-secondary/30"
-                    : "bg-surface/15 backdrop-blur-md border border-white/40 text-white hover:bg-secondary hover:border-secondary"
+                    : isHome
+                      ? "bg-surface/15 backdrop-blur-md border border-white/40 text-white hover:bg-secondary hover:border-secondary"
+                      : "bg-secondary text-on-primary hover:bg-secondary/90 shadow-secondary/30"
                   }`}
               >
                 Masuk
@@ -333,50 +341,58 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
       {/* Mobile & Tablet Bottom Navigation Bar */}
       {!isDashboard && (
         <>
-          <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-surface/90 backdrop-blur-lg border-t border-outline-variant/30 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] pb-5 pt-2 px-2 flex justify-between items-center rounded-t-3xl touch-manipulation">
+          <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-lg border-t border-outline-variant/30 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] pb-5 pt-2 px-1 flex justify-between items-center rounded-t-3xl touch-manipulation">
         <Link 
           href="/" 
           onClick={() => { setPendingPath("/"); setActiveBottomSheet(null); }} 
-          className={`flex-1 flex flex-col items-center gap-1 transition-transform active:scale-95 ${currentPath === "/" ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+          className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath === "/" ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
         >
-          <FiHome size={22} className={currentPath === "/" ? "fill-secondary/20" : ""} />
-          <span className="text-[10px] font-bold">Beranda</span>
+          <FiHome size={20} className={currentPath === "/" ? "fill-secondary/20" : ""} />
+          <span className="text-[9px] font-bold">Beranda</span>
         </Link>
 
         <Link 
           href="/agenda" 
           onClick={() => { setPendingPath("/agenda"); setActiveBottomSheet(null); }} 
-          className={`flex-1 flex flex-col items-center gap-1 transition-transform active:scale-95 ${currentPath.startsWith("/agenda") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+          className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/agenda") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
         >
-          <FiCalendar size={22} className={currentPath.startsWith("/agenda") ? "fill-secondary/20" : ""} />
-          <span className="text-[10px] font-bold">Agenda</span>
+          <FiCalendar size={20} className={currentPath.startsWith("/agenda") ? "fill-secondary/20" : ""} />
+          <span className="text-[9px] font-bold">Agenda</span>
         </Link>
 
         <Link 
           href="/karya" 
           onClick={() => { setPendingPath("/karya"); setActiveBottomSheet(null); }} 
-          className={`flex-1 flex flex-col items-center gap-1 transition-transform active:scale-95 ${currentPath.startsWith("/karya") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+          className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/karya") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
         >
-          <div className="bg-primary text-white p-3 rounded-full -mt-6 shadow-glow border-4 border-white flex items-center justify-center">
-            <FiAward size={22} />
+          <div className="bg-primary text-white p-2.5 rounded-full -mt-5 shadow-glow border-4 border-white flex items-center justify-center">
+            <FiAward size={20} />
           </div>
-          <span className="text-[10px] font-bold">Karya</span>
+          <span className="text-[9px] font-bold">Karya</span>
+        </Link>
+
+        <Link 
+          href="/mahasiswa" 
+          onClick={() => { setPendingPath("/mahasiswa"); setActiveBottomSheet(null); }} 
+          className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/mahasiswa") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+        >
+          <FiUsers size={20} className={currentPath.startsWith("/mahasiswa") ? "fill-secondary/20" : ""} />
+          <span className="text-[9px] font-bold">Mahasiswa</span>
         </Link>
 
         <button 
-          onClick={() => setActiveBottomSheet(activeBottomSheet === 'publikasi' ? null : 'publikasi')} 
-          className={`flex-1 flex flex-col items-center gap-1 transition-transform active:scale-95 ${activeBottomSheet === 'publikasi' || currentPath.startsWith("/berita") || currentPath.startsWith("/dokumentasi") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+          onClick={() => setActiveBottomSheet(activeBottomSheet === 'more' ? null : 'more')} 
+          className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${
+            activeBottomSheet === 'more' ||
+            currentPath.startsWith("/berita") ||
+            currentPath.startsWith("/dokumentasi") ||
+            currentPath.startsWith("/kabinet")
+              ? "text-secondary" 
+              : "text-on-surface-variant hover:text-primary"
+          }`}
         >
-          <FiBookOpen size={22} className={activeBottomSheet === 'publikasi' || currentPath.startsWith("/berita") || currentPath.startsWith("/dokumentasi") ? "fill-secondary/20" : ""} />
-          <span className="text-[10px] font-bold">Publikasi</span>
-        </button>
-
-        <button 
-          onClick={() => setActiveBottomSheet(activeBottomSheet === 'profil' ? null : 'profil')} 
-          className={`flex-1 flex flex-col items-center gap-1 transition-transform active:scale-95 ${activeBottomSheet === 'profil' || currentPath.startsWith("/kabinet") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-        >
-          <FiUser size={22} className={activeBottomSheet === 'profil' || currentPath.startsWith("/kabinet") ? "fill-secondary/20" : ""} />
-          <span className="text-[10px] font-bold text-center">Profil BEM</span>
+          <FiGrid size={20} className={activeBottomSheet === 'more' || currentPath.startsWith("/berita") || currentPath.startsWith("/dokumentasi") || currentPath.startsWith("/kabinet") ? "fill-secondary/20" : ""} />
+          <span className="text-[9px] font-bold">Lainnya</span>
         </button>
       </nav>
       </>
@@ -397,64 +413,81 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
 
       {/* Bottom Sheets */}
       <AnimatePresence>
-        {activeBottomSheet === 'publikasi' && (
+        {activeBottomSheet === 'more' && (
           <motion.div
             initial={{ y: "100%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="lg:hidden fixed bottom-24 left-4 right-4 z-50 bg-surface rounded-2xl shadow-xl overflow-hidden border border-outline-variant/30"
+            className="lg:hidden fixed bottom-20 left-3 right-3 z-50 bg-surface rounded-3xl shadow-2xl overflow-hidden border border-outline-variant/30"
           >
-            <div className="flex flex-col p-2">
+            {/* Header */}
+            <div className="px-5 pt-4 pb-3 border-b border-outline-variant/20 flex items-center justify-between">
+              <p className="text-sm font-extrabold text-on-surface">Menu Lainnya</p>
+              <button onClick={() => setActiveBottomSheet(null)} className="p-1.5 rounded-full hover:bg-surface-variant transition-colors">
+                <FiX size={16} className="text-on-surface-variant" />
+              </button>
+            </div>
+            {/* 2x2 Grid Menu */}
+            <div className="grid grid-cols-2 gap-px bg-outline-variant/10 p-2">
               <Link 
                 href="/berita" 
                 onClick={() => { setPendingPath("/berita"); setActiveBottomSheet(null); }} 
-                className="px-5 py-4 font-bold text-sm border-b border-outline-variant/30 text-on-surface hover:bg-surface-container active:bg-primary/10 transition-colors flex items-center justify-between"
+                className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
               >
-                Berita
-                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <FiBookOpen size={18} className="text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-on-surface">Berita</p>
+                  <p className="text-[10px] text-on-surface-variant">Info & Pengumuman</p>
+                </div>
               </Link>
               <Link 
                 href="/dokumentasi" 
                 onClick={() => { setPendingPath("/dokumentasi"); setActiveBottomSheet(null); }} 
-                className="px-5 py-4 font-bold text-sm text-on-surface hover:bg-surface-container active:bg-primary/10 transition-colors flex items-center justify-between"
+                className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
               >
-                Dokumentasi
-                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-secondary text-[18px]">photo_library</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-on-surface">Dokumentasi</p>
+                  <p className="text-[10px] text-on-surface-variant">Foto & Galeri</p>
+                </div>
+              </Link>
+              <Link 
+                href="/kabinet" 
+                onClick={() => { setPendingPath("/kabinet"); setActiveBottomSheet(null); }} 
+                className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <FiUser size={18} className="text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-on-surface">Kabinet BEM</p>
+                  <p className="text-[10px] text-on-surface-variant">Profil & Struktur</p>
+                </div>
+              </Link>
+              <Link 
+                href="/#saran" 
+                onClick={() => { setPendingPath("/#saran"); setActiveBottomSheet(null); }} 
+                className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-secondary text-[18px]">chat_bubble</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-on-surface">Kotak Saran</p>
+                  <p className="text-[10px] text-on-surface-variant">Aspirasi & Aduan</p>
+                </div>
               </Link>
             </div>
           </motion.div>
         )}
 
-        {activeBottomSheet === 'profil' && (
-          <motion.div
-            initial={{ y: "100%", opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="lg:hidden fixed bottom-24 left-4 right-4 z-50 bg-surface rounded-2xl shadow-xl overflow-hidden border border-outline-variant/30"
-          >
-            <div className="flex flex-col p-2">
-              <Link 
-                href="/kabinet" 
-                onClick={() => { setPendingPath("/kabinet"); setActiveBottomSheet(null); }} 
-                className="px-5 py-4 font-bold text-sm border-b border-outline-variant/30 text-on-surface hover:bg-surface-container active:bg-primary/10 transition-colors flex items-center justify-between"
-              >
-                Kabinet
-                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-              </Link>
-              <Link 
-                href="/#saran" 
-                onClick={() => { setPendingPath("/#saran"); setActiveBottomSheet(null); }} 
-                className="px-5 py-4 font-bold text-sm text-on-surface hover:bg-surface-container active:bg-primary/10 transition-colors flex items-center justify-between"
-              >
-                Kotak Saran & Aduan
-                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-              </Link>
-            </div>
-          </motion.div>
-        )}
       </AnimatePresence>
+
 
       {/* Logout Confirmation Modal */}
       <AnimatePresence>

@@ -48,8 +48,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={toastMethods}>
       {children}
       
-      {/* Toast Container - Top Right */}
-      <div className="fixed top-20 right-6 z-50 flex flex-col gap-3 pointer-events-none">
+      {/* Toast Container - Responsive Positioning */}
+      <div className="fixed top-20 left-4 right-4 md:left-auto md:right-8 z-50 flex flex-col gap-3 pointer-events-none items-center md:items-end">
         {toasts.map((t) => {
           const isSuccess = t.type === "success";
           const isError = t.type === "error";
@@ -59,7 +59,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={t.id}
               className={`
-                pointer-events-auto flex items-start gap-3 px-4 py-3 min-w-[300px] max-w-[400px] rounded-xl shadow-xl 
+                pointer-events-auto flex items-start gap-3 px-4 py-3 w-full sm:w-auto sm:min-w-[300px] sm:max-w-[400px] rounded-xl shadow-xl 
                 border transition-all animate-init-fade-up
                 ${isSuccess ? "bg-emerald-50 border-emerald-200 text-emerald-800" : ""}
                 ${isError ? "bg-red-50 border-red-200 text-red-800" : ""}

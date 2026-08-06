@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { FiMonitor, FiSmartphone, FiBookOpen, FiCpu, FiGrid, FiArrowRight, FiChevronLeft, FiChevronRight } from "react-icons/fi";
@@ -63,6 +64,15 @@ const KATEGORI_KARYA = [
 export default function UploadLandingPage() {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(2);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mencegah hydration error: deteksi layar HP hanya setelah render di sisi client
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Store DotLottie instances per card id
   const lottieRefs = useRef<Record<string, any>>({});
@@ -105,8 +115,17 @@ export default function UploadLandingPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col justify-start pt-0 pb-12 md:pb-4 -mt-8 md:-mt-16 relative z-10 overflow-x-clip overflow-y-visible px-4 md:px-0">
-      <div className="text-center mb-2">
+    <div className="max-w-5xl mx-auto flex flex-col justify-start pt-8 pb-12 md:pb-4 -mt-8 md:-mt-16 relative z-10 overflow-x-clip overflow-y-visible w-full">
+      
+      {/* Tombol Kembali */}
+      <Link 
+        href="/dashboard/karya" 
+        className="fixed top-6 left-4 md:top-8 md:left-8 z-[60] flex items-center gap-1.5 px-3 py-2 md:px-4 md:py-2 bg-white/80 dark:bg-surface/80 backdrop-blur-xl rounded-full shadow-[0_4px_20px_rgba(27,64,134,0.15)] border border-[var(--color-primary)]/30 text-on-surface-variant hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/50 hover:shadow-[0_8px_25px_rgba(27,64,134,0.25)] transition-all text-xs md:text-sm font-bold"
+      >
+        <FiChevronLeft size={16} /> Kembali
+      </Link>
+
+      <div className="text-center mb-2 mt-4 md:mt-0 px-4 md:px-0">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -124,20 +143,20 @@ export default function UploadLandingPage() {
         </motion.p>
       </div>
 
-      <div className="relative h-[390px] md:h-[420px] w-full flex items-center justify-center -mt-2 md:mt-2">
+      <div className="relative h-[410px] md:h-[460px] w-full flex items-center justify-center -mt-2 md:mt-2">
 
         {/* Navigation Arrows */}
         <button
           onClick={prevCard}
           disabled={activeIndex === 0}
-          className="absolute left-2 md:left-8 z-50 p-3 md:p-4 rounded-full bg-surface shadow-xl border border-outline-variant/30 text-on-surface hover:text-[var(--color-primary)] disabled:opacity-0 transition-all hover:scale-110"
+          className="absolute left-1 sm:left-4 md:left-8 z-50 p-2.5 md:p-4 rounded-full bg-surface shadow-xl border border-outline-variant/30 text-on-surface hover:text-[var(--color-primary)] disabled:opacity-0 transition-all hover:scale-110"
         >
           <FiChevronLeft size={24} />
         </button>
         <button
           onClick={nextCard}
           disabled={activeIndex === KATEGORI_KARYA.length - 1}
-          className="absolute right-2 md:right-8 z-50 p-3 md:p-4 rounded-full bg-surface shadow-xl border border-outline-variant/30 text-on-surface hover:text-[var(--color-primary)] disabled:opacity-0 transition-all hover:scale-110"
+          className="absolute right-1 sm:right-4 md:right-8 z-50 p-2.5 md:p-4 rounded-full bg-surface shadow-xl border border-outline-variant/30 text-on-surface hover:text-[var(--color-primary)] disabled:opacity-0 transition-all hover:scale-110"
         >
           <FiChevronRight size={24} />
         </button>
@@ -148,12 +167,12 @@ export default function UploadLandingPage() {
           const isActive = offset === 0;
           const isVisible = absOffset <= 1; // only render nearby cards
 
-          const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
-          const xOffsetBase = isMobile ? 100 : 200;
+          const xOffsetBase = isMobile ? 120 : 220;
 
-          // Instead of CSS scale (which blurs canvas), use opacity + slight vertical offset
-          const cardOpacity = isActive ? 1 : absOffset === 1 ? 0.75 : 0;
+          // Gunakan scale untuk efek 3D kedalaman (depth)
+          const cardOpacity = isActive ? 1 : absOffset === 1 ? 0.6 : 0;
           const cardY = isActive ? 0 : 20;
+          const cardScale = isActive ? 1 : 0.85;
 
           return (
             <motion.div
@@ -161,15 +180,16 @@ export default function UploadLandingPage() {
               onClick={() => handleCardClick(index, item.id)}
               initial={false}
               animate={{
-                x: `${offset * xOffsetBase}px`,
+                x: `calc(-50% + ${offset * xOffsetBase}px)`,
+                y: `calc(-50% + ${cardY}px)`,
                 opacity: cardOpacity,
-                y: cardY,
+                scale: cardScale,
                 zIndex: 20 - absOffset,
               }}
-              whileHover={isActive ? { scale: 1.03, y: -4 } : { scale: 1.02 }}
+              whileHover={isActive ? { scale: 1.03, y: `calc(-50% - 4px)` } : { scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 350, damping: 30 }}
-              className={`absolute w-[280px] sm:w-[320px] md:w-[340px] h-[380px] bg-surface rounded-3xl cursor-pointer select-none flex flex-col overflow-hidden
+              className={`absolute top-1/2 left-1/2 w-[280px] sm:w-[320px] md:w-[340px] h-[400px] md:h-[420px] bg-surface rounded-3xl cursor-pointer select-none flex flex-col overflow-hidden
                 ${isActive
                   ? 'border-2 border-[var(--color-primary)] shadow-2xl'
                   : 'border border-outline-variant/40 shadow-md'
@@ -181,11 +201,11 @@ export default function UploadLandingPage() {
               <div className={`absolute inset-0 bg-gradient-to-br ${item.color} rounded-3xl pointer-events-none`} />
 
               {/* Lottie area — fixed height, no scale transform */}
-              <div className="relative w-full h-[180px] flex-shrink-0 overflow-hidden">
+              <div className="relative w-full h-[160px] md:h-[180px] flex-shrink-0 overflow-hidden">
                 {item.lottie && isVisible && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div
-                      className="w-[190px] h-[190px]"
+                      className="w-[160px] h-[160px] md:w-[190px] md:h-[190px]"
                       style={item.lottieStyle ? {
                         transform: `translateX(${(item.lottieStyle as any).translateX || '0'}) scale(${(item.lottieStyle as any).scale || 1})`,
                         mixBlendMode: 'multiply' as const,
@@ -212,12 +232,12 @@ export default function UploadLandingPage() {
 
 
               {/* Text content */}
-              <div className="relative z-10 flex flex-col flex-grow px-6 pb-5 pt-5">
-                <div className="flex-grow">
-                  <h3 className={`text-2xl font-extrabold mb-2 transition-colors ${isActive ? 'text-[var(--color-primary)]' : 'text-on-surface'}`}>
+              <div className={`relative z-10 flex flex-col flex-grow px-5 pb-4 pt-4 md:px-6 md:pb-5 md:pt-5 transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                <div className="flex-grow flex flex-col justify-center">
+                  <h3 className={`text-xl sm:text-2xl font-extrabold mb-1 sm:mb-2 transition-colors ${isActive ? 'text-[var(--color-primary)]' : 'text-on-surface'}`}>
                     {item.title}
                   </h3>
-                  <p className="text-base text-on-surface-variant leading-relaxed line-clamp-2">
+                  <p className="text-sm sm:text-base text-on-surface-variant leading-relaxed line-clamp-2">
                     {item.description}
                   </p>
                 </div>

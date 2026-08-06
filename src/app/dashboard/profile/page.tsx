@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { FiSave, FiUser, FiInfo, FiLink, FiGithub, FiLinkedin, FiInstagram, FiGlobe, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiUser, FiInfo, FiLink, FiGithub, FiLinkedin, FiInstagram, FiGlobe, FiAlertCircle, FiX, FiChevronDown } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/Toast";
@@ -47,6 +47,90 @@ export default function ProfileSettingsPage() {
     "Sistem Informasi",
     "Bisnis Digital"
   ];
+
+  const PREDEFINED_SKILLS = [
+    "Frontend Developer",
+    "Backend Developer",
+    "Fullstack Developer",
+    "Mobile Developer",
+    "UI/UX Designer",
+    "Data Analyst",
+    "Data Scientist",
+    "Cyber Security",
+    "DevOps Engineer",
+    "System Administrator",
+    "Cloud Engineer",
+    "Machine Learning Engineer",
+    "Game Developer",
+    "Product Manager",
+    "Quality Assurance (QA)",
+    "Network Engineer",
+    "IT Support",
+    "Graphic Designer",
+    "Digital Marketing"
+  ];
+
+  const [showCustomSkillInput, setShowCustomSkillInput] = useState(false);
+  const [customSkill, setCustomSkill] = useState("");
+  const [isSkillDropdownOpen, setIsSkillDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+
+  const PREDEFINED_STATUSES = [
+    "🚀 Open for Collab",
+    "💼 Mencari Magang",
+    "🤝 Siap Freelance",
+    "📚 Fokus Belajar",
+    "💻 Bekerja Full-time",
+    "💡 Punya Ide Startup",
+    "🔍 Mencari Mentor"
+  ];
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsSkillDropdownOpen(false);
+      }
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const currentSkills = formData.skills.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+  const addSkill = (skill: string) => {
+    if (currentSkills.length >= 5) {
+      toast.error("Maksimal 5 Keahlian (Skills) yang bisa dipilih.");
+      return;
+    }
+    if (currentSkills.includes(skill)) {
+      toast.error("Keahlian ini sudah ditambahkan.");
+      return;
+    }
+    const newSkills = [...currentSkills, skill].join(", ");
+    setFormData(prev => ({ ...prev, skills: newSkills }));
+    setIsDirty(true);
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    const newSkills = currentSkills.filter(s => s !== skillToRemove).join(", ");
+    setFormData(prev => ({ ...prev, skills: newSkills }));
+    setIsDirty(true);
+  };
+
+  const handleAddCustomSkill = () => {
+    if (customSkill.trim().length > 0) {
+      addSkill(customSkill.trim());
+      setCustomSkill("");
+      setShowCustomSkillInput(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -311,6 +395,7 @@ export default function ProfileSettingsPage() {
       localStorage.removeItem(DRAFT_KEY);
       setIsDirty(false);
       toast.success("Berhasil Disimpan: Profilmu sudah diperbarui!");
+      router.push("/dashboard");
       router.refresh();
     }
     
@@ -318,7 +403,30 @@ export default function ProfileSettingsPage() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-on-surface-variant">Memuat profil...</div>;
+    return (
+      <div className="max-w-3xl mx-auto space-y-6 animate-pulse">
+        <div>
+          <div className="h-8 bg-surface-variant/50 rounded-lg w-1/3 mb-2" />
+          <div className="h-4 bg-surface-variant/50 rounded-lg w-2/3" />
+        </div>
+        <div className="bg-surface rounded-2xl border border-outline-variant/30 overflow-hidden">
+          <div className="p-6 border-b border-outline-variant/20 flex flex-col items-center gap-4">
+            <div className="w-32 h-32 rounded-full bg-surface-variant/50" />
+            <div className="w-32 h-8 rounded-full bg-surface-variant/50" />
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="h-5 bg-surface-variant/50 rounded-lg w-1/4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="h-14 bg-surface-variant/50 rounded-xl w-full" />
+              <div className="h-14 bg-surface-variant/50 rounded-xl w-full" />
+              <div className="h-14 bg-surface-variant/50 rounded-xl w-full" />
+              <div className="h-14 bg-surface-variant/50 rounded-xl w-full" />
+            </div>
+            <div className="h-24 bg-surface-variant/50 rounded-xl w-full" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -504,28 +612,169 @@ export default function ProfileSettingsPage() {
             />
           </div>
           
-          <div className="space-y-1.5">
-            <label className="text-sm font-bold text-on-surface">Keahlian (Skills)</label>
-            <input
-              type="text"
-              name="skills"
-              value={formData.skills}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary bg-surface outline-none transition-all"
-              placeholder="Misal: React, Node.js, UI/UX Design, Figma (pisahkan dengan koma)"
-            />
+          <div className="space-y-3">
+            <label className="text-sm font-bold text-on-surface flex items-center gap-1.5">
+              Keahlian (Top Skills)
+              <span className="text-xs font-normal text-on-surface-variant bg-surface-variant px-2 py-0.5 rounded-full">Maksimal 5</span>
+            </label>
+            
+            {/* Selected Skills Badges */}
+            <div className="flex flex-wrap gap-2">
+              {currentSkills.length === 0 && (
+                <div className="w-full py-4 px-4 bg-secondary/10 border border-dashed border-secondary/40 rounded-xl flex items-center justify-center gap-2 text-secondary mb-1">
+                  <FiInfo size={18} />
+                  <span className="text-sm font-bold">Keahlianmu masih kosong nih, ayo tambahkan sekarang!</span>
+                </div>
+              )}
+              {currentSkills.map((skill, index) => (
+                <span key={index} className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary border border-primary/20 text-xs font-bold rounded-full">
+                  {skill}
+                  <button type="button" onClick={() => removeSkill(skill)} className="hover:text-red-500 transition-colors ml-1" title="Hapus skill">
+                    <FiX size={14} />
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            {/* Skill Selector */}
+            {currentSkills.length < 5 && (
+              <div className="flex flex-col gap-2 mt-2" ref={dropdownRef}>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsSkillDropdownOpen(!isSkillDropdownOpen)}
+                    className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary bg-surface transition-all text-sm text-on-surface font-semibold hover:bg-surface-variant/30 text-left"
+                  >
+                    <span className="text-on-surface-variant">+ Tambah Keahlian (Pilih dari Template)</span>
+                    <FiChevronDown className={`transition-transform duration-300 ${isSkillDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isSkillDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute z-50 w-full mt-2 bg-surface border border-outline-variant/30 rounded-xl shadow-xl max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-outline-variant scrollbar-track-transparent"
+                      >
+                        <div className="p-1">
+                          {PREDEFINED_SKILLS.filter(s => !currentSkills.includes(s)).map(skill => (
+                            <button
+                              key={skill}
+                              type="button"
+                              onClick={() => {
+                                addSkill(skill);
+                                // Tidak menutup dropdown agar user bisa langsung klik skill lain
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
+                            >
+                              {skill}
+                            </button>
+                          ))}
+                          <div className="h-px bg-outline-variant/30 my-1 mx-2" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowCustomSkillInput(true);
+                              setIsSkillDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm text-secondary hover:bg-secondary/10 font-bold rounded-lg transition-colors flex items-center gap-2"
+                          >
+                            + Tambah Keahlian Custom (Ketik Sendiri)
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <AnimatePresence>
+                  {showCustomSkillInput && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }} 
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex flex-wrap sm:flex-nowrap gap-2 items-center mt-1 overflow-hidden"
+                    >
+                      <input 
+                        type="text" 
+                        value={customSkill}
+                        onChange={(e) => setCustomSkill(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomSkill(); } }}
+                        placeholder="Ketik lalu klik Tambah..."
+                        className="flex-1 px-4 py-2 rounded-xl border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary bg-surface text-sm outline-none w-full sm:w-auto"
+                        autoFocus
+                      />
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <button 
+                          type="button" 
+                          onClick={handleAddCustomSkill}
+                          className="flex-1 sm:flex-none px-4 py-2 bg-secondary text-white text-sm font-bold rounded-xl whitespace-nowrap shadow-sm hover:bg-secondary/90 transition-colors"
+                        >
+                          Tambah
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => { setShowCustomSkillInput(false); setCustomSkill(""); }}
+                          className="px-3 py-2 bg-surface-variant hover:bg-outline-variant/50 text-on-surface-variant rounded-xl transition-colors"
+                        >
+                          <FiX size={16} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
           
-          <div className="space-y-1.5">
+          <div className="space-y-1.5" ref={statusDropdownRef}>
             <label className="text-sm font-bold text-on-surface">Status (Badge) Profil</label>
-            <input
-              type="text"
-              name="status_badge"
-              value={formData.status_badge}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary bg-surface outline-none transition-all"
-              placeholder="Misal: 🚀 Open for Collab"
-            />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary bg-surface transition-all text-sm text-on-surface font-semibold hover:bg-surface-variant/30 text-left"
+              >
+                <span>{formData.status_badge || "Pilih Status..."}</span>
+                <FiChevronDown className={`transition-transform duration-300 text-on-surface-variant ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {isStatusDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute z-50 w-full mt-2 bg-surface border border-outline-variant/30 rounded-xl shadow-xl max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-outline-variant scrollbar-track-transparent"
+                  >
+                    <div className="p-1">
+                      {PREDEFINED_STATUSES.map(status => (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, status_badge: status }));
+                            setIsDirty(true);
+                            setIsStatusDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm rounded-lg transition-colors ${
+                            formData.status_badge === status 
+                              ? 'bg-primary/10 text-primary font-bold' 
+                              : 'text-on-surface hover:bg-surface-variant'
+                          }`}
+                        >
+                          {status}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <p className="text-xs text-on-surface-variant mt-1">Status ini akan tampil di kartu profilmu untuk memberi tahu orang lain kondisimu saat ini.</p>
           </div>
         </div>
 

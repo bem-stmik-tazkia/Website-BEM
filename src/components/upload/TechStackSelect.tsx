@@ -100,7 +100,7 @@ export default function TechStackSelect({ value, onChange, error }: TechStackSel
         <div className="flex flex-wrap gap-2 items-center min-h-[24px]">
           {selectedLabels.length === 0 && (
             <span className="text-on-surface-variant/50 select-none">
-              Pilih tech stack / tools yang digunakan...
+              Pilih tools...
             </span>
           )}
 

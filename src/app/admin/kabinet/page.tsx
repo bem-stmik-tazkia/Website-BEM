@@ -9,7 +9,7 @@ export default async function AdminKabinetPage() {
     .from("kabinet_profiles")
     .select("*")
     .eq("is_active", true)
-    .single();
+    .maybeSingle();
 
   if (error || !kabinet) {
     return (

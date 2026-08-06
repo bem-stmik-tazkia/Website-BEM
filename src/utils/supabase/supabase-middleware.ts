@@ -53,7 +53,7 @@ export async function updateSession(request: NextRequest) {
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (profile?.role !== 'admin') {
       // User is not an admin, redirect to user dashboard
@@ -79,7 +79,7 @@ export async function updateSession(request: NextRequest) {
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     const url = request.nextUrl.clone()
     const nextPath = request.nextUrl.searchParams.get('next')

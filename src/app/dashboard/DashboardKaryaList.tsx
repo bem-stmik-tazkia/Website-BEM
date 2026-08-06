@@ -180,7 +180,7 @@ export default function DashboardKaryaList({ initialKaryaList }: { initialKaryaL
   });
 
   const totalPages = Math.ceil(filteredList.length / ITEMS_PER_PAGE);
-  const paginatedList = filteredList.slice(0, currentPage * ITEMS_PER_PAGE);
+  const paginatedList = filteredList.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const counts = {
     all: karyaList.length,
@@ -199,9 +199,9 @@ export default function DashboardKaryaList({ initialKaryaList }: { initialKaryaL
   return (
     <>
       {/* ── Tabs & Filters ────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-4 justify-between items-start sm:items-center">
+      <div className="flex flex-col sm:flex-row gap-4 mb-4 justify-between items-start sm:items-center w-full">
         <LayoutGroup>
-          <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
+          <div className="flex flex-wrap gap-2 pb-2 sm:pb-0 w-full">
             {TABS.map((tab) => (
               <motion.button
                 key={tab.id}
@@ -307,8 +307,8 @@ export default function DashboardKaryaList({ initialKaryaList }: { initialKaryaL
                           {getCategoryLabel(karya.category)}
                         </span>
                       </div>
-                      <h3 className="font-bold text-lg text-on-surface truncate">{karya.title}</h3>
-                      <p className="text-sm text-on-surface-variant line-clamp-2 mt-1">
+                      <h3 className="font-bold text-lg text-on-surface line-clamp-2 break-words">{karya.title}</h3>
+                      <p className="text-sm text-on-surface-variant line-clamp-3 mt-1 break-words">
                         {karya.description}
                       </p>
                     </div>
@@ -404,15 +404,15 @@ export default function DashboardKaryaList({ initialKaryaList }: { initialKaryaL
                   </div>
 
                   {/* BOTTOM: Action buttons */}
-                  <div className="flex gap-2 w-full pt-1">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full pt-1">
                     {karya.status !== 'deleted' && (
-                      <div className="relative flex-1">
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <div className="relative w-full sm:flex-1">
+                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full">
                           <Link
                             href={`/karya/${karya.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-semibold text-sm border border-[var(--color-primary)]/20 hover:bg-[var(--color-primary)] hover:text-white transition-colors"
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-semibold text-sm border border-[var(--color-primary)]/20 hover:bg-[var(--color-primary)] hover:text-white transition-colors"
                           >
                             <FiEye size={14} /> Lihat Halaman
                           </Link>
@@ -420,40 +420,46 @@ export default function DashboardKaryaList({ initialKaryaList }: { initialKaryaL
                       </div>
                     )}
 
-                    {karya.status !== 'deletion_pending' && karya.status !== 'deleted' && (
-                      <div className="relative flex-1">
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Link
-                            href={`/dashboard/edit/${karya.id}`}
-                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-surface-variant/50 text-on-surface-variant font-semibold text-sm border border-outline-variant/30 hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)] transition-colors"
-                          >
-                            <FiEdit2 size={14} /> Edit
-                          </Link>
-                        </motion.div>
-                      </div>
-                    )}
+                    <div className="flex gap-2 w-full sm:flex-[2]">
+                      {karya.status !== 'deletion_pending' && karya.status !== 'deleted' && (
+                        <div className="relative flex-1">
+                          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full">
+                            <Link
+                              href={`/dashboard/edit/${karya.id}`}
+                              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl bg-surface-variant/50 text-on-surface-variant font-semibold text-sm border border-outline-variant/30 hover:bg-[var(--color-primary)] hover:text-white hover:border-[var(--color-primary)] transition-colors"
+                            >
+                              <FiEdit2 size={14} /> Edit
+                            </Link>
+                          </motion.div>
+                        </div>
+                      )}
 
-                    {karya.status === 'deleted' ? (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => hideDeletedKarya(karya.id)}
-                        disabled={isSubmitting}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-surface-variant/50 text-on-surface-variant font-semibold text-sm border border-outline-variant/30 hover:bg-gray-700 hover:text-white hover:border-gray-700 transition-colors w-full disabled:opacity-50"
-                      >
-                        <FiX size={14} /> Tutup & Hilangkan
-                      </motion.button>
-                    ) : (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleDelete(karya)}
-                        disabled={karya.status === 'deletion_pending'}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-surface-variant/50 text-on-surface-variant font-semibold text-sm border border-outline-variant/30 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <FiTrash2 size={14} /> Hapus
-                      </motion.button>
-                    )}
+                      {karya.status === 'deleted' ? (
+                        <div className="relative flex-1">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => hideDeletedKarya(karya.id)}
+                            disabled={isSubmitting}
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl bg-surface-variant/50 text-on-surface-variant font-semibold text-sm border border-outline-variant/30 hover:bg-gray-700 hover:text-white hover:border-gray-700 transition-colors disabled:opacity-50"
+                          >
+                            <FiX size={14} /> Tutup
+                          </motion.button>
+                        </div>
+                      ) : (
+                        <div className="relative flex-1">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleDelete(karya)}
+                            disabled={karya.status === 'deletion_pending'}
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl bg-surface-variant/50 text-on-surface-variant font-semibold text-sm border border-outline-variant/30 hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <FiTrash2 size={14} /> Hapus
+                          </motion.button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -462,18 +468,31 @@ export default function DashboardKaryaList({ initialKaryaList }: { initialKaryaL
         </motion.div>
       </AnimatePresence>
 
-      {/* ── Pagination (Load More) ─────────────────────────────────────────── */}
-      {filteredList.length > 0 && currentPage < totalPages && (
+      {/* ── Standard Pagination ── */}
+      {totalPages > 1 && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex justify-center mt-8 mb-4"
+          className="flex items-center justify-center gap-4 mt-8 mb-4"
         >
           <button
-            onClick={() => setCurrentPage(p => p + 1)}
-            className="px-6 py-2.5 rounded-xl bg-surface-variant/50 text-on-surface-variant font-bold text-sm hover:bg-[var(--color-primary)] hover:text-white transition-colors border border-outline-variant/30"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 rounded-xl bg-surface-variant/30 text-on-surface-variant font-bold text-sm hover:bg-surface-variant/60 transition-colors border border-outline-variant/30 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Tampilkan Lebih Banyak
+            Sebelumnya
+          </button>
+          
+          <span className="text-sm font-bold text-on-surface-variant">
+            Halaman {currentPage} dari {totalPages}
+          </span>
+          
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 rounded-xl bg-surface-variant/30 text-on-surface-variant font-bold text-sm hover:bg-[var(--color-primary)] hover:text-white transition-colors border border-outline-variant/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Selanjutnya
           </button>
         </motion.div>
       )}

@@ -12,7 +12,7 @@ interface DashboardHeaderProps {
 
 export default function DashboardHeader({ name }: DashboardHeaderProps) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div>
         <motion.h1
           initial={{ opacity: 0, y: 24 }}
@@ -22,15 +22,19 @@ export default function DashboardHeader({ name }: DashboardHeaderProps) {
         >
           Dashboard Karya
         </motion.h1>
-        <motion.p
+        <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.12, duration: 0.5, ease: "easeOut" }}
-          className="text-on-surface-variant flex items-center gap-1"
+          className="flex flex-col gap-1.5"
         >
-          <DynamicGreeting name={name} />. Kelola dan pantau status karya
-          inovasimu di sini.
-        </motion.p>
+          <div className="text-on-surface-variant text-base md:text-lg">
+            <DynamicGreeting name={name} />
+          </div>
+          <p className="text-on-surface-variant/80 text-sm md:text-base leading-relaxed">
+            Kelola dan pantau status karya inovasimu di sini.
+          </p>
+        </motion.div>
       </div>
 
       <motion.div

@@ -29,9 +29,9 @@ export default function DashboardBottomNav() {
   }, [showLogoutConfirm]);
 
   const navLinks = [
-    { name: "Profil",  href: "/dashboard",        icon: <FiUser size={22} />, exact: true },
-    { name: "Karya",   href: "/dashboard/karya",  icon: <FiAward size={22} />, exact: true },
-    { name: "Beranda", href: "/",                 icon: <FiHome size={22} />, exact: true },
+    { name: "Profil",  href: "/dashboard",        icon: <FiUser className="w-5 h-5 md:w-[22px] md:h-[22px]" />, exact: true },
+    { name: "Karya",   href: "/dashboard/karya",  icon: <FiAward className="w-5 h-5 md:w-[22px] md:h-[22px]" />, exact: true },
+    { name: "Beranda", href: "/",                 icon: <FiHome className="w-5 h-5 md:w-[22px] md:h-[22px]" />, exact: true },
   ];
 
   const handleLogout = async () => {
@@ -42,10 +42,13 @@ export default function DashboardBottomNav() {
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname?.startsWith(href);
 
+  // Sembunyikan navigasi bawah saat berada di alur upload karya
+  if (pathname?.startsWith("/dashboard/upload")) return null;
+
   return (
     <>
       {/* ── Bottom Nav ── */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+      <div className="fixed bottom-8 md:bottom-10 left-1/2 -translate-x-1/2 z-40">
         <motion.nav
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -53,21 +56,21 @@ export default function DashboardBottomNav() {
           className="bg-white/80 dark:bg-surface/80 backdrop-blur-2xl border border-[var(--color-primary)]/30 shadow-[0_8px_30px_rgba(27,64,134,0.15)] px-3 py-2 rounded-full flex items-center gap-1 md:gap-2"
         >
           {navLinks.map((link) => (
-            <Link key={link.name} href={link.href} className="relative group px-4 py-2.5 md:px-6 md:py-3 outline-none">
+            <Link key={link.name} href={link.href} className="relative group min-w-[60px] md:min-w-0 px-2 py-2 md:px-6 md:py-3 outline-none flex items-center justify-center">
               <motion.div
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className={`relative z-10 flex flex-row items-center justify-center gap-2 transition-colors duration-300 ${
-                  isActive(link.href, link.exact) ? "text-white" : "text-on-surface-variant group-hover:text-primary"
+                className={`relative z-10 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 transition-colors duration-300 ${
+                  isActive(link.href, link.exact) ? "text-primary md:text-white" : "text-on-surface-variant group-hover:text-primary"
                 }`}
               >
                 {link.icon}
-                <span className="hidden md:inline text-sm font-bold">{link.name}</span>
+                <span className="text-[10px] md:text-sm font-bold">{link.name}</span>
               </motion.div>
               {isActive(link.href, link.exact) && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-secondary rounded-full -z-0 shadow-lg shadow-secondary/30"
+                  className="absolute inset-0 bg-primary/15 md:bg-primary rounded-xl md:rounded-full -z-0 md:shadow-lg md:shadow-primary/30"
                   initial={false}
                   transition={{ type: "spring", damping: 25, stiffness: 350 }}
                 />
@@ -75,17 +78,17 @@ export default function DashboardBottomNav() {
             </Link>
           ))}
 
-          <div className="w-px h-8 bg-outline-variant/30 mx-1 md:mx-2" />
+          <div className="w-px h-8 bg-outline-variant/30 mx-0.5 md:mx-2" />
 
           {/* Keluar */}
-          <button onClick={() => setShowLogoutConfirm(true)} className="relative group px-4 py-2.5 md:px-6 md:py-3 outline-none">
+          <button onClick={() => setShowLogoutConfirm(true)} className="relative group min-w-[60px] md:min-w-0 px-2 py-2 md:px-6 md:py-3 outline-none flex items-center justify-center">
             <motion.div
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              className="relative z-10 flex flex-row items-center justify-center gap-2 text-red-400 group-hover:text-red-500 transition-colors duration-300"
+              className="relative z-10 flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 text-red-400 group-hover:text-red-500 transition-colors duration-300"
             >
-              <FiLogOut size={22} />
-              <span className="hidden md:inline text-sm font-bold">Keluar</span>
+              <FiLogOut className="w-5 h-5 md:w-[22px] md:h-[22px]" />
+              <span className="text-[10px] md:text-sm font-bold">Keluar</span>
             </motion.div>
           </button>
         </motion.nav>

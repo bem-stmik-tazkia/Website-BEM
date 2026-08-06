@@ -18,7 +18,7 @@ import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo } from "@/utils/dateFormatter";
 import AgendaCalendarView from "@/components/agenda/AgendaCalendarView";
 
-const categories = ['Semua', 'Kaderisasi', 'Teknologi', 'Akademik', 'Sosial', 'Internal'];
+
 
 function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
   const searchParams = useSearchParams();
@@ -48,6 +48,10 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const EVENT_CATEGORIES = ['Semua', 'Kaderisasi', 'Teknologi', 'Sosial Masyarakat', 'Akademik & Pendidikan', 'Olahraga', 'Seni & Budaya', 'Keagamaan', 'Kewirausahaan', 'Lainnya'];
+  const VOLUNTEER_CATEGORIES = ['Semua', 'Kepanitiaan', 'Pengurus BEM', 'Relawan / Volunteer', 'Magang / Internship', 'Delegasi / Lomba', 'Lainnya'];
+  
+  const categories = activeTab === 'event' ? EVENT_CATEGORIES : VOLUNTEER_CATEGORIES;
   React.useEffect(() => {
     if (!searchQuery) {
       setDebouncedSearchQuery("");
@@ -119,19 +123,26 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
       const matchesSearch =
         (item.title || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
         (item.description || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+      
+      const matchesCategory = selectedCategory === "Semua" || item.category === selectedCategory;
 
-      return matchesSearch;
+      return matchesSearch && matchesCategory;
     });
-  }, [debouncedSearchQuery, agendas]);
+  }, [debouncedSearchQuery, agendas, selectedCategory]);
 
   // Filter Logic untuk Volunteer
   const filteredVolunteers = useMemo(() => {
-    return volunteerOpportunities.filter((vol) =>
-      (vol.title || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase()) ||
-      (vol.category || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase()) ||
-      (vol.description || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase())
-    );
-  }, [debouncedVolunteerQuery, volunteerOpportunities]);
+    return volunteerOpportunities.filter((vol) => {
+      const matchesSearch =
+        (vol.title || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase()) ||
+        (vol.category || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase()) ||
+        (vol.description || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase());
+      
+      const matchesCategory = selectedCategory === "Semua" || vol.category === selectedCategory;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [debouncedVolunteerQuery, volunteerOpportunities, selectedCategory]);
 
   const volunteerOpportunitiesWithDate = volunteerOpportunities.map(vol => ({
     ...vol,
@@ -219,6 +230,23 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
             )}
           </div>
           {/* View Mode Toggle Removed */}
+        </div>
+
+        {/* Category Filter */}
+        <div className="flex items-center gap-2 mb-8 overflow-x-auto scrollbar-hide pb-2">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => { setSelectedCategory(cat); setCurrentPage(1); }}
+              className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
+                selectedCategory === cat
+                  ? "bg-secondary text-white shadow-md"
+                  : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-secondary hover:text-secondary"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
 

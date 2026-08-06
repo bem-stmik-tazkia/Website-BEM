@@ -97,7 +97,7 @@ export default function MultimediaToolsSelect({ value, onChange, error }: Multim
         <div className="flex flex-wrap gap-2 items-center min-h-[24px]">
           {selectedLabels.length === 0 && (
             <span className="text-on-surface-variant/50 select-none">
-              Pilih tools / aplikasi yang digunakan...
+              Pilih aplikasi/tools...
             </span>
           )}
 

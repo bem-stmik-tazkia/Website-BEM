@@ -153,10 +153,14 @@ export default async function KegiatanAdminPage({
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {item.type === 'volunteer' && (
+                        {(item.type === 'volunteer' || (item.type === 'event' && item.form_schema && item.form_schema.length > 0)) && (
                           <Link
                             href={`/admin/kegiatan/${item.id}/pendaftar`}
-                            className="h-8 px-3 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors text-xs font-bold"
+                            className={`h-8 px-3 rounded-lg flex items-center justify-center transition-colors text-xs font-bold ${
+                              item.type === 'event' 
+                                ? 'bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white' 
+                                : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'
+                            }`}
                             title="Lihat Pendaftar"
                           >
                             Pendaftar

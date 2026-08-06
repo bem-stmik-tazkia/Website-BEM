@@ -206,7 +206,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.96 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="absolute right-0 top-14 w-[340px] sm:w-[380px] bg-surface border border-outline-variant/30 rounded-2xl shadow-2xl z-50 overflow-hidden"
+            className="absolute -right-[80px] sm:right-0 top-14 sm:top-12 w-[320px] sm:w-[360px] bg-surface border border-outline-variant/30 rounded-2xl shadow-2xl z-[60] overflow-hidden"
             style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.12)" }}
           >
             {/* Header */}

@@ -18,7 +18,8 @@ import {
   FiCheckSquare,
   FiX,
   FiChevronLeft,
-  FiChevronRight
+  FiChevronRight,
+  FiClipboard
 } from "react-icons/fi";
 import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo } from "@/utils/dateFormatter";
@@ -209,18 +210,18 @@ function AgendaDetailClientContent({ agenda, participantCount }: { agenda: Agend
           >
             <div className={`flex items-center gap-3 md:gap-4 w-full sm:w-auto ${isLive ? 'text-white' : 'text-on-surface'}`}>
               <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0 ${isLive ? 'bg-surface/20 animate-pulse' : 'bg-primary/10 text-primary'}`}>
-                <FiVideo size={20} />
+                {isLive || (!hasRegistration && agenda.online_link) ? <FiVideo size={20} /> : <FiClipboard size={20} />}
               </div>
               <div>
                 <h3 className="font-bold text-base md:text-lg">
-                  {isLive ? 'Event Sedang Berlangsung!' : 'Informasi Kehadiran'}
+                  {isLive ? 'Event Sedang Berlangsung!' : hasRegistration ? 'Tiket & Pendaftaran' : 'Informasi Kehadiran'}
                 </h3>
                 <p className={`text-xs md:text-sm ${isLive ? 'text-red-100' : 'text-on-surface-variant'}`}>
                   {hasRegistration 
-                    ? "Event ini mewajibkan pendaftaran (RSVP) bagi para pesertanya."
+                    ? "Acara ini sangat ditunggu-tunggu lho! Ayo amankan kursimu sekarang sebelum kehabisan kuota."
                     : agenda.online_link 
                       ? "Event ini diselenggarakan secara online melalui link yang tersedia." 
-                      : "Event ini tidak menyediakan link online, silakan datang langsung ke lokasi event."}
+                      : "Acara ini terbuka untuk umum, silakan datang langsung ke lokasi event!"}
                 </p>
                 {hasRegistration && (
                    <p className={`text-xs mt-1 font-bold ${isQuotaFull ? 'text-red-500' : isLive ? 'text-white' : 'text-primary'}`}>
