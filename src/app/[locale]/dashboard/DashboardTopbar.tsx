@@ -32,13 +32,13 @@ export default function DashboardTopbar({ user }: { user?: any }) {
         
         setHasCompletedProfile(!!profileData?.angkatan);
         if (profileData) {
-          // Fetch project count
-          const { count } = await supabase
+          // Fetch project count — same logic as dashboard/page.tsx (owner OR team member)
+          const { data: karyaData } = await supabase
             .from('karya')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-            .eq('status', 'approved');
-          setProfileData({ ...profileData, projects_count: count ?? 0 });
+            .select('id')
+            .eq('status', 'approved')
+            .or(`user_id.eq.${user.id},team.cs.[{"user_id":"${user.id}"}]`);
+          setProfileData({ ...profileData, projects_count: karyaData?.length ?? 0 });
         }
       }
     };
