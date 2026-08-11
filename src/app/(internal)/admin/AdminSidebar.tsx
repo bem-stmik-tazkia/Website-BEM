@@ -62,19 +62,20 @@ export default function AdminSidebar() {
 
   return (
     <aside
-      className={`transition-all duration-300 ease-in-out bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] border-r border-outline-variant/30 md:h-screen md:sticky top-0 flex flex-col shadow-sm w-full shrink-0 relative z-20 ${isCollapsed ? "md:w-24" : "md:w-72"
+      className={`transition-all duration-300 ease-in-out bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] border-r border-outline-variant/30 md:h-screen md:sticky top-0 flex flex-col shadow-sm w-full shrink-0 z-20 ${isCollapsed ? "md:w-24" : "md:w-72"
         }`}
     >
-      {/* Toggle Button */}
+      {/* Toggle Button - rendered outside overflow so it doesn't get clipped */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="hidden md:flex absolute -right-4 top-10 w-8 h-8 bg-surface border border-outline-variant/30 shadow-sm rounded-full items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary transition-colors z-30"
+        style={{ position: 'absolute', right: '-16px' }}
       >
         {isCollapsed ? <FiChevronRight size={18} /> : <FiChevronLeft size={18} />}
       </button>
 
       {/* Header Logo */}
-      <div className={`p-6 md:p-8 flex items-center mb-4 transition-all duration-300 ${isCollapsed ? "justify-center px-4" : "gap-4"}`}>
+      <div className={`p-6 md:p-8 flex items-center mb-4 transition-all duration-300 shrink-0 ${isCollapsed ? "justify-center px-4" : "gap-4"}`}>
         <div className="w-12 h-12 bg-surface rounded-2xl shadow-sm border border-outline-variant/20 flex items-center justify-center shrink-0">
           <img src="/images/logo.webp" alt="Logo" className="w-8 h-8 object-contain" />
         </div>
@@ -87,14 +88,14 @@ export default function AdminSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className={`flex-1 flex flex-col overflow-y-auto space-y-1.5 pb-6 ${isCollapsed ? "px-3" : "px-4 md:px-6"}`}>
+      <nav className={`flex-1 flex flex-col overflow-y-auto pb-6 ${isCollapsed ? "px-3" : "px-4 md:px-6"}`}>
         {!isCollapsed && (
           <p className="px-4 text-xs font-bold text-on-surface-variant/70 uppercase tracking-wider mb-4 mt-2 whitespace-nowrap">Menu Utama</p>
         )}
 
         {/* Main Nav Items */}
-        <div className="flex-1 space-y-1.5">
-          {navItems.map((item) => {
+        <div className="space-y-1.5">
+          {navItems.filter(i => i.href !== '/admin/master-data').map((item) => {
             let isActive = pathname === item.href || (item.href !== "/admin" && pathname?.startsWith(item.href + "/"));
 
             if (item.href === "/admin/kegiatan" && fromParam === "dokumentasi") {
@@ -137,6 +138,36 @@ export default function AdminSidebar() {
               </Link>
             );
           })}
+        </div>
+
+        {/* Divider + Master Data */}
+        <div className="mt-4 pt-4 border-t border-outline-variant/20 space-y-1.5">
+          {!isCollapsed && (
+            <p className="px-4 text-xs font-bold text-on-surface-variant/70 uppercase tracking-wider mb-3 whitespace-nowrap">Pengaturan</p>
+          )}
+          {(() => {
+            const masterItem = navItems.find(i => i.href === '/admin/master-data')!;
+            const isActive = pathname?.startsWith('/admin/master-data');
+            const Icon = masterItem.icon;
+            return (
+              <Link
+                href={masterItem.href}
+                title={isCollapsed ? masterItem.name : ""}
+                className={`flex items-center rounded-xl transition-all duration-300 font-semibold text-sm group relative overflow-hidden ${isCollapsed ? "justify-center py-3.5 px-0" : "gap-3 px-4 py-3.5"
+                  } ${isActive
+                    ? "bg-primary text-white shadow-md shadow-primary/20"
+                    : "text-on-surface-variant hover:bg-surface hover:text-primary hover:shadow-sm"
+                  }`}
+              >
+                <Icon size={20} className={`shrink-0 ${isActive ? "text-white" : "text-on-surface-variant/70 group-hover:text-primary"}`} />
+                {!isCollapsed && (
+                  <span className="relative z-10 whitespace-nowrap overflow-hidden text-ellipsis flex-1">
+                    {masterItem.name}
+                  </span>
+                )}
+              </Link>
+            );
+          })()}
         </div>
       </nav>
 
