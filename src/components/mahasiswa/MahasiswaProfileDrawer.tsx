@@ -287,19 +287,9 @@ export default function MahasiswaProfileDrawer({
             <div className="space-y-4">
                 {projects.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {projects.slice(0, 3).map((project) => (
+                    {projects.slice(0, 4).map((project) => (
                       <ProjectCard key={project.id} project={project} />
                     ))}
-                    {projects.length > 3 && (
-                      <button 
-                        onClick={onShowFullProfile}
-                        className="bg-surface border-2 border-dashed border-primary/40 rounded-2xl flex flex-col items-center justify-center p-6 text-primary cursor-pointer hover:bg-primary/5 hover:border-primary hover:scale-[1.02] transition-all group shadow-sm"
-                      >
-                         <FiFolder className="w-10 h-10 mb-2 group-hover:scale-110 transition-transform" />
-                         <span className="font-bold text-sm">+{projects.length - 3} {t("moreProjects")}</span>
-                         <span className="text-xs opacity-70 mt-1 text-center">{t("viewFullProfile")}</span>
-                      </button>
-                    )}
                   </div>
                 ) : (
                   <div className="text-center py-12 px-4 rounded-2xl bg-surface-variant/30 border border-dashed border-outline-variant">
@@ -311,6 +301,19 @@ export default function MahasiswaProfileDrawer({
                   </div>
                 )}
             </div>
+
+            {/* Always show View Full Profile button at the bottom */}
+            {onShowFullProfile && (
+              <div className="mt-6 pt-6 border-t border-outline-variant/30">
+                <button 
+                  onClick={onShowFullProfile}
+                  className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl flex items-center justify-center gap-2 py-3.5 transition-all shadow-sm font-bold text-sm group"
+                >
+                  <FiExternalLink className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                  {t("viewFullProfile")}
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

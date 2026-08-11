@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import ProjectCard, { ProjectData } from "@/components/mahasiswa/ProjectCard";
 import { useTranslations } from "next-intl";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
 interface PublicProfileViewProps {
   mahasiswa: any;
@@ -95,13 +96,20 @@ export default function PublicProfileView({ mahasiswa, projects }: PublicProfile
                 </div>
             )}
 
-            {/* Close button */}
-            <button
-              onClick={() => router.back()}
-              className="absolute top-6 right-6 md:right-12 z-20 w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 hover:scale-105 transition-all backdrop-blur-md border border-white/20 shadow-lg"
-            >
-              <FiX size={20} />
-            </button>
+            {/* Top Right Actions */}
+            <div className="absolute top-6 right-6 md:right-12 z-20 flex items-center gap-3">
+              <div className="bg-black/40 backdrop-blur-md border border-white/20 rounded-full h-10 flex items-center px-2">
+                <LanguageSwitcher />
+              </div>
+              
+              {/* Close button */}
+              <button
+                onClick={() => router.back()}
+                className="w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 hover:scale-105 transition-all backdrop-blur-md border border-white/20 shadow-lg"
+              >
+                <FiX size={20} />
+              </button>
+            </div>>
           </div>
 
           {/* ── Profile Body ── */}
