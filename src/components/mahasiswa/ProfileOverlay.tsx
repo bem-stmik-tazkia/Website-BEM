@@ -42,19 +42,19 @@ export default function ProfileOverlay({
           </button>
         </div>
 
-        {/* Floating Language Switcher at Bottom Right */}
-        <div className="fixed bottom-6 sm:bottom-8 right-6 sm:right-8 z-[300]">
-          <div className="bg-surface/80 backdrop-blur-md border border-outline-variant/30 shadow-xl rounded-full px-2 py-1 flex items-center">
-            <LanguageSwitcher />
-          </div>
-        </div>
-
         <ProfileView
           profile={profile}
           projects={projects}
           isOwnProfile={isOwnProfile}
           onEditProfile={onEditProfile}
         />
+
+        {/* Floating Language Switcher at Bottom Right using Sticky */}
+        <div className="sticky bottom-6 sm:bottom-8 w-full flex justify-end px-6 sm:px-8 pointer-events-none z-[300] mt-auto">
+          <div className="bg-surface/80 backdrop-blur-md border border-outline-variant/30 shadow-xl rounded-full px-2 py-1 flex items-center pointer-events-auto">
+            <LanguageSwitcher />
+          </div>
+        </div>
       </div>
     </motion.div>
   );

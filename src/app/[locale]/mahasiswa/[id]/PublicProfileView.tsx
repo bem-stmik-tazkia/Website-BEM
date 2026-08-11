@@ -108,13 +108,6 @@ export default function PublicProfileView({ mahasiswa, projects }: PublicProfile
             </div>
           </div>
           
-          {/* Floating Language Switcher at Bottom Right */}
-          <div className="fixed bottom-6 sm:bottom-8 right-6 sm:right-8 z-[300]">
-            <div className="bg-surface/80 backdrop-blur-md border border-outline-variant/30 shadow-xl rounded-full px-2 py-1 flex items-center">
-              <LanguageSwitcher />
-            </div>
-          </div>
-
           {/* ── Profile Body ── */}
           <div className="w-full max-w-5xl mx-auto px-6 md:px-12 pb-20 flex-1 flex flex-col">
 
