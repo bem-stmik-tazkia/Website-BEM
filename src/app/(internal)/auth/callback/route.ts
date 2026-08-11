@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const next = searchParams.get('next') ?? '/dashboard'
   
   // Use Next.js built-in nextUrl which correctly resolves Vercel's internal routing
   const publicOrigin = request.nextUrl.origin;
@@ -52,7 +52,12 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      return NextResponse.redirect(`${publicOrigin}${next}`)
+      // Add /id locale prefix if next doesn't already have a locale prefix
+      const locales = ['id', 'en', 'ar', 'ja', 'fr'];
+      const hasLocalePrefix = locales.some(locale => next.startsWith(`/${locale}/`) || next === `/${locale}`);
+      const nextWithLocale = hasLocalePrefix ? next : `/id${next}`;
+
+      return NextResponse.redirect(`${publicOrigin}${nextWithLocale}`)
     }
   }
 
