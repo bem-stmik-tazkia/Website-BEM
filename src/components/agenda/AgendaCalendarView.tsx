@@ -6,19 +6,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo } from "@/utils/dateFormatter";
+import { useTranslations } from "next-intl";
 
 interface AgendaCalendarViewProps {
   agendas: AgendaKegiatan[];
   isVolunteer?: boolean;
 }
 
-const daysOfWeek = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-const monthNames = [
-  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-  "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-];
+// We will fetch these dynamically using useTranslations now.
 
 export default function AgendaCalendarView({ agendas, isVolunteer = false }: AgendaCalendarViewProps) {
+  const t = useTranslations("AgendaPage");
+  
+  // Use translations for array-based keys
+  const daysOfWeek = t.raw("daysOfWeek");
+  const monthNames = t.raw("monthNames");
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
@@ -119,7 +122,7 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
   return (
     <div className="w-full flex flex-col gap-6 md:gap-8">
       {/* Calendar Header */}
-      <div className="bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-sm">
+      <div id="tour-agenda-calendar" className="bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-on-background">
             {monthNames[currentMonth]} {currentYear}
@@ -142,7 +145,7 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
 
         {/* Days of Week Header */}
         <div className="grid grid-cols-7 mb-2">
-          {daysOfWeek.map((day, idx) => (
+          {daysOfWeek.map((day: string, idx: number) => (
             <div key={day} className={`text-center text-xs md:text-sm font-bold uppercase tracking-wider mb-2 ${idx === 0 ? "text-red-500" : "text-on-surface-variant"}`}>
               {day}
             </div>
@@ -170,9 +173,9 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
               <FiCalendar size={20} />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-on-background">{isVolunteer ? "Deadline Rekrutmen" : "Agenda Harian"}</h3>
+              <h3 className="text-lg font-bold text-on-background">{isVolunteer ? t("recruitDeadline") : t("dailyAgenda")}</h3>
               <p className="text-sm text-on-surface-variant">
-                {selectedDate ? formatDateToIndo(selectedDate.toISOString()) : "Pilih tanggal"}
+                {selectedDate ? formatDateToIndo(selectedDate.toISOString()) : t("selectDate")}
               </p>
             </div>
           </div>
@@ -196,12 +199,12 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
                       </span>
                       {isToday && (
                         <span className="text-[10px] font-bold text-white uppercase tracking-wider bg-red-500 px-2 py-1 rounded-md flex items-center gap-1">
-                           <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" /> LIVE
+                           <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" /> {t("statusLive").toUpperCase()}
                         </span>
                       )}
                       {isPast && (
                         <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider bg-surface-variant/50 px-2 py-1 rounded-md">
-                          Selesai
+                          {t("statusDone")}
                         </span>
                       )}
                     </div>
@@ -220,7 +223,7 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
                     </div>
 
                     <div className="flex items-center text-primary text-xs font-bold group-hover:text-secondary transition-colors gap-1 mt-2">
-                      {isVolunteer ? "Detail Rekrutmen" : (isPast ? "Lihat Dokumentasi" : "Detail Event")} <FiArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                      {isVolunteer ? t("detailRecruit") : (isPast ? t("viewDocs") : t("detailEvent"))} <FiArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                     </div>
                   </Link>
                  )
@@ -228,8 +231,8 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
             </div>
           ) : (
             <div className="text-center py-10">
-              <p className="text-on-surface-variant font-medium">{isVolunteer ? "Tidak ada deadline pada tanggal ini." : "Tidak ada kegiatan pada tanggal ini."}</p>
-              <p className="text-xs text-on-surface-variant/70 mt-1">Pilih tanggal dengan indikator titik untuk melihat {isVolunteer ? "deadline rekrutmen" : "jadwal kegiatan"}.</p>
+              <p className="text-on-surface-variant font-medium">{isVolunteer ? t("noDeadlineOnDate") : t("noEventOnDate")}</p>
+              <p className="text-xs text-on-surface-variant/70 mt-1">{isVolunteer ? t("pickDateRecruitDesc") : t("pickDateEventDesc")}</p>
             </div>
           )}
         </motion.div>

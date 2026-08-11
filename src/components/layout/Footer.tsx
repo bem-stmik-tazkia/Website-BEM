@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { FiMapPin, FiMail } from "react-icons/fi";
 import { SiInstagram, SiYoutube, SiDiscord, SiTiktok } from "react-icons/si";
 
 export default function Footer() {
+  const t = useTranslations("Footer");
+  const nav = useTranslations("Navigation");
   const [showTooltip, setShowTooltip] = useState(true);
 
   useEffect(() => {
@@ -26,9 +29,9 @@ export default function Footer() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
 
           <div className="flex-1 relative z-10">
-            <h3 className="text-xl md:text-3xl text-white font-bold mb-2">Punya Karya, atau Inovasi Keren?</h3>
+            <h3 className="text-xl md:text-3xl text-white font-bold mb-2">{t("ctaTitle")}</h3>
             <p className="text-white/80 text-sm md:text-base max-w-xl leading-relaxed">
-              Tunjukkan karya terbaikmu kepada seluruh civitas akademika STMIK Tazkia. Masuk dengan akun email kampus dan unggah karyamu!
+              {t("ctaDesc")}
             </p>
           </div>
 
@@ -37,7 +40,7 @@ export default function Footer() {
               href="/dashboard/upload"
               className="group bg-secondary text-white font-bold py-3.5 px-6 md:px-8 rounded-2xl text-sm md:text-base hover:bg-secondary/90 hover:-translate-y-0.5 hover:shadow-[0_0_25px_rgba(242,121,30,0.5)] transition-all duration-300 flex items-center justify-center gap-2.5 whitespace-nowrap shadow-soft"
             >
-              <span>Unggah Karya</span>
+              <span>{t("ctaBtn")}</span>
               <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </Link>
           </div>
@@ -48,10 +51,10 @@ export default function Footer() {
           <div className="md:col-span-4 flex flex-col gap-6">
             <div className="bg-surface p-2 rounded-xl mb-6 shadow-sm inline-block w-fit">
               <Image
-                src="/images/logo.png"
-                alt="Logo BEM"
+                alt="BEM STMIK Tazkia Logo"
+                src="/images/logo.webp"
                 width={80}
-                height={48}
+                height={80}
                 className="h-12 w-auto object-contain bg-surface rounded-lg p-1.5 shadow-sm"
               />
             </div>
@@ -60,12 +63,12 @@ export default function Footer() {
               <span className="font-bold leading-none text-xl text-secondary">Tazkia</span>
             </div>
             <p className="text-white/80 max-w-sm leading-relaxed text-sm">
-              Badan Eksekutif Mahasiswa STMIK Tazkia Bogor. Satu langkah untuk STMIK Tazkia berdampak.
+              {t("description")}
             </p>
           </div>
 
           <div className="md:col-span-3 flex flex-col gap-6">
-            <h4 className="text-lg text-white font-bold tracking-wide">Layanan & Sekertariat BEM</h4>
+            <h4 className="text-lg text-white font-bold tracking-wide">{t("contact")}</h4>
             <div className="flex flex-col gap-4 text-white/80 text-sm">
               <a
                 className="flex items-start gap-3 hover:text-white hover:-translate-y-0.5 hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all duration-300 leading-relaxed"
@@ -84,20 +87,20 @@ export default function Footer() {
           </div>
 
           <div className="md:col-span-3 flex flex-col gap-6">
-            <h4 className="text-lg text-white font-bold tracking-wide">Navigasi</h4>
+            <h4 className="text-lg text-white font-bold tracking-wide">{t("quickLinks")}</h4>
             <div className="flex flex-col gap-3 text-white/80 text-sm">
-              <Link href="/kabinet" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">Kabinet BEM</Link>
-              <Link href="/mahasiswa" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">Portal Mahasiswa</Link>
-              <Link href="/karya" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">Karya & Inovasi</Link>
-              <Link href="/berita" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">Berita & Publikasi</Link>
-              <Link href="/#saran" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">Kotak Saran & Aduan</Link>
+              <Link href="/kabinet" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{nav("cabinet")}</Link>
+              <Link href="/mahasiswa" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{nav("students")}</Link>
+              <Link href="/karya" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{nav("projects")}</Link>
+              <Link href="/berita" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{nav("news")}</Link>
+              <Link href="/#saran" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{t("feedbackBox")}</Link>
             </div>
           </div>
 
-          <div className="md:col-span-3 flex flex-col gap-6">
-            <h4 className="text-lg text-white font-bold tracking-wide">Sosial Media Resmi</h4>
+          <div className="md:col-span-2 flex flex-col gap-6">
+            <h4 className="text-lg text-white font-bold tracking-wide">{t("social")}</h4>
 
-            <div className="flex gap-4 text-white/80 mt-2 flex-wrap">
+            <div className="grid grid-cols-2 gap-4 text-white/80 mt-2 w-fit">
               <a
                 className="hover:text-[#E1306C] hover:-translate-y-1 hover:scale-110 transition-all duration-300 p-2 bg-white/10 rounded-xl hover:bg-white"
                 href="https://www.instagram.com/bem_stmiktazkia?igsh=amNsbWRqODVwemV4"
@@ -138,7 +141,7 @@ export default function Footer() {
           </div>
 
           <div className="col-span-1 md:col-span-12 border-t border-white/10 mt-8 pt-8 text-center text-white/50 text-sm">
-            © {new Date().getFullYear()} BEM STMIK Tazkia. All Rights Reserved.
+            © {new Date().getFullYear()} {t("copyright")}
           </div>
         </div>
       </div>

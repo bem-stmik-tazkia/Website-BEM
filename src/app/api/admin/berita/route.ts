@@ -5,8 +5,22 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const supabase = await createClient();
-    const body = await req.json();
 
+    // Auth guard – only admin can create/update berita
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const body = await req.json();
     const { id, title, slug, category, excerpt, content, image_url, tags, is_published } = body;
 
     if (!title || !slug || !excerpt || !content) {

@@ -9,16 +9,14 @@ export default function LoadingScreen() {
   const playerRef = useRef<any>(null);
 
   useEffect(() => {
-    // Check if user already saw loading screen during this session
-    const isNavigating = typeof window !== "undefined" && window.performance?.getEntriesByType("navigation")[0] as any;
-    const isReload = isNavigating?.type === "reload";
-    const hasSeen = sessionStorage.getItem("hasSeenLoading");
+    // Gunakan variabel global window untuk melacak soft navigation
+    // Jika window.hasSeenLoading sudah true, berarti ini hanya pergantian bahasa atau soft route change
+    const globalWindow = window as any;
 
-    if (hasSeen && !isReload) {
-      // Already seen, skip loading screen
+    if (globalWindow.hasSeenLoading) {
       setShow(false);
     } else {
-      sessionStorage.setItem("hasSeenLoading", "true");
+      globalWindow.hasSeenLoading = true;
       setShow(true);
 
       // Load lottie-player script dynamically if not already loaded

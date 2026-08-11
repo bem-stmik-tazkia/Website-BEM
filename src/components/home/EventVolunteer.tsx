@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { useTranslations, useLocale } from "next-intl";
 import { FiCalendar, FiMapPin, FiClock, FiArrowRight, FiZap, FiCheckCircle, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 
 import { AgendaKegiatan } from "@/types/agenda";
@@ -27,6 +29,15 @@ export default function EventVolunteer({
   volunteerOpportunities = [],
   pastEvents = []
 }: EventVolunteerProps) {
+  const t = useTranslations("Event");
+  const locale = useLocale();
+
+  // Auto-translate konten event dari database
+  const { data: translatedLive } = useTranslatedList(liveEvents, "agenda_kegiatan", locale, ["title", "description"]);
+  const { data: translatedUpcoming } = useTranslatedList(upcomingEvents, "agenda_kegiatan", locale, ["title", "description"]);
+  const { data: translatedVolunteer } = useTranslatedList(volunteerOpportunities, "agenda_kegiatan", locale, ["title", "description"]);
+  const { data: translatedPast } = useTranslatedList(pastEvents, "agenda_kegiatan", locale, ["title", "description"]);
+
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(1);
   const [paused, setPaused] = useState(false);
@@ -222,28 +233,30 @@ export default function EventVolunteer({
       {/*  HERO HEADER                                */}
       {/* ============================================ */}
       {showHeader && (
-        <section className="px-4 sm:px-6 md:px-10 max-w-7xl mx-auto mb-10 md:mb-16 text-center">
+        <section id="tour-event-volunteer" className="px-4 sm:px-6 md:px-10 max-w-7xl mx-auto mb-10 md:mb-16 text-center">
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-bold uppercase tracking-wider mb-5">
-            <FiCalendar size={13} /> Program Kegiatan
+            <FiCalendar size={13} /> {t("program")}
           </span>
           <h1 className="text-3xl md:text-5xl font-extrabold text-on-surface mb-4 leading-tight">
-            Events &amp; <span className="text-[var(--color-primary)]">Volunteer</span> Hub
+            {t.rich("title", {
+              span: (chunks) => <span className="text-[var(--color-primary)]">{chunks}</span>
+            })}
           </h1>
           <p className="text-on-surface-variant text-sm md:text-base max-w-2xl mx-auto mb-8">
-            Temukan event terkini, daftarkan diri sebagai relawan, dan jadilah bagian dari perubahan nyata di kampus.
+            {t("subtitle")}
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <Link
               href="#upcoming"
               className="bg-[var(--color-primary)] text-white px-6 py-2.5 rounded-full text-sm font-bold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[var(--color-primary)]/30 transition-all"
             >
-              Lihat Events
+              {t("viewEvents")}
             </Link>
             <Link
               href="#volunteer"
               className="border border-[var(--color-primary)] text-[var(--color-primary)] px-6 py-2.5 rounded-full text-sm font-bold hover:bg-[var(--color-primary)]/5 hover:-translate-y-0.5 transition-all"
             >
-              Jadi Volunteer
+              {t("beVolunteer")}
             </Link>
           </div>
         </section>
@@ -252,12 +265,12 @@ export default function EventVolunteer({
       {/* ============================================ */}
       {/*  SECTION 1: LIVE EVENT                      */}
       {/* ============================================ */}
-      <section className="px-4 sm:px-6 md:px-10 max-w-7xl mx-auto mb-10 md:mb-16">
+      <section id="tour-event-live" className="px-4 sm:px-6 md:px-10 max-w-7xl mx-auto mb-10 md:mb-16">
         {/* Section Label */}
         <div className="flex items-center gap-3 mb-6">
-          <h2 className="text-xl font-bold text-on-background">Event Sedang Berjalan</h2>
+          <h2 className="text-xl font-bold text-on-background">{t("liveEvent")}</h2>
           <span className="flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
-            <FiZap size={11} /> LIVE ({liveEvents.length})
+            <FiZap size={11} /> {t("liveBadge")} ({liveEvents.length})
           </span>
         </div>
 
@@ -328,7 +341,7 @@ export default function EventVolunteer({
                       {liveEvents[activeLive].category}
                     </span>
 
-                    <h3 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-3 leading-tight drop-shadow-md">{liveEvents[activeLive].title}</h3>
+                    <h3 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-3 leading-tight drop-shadow-md">{(translatedLive[activeLive] ?? liveEvents[activeLive]).title}</h3>
 
                     <div className="flex flex-col gap-1 text-white/90 text-xs sm:text-sm mb-5 font-medium">
                       <span className="flex items-center gap-2"><FiCalendar size={14} className="text-white/70" /> {formatDateToIndo(liveEvents[activeLive].date)}</span>
@@ -338,7 +351,7 @@ export default function EventVolunteer({
 
                     <div>
                       <Link href={`/agenda/${liveEvents[activeLive].id}`} className="bg-secondary text-white text-sm font-bold px-6 py-3 rounded-full hover:bg-secondary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-2">
-                        Masuk ke Live <FiArrowRight size={16} />
+                        {t("enterLive")} <FiArrowRight size={16} />
                       </Link>
                     </div>
                   </div>
@@ -370,9 +383,9 @@ export default function EventVolunteer({
               />
             </div>
             <div>
-              <h3 className="text-base md:text-lg font-bold text-on-background">Belum Ada Event Live Hari Ini</h3>
+              <h3 className="text-base md:text-lg font-bold text-on-background">{t("noLiveTitle")}</h3>
               <p className="text-xs md:text-sm text-on-surface-variant mt-1 max-w-md mx-auto">
-                Pantau terus halaman ini atau cek agenda mendatang di bawah!
+                {t("noLiveDesc")}
               </p>
             </div>
           </div>
@@ -400,13 +413,13 @@ export default function EventVolunteer({
             <div className="flex justify-between items-start gap-3 mb-4">
               <div>
                 <h2 className="text-base font-bold text-on-background flex items-center gap-2">
-                  Upcoming Events
+                  {t("upcomingEvents")}
                   <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full">{upcomingEvents.length}</span>
                 </h2>
-                <p className="text-xs text-on-surface-variant mt-0.5">Agenda kegiatan BEM terdekat</p>
+                <p className="text-xs text-on-surface-variant mt-0.5">{t("upcomingSubtitle")}</p>
               </div>
               <Link href="/agenda" className="group flex items-center gap-1 text-primary hover:text-secondary font-semibold text-xs transition-colors whitespace-nowrap shrink-0">
-                Lihat Semua <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                {t("seeAll")} <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
@@ -415,10 +428,10 @@ export default function EventVolunteer({
                 <div className="w-24 h-24 relative -my-1">
                   <DotLottieReact src="/animations/Calendar.lottie" loop autoplay />
                 </div>
-                <h3 className="text-base font-bold text-on-background">Belum Ada Event Mendatang</h3>
-                <p className="text-xs text-on-surface-variant leading-relaxed max-w-xs">Belum ada agenda kegiatan terdekat yang dijadwalkan.</p>
+                <h3 className="text-base font-bold text-on-background">{t("noUpcomingTitle")}</h3>
+                <p className="text-xs text-on-surface-variant leading-relaxed max-w-xs">{t("noUpcomingDesc")}</p>
                 <Link href="/agenda" className="mt-2 inline-flex items-center gap-2 bg-primary text-white text-xs font-bold px-5 py-2.5 rounded-full hover:bg-primary/95 transition-all shadow-md">
-                  Lihat Arsip <FiArrowRight />
+                  {t("viewArchive")} <FiArrowRight />
                 </Link>
               </div>
             ) : (
@@ -472,17 +485,17 @@ export default function EventVolunteer({
                       <img src={upcomingEvents[active].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={upcomingEvents[active].title} className="w-full h-full object-cover select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                       <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
-                        {upcomingEvents[active].category}
+                        {(translatedUpcoming[active] ?? upcomingEvents[active]).category}
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                        <h3 className="font-extrabold text-sm leading-tight mb-2">{upcomingEvents[active].title}</h3>
+                        <h3 className="font-extrabold text-sm leading-tight mb-2">{(translatedUpcoming[active] ?? upcomingEvents[active]).title}</h3>
                         <div className="flex flex-col gap-0.5 text-white/80 text-[10px] mb-3">
                           <span className="flex items-center gap-1.5"><FiCalendar size={11} className="text-secondary" /> {formatDateToIndo(upcomingEvents[active].date)}</span>
                           <span className="flex items-center gap-1.5"><FiClock size={11} className="text-secondary" /> {upcomingEvents[active].time_range}</span>
                           <span className="flex items-center gap-1.5"><FiMapPin size={11} className="text-secondary" /> {upcomingEvents[active].location || "Online"}</span>
                         </div>
                         <Link href={`/agenda/${upcomingEvents[active].id}`} className="bg-primary text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-1.5">
-                          Detail Event <FiArrowRight size={12} />
+                          {t("detailEvent")} <FiArrowRight size={12} />
                         </Link>
                       </div>
                     </motion.div>
@@ -518,13 +531,13 @@ export default function EventVolunteer({
             <div className="flex justify-between items-start gap-3 mb-4">
               <div>
                 <h2 className="text-base font-bold text-on-background flex items-center gap-2">
-                  Volunteer Opportunities
+                  {t("volOpportunities")}
                   <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full">{volunteerOpportunities.length}</span>
                 </h2>
-                <p className="text-xs text-on-surface-variant mt-0.5">Bergabunglah dan jadilah bagian perubahan!</p>
+                <p className="text-xs text-on-surface-variant mt-0.5">{t("volSubtitle")}</p>
               </div>
               <Link href="/volunteer" className="group flex items-center gap-1 text-primary hover:text-secondary font-semibold text-xs transition-colors whitespace-nowrap shrink-0">
-                Lihat Semua <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                {t("seeAll")} <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
@@ -533,8 +546,8 @@ export default function EventVolunteer({
                 <div className="w-24 h-24 relative -my-1">
                   <DotLottieReact src="/animations/Calendar.lottie" loop autoplay />
                 </div>
-                <h3 className="text-base font-bold text-on-background">Belum Ada Lowongan</h3>
-                <p className="text-xs text-on-surface-variant leading-relaxed max-w-xs">Belum ada posisi relawan baru. Pantau terus!</p>
+                <h3 className="text-base font-bold text-on-background">{t("noVolTitle")}</h3>
+                <p className="text-xs text-on-surface-variant leading-relaxed max-w-xs">{t("noVolDesc")}</p>
               </div>
             ) : (
               <div
@@ -585,19 +598,19 @@ export default function EventVolunteer({
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
                       {volunteerOpportunities[activeVol].is_urgent && (
                         <div className="absolute top-4 left-4 bg-red-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                          <FiClock size={10} /> SEGERA
+                          <FiClock size={10} /> {t("urgent")}
                         </div>
                       )}
                       <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                        <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block mb-1">{volunteerOpportunities[activeVol].category}</span>
-                        <h3 className="font-extrabold text-sm leading-tight mb-1">{volunteerOpportunities[activeVol].title}</h3>
-                        <p className="text-white/80 text-[10px] mb-2 leading-relaxed line-clamp-2">{volunteerOpportunities[activeVol].description}</p>
+                         <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block mb-1">{(translatedVolunteer[activeVol] ?? volunteerOpportunities[activeVol]).category}</span>
+                         <h3 className="font-extrabold text-sm leading-tight mb-1">{(translatedVolunteer[activeVol] ?? volunteerOpportunities[activeVol]).title}</h3>
+                         <p className="text-white/80 text-[10px] mb-2 leading-relaxed line-clamp-2">{(translatedVolunteer[activeVol] ?? volunteerOpportunities[activeVol]).description}</p>
                         <div className="flex items-center gap-1 text-[10px] text-white/70 mb-3">
                           <FiClock size={11} className="text-secondary" />
-                          <span>Deadline: <span className="font-semibold text-white">{formatDateToIndo(volunteerOpportunities[activeVol].deadline)}</span></span>
+                          <span>{t("deadline")}: <span className="font-semibold text-white">{formatDateToIndo(volunteerOpportunities[activeVol].deadline)}</span></span>
                         </div>
                         <Link href={`/agenda/${volunteerOpportunities[activeVol].id}`} className="bg-primary text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-1.5">
-                          <FiCheckCircle size={12} /> Apply Posisi
+                          <FiCheckCircle size={12} /> {t("applyPos")}
                         </Link>
                       </div>
                     </motion.div>
@@ -633,13 +646,13 @@ export default function EventVolunteer({
             <div className="flex justify-between items-start gap-3 mb-4">
               <div>
                 <h2 className="text-base font-bold text-on-background flex items-center gap-2">
-                  Event yang Sudah Berakhir
+                  {t("pastEvents")}
                   <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full">{pastEvents.length}</span>
                 </h2>
-                <p className="text-xs text-on-surface-variant mt-0.5">Galeri arsip kegiatan BEM terdahulu</p>
+                <p className="text-xs text-on-surface-variant mt-0.5">{t("pastSubtitle")}</p>
               </div>
               <Link href="/agenda" className="group flex items-center gap-1 text-on-surface-variant hover:text-primary font-semibold text-xs transition-colors whitespace-nowrap shrink-0">
-                Lihat Semua <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                {t("seeAll")} <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
@@ -648,8 +661,8 @@ export default function EventVolunteer({
                 <div className="w-24 h-24 relative -my-1">
                   <DotLottieReact src="/animations/Calendar.lottie" loop autoplay />
                 </div>
-                <h3 className="text-base font-bold text-on-background">Belum Ada Arsip</h3>
-                <p className="text-xs text-on-surface-variant leading-relaxed max-w-xs">Belum ada data dokumentasi kegiatan.</p>
+                <h3 className="text-base font-bold text-on-background">{t("noPastTitle")}</h3>
+                <p className="text-xs text-on-surface-variant leading-relaxed max-w-xs">{t("noPastDesc")}</p>
               </div>
             ) : (
               <div
@@ -699,12 +712,12 @@ export default function EventVolunteer({
                       <img src={pastEvents[activePast].image_url || pastEvents[activePast].gallery?.[0] || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={pastEvents[activePast].title} className="w-full h-full object-cover grayscale select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
                       <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
-                        {pastEvents[activePast].category}
+                        {(translatedPast[activePast] ?? pastEvents[activePast]).category}
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                        <h3 className="font-extrabold text-sm leading-tight mb-3">{pastEvents[activePast].title}</h3>
+                        <h3 className="font-extrabold text-sm leading-tight mb-3">{(translatedPast[activePast] ?? pastEvents[activePast]).title}</h3>
                         <Link href={`/agenda/${pastEvents[activePast].id}`} className="bg-surface/20 text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-surface/30 transition-all duration-300 inline-flex items-center gap-1.5 border border-white/20 backdrop-blur-sm">
-                          Lihat Dokumentasi <FiArrowRight size={12} />
+                          {t("viewDocs")} <FiArrowRight size={12} />
                         </Link>
                       </div>
                     </motion.div>

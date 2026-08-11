@@ -6,8 +6,12 @@ import { createClient } from "@/utils/supabase/client";
 import { FiBell, FiCheck, FiX, FiEdit2, FiTrash2, FiClock, FiUpload } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { useTranslations, useLocale } from "next-intl";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
+
 interface UserNotification {
   id: string;
+  karyaId: string;
   type: "approved" | "rejected" | "edit_approved" | "edit_rejected" | "deletion_rejected" | "pending";
   title: string;
   reason?: string;
@@ -15,20 +19,20 @@ interface UserNotification {
   read?: boolean;
 }
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, t: any): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  if (mins < 1) return "Baru saja";
-  if (mins < 60) return `${mins} menit lalu`;
-  if (hours < 24) return `${hours} jam lalu`;
-  return `${days} hari lalu`;
+  if (mins < 1) return t("timeJustNow");
+  if (mins < 60) return t("timeMinutesAgo", { minutes: mins });
+  if (hours < 24) return t("timeHoursAgo", { hours });
+  return t("timeDaysAgo", { days });
 }
 
-const TYPE_CONFIG = {
+const getTypeConfig = (t: any) => ({
   approved: {
-    label: "Karya Disetujui",
+    label: t("typeApproved"),
     icon: FiCheck,
     bg: "bg-green-50",
     iconBg: "bg-green-500",
@@ -38,7 +42,7 @@ const TYPE_CONFIG = {
     border: "border-green-100",
   },
   rejected: {
-    label: "Karya Ditolak",
+    label: t("typeRejected"),
     icon: FiX,
     bg: "bg-red-50",
     iconBg: "bg-red-500",
@@ -48,7 +52,7 @@ const TYPE_CONFIG = {
     border: "border-red-100",
   },
   edit_approved: {
-    label: "Edit Disetujui",
+    label: t("typeEditApproved"),
     icon: FiEdit2,
     bg: "bg-blue-50",
     iconBg: "bg-blue-500",
@@ -58,7 +62,7 @@ const TYPE_CONFIG = {
     border: "border-blue-100",
   },
   edit_rejected: {
-    label: "Edit Ditolak",
+    label: t("typeEditRejected"),
     icon: FiEdit2,
     bg: "bg-amber-50",
     iconBg: "bg-amber-500",
@@ -68,7 +72,7 @@ const TYPE_CONFIG = {
     border: "border-amber-100",
   },
   deletion_rejected: {
-    label: "Hapus Ditolak",
+    label: t("typeDeleteRejected"),
     icon: FiTrash2,
     bg: "bg-orange-50",
     iconBg: "bg-orange-500",
@@ -78,7 +82,7 @@ const TYPE_CONFIG = {
     border: "border-orange-100",
   },
   pending: {
-    label: "Menunggu Review",
+    label: t("typePending"),
     icon: FiClock,
     bg: "bg-surface-variant/20",
     iconBg: "bg-on-surface-variant/20",
@@ -87,7 +91,7 @@ const TYPE_CONFIG = {
     dot: "bg-on-surface-variant/40",
     border: "border-outline-variant/20",
   },
-};
+});
 
 // We store seen IDs in localStorage so we know what's "new"
 const STORAGE_KEY = "user_notif_seen_ids";
@@ -128,8 +132,12 @@ function saveSeenIds(ids: Set<string>) {
 }
 
 export default function UserNotificationBell({ isScrolled, isHome }: { isScrolled?: boolean; isHome?: boolean }) {
+  const t = useTranslations("UserNotification");
+  const locale = useLocale();
+  const TYPE_CONFIG = getTypeConfig(t);
+
   const supabase = createClient();
-  const [notifications, setNotifications] = useState<UserNotification[]>([]);
+  const [rawNotifications, setRawNotifications] = useState<UserNotification[]>([]);
   const [open, setOpen] = useState(false);
   const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
   const [clearedIds, setClearedIds] = useState<Set<string>>(new Set());
@@ -157,7 +165,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
       .limit(30);
 
     if (error || !data) {
-      setNotifications([]);
+      setRawNotifications([]);
       return;
     }
 
@@ -168,6 +176,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
       if (k.edit_reject_reason) {
         mapped.push({
           id: `edit_rejected_${k.id}`,
+          karyaId: k.id,
           type: "edit_rejected",
           title: k.title,
           reason: k.edit_reject_reason,
@@ -180,6 +189,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
       if (k.deletion_reject_reason) {
         mapped.push({
           id: `deletion_rejected_${k.id}`,
+          karyaId: k.id,
           type: "deletion_rejected",
           title: k.title,
           reason: k.deletion_reject_reason,
@@ -192,6 +202,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
       if (k.pending_edits) {
         mapped.push({
           id: `edit_pending_${k.id}`,
+          karyaId: k.id,
           type: "pending",
           title: k.title,
           created_at: k.created_at,
@@ -203,6 +214,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
       if (k.status === "pending") {
         mapped.push({
           id: `pending_${k.id}`,
+          karyaId: k.id,
           type: "pending",
           title: k.title,
           created_at: k.created_at,
@@ -213,6 +225,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
         if (diffDays <= 14) {
           mapped.push({
             id: `approved_${k.id}`,
+            karyaId: k.id,
             type: "approved",
             title: k.title,
             created_at: k.created_at,
@@ -221,6 +234,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
       } else if (k.status === "rejected") {
         mapped.push({
           id: `rejected_${k.id}`,
+          karyaId: k.id,
           type: "rejected",
           title: k.title,
           reason: k.reject_reason,
@@ -235,7 +249,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
     const currentCleared = getClearedIds();
     const visibleMapped = mapped.filter(n => !currentCleared.has(n.id));
 
-    setNotifications(visibleMapped);
+    setRawNotifications(visibleMapped);
 
     // Check if new unread appeared
     const currentSeen = getSeenIds();
@@ -251,8 +265,9 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
     if (!userId) return;
     fetchNotifications(userId);
 
+    const channelName = `user_notif_${userId}_${Date.now()}`;
     const channel = supabase
-      .channel(`user_notif_${userId}`)
+      .channel(channelName)
       .on("postgres_changes", { event: "*", schema: "public", table: "karya", filter: `user_id=eq.${userId}` }, () => {
         fetchNotifications(userId);
       })
@@ -274,11 +289,19 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const { data: notifications } = useTranslatedList(
+    rawNotifications,
+    "karya",
+    locale,
+    ["title", "reason"],
+    "karyaId"
+  );
+
   const handleClearAll = () => {
     const newCleared = new Set([...clearedIds, ...notifications.map((n) => n.id)]);
     setClearedIds(newCleared);
     saveClearedIds(newCleared);
-    setNotifications([]);
+    setRawNotifications([]);
   };
 
   const handleOpen = () => {
@@ -357,7 +380,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
             <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/20 bg-surface-variant/20">
               <div className="flex items-center gap-2">
                 <FiBell size={15} className="text-primary" />
-                <span className="text-sm font-bold text-on-surface">Notifikasi Karya</span>
+                <span className="text-sm font-bold text-on-surface">{t("title")}</span>
                 {notifications.length > 0 && (
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                     {notifications.length}
@@ -370,7 +393,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
                     onClick={(e) => { e.preventDefault(); handleClearAll(); }}
                     className="text-xs font-semibold text-on-surface-variant hover:text-red-500 transition-colors"
                   >
-                    Bersihkan
+                    {t("clearAll")}
                   </button>
                 )}
               </div>
@@ -383,13 +406,13 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
                   <div className="w-12 h-12 rounded-full bg-surface-variant/30 flex items-center justify-center">
                     <FiUpload size={20} className="text-on-surface-variant/60" />
                   </div>
-                  <p className="text-sm font-medium">Belum ada notifikasi karya.</p>
+                  <p className="text-sm font-medium">{t("emptyState")}</p>
                   <Link
                     href="/dashboard"
                     onClick={() => setOpen(false)}
                     className="text-xs text-primary font-semibold hover:underline"
                   >
-                    Upload karya pertamamu →
+                    {t("emptyAction")}
                   </Link>
                 </div>
               ) : (
@@ -417,7 +440,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
                           </span>
                           {isNew && (
                             <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-red-500 text-white uppercase tracking-wide">
-                              Baru
+                              {t("newBadge")}
                             </span>
                           )}
                         </div>
@@ -430,7 +453,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
                           </p>
                         )}
                         <p className="text-[11px] text-on-surface-variant/70 mt-1">
-                          {timeAgo(notif.created_at)}
+                          {timeAgo(notif.created_at, t)}
                         </p>
                       </div>
 
@@ -450,7 +473,7 @@ export default function UserNotificationBell({ isScrolled, isHome }: { isScrolle
                   onClick={() => setOpen(false)}
                   className="flex items-center justify-center gap-2 w-full py-2 bg-primary/10 text-primary text-sm font-bold rounded-xl hover:bg-primary/20 transition-colors"
                 >
-                  Lihat Dashboard Karya
+                  {t("viewDashboard")}
                 </Link>
               </div>
             )}

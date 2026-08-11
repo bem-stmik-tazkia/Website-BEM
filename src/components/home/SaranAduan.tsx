@@ -3,18 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
-const DUMMY_CHATS = [
-  "Event BEM kemarin seru banget! ✨",
-  "Tolong perbaiki AC di lab komputer 🙏",
-  "Kapan oprec panitia selanjutnya?",
-  "Website BEM makin keren euy 🔥",
-  "Adain lomba e-sport dong min 🎮",
-  "Semangat terus BEM STMIK Tazkia!",
-  "Usul: perbanyak acara seminar teknologi 💻",
-  "Fasilitas parkir kadang penuh, tolong ditertibkan 🚗",
-  "Bikin merchandise jaket BEM dong! 🧥"
-];
+
 
 const CHAT_COLORS = [
   "bg-blue-100 text-blue-800 border-blue-200",
@@ -49,6 +40,19 @@ export default function SaranAduan() {
   const [fieldErrors, setFieldErrors] = useState({ kategori: false, deskripsi: false });
   const [successMsg, setSuccessMsg] = useState("");
   const supabase = createClient();
+  const t = useTranslations("Feedback");
+
+  const DUMMY_CHATS = [
+    t("dummyChats.0"),
+    t("dummyChats.1"),
+    t("dummyChats.2"),
+    t("dummyChats.3"),
+    t("dummyChats.4"),
+    t("dummyChats.5"),
+    t("dummyChats.6"),
+    t("dummyChats.7"),
+    t("dummyChats.8")
+  ];
 
   // Form states
   const [nama, setNama] = useState("");
@@ -153,18 +157,18 @@ export default function SaranAduan() {
     }
 
     if (!isCaptchaSolved) {
-      setErrorMsg("Selesaikan verifikasi keamanan (puzzle) terlebih dahulu.");
+      setErrorMsg(t("errorCaptcha"));
       return;
     }
 
     if (hasError) {
       setFieldErrors(newFieldErrors);
-      setErrorMsg("Mohon lengkapi kolom yang wajib diisi (berwarna merah).");
+      setErrorMsg(t("errorIncomplete"));
       return;
     }
 
     // Handle empty name
-    const finalNama = nama && nama.trim() !== "" ? nama : "Anonim";
+    const finalNama = nama && nama.trim() !== "" ? nama : t("namePlaceholder");
 
     setIsLoading(true);
 
@@ -212,7 +216,7 @@ export default function SaranAduan() {
         // Kita tidak menggagalkan proses form jika excel gagal
       }
 
-      setSuccessMsg("Terima kasih! Saran/Aduan Anda telah terkirim.");
+      setSuccessMsg(t("successSent"));
       setNama("");
       setKategori("");
       setDeskripsi("");
@@ -224,14 +228,14 @@ export default function SaranAduan() {
       }, 5000);
     } catch (error: any) {
       console.error("Error submitting:", error);
-      setErrorMsg("Terjadi kesalahan sistem. Silakan coba lagi.");
+      setErrorMsg(t("errorSystem"));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <section id="saran" className="py-10 md:py-20 relative bg-surface-variant overflow-hidden">
+    <section className="py-10 md:py-20 relative bg-surface-variant overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 z-0"></div>
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/4 z-0"></div>
@@ -251,8 +255,6 @@ export default function SaranAduan() {
                 <AnimatePresence initial={false}>
                   {bubbles.map((bubble, i) => {
                     const colorClass = CHAT_COLORS[bubble.textIdx % CHAT_COLORS.length];
-                    // Alternate slight margins to make it look a bit dynamic
-                    const marginLeft = i % 2 !== 0 ? 'ml-8' : 'ml-2';
                     return (
                       <motion.div
                         layout
@@ -261,14 +263,14 @@ export default function SaranAduan() {
                         animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
                         exit={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
                         transition={{ duration: 0.5, type: "spring", bounce: 0.3 }}
-                        className={`px-4 py-3.5 rounded-2xl rounded-bl-sm shadow-sm border max-w-[280px] bg-surface/90 backdrop-blur-md flex gap-3 items-start relative z-0 ${colorClass} ${marginLeft}`}
+                        className={`px-4 py-3.5 rounded-2xl rounded-bl-sm shadow-sm border max-w-[280px] bg-surface/90 backdrop-blur-md flex gap-3 items-start relative z-0 ${colorClass}`}
                       >
                         <div className="w-8 h-8 rounded-full bg-white/60 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
                           <span className="material-symbols-outlined text-[18px] opacity-80">person</span>
                         </div>
                         <div>
                           <p className="text-xs md:text-sm font-bold leading-relaxed">{DUMMY_CHATS[bubble.textIdx]}</p>
-                          <span className="text-[10px] opacity-60 mt-1 block font-medium">Mahasiswa STMIK Tazkia</span>
+                          <span className="text-[10px] opacity-60 mt-1 block font-medium">{t("studentOf")}</span>
                         </div>
                       </motion.div>
                     )
@@ -277,13 +279,17 @@ export default function SaranAduan() {
               </div>
             </div>
             
-            <h2 className="font-display-md text-3xl md:text-4xl lg:text-5xl text-on-background mb-4 md:mb-6 leading-tight">
-              Kotak <span className="text-primary">Saran & Aduan</span>
-            </h2>
-            
-            <p className="font-body-lg text-on-surface-variant leading-relaxed mb-6 md:mb-8 max-w-xl text-sm md:text-base">
-              BEM STMIK Tazkia selalu terbuka untuk mendengar aspirasi, kritik, maupun keluhan dari seluruh mahasiswa. Suara Anda sangat berarti untuk membangun kampus yang lebih baik.
-            </p>
+            <div id="tour-saran-aduan">
+              <h2 className="font-display-md text-3xl md:text-4xl lg:text-5xl text-on-background mb-4 md:mb-6 leading-tight">
+                {t.rich("title", {
+                  span: (chunks) => <span className="text-primary">{chunks}</span>
+                })}
+              </h2>
+              
+              <p className="font-body-lg text-on-surface-variant leading-relaxed mb-6 md:mb-8 max-w-xl text-sm md:text-base">
+                {t("subtitle")}
+              </p>
+            </div>
 
             <div className="flex flex-col gap-4 md:gap-6">
               <div className="flex items-start gap-3.5 md:gap-4 p-3 md:p-4 rounded-2xl bg-surface/40 border border-outline-variant/20">
@@ -291,8 +297,8 @@ export default function SaranAduan() {
                   <span className="material-symbols-outlined text-[20px] md:text-[24px]">lightbulb</span>
                 </div>
                 <div>
-                  <h4 className="font-headline-sm text-sm md:text-base font-bold text-on-background mb-1">Saran Konstruktif</h4>
-                  <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed">Punya ide program kerja atau masukan untuk BEM? Sampaikan di sini.</p>
+                  <h4 className="font-headline-sm text-sm md:text-base font-bold text-on-background mb-1">{t("constructiveTitle")}</h4>
+                  <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed">{t("constructiveDesc")}</p>
                 </div>
               </div>
               
@@ -301,8 +307,8 @@ export default function SaranAduan() {
                   <span className="material-symbols-outlined text-[20px] md:text-[24px]">report</span>
                 </div>
                 <div>
-                  <h4 className="font-headline-sm text-sm md:text-base font-bold text-on-background mb-1">Aduan Fasilitas / Layanan</h4>
-                  <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed">Laporkan kendala terkait fasilitas kampus atau layanan kemahasiswaan. Kami jamin kerahasiaannya.</p>
+                  <h4 className="font-headline-sm text-sm md:text-base font-bold text-on-background mb-1">{t("facilityTitle")}</h4>
+                  <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed">{t("facilityDesc")}</p>
                 </div>
               </div>
             </div>
@@ -314,22 +320,22 @@ export default function SaranAduan() {
               
               <div className="flex flex-col gap-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs md:text-sm font-bold text-on-background">Nama (Opsional)</label>
+                    <label className="text-xs md:text-sm font-bold text-on-background">{t("nameLabel")}</label>
                     <span className={`text-[10px] ${nama.length >= 50 ? 'text-red-500 font-bold' : 'text-on-surface-variant'}`}>{nama.length}/50</span>
                   </div>
-                  <input type="text" name="nama" value={nama} onChange={(e) => setNama(e.target.value)} onFocus={() => setIsFormFocused(true)} onBlur={() => setIsFormFocused(false)} maxLength={50} placeholder="Anonim" className={`w-full px-3.5 py-2.5 text-sm rounded-xl border bg-surface-variant/20 focus:bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-background ${nama.length >= 50 ? 'border-red-500' : 'border-outline-variant/30'}`} />
+                  <input type="text" name="nama" value={nama} onChange={(e) => setNama(e.target.value)} onFocus={() => setIsFormFocused(true)} onBlur={() => setIsFormFocused(false)} maxLength={50} placeholder={t("namePlaceholder")} className={`w-full px-3.5 py-2.5 text-sm rounded-xl border bg-surface-variant/20 focus:bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-background ${nama.length >= 50 ? 'border-red-500' : 'border-outline-variant/30'}`} />
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs md:text-sm font-bold text-on-surface">
-                  Kategori Laporan <span className="text-red-500">*</span>
+                  {t("categoryLabel")} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <select name="kategori" value={kategori} onChange={(e) => setKategori(e.target.value)} onFocus={() => setIsFormFocused(true)} onBlur={() => setIsFormFocused(false)} className={`w-full bg-surface-variant/20 border rounded-xl px-4 py-3 outline-none transition-all duration-300 text-sm text-on-surface appearance-none cursor-pointer ${fieldErrors.kategori ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20" : "border-outline-variant/30 focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20"}`}>
-                    <option value="" disabled>Pilih Kategori</option>
-                    <option value="saran">Saran & Masukan</option>
-                    <option value="aduan">Aduan Mahasiswa</option>
-                    <option value="lainnya">Lainnya</option>
+                    <option value="" disabled>{t("selectCategory")}</option>
+                    <option value="saran">{t("catFeedback")}</option>
+                    <option value="aduan">{t("catComplaint")}</option>
+                    <option value="lainnya">{t("catOther")}</option>
                   </select>
                   <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[18px]">expand_more</span>
                 </div>
@@ -338,11 +344,11 @@ export default function SaranAduan() {
               <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between items-center">
                   <label className="text-xs md:text-sm font-bold text-on-surface">
-                    Deskripsi Detail <span className="text-red-500">*</span>
+                    {t("descLabel")} <span className="text-red-500">*</span>
                   </label>
                   <span className={`text-[10px] font-medium ${deskripsi.length >= 1000 ? 'text-red-500 font-bold' : 'text-on-surface-variant'}`}>{deskripsi.length}/1000</span>
                 </div>
-                <textarea name="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} onFocus={() => setIsFormFocused(true)} onBlur={() => setIsFormFocused(false)} maxLength={1000} rows={4} placeholder="Jelaskan secara rinci apa yang ingin Anda sampaikan..." className={`w-full bg-surface-variant/20 border rounded-xl px-4 py-3 outline-none transition-all duration-300 text-sm text-on-surface resize-none ${fieldErrors.deskripsi || deskripsi.length >= 1000 ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20" : "border-outline-variant/30 focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20"}`}></textarea>
+                <textarea name="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} onFocus={() => setIsFormFocused(true)} onBlur={() => setIsFormFocused(false)} maxLength={1000} rows={4} placeholder={t("descPlaceholder")} className={`w-full bg-surface-variant/20 border rounded-xl px-4 py-3 outline-none transition-all duration-300 text-sm text-on-surface resize-none ${fieldErrors.deskripsi || deskripsi.length >= 1000 ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20" : "border-outline-variant/30 focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20"}`}></textarea>
               </div>
 
               {/* Custom Error Message */}
@@ -367,16 +373,16 @@ export default function SaranAduan() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className={`text-xs md:text-sm font-bold ${isCaptchaSolved ? 'text-green-700' : captchaError ? 'text-red-600' : 'text-on-surface'}`}>
-                      {isCaptchaSolved ? '✓ Keamanan Lolos' : captchaError ? '❌ Salah tebak!' : '🛡️ Verifikasi Keamanan'}
+                      {isCaptchaSolved ? t("securitySuccess") : captchaError ? t("securityWrong") : t("securityTitle")}
                     </h4>
                     {!isCaptchaSolved && (
                       <p className="text-xs text-on-surface-variant mt-0.5">
-                        Buktikan Anda bukan robot, klik gambar <strong className="text-primary font-extrabold">{captchaTarget?.name}</strong>:
+                        {t("securityDesc")} <strong className="text-primary font-extrabold">{captchaTarget?.name}</strong>:
                       </p>
                     )}
                   </div>
                   {isCaptchaSolved && (
-                    <span className="text-[11px] font-bold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full border border-green-200">Terverifikasi</span>
+                    <span className="text-[11px] font-bold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full border border-green-200">{t("verified")}</span>
                   )}
                 </div>
                 
@@ -403,12 +409,12 @@ export default function SaranAduan() {
               disabled={isLoading}
               className="mt-2 flex w-full justify-center rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-white shadow-soft transition-all hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed items-center gap-2 group cursor-pointer relative overflow-hidden"
             >
-              {isLoading ? "Mengirim..." : "Kirim Pesan"}
+              {isLoading ? t("btnSending") : t("btnSend")}
               {!isLoading && <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">send</span>}
             </button>
               
               <p className="text-[10px] md:text-xs text-center text-on-surface-variant">
-                Identitas pelapor (jika ada) akan dirahasiakan dan hanya digunakan untuk keperluan tindak lanjut internal BEM.
+                {t("disclaimer")}
               </p>
             </form>
           </div>

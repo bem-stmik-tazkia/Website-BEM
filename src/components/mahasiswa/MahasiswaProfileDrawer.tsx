@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import ProjectCard, { ProjectData } from "./ProjectCard";
 import { MahasiswaProfile } from "./MahasiswaCard";
+import { useTranslations } from "next-intl";
 
 interface MahasiswaProfileDrawerProps {
   mahasiswa: MahasiswaProfile | null;
@@ -22,10 +23,25 @@ export default function MahasiswaProfileDrawer({
   onClose,
   onShowFullProfile,
 }: MahasiswaProfileDrawerProps) {
+  const t = useTranslations("MahasiswaDrawer");
+  const tStatus = useTranslations("StatusBadge");
   const [activeTab, setActiveTab] = useState<"projects" | "skills">("projects");
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [downloadedQR, setDownloadedQR] = useState(false);
+
+  const translateStatusBadge = (badgeStr: string) => {
+    if (!badgeStr) return badgeStr;
+    const isMatched = (key: string) => badgeStr.toLowerCase().includes(key.toLowerCase());
+    if (isMatched("Open for Collab")) return `🚀 ${tStatus("openForCollab")}`;
+    if (isMatched("Mencari Magang")) return `💼 ${tStatus("lookingForInternship")}`;
+    if (isMatched("Siap Freelance")) return `🤝 ${tStatus("readyForFreelance")}`;
+    if (isMatched("Fokus Belajar")) return `📚 ${tStatus("focusOnStudy")}`;
+    if (isMatched("Bekerja Full-time")) return `💻 ${tStatus("workingFullTime")}`;
+    if (isMatched("Punya Ide Startup")) return `💡 ${tStatus("haveStartupIdea")}`;
+    if (isMatched("Mencari Mentor")) return `🔍 ${tStatus("lookingForMentor")}`;
+    return badgeStr;
+  };
 
   useEffect(() => {
     if (mahasiswa) {
@@ -119,7 +135,7 @@ export default function MahasiswaProfileDrawer({
             {/* Angkatan badge - top left */}
             <div className="absolute top-4 left-5 z-10">
               <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-bold uppercase tracking-wider border border-white/20">
-                Angkatan {mahasiswa.angkatan}
+                {t("batch")} {mahasiswa.angkatan}
               </span>
             </div>
 
@@ -155,7 +171,7 @@ export default function MahasiswaProfileDrawer({
                 {(mahasiswa.status_badge || mahasiswa.skills?.[0]) && (
                   <div className="flex items-center gap-1.5 bg-secondary backdrop-blur-sm rounded-full px-3 py-1 shadow-sm">
                     <span className="text-white text-xs font-bold">
-                      {mahasiswa.status_badge || mahasiswa.skills?.[0]}
+                      {mahasiswa.status_badge ? translateStatusBadge(mahasiswa.status_badge) : mahasiswa.skills?.[0]}
                     </span>
                   </div>
                 )}
@@ -193,10 +209,10 @@ export default function MahasiswaProfileDrawer({
                 <button
                   onClick={() => setShowShareModal(true)}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs transition-all shadow-sm bg-primary text-white hover:bg-primary/90"
-                  title="Bagikan Profil"
+                  title={t("shareProfile")}
                 >
                   <FiShare2 size={14} />
-                  <span className="hidden sm:inline">Bagikan Profil</span>
+                  <span className="hidden sm:inline">{t("shareProfile")}</span>
                 </button>
 
                 {mahasiswa.github_url && (
@@ -245,9 +261,9 @@ export default function MahasiswaProfileDrawer({
             {/* Email Direct Action Card */}
             <div className="bg-surface-variant/30 p-5 rounded-2xl border border-outline-variant/30 flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
               <div>
-                <h4 className="text-sm font-bold text-primary">Ingin Mengajak Kolaborasi?</h4>
+                <h4 className="text-sm font-bold text-primary">{t("collaborateTitle")}</h4>
                 <p className="text-xs text-on-surface-variant">
-                  Hubungi via email untuk mendiskusikan peluang kolaborasi.
+                  {t("collaborateDesc")}
                 </p>
               </div>
               <a
@@ -255,7 +271,7 @@ export default function MahasiswaProfileDrawer({
                 className="px-4 py-2.5 rounded-xl bg-secondary text-white text-xs font-bold hover:bg-secondary/90 transition-all flex items-center gap-2 shadow-sm shrink-0"
               >
                 <FiSend size={14} />
-                Kirim Email Direct
+                {t("sendEmail")}
               </a>
             </div>
 
@@ -263,7 +279,7 @@ export default function MahasiswaProfileDrawer({
             <div className="flex border-b border-outline-variant/30 mb-6">
               <div className="flex items-center gap-2 pb-3 px-4 font-bold text-sm border-b-2 border-primary text-primary">
                 <FiFolder size={16} />
-                <span>Proyek & Repository ({projects.length})</span>
+                <span>{t("projectsRepo")} ({projects.length})</span>
               </div>
             </div>
 
@@ -280,17 +296,17 @@ export default function MahasiswaProfileDrawer({
                         className="bg-surface border-2 border-dashed border-primary/40 rounded-2xl flex flex-col items-center justify-center p-6 text-primary cursor-pointer hover:bg-primary/5 hover:border-primary hover:scale-[1.02] transition-all group shadow-sm"
                       >
                          <FiFolder className="w-10 h-10 mb-2 group-hover:scale-110 transition-transform" />
-                         <span className="font-bold text-sm">+{projects.length - 3} Karya Lainnya</span>
-                         <span className="text-xs opacity-70 mt-1 text-center">Lihat Profil Lengkap</span>
+                         <span className="font-bold text-sm">+{projects.length - 3} {t("moreProjects")}</span>
+                         <span className="text-xs opacity-70 mt-1 text-center">{t("viewFullProfile")}</span>
                       </button>
                     )}
                   </div>
                 ) : (
                   <div className="text-center py-12 px-4 rounded-2xl bg-surface-variant/30 border border-dashed border-outline-variant">
                     <FiFolder size={40} className="mx-auto text-on-surface-variant/40 mb-3" />
-                    <p className="font-bold text-on-surface mb-1">Belum ada proyek yang diunggah</p>
+                    <p className="font-bold text-on-surface mb-1">{t("noProjectTitle")}</p>
                     <p className="text-xs text-on-surface-variant">
-                      Mahasiswa ini belum mengunggah repositori proyek ke portal.
+                      {t("noProjectDesc")}
                     </p>
                   </div>
                 )}
@@ -318,9 +334,9 @@ export default function MahasiswaProfileDrawer({
             >
               <FiX size={20} />
             </button>
-            <h3 className="text-xl font-extrabold text-primary mb-2 mt-2 text-center">Bagikan Profil</h3>
+            <h3 className="text-xl font-extrabold text-primary mb-2 mt-2 text-center">{t("shareTitle")}</h3>
             <p className="text-sm text-on-surface-variant text-center mb-6">
-              Scan QR code atau salin tautan untuk membagikan portofolio ini.
+              {t("shareDesc")}
             </p>
 
             {/* QR Code from free API */}
@@ -339,7 +355,7 @@ export default function MahasiswaProfileDrawer({
                 }`}
               >
                 {downloadedQR ? <FiCheck size={14} /> : <FiDownload size={14} />}
-                {downloadedQR ? "QR Code Berhasil Diunduh!" : "Unduh QR Code"}
+                {downloadedQR ? t("downloadedQr") : t("downloadQr")}
               </button>
             </div>
 
@@ -383,7 +399,7 @@ export default function MahasiswaProfileDrawer({
                 }`}
               >
                 {copiedLink ? <FiCheck size={14} /> : <FiCopy size={14} />}
-                {copiedLink ? "Tersalin" : "Salin"}
+                {copiedLink ? t("copied") : t("copyLink")}
               </button>
             </div>
           </motion.div>

@@ -35,9 +35,6 @@ export async function compressImage(
       lastModified: Date.now(),
     });
     
-    // Log informasi (bisa dihapus nanti, berguna untuk debugging ukuran awal vs akhir)
-    console.log(`Kompresi: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
-    
     return compressedFile;
   } catch (error) {
     console.error("Gagal mengkompresi gambar, menggunakan file asli:", error);

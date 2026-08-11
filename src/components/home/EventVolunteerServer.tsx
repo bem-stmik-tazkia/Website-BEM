@@ -1,4 +1,4 @@
-import { getKegiatans } from "@/app/admin/kegiatan/actions";
+import { getKegiatans } from "@/app/(internal)/admin/kegiatan/actions";
 import { AgendaKegiatan } from "@/types/agenda";
 import EventVolunteer from "./EventVolunteer";
 

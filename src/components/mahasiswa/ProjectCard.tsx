@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FiGithub, FiExternalLink, FiHeart, FiLayers, FiEye, FiArrowRight } from "react-icons/fi";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { getTechStack } from "@/lib/techStack";
 import { getKTITool } from "@/lib/ktiTools";
@@ -11,12 +12,13 @@ import { getIoTComponent } from "@/lib/iotComponents";
 import { getMultimediaTool } from "@/lib/multimediaTools";
 import Link from "next/link";
 
-const CATEGORY_MAP: Record<string, string> = {
-  "Technology": "Aplikasi Web & Sistem",
-  "Programming": "Aplikasi Mobile",
-  "Research": "Karya Tulis & Jurnal",
-  "IoT": "Proyek IoT",
-  "Multimedia": "Desain & Lainnya",
+const getCategoryLabel = (id: string, t: any) => {
+  if (id === "Technology") return t("catWeb");
+  if (id === "Programming") return t("catMobile");
+  if (id === "Research") return t("catResearch");
+  if (id === "IoT") return t("catIoT");
+  if (id === "Multimedia") return t("catDesign");
+  return id;
 };
 
 export interface ProjectData {
@@ -42,6 +44,9 @@ interface ProjectCardProps {
 export default function ProjectCard({ project, onLike }: ProjectCardProps) {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(project.likes_count || 0);
+  const t = useTranslations("ProjectCard");
+  const tCat = useTranslations("KaryaPage");
+  const tProj = useTranslations("Project");
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -72,7 +77,7 @@ export default function ProjectCard({ project, onLike }: ProjectCardProps) {
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-primary/5">
             <FiLayers size={36} className="mb-2 text-primary/40" />
-            <span className="text-xs font-bold text-on-surface-variant">Project Showcase</span>
+            <span className="text-xs font-bold text-on-surface-variant">{t("projectShowcase")}</span>
           </div>
         )}
       </div>
@@ -118,7 +123,7 @@ export default function ProjectCard({ project, onLike }: ProjectCardProps) {
               );
             })
           ) : (
-            <span className="text-[var(--color-secondary)] text-xs font-bold tracking-wider uppercase">Project</span>
+            <span className="text-[var(--color-secondary)] text-xs font-bold tracking-wider uppercase">{t("project")}</span>
           )}
           {project.tech_stack && project.tech_stack.length > 3 && (
             <span className="px-1.5 py-0.5 rounded bg-surface-variant/20 text-on-surface-variant text-[10px] font-bold">
@@ -129,7 +134,7 @@ export default function ProjectCard({ project, onLike }: ProjectCardProps) {
         {/* Category Badge */}
         {(project as any).category && (
           <span className="text-secondary text-xs font-bold tracking-wider uppercase mb-2 block">
-            {CATEGORY_MAP[(project as any).category] || (project as any).category}
+            {getCategoryLabel((project as any).category, tCat)}
           </span>
         )}
         <h3 className="text-xl font-bold text-[var(--color-primary)] mb-3 line-clamp-2">
@@ -153,12 +158,12 @@ export default function ProjectCard({ project, onLike }: ProjectCardProps) {
               )}
             </div>
             <span className={liked ? "text-red-500 font-bold" : "text-on-surface-variant"}>
-              {likes} Suka
+              {likes} {tProj("likes")}
             </span>
           </div>
           <div className="flex items-center gap-1.5 group/stat cursor-pointer hover:text-blue-500 transition-colors">
             <FiEye size={14} className="text-on-surface-variant/70 group-hover/stat:text-blue-500 transition-colors" />
-            <span>{project.views_count || (project as any).views || 0} Dilihat</span>
+            <span>{project.views_count || (project as any).views || 0} {tProj("views")}</span>
           </div>
         </div>
 
@@ -174,7 +179,7 @@ export default function ProjectCard({ project, onLike }: ProjectCardProps) {
             onClick={(e) => e.stopPropagation()}
             className="text-[var(--color-primary)] text-sm font-semibold flex items-center gap-1 group-hover:gap-2 transition-all"
           >
-            View Details <FiArrowRight />
+            {t("viewDetails")} <FiArrowRight />
           </Link>
         </div>
       </div>

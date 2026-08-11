@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { KabinetDepartemen } from "@/types/kabinet";
 import LottieIcon from "@/components/ui/LottieIcon";
+import { useTranslations } from "next-intl";
 
 // Icons
 function UsersIcon() {
@@ -52,10 +53,25 @@ const TAG_COLORS: Record<string, string> = {
   Tahunan: "bg-rose-100 text-rose-700",
 };
 
-function ProkerTag({ tag }: { tag: string }) {
+function ProkerTag({ tag, tTags }: { tag: string, tTags?: any }) {
+  const getTag = (t: string) => {
+    if (!tTags || !t) return t;
+    const key = t.replace(/[\s\(\)-]/g, '');
+    if (!key) return t;
+    try {
+      if (tTags.has(key)) {
+        const tr = tTags(key);
+        if (tr && !tr.includes("Tags.")) return tr;
+      }
+    } catch {
+      // ignore
+    }
+    return t;
+  };
+
   return (
     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${TAG_COLORS[tag] ?? "bg-surface-variant/30 text-on-surface-variant"}`}>
-      {tag}
+      {getTag(tag)}
     </span>
   );
 }
@@ -64,11 +80,28 @@ function AnggotaCard({
   member,
   warna,
   warnaBg,
+  tRoles,
 }: {
   member: KabinetDepartemen["anggota"][0];
   warna: string;
   warnaBg: string;
+  tRoles?: any;
 }) {
+  const getRole = (role: string) => {
+    if (!tRoles || !role) return role;
+    const key = role.replace(/[\s\(\)-]/g, '');
+    if (!key) return role;
+    try {
+      if (tRoles.has(key)) {
+        const tr = tRoles(key);
+        if (tr && !tr.includes("Roles.")) return tr;
+      }
+    } catch {
+      // ignore
+    }
+    return role;
+  };
+
   return (
     <div className="group bg-surface rounded-2xl border border-outline-variant/20 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center gap-4 p-4">
       <div
@@ -83,7 +116,7 @@ function AnggotaCard({
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[11px] font-extrabold uppercase tracking-widest mb-0.5" style={{ color: warna }}>
-          {member.role}
+          {getRole(member.role)}
         </p>
         <h3 className="font-bold text-on-background text-base leading-tight truncate">{member.name}</h3>
       </div>
@@ -121,7 +154,7 @@ function AnggotaCard({
 
 import ProkerIcon from "@/components/kabinet/ProkerIcon";
 
-function ProkerRow({ proker }: { proker: { nama: string; deskripsi: string; tag: string; icon?: string } }) {
+function ProkerRow({ proker, tTags }: { proker: { nama: string; deskripsi: string; tag: string; icon?: string }, tTags?: any }) {
   return (
     <div className="flex items-start gap-3 p-3.5 rounded-xl bg-surface-container-low/60 border border-outline-variant/10 hover:border-outline-variant/30 hover:bg-surface transition-all duration-200">
       {proker.icon ? (
@@ -138,7 +171,7 @@ function ProkerRow({ proker }: { proker: { nama: string; deskripsi: string; tag:
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-0.5">
           <span className="font-bold text-sm text-on-background">{proker.nama}</span>
-          <ProkerTag tag={proker.tag} />
+          <ProkerTag tag={proker.tag} tTags={tTags} />
         </div>
         <p className="text-xs text-on-surface-variant leading-relaxed">{proker.deskripsi}</p>
       </div>
@@ -157,6 +190,9 @@ function DeptIcon({ icon }: { icon: string }) {
 }
 
 export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
+  const t = useTranslations("KabinetPage");
+  const tRoles = useTranslations("Roles");
+  const tTags = useTranslations("Tags");
   const [tab, setTab] = useState<"anggota" | "proker">("anggota");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -201,16 +237,16 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
 
       {/* ── Tab switcher ── */}
       <div className="flex border-t border-outline-variant/20 bg-surface-container-lowest">
-        {(["anggota", "proker"] as const).map((t) => {
-          const isActive = tab === t;
-          const count = t === "anggota" ? dept.anggota.length : dept.proker.length;
-          const label = t === "anggota" ? "Anggota" : "Program Kerja";
+      {(["anggota", "proker"] as const).map((tabKey) => {
+          const isActive = tab === tabKey;
+          const count = tabKey === "anggota" ? dept.anggota.length : dept.proker.length;
+          const label = tabKey === "anggota" ? t("tabMember") : t("tabProker");
           return (
             <button
-              key={t}
-              id={`tab-${dept.id}-${t}`}
+              key={tabKey}
+              id={`tab-${dept.id}-${tabKey}`}
               onClick={() => {
-                setTab(t);
+                setTab(tabKey);
                 setCurrentPage(1);
               }}
               className={`flex-1 py-3 text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border-b-2 ${isActive
@@ -220,7 +256,7 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
               style={isActive ? { borderBottomColor: dept.warna } : {}}
             >
               <span className="opacity-80">
-                {t === "anggota" ? <UsersIcon /> : <CheckIcon />}
+                {tabKey === "anggota" ? <UsersIcon /> : <CheckIcon />}
               </span>
               {label}
               <span
@@ -244,7 +280,7 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {paginatedAnggota.map((member, i) => (
-                <AnggotaCard key={i} member={member} warna={dept.warna} warnaBg={dept.warnaBg} />
+                <AnggotaCard key={i} member={member} warna={dept.warna} warnaBg={dept.warnaBg} tRoles={tRoles} />
               ))}
             </div>
 
@@ -256,7 +292,7 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
                   disabled={currentPage === 1}
                   className="px-3 py-1.5 text-xs text-on-surface-variant hover:text-primary disabled:opacity-50 disabled:hover:text-on-surface-variant transition-colors"
                 >
-                  Prev
+                  {t("prev")}
                 </button>
                 {getPageNumbers().map((page) => (
                   <button
@@ -276,7 +312,7 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
                   disabled={currentPage === totalPages}
                   className="px-3 py-1.5 text-xs text-on-surface-variant hover:text-primary disabled:opacity-50 disabled:hover:text-on-surface-variant transition-colors"
                 >
-                  Next
+                  {t("next")}
                 </button>
               </div>
             )}
@@ -284,7 +320,7 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
         ) : (
           <div className="flex flex-col gap-2">
             {dept.proker.map((p, i) => (
-              <ProkerRow key={i} proker={p} />
+              <ProkerRow key={i} proker={p} tTags={tTags} />
             ))}
           </div>
         )}

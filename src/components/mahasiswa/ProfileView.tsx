@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import {
   FiGithub, FiLinkedin, FiGlobe, FiFolder,
   FiSend, FiShare2, FiCopy, FiCheck, FiX,
@@ -11,6 +11,8 @@ import {
 } from "react-icons/fi";
 import { FaWhatsapp, FaTelegram, FaXTwitter } from "react-icons/fa6";
 import ProjectCard, { ProjectData } from "@/components/mahasiswa/ProjectCard";
+import { useTranslations, useLocale } from "next-intl";
+import { useTranslatedContent, useTranslatedList } from "@/hooks/useTranslatedContent";
 
 export interface ProfileViewData {
   id?: string;
@@ -45,11 +47,46 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 export default function ProfileView({
-  profile,
-  projects,
+  profile: rawProfile,
+  projects: rawProjects,
   isOwnProfile = false,
   onEditProfile,
 }: ProfileViewProps) {
+  const t = useTranslations("ProfileView");
+  const locale = useLocale();
+  
+  const { data: profileObj, isTranslating: isTranslatingProfile } = useTranslatedContent(
+    rawProfile,
+    "mahasiswa_profiles",
+    locale,
+    ["bio", "prodi"],
+    "id"
+  );
+  const profile = profileObj || rawProfile;
+
+  const { data: projects, isTranslating: isTranslatingProjects } = useTranslatedList(
+    rawProjects,
+    "karya",
+    locale,
+    ["title", "description", "category"],
+    "id"
+  );
+
+  const tStatus = useTranslations("StatusBadge");
+  const translateStatusBadge = (badgeStr: string) => {
+    if (!badgeStr) return badgeStr;
+    const isMatched = (key: string) => badgeStr.toLowerCase().includes(key.toLowerCase());
+    if (isMatched("Open for Collab")) return `🚀 ${tStatus("openForCollab")}`;
+    if (isMatched("Mencari Magang")) return `💼 ${tStatus("lookingForInternship")}`;
+    if (isMatched("Siap Freelance")) return `🤝 ${tStatus("readyForFreelance")}`;
+    if (isMatched("Fokus Belajar")) return `📚 ${tStatus("focusOnStudy")}`;
+    if (isMatched("Bekerja Full-time")) return `💻 ${tStatus("workingFullTime")}`;
+    if (isMatched("Punya Ide Startup")) return `💡 ${tStatus("haveStartupIdea")}`;
+    if (isMatched("Mencari Mentor")) return `🔍 ${tStatus("lookingForMentor")}`;
+    return badgeStr; // fallback if no match
+  };
+
+  const isTranslating = isTranslatingProfile || isTranslatingProjects;
   const [projectFilter, setProjectFilter] = useState("Semua");
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -106,7 +143,7 @@ export default function ProfileView({
       setTimeout(() => setDownloadedQR(false), 3000);
     } catch (error) {
       console.error("Error downloading QR:", error);
-      alert("Gagal mengunduh QR Code. Silakan coba lagi.");
+      alert(t("qrFail"));
     }
   };
 
@@ -128,7 +165,7 @@ export default function ProfileView({
 
   return (
     <>
-      <div className="relative min-h-full pb-8 w-full">
+      <div className={`relative min-h-full pb-8 w-full transition-opacity duration-300 ${isTranslating ? "opacity-70" : "opacity-100"}`}>
           {/* ── TOP HEADER STRIP (Banner) ── */}
           <div className="relative h-40 sm:h-52 bg-primary overflow-hidden">
             {/* Animated dot grid */}
@@ -159,13 +196,13 @@ export default function ProfileView({
             {/* CTA Kolaborasi — inside banner, only public view */}
             {!isOwnProfile && (
               <div className="absolute top-6 sm:top-8 right-[72px] md:right-[90px] z-10 hidden sm:flex items-center gap-3">
-                <p className="text-white/90 text-sm font-semibold hidden md:block">Tertarik berkolaborasi?</p>
+                <p className="text-white/90 text-sm font-semibold hidden md:block">{t("interestedCollab")}</p>
                 <a
                   href={`mailto:${profile.contact_email || profile.email}`}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-secondary text-white font-extrabold text-xs hover:bg-secondary/90 hover:scale-105 transition-all shadow-md shadow-secondary/20 border border-secondary"
                 >
                   <FiSend size={14} />
-                  Kirim Email
+                  {t("sendEmail")}
                 </a>
               </div>
             )}
@@ -200,7 +237,7 @@ export default function ProfileView({
               <div className="mb-6">
                 {profile.status_badge && (
                   <span className="inline-block mb-3 px-3 py-1 rounded-md bg-secondary/10 text-secondary text-[11px] font-extrabold tracking-widest uppercase border border-secondary/20">
-                    {profile.status_badge}
+                    {translateStatusBadge(profile.status_badge)}
                   </span>
                 )}
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface leading-tight mb-2">
@@ -214,7 +251,7 @@ export default function ProfileView({
                   {profile.angkatan && (
                     <>
                       <span className="w-1 h-1 rounded-full bg-outline-variant/60 mx-1" />
-                      <span className="text-primary/90">Angkatan {profile.angkatan}</span>
+                      <span className="text-primary/90">{t("angkatan", { year: profile.angkatan })}</span>
                     </>
                   )}
                 </div>
@@ -223,14 +260,14 @@ export default function ProfileView({
                 <div className="flex items-center gap-3 mt-4 text-sm text-on-surface-variant font-bold">
                   <div className="flex items-center gap-1.5">
                     <FiAward size={14} className="text-primary" />
-                    {projects.length} karya
+                    {t("karyaCount", { count: projects.length })}
                   </div>
                   {profile.skills && profile.skills.length > 0 && (
                     <>
                       <div className="w-px h-3 bg-outline-variant/50" />
                       <div className="flex items-center gap-1.5">
                         <FiCode size={14} className="text-primary" />
-                        {profile.skills.length} keahlian
+                        {t("skillsCount", { count: profile.skills.length })}
                       </div>
                     </>
                   )}
@@ -245,7 +282,7 @@ export default function ProfileView({
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-secondary text-secondary font-bold text-sm hover:bg-secondary hover:text-white transition-all shadow-sm"
                   >
                     <FiEdit2 size={16} />
-                    Edit Profil
+                    {t("editProfile")}
                   </Link>
                 ) : (
                   <a
@@ -253,7 +290,7 @@ export default function ProfileView({
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary text-white font-bold text-sm hover:bg-secondary/90 transition-all shadow-md shadow-secondary/20"
                   >
                     <FiSend size={16} />
-                    Kirim Email
+                    {t("sendEmail")}
                   </a>
                 )}
                 <button
@@ -261,14 +298,14 @@ export default function ProfileView({
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-outline-variant/30 text-on-surface-variant font-bold text-sm hover:border-secondary/50 hover:text-secondary transition-all"
                 >
                   <FiShare2 size={15} />
-                  Bagikan Profil
+                  {t("shareProfile")}
                 </button>
               </div>
 
               {/* Social Links */}
               {(profile.github_url || profile.linkedin_url || profile.website_url) && (
                 <div className="mb-8 space-y-2">
-                  <p className="text-[11px] font-extrabold text-on-surface-variant/70 uppercase tracking-[0.15em] mb-4">Tautan</p>
+                  <p className="text-[11px] font-extrabold text-on-surface-variant/70 uppercase tracking-[0.15em] mb-4">{t("links")}</p>
                   {profile.github_url && (
                     <a
                       href={profile.github_url}
@@ -311,11 +348,10 @@ export default function ProfileView({
               {/* Bio */}
               <div className="mb-8">
                 <p className="text-[11px] font-extrabold text-on-surface-variant/70 uppercase tracking-[0.15em] mb-3">
-                  Tentang
+                  {t("about")}
                 </p>
                 <p className="text-[15px] text-on-surface-variant leading-relaxed">
-                  {profile.bio ||
-                    "Halo! Saya mahasiswa BEM STMIK Tazkia yang siap berkolaborasi dan terus belajar hal-hal baru di bidang teknologi."}
+                  {profile.bio || t("defaultBio")}
                 </p>
               </div>
 
@@ -323,7 +359,7 @@ export default function ProfileView({
               {profile.skills && profile.skills.length > 0 && (
                 <div className="mb-8">
                   <p className="text-[11px] font-extrabold text-on-surface-variant/70 uppercase tracking-[0.15em] mb-3">
-                    Keahlian
+                    {t("skills")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {profile.skills.map((skill, idx) => (
@@ -355,9 +391,9 @@ export default function ProfileView({
                   className="mb-8 sm:hidden rounded-2xl border border-secondary/20 bg-secondary/5 p-4 flex items-center justify-between gap-3 shadow-sm"
                 >
                   <div>
-                    <p className="text-sm font-extrabold text-secondary">Tertarik berkolaborasi?</p>
+                    <p className="text-sm font-extrabold text-secondary">{t("interestedCollab")}</p>
                     <p className="text-[11px] text-on-surface-variant mt-0.5">
-                      Hubungi via email untuk kerja sama.
+                      {t("collabDesc")}
                     </p>
                   </div>
                   <a
@@ -365,7 +401,7 @@ export default function ProfileView({
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-secondary text-white font-bold text-xs hover:bg-secondary/90 transition-all shadow-md shadow-secondary/20 shrink-0"
                   >
                     <FiSend size={12} />
-                    Email
+                    {t("emailBtn")}
                   </a>
                 </motion.div>
               )}
@@ -375,7 +411,7 @@ export default function ProfileView({
                 <div className="flex items-center gap-2">
                   <FiFolder size={20} className="text-primary" />
                   <h2 className="text-lg font-extrabold text-on-surface">
-                    Proyek & Repository
+                    {t("projects")}
                   </h2>
                   <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-extrabold ml-1">
                     {projects.length}
@@ -399,7 +435,7 @@ export default function ProfileView({
                             : "bg-surface-variant text-on-surface-variant hover:bg-primary/10 hover:text-primary"
                         }`}
                       >
-                        {cat in CATEGORY_LABEL ? CATEGORY_LABEL[cat] : cat}
+                        {cat === "Semua" ? t("filterAll") : (cat in CATEGORY_LABEL ? CATEGORY_LABEL[cat] : cat)}
                       </button>
                     ))}
                     <div className="w-4 shrink-0 md:hidden" /> {/* Spacer for right edge */}
@@ -435,7 +471,7 @@ export default function ProfileView({
                   {filteredProjects.length === 0 && (
                     <div className="col-span-2 text-center py-12 bg-surface-variant/20 rounded-2xl border border-dashed border-outline-variant/50">
                       <p className="text-on-surface-variant text-sm font-medium">
-                        Tidak ada proyek dalam kategori ini.
+                        {t("noProjectsCat")}
                       </p>
                     </div>
                   )}
@@ -463,19 +499,19 @@ export default function ProfileView({
                     <FiFolder size={32} />
                   </div>
                   <p className="font-bold text-xl text-on-surface mb-2">
-                    Belum ada karya publik
+                    {t("noPublicWorks")}
                   </p>
                   <p className="text-sm text-on-surface-variant max-w-sm mx-auto">
                     {isOwnProfile
-                      ? "Karya yang telah kamu unggah dan disetujui akan tampil di sini."
-                      : "Mahasiswa ini belum mengunggah proyek yang berstatus publik."}
+                      ? t("ownEmptyDesc")
+                      : t("otherEmptyDesc")}
                   </p>
                   {isOwnProfile && (
                     <Link
                       href="/dashboard/upload"
                       className="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all shadow-md shadow-primary/20"
                     >
-                      Upload Karya Pertama
+                      {t("uploadFirst")}
                     </Link>
                   )}
                 </div>
@@ -512,10 +548,10 @@ export default function ProfileView({
                 <FiShare2 size={22} />
               </div>
               <h3 className="text-xl font-extrabold text-primary mb-1 text-center">
-                Bagikan Profil
+                {t("shareProfile")}
               </h3>
               <p className="text-sm text-on-surface-variant text-center mb-5">
-                Scan QR code atau bagikan portofolio ini.
+                {t("shareModalDesc")}
               </p>
               
               {/* QR Code */}
@@ -536,7 +572,7 @@ export default function ProfileView({
                   }`}
                 >
                   {downloadedQR ? <FiCheck size={14} /> : <FiDownload size={14} />}
-                  {downloadedQR ? "QR Code Berhasil Diunduh!" : "Unduh QR Code"}
+                  {downloadedQR ? t("qrSuccess") : t("qrDownload")}
                 </button>
               </div>
 
@@ -582,7 +618,7 @@ export default function ProfileView({
                   }`}
                 >
                   {copiedLink ? <FiCheck size={13} /> : <FiCopy size={13} />}
-                  {copiedLink ? "Tersalin" : "Salin Link"}
+                  {copiedLink ? t("copied") : t("copyLink")}
                 </button>
               </div>
             </motion.div>

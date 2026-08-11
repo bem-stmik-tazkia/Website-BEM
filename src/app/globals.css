@@ -265,3 +265,64 @@ body {
   border: 3px solid var(--color-background);
 }
 ::-webkit-scrollbar-thumb:hover { background-color: var(--color-secondary); }
+
+/* === DRIVER.JS CUSTOM STYLING (GUIDED TOUR) === */
+.driver-popover {
+  background: rgba(27, 64, 134, 0.95) !important; /* Navy Background */
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  padding: 16px !important;
+}
+
+.dark .driver-popover {
+  background: rgba(25, 28, 32, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+.driver-popover-title {
+  font-family: "Plus Jakarta Sans", sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: var(--color-secondary) !important; /* Orange Title */
+  margin-bottom: 8px !important;
+}
+
+.driver-popover-description {
+  font-family: "Plus Jakarta Sans", sans-serif !important;
+  font-size: 14px !important;
+  color: rgba(255, 255, 255, 0.9) !important; /* White Text */
+  line-height: 1.6 !important;
+}
+
+/* Progress text (Langkah 1 dari 5) */
+.driver-popover-progress-text {
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+/* Sembunyikan tombol Kembali (Previous) jika sedang disabled (langkah 1) */
+.driver-popover-prev-btn:disabled {
+  display: none !important;
+}
+
+/* Tombol Close (X) di pojok kanan atas */
+.driver-popover-close-btn {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+.driver-popover-close-btn:hover {
+  color: white !important;
+}
+
+/* Warna panah (arrow) agar sesuai dengan background Navy */
+.driver-popover-arrow {
+  border-color: rgba(27, 64, 134, 0.95) !important;
+}
+.driver-popover-arrow-side-left { border-left-color: rgba(27, 64, 134, 0.95) !important; }
+.driver-popover-arrow-side-right { border-right-color: rgba(27, 64, 134, 0.95) !important; }
+.driver-popover-arrow-side-top { border-top-color: rgba(27, 64, 134, 0.95) !important; }
+.driver-popover-arrow-side-bottom { border-bottom-color: rgba(27, 64, 134, 0.95) !important; }

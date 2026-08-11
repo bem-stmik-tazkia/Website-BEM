@@ -14,9 +14,9 @@ export default function LayoutClientWrapper({
   isLoggedIn?: boolean;
 }) {
   const pathname = usePathname();
-  const isLoginPage = pathname === "/login";
-  const isAdminPage = pathname?.startsWith("/admin") || false;
-  const isDashboardPage = pathname?.startsWith("/dashboard") || false;
+  const isLoginPage = pathname?.includes("/login") || false;
+  const isAdminPage = pathname?.includes("/admin") || false;
+  const isDashboardPage = pathname?.includes("/dashboard") || false;
   const hideLayout = isLoginPage || isAdminPage || isDashboardPage;
 
   useEffect(() => {

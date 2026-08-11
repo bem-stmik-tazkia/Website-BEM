@@ -2,15 +2,18 @@
 
 import { motion } from "framer-motion";
 import LottieIcon from "@/components/ui/LottieIcon";
+import { useTranslations } from "next-intl";
 
 export default function VisiMisi() {
+  const t = useTranslations("VisiMisi");
+
   return (
     <section className="py-12 md:py-20 px-4 sm:px-6 md:px-10 bg-mesh relative overflow-hidden" id="tentang">
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-16 animate-on-scroll animate-fade-up">
-          <h2 className="text-3xl md:text-4xl font-bold gradient-text mb-4">Visi &amp; Misi</h2>
+          <h2 className="text-3xl md:text-4xl font-bold gradient-text mb-4">{t("title")}</h2>
           <p className="text-on-surface-variant max-w-2xl mx-auto">
-            Landasan gerak dan arah tujuan Kabinet BEM STMIK Tazkia dalam membawa perubahan positif bagi sivitas akademika STMIK Tazkia.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -27,9 +30,9 @@ export default function VisiMisi() {
             <div className="w-16 h-16 bg-primary-container rounded-2xl flex items-center justify-center mb-8 rotate-3 group-hover:rotate-0 group-hover:scale-110 transition-all duration-300">
               <LottieIcon src="/animations/lamp.lottie" className="w-12 h-12" />
             </div>
-            <h3 className="text-2xl md:text-3xl text-primary font-bold mb-4 md:mb-6 group-hover:translate-x-1 transition-transform duration-300">Visi</h3>
+            <h3 className="text-2xl md:text-3xl text-primary font-bold mb-4 md:mb-6 group-hover:translate-x-1 transition-transform duration-300">{t("visiLabel")}</h3>
             <p className="text-lg text-on-surface-variant leading-relaxed">
-              Mewujudkan BEM STMIK Tazkia sebagai inisiator pergerakan yang progresif, inklusif, dan berdampak nyata bagi sivitas akademika dan masyarakat berbasis teknologi informasi.
+              {t("visiText")}
             </p>
           </motion.div>
 
@@ -46,14 +49,10 @@ export default function VisiMisi() {
               <div className="w-14 h-14 bg-secondary-container rounded-2xl flex items-center justify-center -rotate-3 group-hover:rotate-0 group-hover:scale-110 transition-all duration-300">
                 <LottieIcon src="/animations/Target.lottie" className="w-10 h-10" />
               </div>
-              <h3 className="text-3xl text-primary font-bold">Misi</h3>
+              <h3 className="text-3xl text-primary font-bold">{t("misiLabel")}</h3>
             </div>
             <div className="space-y-5">
-              {[
-                "Mengoptimalkan pelayanan advokasi mahasiswa yang responsif dan solutif.",
-                "Membangun ruang dialektika intelektual yang kritis dan inovatif di bidang teknologi.",
-                "Menyelaraskan pergerakan mahasiswa dengan isu strategis digitalisasi nasional."
-              ].map((misi, i) => (
+              {([t("misi0"), t("misi1"), t("misi2")] as string[]).map((misi, i) => (
                 <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-surface-container-lowest/50 hover:bg-surface-container-lowest transition-colors">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
                     <span className="material-symbols-outlined text-primary text-sm font-bold">check</span>

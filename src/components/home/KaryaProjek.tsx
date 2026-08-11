@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { useTranslations, useLocale } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiArrowRight, FiEye, FiHeart, FiChevronLeft, FiChevronRight, FiTrendingUp } from "react-icons/fi";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 const AUTOPLAY_INTERVAL = 4500;
 const rankLabel = ["🥇", "🥈", "🥉"];
@@ -18,7 +20,18 @@ const categoryColors: Record<string, { badge: string, accent: string }> = {
 };
 
 export default function KaryaProjek({ karyaList = [] }: { karyaList?: any[] }) {
-  const projects = karyaList.map((k, idx) => ({
+  const t = useTranslations("Project");
+  const locale = useLocale();
+
+  // Auto-translate title & description dari database
+  const { data: translatedKarya } = useTranslatedList(
+    karyaList,
+    "karya",
+    locale,
+    ["title", "description"]
+  );
+
+  const projects = translatedKarya.map((k, idx) => ({
     id: k.id,
     rank: idx + 1,
     badge: k.category || "UMUM",
@@ -88,24 +101,26 @@ export default function KaryaProjek({ karyaList = [] }: { karyaList?: any[] }) {
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <div className="flex items-start sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold mb-3">
-              <FiTrendingUp size={13} /> Karya Terbaik
+        <div id="tour-karya-projek" className="mb-8">
+          <div className="flex items-center justify-between gap-4 mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold">
+              <FiTrendingUp size={13} /> {t("bestProject")}
             </div>
+            <Link
+              href="/karya"
+              className="group flex items-center gap-1.5 text-primary font-semibold text-sm hover:text-secondary transition-colors whitespace-nowrap shrink-0"
+            >
+              {t("seeAll")} <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+          <div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary leading-tight">
-              Karya & Inovasi
+              {t("title")}
             </h2>
-            <p className="text-on-surface-variant text-sm mt-1 whitespace-nowrap">
-              {projects.length} karya paling disukai mahasiswa
+            <p className="text-on-surface-variant text-sm mt-1">
+              {t("subtitle", { count: projects.length })}
             </p>
           </div>
-          <Link
-            href="/karya"
-            className="group flex items-center gap-1.5 text-primary font-semibold text-sm hover:text-secondary transition-colors whitespace-nowrap shrink-0"
-          >
-            Lihat Semua <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
-          </Link>
         </div>
 
         {/* Empty State when 0 Projects */}
@@ -118,15 +133,15 @@ export default function KaryaProjek({ karyaList = [] }: { karyaList?: any[] }) {
                 autoplay
               />
             </div>
-            <h3 className="text-lg md:text-xl font-bold text-on-background">Belum Ada Karya yang Diunggah</h3>
+            <h3 className="text-lg md:text-xl font-bold text-on-background">{t("noProjectTitle")}</h3>
             <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
-              Jadilah mahasiswa STMIK Tazkia pertama yang memamerkan karya atau inovasimu di website BEM!
+              {t("noProjectDesc")}
             </p>
             <Link
               href="/dashboard/upload"
               className="mt-3 inline-flex items-center gap-2 bg-primary text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md"
             >
-              Unggah Karya Pertama <FiArrowRight />
+              {t("uploadFirst")} <FiArrowRight />
             </Link>
           </div>
         ) : (
@@ -158,8 +173,8 @@ export default function KaryaProjek({ karyaList = [] }: { karyaList?: any[] }) {
                     <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest">{p.badge}</span>
                     <h3 className="text-white font-extrabold text-base leading-tight mt-0.5">{p.title}</h3>
                     <div className="flex items-center gap-3 mt-2">
-                      <span className="flex items-center gap-1 text-white/70 text-xs"><FiEye size={12} /> {p.viewsLabel} dilihat</span>
-                      <span className="flex items-center gap-1 text-white/70 text-xs"><FiHeart size={12} /> {p.likes} suka</span>
+                      <span className="flex items-center gap-1 text-white/70 text-xs"><FiEye size={12} /> {p.viewsLabel} {t("views")}</span>
+                      <span className="flex items-center gap-1 text-white/70 text-xs"><FiHeart size={12} /> {p.likes} {t("likes")}</span>
                     </div>
                   </div>
                 </Link>
@@ -229,8 +244,8 @@ export default function KaryaProjek({ karyaList = [] }: { karyaList?: any[] }) {
                         <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest">{item.badge}</span>
                         <h3 className="text-white font-extrabold text-lg leading-tight mt-0.5">{item.title}</h3>
                         <div className="flex items-center gap-3 mt-2">
-                          <span className="flex items-center gap-1 text-white/70 text-xs"><FiEye size={12} /> {item.viewsLabel} dilihat</span>
-                          <span className="flex items-center gap-1 text-white/70 text-xs"><FiHeart size={12} /> {item.likes} suka</span>
+                          <span className="flex items-center gap-1 text-white/70 text-xs"><FiEye size={12} /> {item.viewsLabel} {t("views")}</span>
+                          <span className="flex items-center gap-1 text-white/70 text-xs"><FiHeart size={12} /> {item.likes} {t("likes")}</span>
                         </div>
                       </div>
                     </motion.div>

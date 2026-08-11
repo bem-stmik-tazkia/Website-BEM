@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { FiMail, FiFolder, FiChevronRight } from "react-icons/fi";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 export interface MahasiswaProfile {
   id: string;
@@ -34,6 +35,21 @@ export interface MahasiswaCardProps {
 
 export default function MahasiswaCard({ mahasiswa, onSelect, searchQuery = "" }: MahasiswaCardProps) {
   const [imgError, setImgError] = useState(false);
+  const t = useTranslations("MahasiswaCard");
+  const tStatus = useTranslations("StatusBadge");
+
+  const translateStatusBadge = (badgeStr: string) => {
+    if (!badgeStr) return badgeStr;
+    const isMatched = (key: string) => badgeStr.toLowerCase().includes(key.toLowerCase());
+    if (isMatched("Open for Collab")) return `🚀 ${tStatus("openForCollab")}`;
+    if (isMatched("Mencari Magang")) return `💼 ${tStatus("lookingForInternship")}`;
+    if (isMatched("Siap Freelance")) return `🤝 ${tStatus("readyForFreelance")}`;
+    if (isMatched("Fokus Belajar")) return `📚 ${tStatus("focusOnStudy")}`;
+    if (isMatched("Bekerja Full-time")) return `💻 ${tStatus("workingFullTime")}`;
+    if (isMatched("Punya Ide Startup")) return `💡 ${tStatus("haveStartupIdea")}`;
+    if (isMatched("Mencari Mentor")) return `🔍 ${tStatus("lookingForMentor")}`;
+    return badgeStr;
+  };
 
   return (
     <motion.div
@@ -65,11 +81,11 @@ export default function MahasiswaCard({ mahasiswa, onSelect, searchQuery = "" }:
         {/* Angkatan pill */}
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 sm:gap-0">
           <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider border border-white/20">
-            Angkatan {mahasiswa.angkatan}
+            {t("batch")} {mahasiswa.angkatan}
           </span>
           {mahasiswa.status_badge && (
             <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-secondary text-white text-[9px] sm:text-[10px] font-bold">
-              {mahasiswa.status_badge}
+              {translateStatusBadge(mahasiswa.status_badge)}
             </span>
           )}
         </div>
@@ -150,7 +166,7 @@ export default function MahasiswaCard({ mahasiswa, onSelect, searchQuery = "" }:
 
         {/* Bio */}
         <p className="hidden sm:block text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-4 flex-1">
-          {mahasiswa.bio || "Halo! Saya mahasiswa BEM STMIK Tazkia."}
+          {mahasiswa.bio || t("defaultBio")}
         </p>
         
         {/* Mobile spacing flex-1 when bio is hidden */}
@@ -160,10 +176,10 @@ export default function MahasiswaCard({ mahasiswa, onSelect, searchQuery = "" }:
         <div className="pt-2 sm:pt-3 border-t border-outline-variant/30 flex items-center justify-between mt-2 sm:mt-0">
           <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-bold text-on-surface-variant">
             <FiFolder size={12} className="text-secondary sm:w-[13px] sm:h-[13px]" />
-            <span>{mahasiswa.projects_count ?? 0} Proyek</span>
+            <span>{mahasiswa.projects_count ?? 0} {t("projects")}</span>
           </div>
           <span className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-bold text-primary group-hover:translate-x-1 transition-transform">
-            <span className="hidden sm:inline">Lihat </span>Portfolio
+            <span className="hidden sm:inline">{t("view")}</span>{t("portfolio")}
             <FiChevronRight size={12} className="sm:w-[14px] sm:h-[14px]" />
           </span>
         </div>

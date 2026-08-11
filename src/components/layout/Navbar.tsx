@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import NativeLink from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { usePathname, useRouter } from "@/i18n/routing";
 import { FiHome, FiAward, FiCalendar, FiBookOpen, FiUser, FiUsers, FiLogOut, FiChevronDown, FiGrid, FiX } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import UserNotificationBell from "@/components/layout/UserNotificationBell";
-import AdminNotificationBell from "@/app/admin/AdminNotificationBell";
+import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
 export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -97,25 +100,27 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
     setActiveBottomSheet(null);
   }, [pathname]);
 
+  const t = useTranslations("Navigation");
+
   const navLinks = [
-    { name: "Beranda", path: "/" },
-    { name: "Karya", path: "/karya" },
-    { name: "Mahasiswa", path: "/mahasiswa" },
-    { name: "Agenda", path: "/agenda" },
+    { name: t("home"), path: "/" },
+    { name: t("projects"), path: "/karya" },
+    { name: t("students"), path: "/mahasiswa" },
+    { name: t("agenda"), path: "/agenda" },
     {
-      name: "Publikasi",
+      name: t("publications"),
       dropdown: true,
       children: [
-        { name: "Berita", path: "/berita" },
-        { name: "Dokumentasi", path: "/dokumentasi" }
+        { name: t("news"), path: "/berita" },
+        { name: t("documentation"), path: "/dokumentasi" }
       ]
     },
     {
-      name: "Profil BEM",
+      name: t("cabinet"),
       dropdown: true,
       children: [
-        { name: "Kabinet", path: "/kabinet" },
-        { name: "Kotak Saran/Aduan", path: "/#saran" }
+        { name: t("menuCab"), path: "/kabinet" },
+        { name: t("feedbackTitle"), path: "/#saran" }
       ]
     },
   ];
@@ -125,8 +130,8 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
       <nav
         id="navbar"
         className={`fixed top-0 w-full z-50 transition-all duration-300 ease-in-out border-b ${isScrolled
-            ? "bg-surface border-outline-variant/50 shadow-md"
-            : "bg-transparent border-transparent"
+          ? "bg-surface border-outline-variant/50 shadow-md"
+          : "bg-transparent border-transparent"
           }`}
       >
         <div className="flex justify-between items-center h-20 md:h-24 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto gap-4">
@@ -134,7 +139,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
             <div className="flex items-center gap-1.5 md:gap-2">
               <Image
                 alt="BEM STMIK Tazkia Logo 1"
-                src="/images/logo.png"
+                src="/images/logo.webp"
                 width={64}
                 height={64}
                 priority
@@ -142,7 +147,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
               />
               <Image
                 alt="BEM STMIK Tazkia Logo 2"
-                src="/images/logo2.png"
+                src="/images/logo2.webp"
                 width={64}
                 height={64}
                 priority
@@ -174,12 +179,12 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                   <div key={link.name} className="relative group">
                     <button
                       className={`flex items-center gap-1 py-2 transition-colors duration-300 after:absolute after:bottom-[-4px] after:left-0 after:h-1 after:rounded-full after:transition-all after:duration-300 ${isActive
-                          ? `font-bold after:w-full after:bg-secondary ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"}`
-                          : isScrolled
-                            ? "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
-                            : isHome
-                              ? "text-white/80 after:w-0 hover:after:w-full after:bg-surface hover:text-white"
-                              : "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
+                        ? `font-bold after:w-full after:bg-secondary ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"}`
+                        : isScrolled
+                          ? "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
+                          : isHome
+                            ? "text-white/80 after:w-0 hover:after:w-full after:bg-surface hover:text-white"
+                            : "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
                         }`}
                     >
                       {link.name}
@@ -211,12 +216,12 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                   key={link.name}
                   href={link.path!}
                   className={`relative py-2 transition-colors duration-300 after:absolute after:bottom-[-4px] after:left-0 after:h-1 after:rounded-full after:transition-all after:duration-300 ${isActive
-                      ? `font-bold after:w-full after:bg-secondary ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"}`
-                      : isScrolled
-                        ? "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
-                        : isHome
-                          ? "text-white/80 after:w-0 hover:after:w-full after:bg-surface hover:text-white"
-                          : "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
+                    ? `font-bold after:w-full after:bg-secondary ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"}`
+                    : isScrolled
+                      ? "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
+                      : isHome
+                        ? "text-white/80 after:w-0 hover:after:w-full after:bg-surface hover:text-white"
+                        : "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
                     }`}
                 >
                   {link.name}
@@ -226,7 +231,8 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           </div>
 
           {/* Action Button (Mobile, Tablet, Desktop) */}
-          <div className="flex items-center ml-auto lg:ml-0 gap-2 md:gap-3">
+          <div id="tour-login-btn" className="flex items-center ml-auto lg:ml-0 gap-2 md:gap-3">
+            <LanguageSwitcher />
             {userProfile && (
               userProfile.role === 'admin' ? (
                 <AdminNotificationBell isScrolled={isScrolled} isHome={isHome} />
@@ -238,13 +244,12 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
               <div className="relative" ref={profileMenuRef}>
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className={`flex items-center md:gap-2 md:pl-2 md:pr-4 md:py-1.5 rounded-full md:border transition-all md:hover:shadow-soft ${
-                    isScrolled
+                  className={`flex items-center md:gap-2 md:pl-2 md:pr-4 md:py-1.5 rounded-full md:border transition-all md:hover:shadow-soft ${isScrolled
                       ? "md:bg-surface md:border-outline-variant/50 text-on-surface hover:text-primary md:hover:border-primary"
                       : isHome
                         ? "md:bg-surface/10 md:backdrop-blur-md md:border-white/20 text-white hover:text-white/80 md:hover:bg-surface/20"
                         : "md:bg-surface/80 md:backdrop-blur-md md:border-outline-variant/30 text-on-surface hover:text-primary md:hover:border-primary"
-                  }`}
+                    }`}
                 >
                   <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-sm">
                     {userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || userProfile.raw_user_meta_data?.avatar_url || userProfile.raw_user_meta_data?.picture ? (
@@ -265,7 +270,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 {!hideProfileTooltip && userProfile?.has_completed_profile === false && (
                   <div className="absolute top-full right-0 mt-4 mr-2 md:mr-0 z-50 animate-bounce cursor-pointer" onClick={() => { setHideProfileTooltip(true); localStorage.setItem("hasSeenProfileTooltip", "true"); }}>
                     <div className="bg-[var(--color-secondary)] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-secondary/30 relative whitespace-nowrap flex items-center gap-2">
-                      <span>Tempat profilmu ada di sini, ayo sesuaikan!</span>
+                      <span>{t("profileTooltip")}</span>
                       <button className="text-white/80 hover:text-white" onClick={(e) => { e.stopPropagation(); setHideProfileTooltip(true); localStorage.setItem("hasSeenProfileTooltip", "true"); }}>
                         <FiX size={14} />
                       </button>
@@ -294,14 +299,25 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                         <p className="text-xs text-on-surface-variant truncate">{userProfile.email}</p>
                       </div>
 
-                      <Link
-                        href={userProfile.role === 'admin' ? '/admin' : '/dashboard'}
-                        onClick={() => setShowProfileMenu(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-on-surface hover:bg-primary/10 hover:text-primary transition-colors"
-                      >
-                        <FiGrid size={16} />
-                        Dashboard {userProfile.role === 'admin' ? 'Admin' : 'Karya'}
-                      </Link>
+                      {userProfile.role === 'admin' ? (
+                        <NativeLink
+                          href="/admin"
+                          onClick={() => setShowProfileMenu(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-on-surface hover:bg-primary/10 hover:text-primary transition-colors"
+                        >
+                          <FiGrid size={16} />
+                          {t("dashboardAdmin")}
+                        </NativeLink>
+                      ) : (
+                        <Link
+                          href="/dashboard"
+                          onClick={() => setShowProfileMenu(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-on-surface hover:bg-primary/10 hover:text-primary transition-colors"
+                        >
+                          <FiGrid size={16} />
+                          {t("dashboardKarya")}
+                        </Link>
+                      )}
 
                       <div className="h-px bg-outline-variant/20 my-1 mx-4"></div>
 
@@ -310,24 +326,24 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-500/10 transition-colors text-left"
                       >
                         <FiLogOut size={16} />
-                        Keluar
+                        {t("logout")}
                       </button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
             ) : (
-              <Link
+              <NativeLink
                 href="/login"
                 className={`ml-2 md:ml-4 px-5 py-2 md:px-8 md:py-3 rounded-full font-semibold text-sm md:text-base transition-all hover:-translate-y-0.5 shadow-soft ${isScrolled
-                    ? "bg-secondary text-on-primary hover:bg-secondary/90 shadow-secondary/30"
-                    : isHome
-                      ? "bg-surface/15 backdrop-blur-md border border-white/40 text-white hover:bg-secondary hover:border-secondary"
-                      : "bg-secondary text-on-primary hover:bg-secondary/90 shadow-secondary/30"
+                  ? "bg-secondary text-on-primary hover:bg-secondary/90 shadow-secondary/30"
+                  : isHome
+                    ? "bg-surface/15 backdrop-blur-md border border-white/40 text-white hover:bg-secondary hover:border-secondary"
+                    : "bg-secondary text-on-primary hover:bg-secondary/90 shadow-secondary/30"
                   }`}
               >
-                Masuk
-              </Link>
+                {t("login")}
+              </NativeLink>
             )}
           </div>
         </div>
@@ -342,60 +358,59 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
       {!isDashboard && (
         <>
           <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-lg border-t border-outline-variant/30 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] pb-5 pt-2 px-1 flex justify-between items-center rounded-t-3xl touch-manipulation">
-        <Link 
-          href="/" 
-          onClick={() => { setPendingPath("/"); setActiveBottomSheet(null); }} 
-          className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath === "/" ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-        >
-          <FiHome size={20} className={currentPath === "/" ? "fill-secondary/20" : ""} />
-          <span className="text-[9px] font-bold">Beranda</span>
-        </Link>
+            <Link
+              href="/"
+              onClick={() => { setPendingPath("/"); setActiveBottomSheet(null); }}
+              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath === "/" ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+            >
+              <FiHome size={20} className={currentPath === "/" ? "fill-secondary/20" : ""} />
+              <span className="text-[9px] font-bold">{t("home")}</span>
+            </Link>
 
-        <Link 
-          href="/agenda" 
-          onClick={() => { setPendingPath("/agenda"); setActiveBottomSheet(null); }} 
-          className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/agenda") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-        >
-          <FiCalendar size={20} className={currentPath.startsWith("/agenda") ? "fill-secondary/20" : ""} />
-          <span className="text-[9px] font-bold">Agenda</span>
-        </Link>
+            <Link
+              href="/agenda"
+              onClick={() => { setPendingPath("/agenda"); setActiveBottomSheet(null); }}
+              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/agenda") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+            >
+              <FiCalendar size={20} className={currentPath.startsWith("/agenda") ? "fill-secondary/20" : ""} />
+              <span className="text-[9px] font-bold">{t("agenda")}</span>
+            </Link>
 
-        <Link 
-          href="/karya" 
-          onClick={() => { setPendingPath("/karya"); setActiveBottomSheet(null); }} 
-          className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/karya") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-        >
-          <div className="bg-primary text-white p-2.5 rounded-full -mt-5 shadow-glow border-4 border-white flex items-center justify-center">
-            <FiAward size={20} />
-          </div>
-          <span className="text-[9px] font-bold">Karya</span>
-        </Link>
+            <Link
+              href="/karya"
+              onClick={() => { setPendingPath("/karya"); setActiveBottomSheet(null); }}
+              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/karya") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+            >
+              <div className="bg-primary text-white p-2.5 rounded-full -mt-5 shadow-glow border-4 border-white flex items-center justify-center">
+                <FiAward size={20} />
+              </div>
+              <span className="text-[9px] font-bold">{t("projects")}</span>
+            </Link>
 
-        <Link 
-          href="/mahasiswa" 
-          onClick={() => { setPendingPath("/mahasiswa"); setActiveBottomSheet(null); }} 
-          className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/mahasiswa") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-        >
-          <FiUsers size={20} className={currentPath.startsWith("/mahasiswa") ? "fill-secondary/20" : ""} />
-          <span className="text-[9px] font-bold">Mahasiswa</span>
-        </Link>
+            <Link
+              href="/mahasiswa"
+              onClick={() => { setPendingPath("/mahasiswa"); setActiveBottomSheet(null); }}
+              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/mahasiswa") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+            >
+              <FiUsers size={20} className={currentPath.startsWith("/mahasiswa") ? "fill-secondary/20" : ""} />
+              <span className="text-[9px] font-bold">{t("students")}</span>
+            </Link>
 
-        <button 
-          onClick={() => setActiveBottomSheet(activeBottomSheet === 'more' ? null : 'more')} 
-          className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${
-            activeBottomSheet === 'more' ||
-            currentPath.startsWith("/berita") ||
-            currentPath.startsWith("/dokumentasi") ||
-            currentPath.startsWith("/kabinet")
-              ? "text-secondary" 
-              : "text-on-surface-variant hover:text-primary"
-          }`}
-        >
-          <FiGrid size={20} className={activeBottomSheet === 'more' || currentPath.startsWith("/berita") || currentPath.startsWith("/dokumentasi") || currentPath.startsWith("/kabinet") ? "fill-secondary/20" : ""} />
-          <span className="text-[9px] font-bold">Lainnya</span>
-        </button>
-      </nav>
-      </>
+            <button
+              onClick={() => setActiveBottomSheet(activeBottomSheet === 'more' ? null : 'more')}
+              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${activeBottomSheet === 'more' ||
+                  currentPath.startsWith("/berita") ||
+                  currentPath.startsWith("/dokumentasi") ||
+                  currentPath.startsWith("/kabinet")
+                  ? "text-secondary"
+                  : "text-on-surface-variant hover:text-primary"
+                }`}
+            >
+              <FiGrid size={20} className={activeBottomSheet === 'more' || currentPath.startsWith("/berita") || currentPath.startsWith("/dokumentasi") || currentPath.startsWith("/kabinet") ? "fill-secondary/20" : ""} />
+              <span className="text-[9px] font-bold">{t("others")}</span>
+            </button>
+          </nav>
+        </>
       )}
 
       {/* Overlay for Bottom Sheet */}
@@ -423,63 +438,63 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           >
             {/* Header */}
             <div className="px-5 pt-4 pb-3 border-b border-outline-variant/20 flex items-center justify-between">
-              <p className="text-sm font-extrabold text-on-surface">Menu Lainnya</p>
+              <p className="text-sm font-extrabold text-on-surface">{t("moreMenu")}</p>
               <button onClick={() => setActiveBottomSheet(null)} className="p-1.5 rounded-full hover:bg-surface-variant transition-colors">
                 <FiX size={16} className="text-on-surface-variant" />
               </button>
             </div>
             {/* 2x2 Grid Menu */}
             <div className="grid grid-cols-2 gap-px bg-outline-variant/10 p-2">
-              <Link 
-                href="/berita" 
-                onClick={() => { setPendingPath("/berita"); setActiveBottomSheet(null); }} 
+              <Link
+                href="/berita"
+                onClick={() => { setPendingPath("/berita"); setActiveBottomSheet(null); }}
                 className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
               >
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                   <FiBookOpen size={18} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-on-surface">Berita</p>
-                  <p className="text-[10px] text-on-surface-variant">Info & Pengumuman</p>
+                  <p className="text-sm font-bold text-on-surface">{t("menuNews")}</p>
+                  <p className="text-[10px] text-on-surface-variant">{t("menuNewsDesc")}</p>
                 </div>
               </Link>
-              <Link 
-                href="/dokumentasi" 
-                onClick={() => { setPendingPath("/dokumentasi"); setActiveBottomSheet(null); }} 
+              <Link
+                href="/dokumentasi"
+                onClick={() => { setPendingPath("/dokumentasi"); setActiveBottomSheet(null); }}
                 className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
               >
                 <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-secondary text-[18px]">photo_library</span>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-on-surface">Dokumentasi</p>
-                  <p className="text-[10px] text-on-surface-variant">Foto & Galeri</p>
+                  <p className="text-sm font-bold text-on-surface">{t("menuDoc")}</p>
+                  <p className="text-[10px] text-on-surface-variant">{t("menuDocDesc")}</p>
                 </div>
               </Link>
-              <Link 
-                href="/kabinet" 
-                onClick={() => { setPendingPath("/kabinet"); setActiveBottomSheet(null); }} 
+              <Link
+                href="/kabinet"
+                onClick={() => { setPendingPath("/kabinet"); setActiveBottomSheet(null); }}
                 className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
               >
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                   <FiUser size={18} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-on-surface">Kabinet BEM</p>
-                  <p className="text-[10px] text-on-surface-variant">Profil & Struktur</p>
+                  <p className="text-sm font-bold text-on-surface">{t("menuCab")}</p>
+                  <p className="text-[10px] text-on-surface-variant">{t("menuCabDesc")}</p>
                 </div>
               </Link>
-              <Link 
-                href="/#saran" 
-                onClick={() => { setPendingPath("/#saran"); setActiveBottomSheet(null); }} 
+              <Link
+                href="/#saran"
+                onClick={() => { setPendingPath("/#saran"); setActiveBottomSheet(null); }}
                 className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
               >
                 <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-secondary text-[18px]">chat_bubble</span>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-on-surface">Kotak Saran</p>
-                  <p className="text-[10px] text-on-surface-variant">Aspirasi & Aduan</p>
+                  <p className="text-sm font-bold text-on-surface">{t("menuFeedback")}</p>
+                  <p className="text-[10px] text-on-surface-variant">{t("menuFeedbackDesc")}</p>
                 </div>
               </Link>
             </div>
@@ -507,20 +522,20 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
               <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mb-4">
                 <FiLogOut size={28} />
               </div>
-              <h3 className="text-xl font-bold text-on-surface mb-2">Konfirmasi Keluar</h3>
-              <p className="text-on-surface-variant text-sm mb-8">Apakah kamu yakin ingin keluar dari akun ini? Kamu harus login kembali untuk mengakses dashboard.</p>
+              <h3 className="text-xl font-bold text-on-surface mb-2">{t("logoutConfirmTitle")}</h3>
+              <p className="text-on-surface-variant text-sm mb-8">{t("logoutConfirmDesc")}</p>
               <div className="flex w-full gap-3">
                 <button
                   onClick={() => setShowLogoutConfirm(false)}
                   className="flex-1 py-3 px-4 rounded-xl font-bold text-on-surface bg-surface-variant hover:bg-outline-variant transition-colors"
                 >
-                  Batal
+                  {t("cancel")}
                 </button>
                 <button
                   onClick={handleLogout}
                   className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
                 >
-                  Ya, Keluar
+                  {t("yesLogout")}
                 </button>
               </div>
             </motion.div>

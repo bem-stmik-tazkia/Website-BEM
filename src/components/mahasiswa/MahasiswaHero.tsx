@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { FiSearch, FiFilter, FiX } from "react-icons/fi";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 
 const DotLottieReact = dynamic(
   () => import("@lottiefiles/dotlottie-react").then((mod) => mod.DotLottieReact),
@@ -34,8 +35,9 @@ export default function MahasiswaHero({
   availableAngkatan,
   isLoading = false,
 }: MahasiswaHeroProps) {
+  const t = useTranslations("MahasiswaPage");
   const prodiOptions = [
-    "Semua Prodi",
+    t("filterAll") + " Prodi",
     "Teknik Informatika",
     "Sistem Informasi",
   ];
@@ -67,13 +69,14 @@ export default function MahasiswaHero({
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto relative z-10">
           {/* Title */}
           <motion.h1
+            id="tour-mahasiswa-header"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             className="text-2xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight mb-3 md:mb-4 text-primary"
           >
-            Direktori Mahasiswa &{" "}
-            <span className="text-secondary">Karya Per Angkatan</span>
+            {t("heroTitlePart1")}{" "}
+            <span className="text-secondary">{t("heroTitlePart2")}</span>
           </motion.h1>
 
           <motion.p
@@ -82,11 +85,12 @@ export default function MahasiswaHero({
             transition={{ duration: 0.4, delay: 0.1 }}
             className="text-on-surface-variant text-sm sm:text-lg max-w-2xl leading-relaxed mb-6 md:mb-8"
           >
-            Temukan profil pengembang, desainer, dan inovator STMIK Tazkia. Jelajahi portofolio dan repositori karya per angkatan.
+            {t("heroSubtitle")}
           </motion.p>
 
           {/* Stats Card */}
           <motion.div
+            id="tour-mahasiswa-stats"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.15 }}
@@ -106,7 +110,7 @@ export default function MahasiswaHero({
                 ) : (
                   <>
                     <p className="text-lg sm:text-2xl font-extrabold text-primary leading-none">{totalMahasiswa}</p>
-                    <p className="text-[10px] sm:text-xs font-semibold text-on-surface-variant mt-1">Mahasiswa</p>
+                    <p className="text-[10px] sm:text-xs font-semibold text-on-surface-variant mt-1">{t("statStudents")}</p>
                   </>
                 )}
               </div>
@@ -126,7 +130,7 @@ export default function MahasiswaHero({
                 ) : (
                   <>
                     <p className="text-lg sm:text-2xl font-extrabold text-secondary leading-none">{totalProjects}</p>
-                    <p className="text-[10px] sm:text-xs font-semibold text-on-surface-variant mt-1">Proyek</p>
+                    <p className="text-[10px] sm:text-xs font-semibold text-on-surface-variant mt-1">{t("statProjects")}</p>
                   </>
                 )}
               </div>
@@ -146,7 +150,7 @@ export default function MahasiswaHero({
                 ) : (
                   <>
                     <p className="text-lg sm:text-2xl font-extrabold text-primary leading-none">{availableAngkatan.length}</p>
-                    <p className="text-[10px] sm:text-xs font-semibold text-on-surface-variant mt-1">Angkatan</p>
+                    <p className="text-[10px] sm:text-xs font-semibold text-on-surface-variant mt-1">{t("statBatch")}</p>
                   </>
                 )}
               </div>
@@ -155,6 +159,7 @@ export default function MahasiswaHero({
 
           {/* Search Box */}
           <motion.div
+            id="tour-mahasiswa-search"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
@@ -166,7 +171,7 @@ export default function MahasiswaHero({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari nama, skill, atau proyek..."
+                placeholder={t("searchPlaceholder")}
                 className="w-full pl-11 pr-10 py-3 md:py-4 rounded-full bg-surface border border-outline-variant/30 text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm text-sm font-medium"
               />
               {searchQuery && (
@@ -182,6 +187,7 @@ export default function MahasiswaHero({
 
           {/* Filters */}
           <motion.div
+            id="tour-mahasiswa-filters"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.25 }}
@@ -192,8 +198,7 @@ export default function MahasiswaHero({
               <div className="w-full overflow-x-auto scrollbar-hide pb-1">
                 <div className="flex items-center sm:justify-center gap-2 min-w-max px-1">
                   <span className="text-xs text-on-surface-variant font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0">
-                    <FiFilter size={13} className="text-primary" /> Angkatan:
-                    <span className="text-[9px] text-primary/70 animate-pulse ml-0.5 sm:hidden normal-case font-medium tracking-normal">(Geser ➔)</span>
+                    <FiFilter size={13} className="text-primary" /> {t("filterBatch")}
                   </span>
                   <button
                     onClick={() => setSelectedAngkatan(null)}
@@ -203,7 +208,7 @@ export default function MahasiswaHero({
                         : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary hover:text-primary"
                     }`}
                   >
-                    Semua
+                    {t("filterAll")}
                   </button>
                   {isLoading
                     ? [1, 2, 3].map(n => <div key={n} className="w-14 h-7 bg-surface-variant/60 rounded-full animate-pulse shrink-0" />)
@@ -231,8 +236,7 @@ export default function MahasiswaHero({
               <div className="w-full overflow-x-auto scrollbar-hide pb-1">
                 <div className="flex items-center sm:justify-center gap-2 min-w-max px-1">
                   <span className="text-xs text-on-surface-variant font-bold uppercase tracking-wider shrink-0 flex items-center">
-                    Prodi:
-                    <span className="text-[9px] text-primary/70 animate-pulse ml-1 sm:hidden normal-case font-medium tracking-normal">(Geser ➔)</span>
+                    {t("filterProdi")}
                   </span>
                   {prodiOptions.map((prodi) => (
                     <button
