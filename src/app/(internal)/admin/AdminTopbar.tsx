@@ -23,7 +23,7 @@ export default function AdminTopbar({ user }: { user?: any }) {
   const initial = fullName.charAt(0).toUpperCase();
 
   return (
-    <header className="w-full bg-surface border-b border-outline-variant/30 shadow-sm px-6 py-4 flex items-center justify-end gap-6 sticky top-0 z-10 transition-colors duration-300">
+    <header className="w-full bg-surface border-b border-outline-variant/30 shadow-sm px-6 py-4 flex items-center justify-end gap-6 sticky top-0 z-[60] transition-colors duration-300">
       
       {/* Profile Card */}
       <div className="flex items-center gap-3">
