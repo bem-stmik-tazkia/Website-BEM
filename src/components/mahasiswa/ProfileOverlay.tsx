@@ -52,7 +52,7 @@ export default function ProfileOverlay({
       {/* Language Switcher — floating bottom right, outside the transformed container */}
       <div className="fixed bottom-6 right-6 z-[9999] flex items-center gap-2">
         <div className="bg-surface/90 backdrop-blur-md border border-outline-variant/40 shadow-2xl rounded-full px-2 py-1 flex items-center">
-          <LanguageSwitcher />
+          <LanguageSwitcher floatingMode />
         </div>
       </div>
     </>

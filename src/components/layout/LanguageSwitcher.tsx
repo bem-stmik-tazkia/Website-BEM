@@ -14,7 +14,7 @@ const LANGUAGES = [
   { code: "fr", label: "Français", flag: "🇫🇷" },
 ];
 
-export default function LanguageSwitcher({ bottomNavMode = false }: { bottomNavMode?: boolean }) {
+export default function LanguageSwitcher({ bottomNavMode = false, floatingMode = false }: { bottomNavMode?: boolean; floatingMode?: boolean }) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -64,7 +64,9 @@ export default function LanguageSwitcher({ bottomNavMode = false }: { bottomNavM
 
   const currentLanguage = LANGUAGES.find((l) => l.code === locale) || LANGUAGES[0];
 
-  const containerClasses = bottomNavMode
+  const containerClasses = floatingMode
+    ? "relative z-[100]"
+    : bottomNavMode
     ? "relative z-[100]"
     : `relative md:fixed md:bottom-6 md:z-50 transition-all duration-500 ease-in-out ${hasTour ? "md:right-[5.5rem]" : "md:right-6"}`;
 
@@ -91,7 +93,7 @@ export default function LanguageSwitcher({ bottomNavMode = false }: { bottomNavM
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className={`absolute ${bottomNavMode ? "left-0 md:left-auto md:right-0" : "right-0"} md:bottom-full md:top-auto md:mb-2 top-full mt-2 w-40 bg-surface border border-outline-variant/30 rounded-xl shadow-xl overflow-hidden z-50`}
+            className={`absolute ${bottomNavMode ? "left-0 md:left-auto md:right-0" : "right-0"} ${floatingMode ? "bottom-full mb-2" : "md:bottom-full md:top-auto md:mb-2 top-full mt-2"} w-40 bg-surface border border-outline-variant/30 rounded-xl shadow-xl overflow-hidden z-50`}
           >
             {LANGUAGES.map((lang) => (
               <button
