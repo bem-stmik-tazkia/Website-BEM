@@ -14,7 +14,7 @@ export default function ProfileSettingsPage() {
   const supabase = createClient();
   const router = useRouter();
   const toast = useToast();
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -22,7 +22,7 @@ export default function ProfileSettingsPage() {
   // true = prodi & angkatan sudah diset admin (read-only untuk user)
   // false = belum diinput admin, user bisa isi prodi & angkatan sendiri
   const [isAdminSeeded, setIsAdminSeeded] = useState(false);
-  
+
   const DRAFT_KEY = "profile_draft";
 
   const [formData, setFormData] = useState({
@@ -44,11 +44,8 @@ export default function ProfileSettingsPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  const PRODI_OPTIONS = [
-    "Teknik Informatika",
-    "Sistem Informasi",
-    "Bisnis Digital"
-  ];
+  const [masterAngkatan, setMasterAngkatan] = useState<string[]>(["1", "2", "3"]);
+  const [masterProdi, setMasterProdi] = useState<string[]>(["Teknik Informatika", "Sistem Informasi", "Bisnis Digital"]);
 
   const PREDEFINED_SKILLS = [
     "Frontend Developer",
@@ -76,7 +73,7 @@ export default function ProfileSettingsPage() {
   const [customSkill, setCustomSkill] = useState("");
   const [isSkillDropdownOpen, setIsSkillDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -136,6 +133,19 @@ export default function ProfileSettingsPage() {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      // Fetch master data for Angkatan & Prodi
+      const { data: masterData } = await supabase
+        .from('system_settings')
+        .select('key, value')
+        .in('key', ['master_angkatan', 'master_prodi']);
+      
+      if (masterData) {
+        const angkatanItem = masterData.find(d => d.key === 'master_angkatan');
+        const prodiItem = masterData.find(d => d.key === 'master_prodi');
+        if (angkatanItem?.value) setMasterAngkatan(JSON.parse(angkatanItem.value));
+        if (prodiItem?.value) setMasterProdi(JSON.parse(prodiItem.value));
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push("/login");
@@ -323,9 +333,9 @@ export default function ProfileSettingsPage() {
       toast.info(t("toastNoChange"));
       return;
     }
-    
+
     setSaving(true);
-    
+
     let finalAvatarUrl = formData.avatar_url;
     if (avatarFile) {
       setUploadingAvatar(true);
@@ -335,7 +345,7 @@ export default function ProfileSettingsPage() {
       }
       setUploadingAvatar(false);
     }
-    
+
     // Parse skills dari string (pisahkan dengan koma) menjadi array
     const skillsArray = formData.skills
       .split(',')
@@ -365,7 +375,7 @@ export default function ProfileSettingsPage() {
       .select('id')
       .eq('user_id', userId)
       .single();
-      
+
     // Jika masih null, cek berdasarkan email (berjaga-jaga kalau belum ter-link)
     if (!existing) {
       const { data: byEmail } = await supabase
@@ -374,12 +384,12 @@ export default function ProfileSettingsPage() {
         .eq('email', payload.email)
         .is('user_id', null)
         .single();
-        
+
       if (byEmail) existing = byEmail;
     }
 
     let error;
-    
+
     if (existing) {
       // Update
       const res = await supabase.from('mahasiswa_profiles').update(payload).eq('id', existing.id);
@@ -400,7 +410,7 @@ export default function ProfileSettingsPage() {
       router.push("/dashboard");
       router.refresh();
     }
-    
+
     setSaving(false);
   };
 
@@ -469,7 +479,7 @@ export default function ProfileSettingsPage() {
       </AnimatePresence>
 
       <form onSubmit={handleSubmit} className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden">
-        
+
         {/* Avatar Upload */}
         <div className="p-6 border-b border-outline-variant/20 flex flex-col items-center justify-center gap-4 bg-surface-variant/5">
           <div className="relative w-32 h-32 rounded-full border-4 border-surface shadow-md overflow-hidden bg-primary/10 flex items-center justify-center">
@@ -506,7 +516,7 @@ export default function ProfileSettingsPage() {
           <h2 className="text-sm font-bold text-[var(--color-primary)] uppercase tracking-wider flex items-center gap-2">
             <FiInfo /> {t("basicInfo")}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* {t("fullName")} - Selalu read-only, otomatis dari akun Google kampus */}
             <div className="space-y-1.5">
@@ -522,7 +532,7 @@ export default function ProfileSettingsPage() {
                 className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/30 bg-surface-variant/40 text-on-surface-variant cursor-not-allowed outline-none"
               />
             </div>
-            
+
             {/* NIM diganti Email Kontak - Bisa diisi */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-on-surface flex items-center gap-1.5">
@@ -539,7 +549,7 @@ export default function ProfileSettingsPage() {
               />
               <p className="text-xs text-on-surface-variant">Email ini yang akan dihubungi saat orang mengklik tombol kolaborasi di profilmu.</p>
             </div>
-            
+
             {/* {t("studyProgram")} - Read Only jika dari admin, pilih sendiri jika belum */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-on-surface flex items-center gap-1.5">
@@ -567,13 +577,13 @@ export default function ProfileSettingsPage() {
                   className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary bg-surface outline-none transition-all"
                 >
                   <option value="" disabled>-- Pilih Program Studi --</option>
-                  <option value="Teknik Informatika">Teknik Informatika</option>
-                  <option value="Sistem Informasi">Sistem Informasi</option>
-                  <option value="Bisnis Digital">Bisnis Digital</option>
+                  {masterProdi.map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
                 </select>
               )}
             </div>
-            
+
             {/* Tahun {t("cohort")} - Read Only jika dari admin, isi sendiri jika belum */}
             <div>
               <label className="block text-sm font-bold text-on-surface mb-2 flex items-center gap-2">
@@ -584,21 +594,29 @@ export default function ProfileSettingsPage() {
                   <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full">Isi angkatanmu</span>
                 )}
               </label>
-              <input
-                type="number"
-                name="angkatan"
-                value={formData.angkatan}
-                onChange={isAdminSeeded ? undefined : handleChange}
-                disabled={isAdminSeeded}
-                required={!isAdminSeeded}
-                min={1}
-                placeholder={isAdminSeeded ? "" : "Contoh: 1, 2, 3..."}
-                className={`w-full border rounded-xl px-4 py-3 text-sm outline-none transition-all ${
-                  isAdminSeeded
-                    ? "bg-surface-variant/20 border-outline-variant/30 text-on-surface-variant cursor-not-allowed"
-                    : "bg-surface border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary"
-                }`}
-              />
+              {isAdminSeeded ? (
+                <input
+                  type="number"
+                  name="angkatan"
+                  value={formData.angkatan}
+                  disabled
+                  readOnly
+                  className="w-full border rounded-xl px-4 py-3 text-sm outline-none transition-all bg-surface-variant/20 border-outline-variant/30 text-on-surface-variant cursor-not-allowed"
+                />
+              ) : (
+                <select
+                  name="angkatan"
+                  value={formData.angkatan}
+                  onChange={handleChange}
+                  required
+                  className="w-full border rounded-xl px-4 py-3 text-sm outline-none transition-all bg-surface border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary"
+                >
+                  <option value="" disabled>-- Pilih Angkatan --</option>
+                  {masterAngkatan.map(a => (
+                    <option key={a} value={a}>Angkatan {a}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 
@@ -613,13 +631,13 @@ export default function ProfileSettingsPage() {
               placeholder="Tuliskan sedikit tentang dirimu, minat, dan passion-mu..."
             />
           </div>
-          
+
           <div className="space-y-3">
             <label className="text-sm font-bold text-on-surface flex items-center gap-1.5">
               Keahlian (Top Skills)
               <span className="text-xs font-normal text-on-surface-variant bg-surface-variant px-2 py-0.5 rounded-full">Maksimal 5</span>
             </label>
-            
+
             {/* Selected Skills Badges */}
             <div className="flex flex-wrap gap-2">
               {currentSkills.length === 0 && (
@@ -693,14 +711,14 @@ export default function ProfileSettingsPage() {
 
                 <AnimatePresence>
                   {showCustomSkillInput && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }} 
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       className="flex flex-wrap sm:flex-nowrap gap-2 items-center mt-1 overflow-hidden"
                     >
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={customSkill}
                         onChange={(e) => setCustomSkill(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomSkill(); } }}
@@ -709,15 +727,15 @@ export default function ProfileSettingsPage() {
                         autoFocus
                       />
                       <div className="flex gap-2 w-full sm:w-auto">
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={handleAddCustomSkill}
                           className="flex-1 sm:flex-none px-4 py-2 bg-secondary text-white text-sm font-bold rounded-xl whitespace-nowrap shadow-sm hover:bg-secondary/90 transition-colors"
                         >
                           Tambah
                         </button>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => { setShowCustomSkillInput(false); setCustomSkill(""); }}
                           className="px-3 py-2 bg-surface-variant hover:bg-outline-variant/50 text-on-surface-variant rounded-xl transition-colors"
                         >
@@ -730,7 +748,7 @@ export default function ProfileSettingsPage() {
               </div>
             )}
           </div>
-          
+
           <div className="space-y-1.5" ref={statusDropdownRef}>
             <label className="text-sm font-bold text-on-surface">{t("statusBadgeLabel")}</label>
             <div className="relative">
@@ -762,11 +780,10 @@ export default function ProfileSettingsPage() {
                             setIsDirty(true);
                             setIsStatusDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2.5 text-sm rounded-lg transition-colors ${
-                            formData.status_badge === status 
-                              ? 'bg-primary/10 text-primary font-bold' 
-                              : 'text-on-surface hover:bg-surface-variant'
-                          }`}
+                          className={`w-full text-left px-4 py-2.5 text-sm rounded-lg transition-colors ${formData.status_badge === status
+                            ? 'bg-primary/10 text-primary font-bold'
+                            : 'text-on-surface hover:bg-surface-variant'
+                            }`}
                         >
                           {status}
                         </button>
@@ -785,7 +802,7 @@ export default function ProfileSettingsPage() {
           <h2 className="text-sm font-bold text-[var(--color-primary)] uppercase tracking-wider flex items-center gap-2">
             <FiLink /> {t("socialLinks")}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-on-surface flex items-center gap-1.5"><FiGithub /> URL GitHub</label>
@@ -798,7 +815,7 @@ export default function ProfileSettingsPage() {
                 placeholder="https://github.com/username"
               />
             </div>
-            
+
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-on-surface flex items-center gap-1.5"><FiLinkedin /> URL LinkedIn</label>
               <input
@@ -810,7 +827,7 @@ export default function ProfileSettingsPage() {
                 placeholder="https://linkedin.com/in/username"
               />
             </div>
-            
+
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-on-surface flex items-center gap-1.5"><FiInstagram /> URL Instagram</label>
               <input
@@ -822,7 +839,7 @@ export default function ProfileSettingsPage() {
                 placeholder="https://instagram.com/username"
               />
             </div>
-            
+
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-on-surface flex items-center gap-1.5"><FiGlobe /> Website Portofolio</label>
               <input
@@ -854,7 +871,7 @@ export default function ProfileSettingsPage() {
             {t("btnSave")}
           </motion.button>
         </div>
-        
+
       </form>
     </div>
   );

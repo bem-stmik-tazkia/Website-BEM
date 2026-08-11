@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { FiHome, FiFileText, FiBriefcase, FiCalendar, FiChevronLeft, FiChevronRight, FiCheckCircle, FiUsers, FiAward, FiImage, FiMessageSquare, FiShield } from "react-icons/fi";
+import { FiHome, FiFileText, FiBriefcase, FiCalendar, FiChevronLeft, FiChevronRight, FiCheckCircle, FiUsers, FiAward, FiImage, FiMessageSquare, FiShield, FiSettings } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 
 const navItems = [
@@ -15,6 +15,7 @@ const navItems = [
   { name: "Kelola Kegiatan", href: "/admin/kegiatan", icon: FiCalendar },
   { name: "Kelola Dokumentasi", href: "/admin/dokumentasi", icon: FiImage },
   { name: "Kotak Saran", href: "/admin/saran-aduan", icon: FiMessageSquare },
+  { name: "Master Data", href: "/admin/master-data", icon: FiSettings },
 ];
 
 export default function AdminSidebar() {

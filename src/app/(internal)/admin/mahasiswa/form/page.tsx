@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FiArrowLeft, FiSave } from "react-icons/fi";
 import { getMahasiswaById, saveMahasiswa } from "../actions";
 import { useToast } from "@/components/ui/Toast";
+import { createClient } from "@/utils/supabase/client";
 
 export default function AdminMahasiswaFormPage() {
   const router = useRouter();
@@ -23,8 +24,28 @@ export default function AdminMahasiswaFormPage() {
     prodi: "Teknik Informatika",
     is_featured: false,
   });
-  
+
   const [isDirty, setIsDirty] = useState(false);
+  const [masterAngkatan, setMasterAngkatan] = useState<string[]>([]);
+  const [masterProdi, setMasterProdi] = useState<string[]>([]);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      const { data } = await supabase
+        .from('system_settings')
+        .select('key, value')
+        .in('key', ['master_angkatan', 'master_prodi']);
+      
+      if (data) {
+        const angkatanItem = data.find(d => d.key === 'master_angkatan');
+        const prodiItem = data.find(d => d.key === 'master_prodi');
+        if (angkatanItem?.value) setMasterAngkatan(JSON.parse(angkatanItem.value));
+        if (prodiItem?.value) setMasterProdi(JSON.parse(prodiItem.value));
+      }
+    };
+    fetchMasterData();
+  }, [supabase]);
 
   // Load from local storage on initial mount if adding new
   useEffect(() => {
@@ -77,15 +98,15 @@ export default function AdminMahasiswaFormPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     let newValue: string | boolean = value;
-    
+
     if (type === "checkbox") {
       newValue = (e.target as HTMLInputElement).checked;
     }
-    
+
     const newFormData = { ...formData, [name]: newValue };
     setFormData(newFormData);
     setIsDirty(true);
-    
+
     // Auto-save draft if creating new
     if (!id) {
       localStorage.setItem("mahasiswaDraft", JSON.stringify(newFormData));
@@ -109,7 +130,7 @@ export default function AdminMahasiswaFormPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <button 
+        <button
           onClick={handleCancel}
           className="w-10 h-10 bg-surface border border-outline-variant/30 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary transition-colors"
         >
@@ -126,7 +147,7 @@ export default function AdminMahasiswaFormPage() {
       </div>
 
       <div className="bg-surface border border-outline-variant/30 rounded-3xl p-6 md:p-8 shadow-sm">
-        <form 
+        <form
           onSubmit={async (e) => {
             e.preventDefault();
             setLoading(true);
@@ -152,8 +173,8 @@ export default function AdminMahasiswaFormPage() {
 
           <div>
             <label htmlFor="full_name" className="block text-sm font-bold text-on-surface mb-2">Nama Lengkap *</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               id="full_name"
               name="full_name"
               required
@@ -168,8 +189,8 @@ export default function AdminMahasiswaFormPage() {
             <label htmlFor="email" className="block text-sm font-bold text-on-surface mb-2">
               Email Kampus {id ? "(Opsional)" : "(Syarat Login *)"}
             </label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               id="email"
               name="email"
               required={!id}
@@ -179,8 +200,8 @@ export default function AdminMahasiswaFormPage() {
               placeholder="email@stmik-tazkia.ac.id"
             />
             <p className="text-xs text-on-surface-variant/70 mt-2">
-              {id 
-                ? "Boleh dikosongkan jika kamu belum tahu emailnya. Karena akun ini sudah terhubung, mahasiswa tetap bisa melengkapinya sendiri nanti." 
+              {id
+                ? "Boleh dikosongkan jika kamu belum tahu emailnya. Karena akun ini sudah terhubung, mahasiswa tetap bisa melengkapinya sendiri nanti."
                 : "Wajib diisi jika membuat dari awal. Email ini akan digunakan oleh mahasiswa untuk 'Login with Google'. Pastikan tidak ada salah ketik."}
             </p>
           </div>
@@ -188,50 +209,61 @@ export default function AdminMahasiswaFormPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="angkatan" className="block text-sm font-bold text-on-surface mb-2">Angkatan *</label>
-              <input 
-                type="number" 
+              <select
                 id="angkatan"
                 name="angkatan"
                 required
                 value={formData.angkatan}
                 onChange={handleChange}
-                className="w-full bg-surface-variant/30 border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors"
-                placeholder="Contoh: 1, 2, 3..."
-              />
+                className="w-full bg-surface-variant/30 border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors appearance-none"
+              >
+                <option value="" disabled>Pilih Angkatan</option>
+                {masterAngkatan.length > 0 ? (
+                  masterAngkatan.map(a => <option key={a} value={a}>Angkatan {a}</option>)
+                ) : (
+                  <>
+                    <option value="1">Angkatan 1</option>
+                    <option value="2">Angkatan 2</option>
+                    <option value="3">Angkatan 3</option>
+                  </>
+                )}
+              </select>
             </div>
-            
+
             <div>
               <label htmlFor="prodi" className="block text-sm font-bold text-on-surface mb-2">Program Studi *</label>
-              <input
-                type="text"
+              <select
                 id="prodi"
                 name="prodi"
-                list="prodi-list"
                 required
                 value={formData.prodi}
                 onChange={handleChange}
-                className="w-full bg-surface-variant/30 border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors"
-                placeholder="Ketik atau pilih program studi..."
-              />
-              <datalist id="prodi-list">
-                <option value="Teknik Informatika" />
-                <option value="Sistem Informasi" />
-                <option value="Bisnis Digital" />
-              </datalist>
+                className="w-full bg-surface-variant/30 border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors appearance-none"
+              >
+                <option value="" disabled>Pilih Program Studi</option>
+                {masterProdi.length > 0 ? (
+                  masterProdi.map(p => <option key={p} value={p}>{p}</option>)
+                ) : (
+                  <>
+                    <option value="Teknik Informatika">Teknik Informatika</option>
+                    <option value="Sistem Informasi">Sistem Informasi</option>
+                  </>
+                )}
+              </select>
               <p className="text-xs text-on-surface-variant/70 mt-2">
-                Kamu bisa memilih dari daftar atau mengetik jurusan baru secara manual.
+                Pilihan ini diatur di menu Master Data.
               </p>
             </div>
           </div>
 
           <div className="pt-4 border-t border-outline-variant/20">
             <label className="flex items-center gap-3 cursor-pointer group">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 name="is_featured"
                 checked={formData.is_featured}
                 onChange={handleChange}
-                className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer accent-primary" 
+                className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer accent-primary"
               />
               <div>
                 <span className="block text-sm font-bold text-on-surface group-hover:text-primary transition-colors">Featured Profile</span>
