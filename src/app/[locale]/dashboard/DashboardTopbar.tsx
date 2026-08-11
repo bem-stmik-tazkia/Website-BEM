@@ -10,7 +10,7 @@ import { useRouter } from "@/i18n/routing";
 import UserNotificationBell from "@/components/layout/UserNotificationBell";
 import { useTranslations } from "next-intl";
 
-export default function DashboardTopbar({ user }: { user?: any }) {
+export default function DashboardTopbar({ user, karyaCount = 0 }: { user?: any; karyaCount?: number }) {
   const t = useTranslations("Dashboard");
   const supabase = createClient();
   const router = useRouter();
@@ -32,13 +32,7 @@ export default function DashboardTopbar({ user }: { user?: any }) {
         
         setHasCompletedProfile(!!profileData?.angkatan);
         if (profileData) {
-          // Fetch project count — same logic as dashboard/page.tsx (owner OR team member)
-          const { data: karyaData } = await supabase
-            .from('karya')
-            .select('id')
-            .eq('status', 'approved')
-            .or(`user_id.eq.${user.id},team.cs.[{"user_id":"${user.id}"}]`);
-          setProfileData({ ...profileData, projects_count: karyaData?.length ?? 0 });
+          setProfileData(profileData);
         }
       }
     };
@@ -90,6 +84,7 @@ export default function DashboardTopbar({ user }: { user?: any }) {
     linkedin_url: profileData?.linkedin_url,
     instagram_url: profileData?.instagram_url,
     website_url: profileData?.website_url,
+    projects_count: karyaCount,
   };
 
   // Gamifikasi Profil (Progress Ring)
