@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { FiX } from "react-icons/fi";
 import { ProjectData } from "@/components/mahasiswa/ProjectCard";
 import ProfileView, { ProfileViewData } from "./ProfileView";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
 interface ProfileOverlayProps {
   profile: ProfileViewData;
@@ -30,13 +31,20 @@ export default function ProfileOverlay({
       className="fixed inset-0 z-[100] bg-surface overflow-y-auto"
     >
       <div className="relative min-h-full">
-        {/* Close button for overlay mode */}
-        <button
-          onClick={onClose}
-          className="absolute top-6 sm:top-8 right-5 md:right-8 z-[200] w-10 h-10 rounded-full bg-black/25 text-white flex items-center justify-center hover:bg-black/45 hover:scale-110 active:scale-95 transition-all backdrop-blur-sm border border-white/15"
-        >
-          <FiX size={18} />
-        </button>
+        {/* Top Right Actions */}
+        <div className="absolute top-6 sm:top-8 right-5 md:right-8 z-[200] flex items-center gap-3">
+          <div className="bg-black/25 backdrop-blur-sm border border-white/15 rounded-full h-10 flex items-center px-2">
+            <LanguageSwitcher />
+          </div>
+          
+          {/* Close button for overlay mode */}
+          <button
+            onClick={onClose}
+            className="w-10 h-10 rounded-full bg-black/25 text-white flex items-center justify-center hover:bg-black/45 hover:scale-110 active:scale-95 transition-all backdrop-blur-sm border border-white/15 shadow-sm"
+          >
+            <FiX size={18} />
+          </button>
+        </div>
 
         <ProfileView
           profile={profile}
