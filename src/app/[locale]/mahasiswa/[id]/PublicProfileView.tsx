@@ -98,10 +98,6 @@ export default function PublicProfileView({ mahasiswa, projects }: PublicProfile
 
             {/* Top Right Actions */}
             <div className="absolute top-6 right-6 md:right-12 z-20 flex items-center gap-3">
-              <div className="bg-black/40 backdrop-blur-md border border-white/20 rounded-full h-10 flex items-center px-2">
-                <LanguageSwitcher />
-              </div>
-              
               {/* Close button */}
               <button
                 onClick={() => router.back()}
@@ -109,7 +105,14 @@ export default function PublicProfileView({ mahasiswa, projects }: PublicProfile
               >
                 <FiX size={20} />
               </button>
-            </div>>
+            </div>
+          </div>
+          
+          {/* Floating Language Switcher at Bottom Right */}
+          <div className="fixed bottom-6 sm:bottom-8 right-6 sm:right-8 z-[300]">
+            <div className="bg-surface/80 backdrop-blur-md border border-outline-variant/30 shadow-xl rounded-full px-2 py-1 flex items-center">
+              <LanguageSwitcher />
+            </div>
           </div>
 
           {/* ── Profile Body ── */}

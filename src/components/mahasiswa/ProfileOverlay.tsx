@@ -33,10 +33,6 @@ export default function ProfileOverlay({
       <div className="relative min-h-full">
         {/* Top Right Actions */}
         <div className="absolute top-6 sm:top-8 right-5 md:right-8 z-[200] flex items-center gap-3">
-          <div className="bg-black/25 backdrop-blur-sm border border-white/15 rounded-full h-10 flex items-center px-2">
-            <LanguageSwitcher />
-          </div>
-          
           {/* Close button for overlay mode */}
           <button
             onClick={onClose}
@@ -44,6 +40,13 @@ export default function ProfileOverlay({
           >
             <FiX size={18} />
           </button>
+        </div>
+
+        {/* Floating Language Switcher at Bottom Right */}
+        <div className="fixed bottom-6 sm:bottom-8 right-6 sm:right-8 z-[300]">
+          <div className="bg-surface/80 backdrop-blur-md border border-outline-variant/30 shadow-xl rounded-full px-2 py-1 flex items-center">
+            <LanguageSwitcher />
+          </div>
         </div>
 
         <ProfileView
