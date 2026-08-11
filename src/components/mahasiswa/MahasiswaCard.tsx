@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { FiMail, FiFolder, FiChevronRight } from "react-icons/fi";
@@ -31,9 +33,10 @@ export interface MahasiswaCardProps {
   mahasiswa: MahasiswaProfile;
   onSelect: (mahasiswa: MahasiswaProfile) => void;
   searchQuery?: string;
+  editButton?: React.ReactNode;
 }
 
-export default function MahasiswaCard({ mahasiswa, onSelect, searchQuery = "" }: MahasiswaCardProps) {
+export default function MahasiswaCard({ mahasiswa, onSelect, searchQuery = "", editButton }: MahasiswaCardProps) {
   const [imgError, setImgError] = useState(false);
   const t = useTranslations("MahasiswaCard");
   const tStatus = useTranslations("StatusBadge");
@@ -178,10 +181,14 @@ export default function MahasiswaCard({ mahasiswa, onSelect, searchQuery = "" }:
             <FiFolder size={12} className="text-secondary sm:w-[13px] sm:h-[13px]" />
             <span>{mahasiswa.projects_count ?? 0} {t("projects")}</span>
           </div>
-          <span className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-bold text-primary group-hover:translate-x-1 transition-transform">
-            <span className="hidden sm:inline">{t("view")}</span>{t("portfolio")}
-            <FiChevronRight size={12} className="sm:w-[14px] sm:h-[14px]" />
-          </span>
+          {editButton ? (
+            <div onClick={(e) => e.stopPropagation()}>{editButton}</div>
+          ) : (
+            <span className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-bold text-primary group-hover:translate-x-1 transition-transform">
+              <span className="hidden sm:inline">{t("view")}</span>{t("portfolio")}
+              <FiChevronRight size={12} className="sm:w-[14px] sm:h-[14px]" />
+            </span>
+          )}
         </div>
       </div>
     </motion.div>

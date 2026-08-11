@@ -24,14 +24,22 @@ export default function DashboardTopbar({ user }: { user?: any }) {
   useEffect(() => {
     const checkProfile = async () => {
       if (user) {
-        const { data: profileData, error } = await supabase
+        const { data: profileData } = await supabase
         .from('mahasiswa_profiles')
-        .select('full_name, contact_email, angkatan, prodi, avatar_url, bio, skills, github_url, linkedin_url')
+        .select('id, full_name, contact_email, angkatan, prodi, avatar_url, bio, skills, github_url, linkedin_url, status_badge')
         .eq('user_id', user.id)
         .single();
         
         setHasCompletedProfile(!!profileData?.angkatan);
-        if (profileData) setProfileData(profileData);
+        if (profileData) {
+          // Fetch project count
+          const { count } = await supabase
+            .from('karya')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('status', 'approved');
+          setProfileData({ ...profileData, projects_count: count ?? 0 });
+        }
       }
     };
     checkProfile();
@@ -210,15 +218,15 @@ export default function DashboardTopbar({ user }: { user?: any }) {
                       setShowCard(false);
                       router.push("/mahasiswa");
                     }}
+                    editButton={
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); router.push("/dashboard/profile"); setShowCard(false); }}
+                        className="bg-primary hover:bg-primary/90 text-white text-[11px] font-bold px-3 py-1.5 rounded-full transition-all shadow-md flex items-center gap-1.5"
+                      >
+                        <span>{t("topbarEditProfile")}</span>
+                      </button>
+                    }
                   />
-                  <div className="absolute top-3 right-3 z-20">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); router.push("/dashboard/profile"); setShowCard(false); }}
-                      className="bg-black/40 hover:bg-black/60 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full border border-white/20 transition-all shadow-md flex items-center gap-1.5"
-                    >
-                      <span>{t("topbarEditProfile")}</span>
-                    </button>
-                  </div>
                 </div>
               </motion.div>
             )}
