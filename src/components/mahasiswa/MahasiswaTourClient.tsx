@@ -3,8 +3,14 @@
 import { useTour } from "@/hooks/useTour";
 import { FiHelpCircle } from "react-icons/fi";
 import { motion } from "framer-motion";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function MahasiswaTourClient() {
+function MahasiswaTourInner() {
+  const searchParams = useSearchParams();
+  // Jangan tampilkan tour auto jika user datang dari share link (?id=)
+  const isFromShareLink = !!searchParams.get("id");
+
   const { startTour } = useTour({
     tourId: "mahasiswa_tour_v1",
     steps: [
@@ -45,7 +51,7 @@ export default function MahasiswaTourClient() {
         }
       }
     ],
-    autoStart: true,
+    autoStart: !isFromShareLink, // Tidak auto-start jika masuk via share link
   });
 
   return (
@@ -62,5 +68,13 @@ export default function MahasiswaTourClient() {
         Mulai Tur Panduan
       </span>
     </motion.button>
+  );
+}
+
+export default function MahasiswaTourClient() {
+  return (
+    <Suspense fallback={null}>
+      <MahasiswaTourInner />
+    </Suspense>
   );
 }
