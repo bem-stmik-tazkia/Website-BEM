@@ -183,6 +183,11 @@ export default function MahasiswaProfileDrawer({
                       {skill}
                     </span>
                   ))}
+                  {mahasiswa.skills && mahasiswa.skills.length > 3 && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-white/70 text-primary text-[10px] font-extrabold shadow-sm">
+                      +{mahasiswa.skills.length - 3}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
