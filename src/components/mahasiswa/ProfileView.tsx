@@ -560,7 +560,6 @@ export default function ProfileView({
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}&margin=0`}
                   alt="QR Code"
                   className="w-40 h-40 mb-3"
-                  crossOrigin="anonymous"
                   id="qr-code-img"
                 />
                 <button
