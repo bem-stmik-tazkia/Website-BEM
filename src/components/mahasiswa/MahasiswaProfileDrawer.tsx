@@ -58,7 +58,7 @@ export default function MahasiswaProfileDrawer({
   if (!mahasiswa) return null;
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "");
-  const shareUrl = baseUrl ? `${baseUrl}/${locale}/mahasiswa?id=${mahasiswa.id}` : "";
+  const shareUrl = baseUrl ? `${baseUrl}/${locale}/mahasiswa/${mahasiswa.id}` : "";
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl);

@@ -115,7 +115,7 @@ export default function ProfileView({
 
   const shareUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}/${locale}/mahasiswa?id=${profile.id}`
+      ? `${window.location.origin}/${locale}/mahasiswa/${profile.id}`
       : "";
 
   const handleCopyLink = () => {

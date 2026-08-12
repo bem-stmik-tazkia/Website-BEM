@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { notFound } from "next/navigation";
+import DedicatedProfileClient from "./DedicatedProfileClient";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string; locale: string }> }) {
   const { id } = await params;
@@ -23,9 +24,39 @@ export default async function PublicProfilePage({
 }: {
   params: Promise<{ id: string; locale: string }>;
 }) {
-  const { id, locale } = await params;
+  const { id } = await params;
+  const supabase = await createClient();
 
-  // Redirect ke halaman mahasiswa dengan overlay — konsisten dengan design Foto 2
-  // Tombol X pada overlay akan kembali ke /mahasiswa secara otomatis
-  redirect(`/${locale}/mahasiswa?id=${id}`);
+  // Fetch hanya profil yang dibutuhkan — jauh lebih cepat dari loading seluruh listing
+  const { data: mahasiswa } = await supabase
+    .from("mahasiswa_profiles")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (!mahasiswa) notFound();
+
+  const { data: projects } = await supabase
+    .from("karya")
+    .select("*")
+    .eq("user_id", mahasiswa.user_id)
+    .eq("status", "approved")
+    .order("created_at", { ascending: false });
+
+  const mappedProjects = (projects || []).map((p) => ({
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    tech_stack: p.tech_stack || [],
+    demo_url: p.live_url,
+    github_url: p.github_url,
+    cover_image: p.image_url,
+    likes_count: p.likes || 0,
+    views_count: p.views || 0,
+    category: p.category,
+    mahasiswa_id: mahasiswa.id,
+  }));
+
+  return <DedicatedProfileClient profile={mahasiswa} projects={mappedProjects} />;
 }
+
