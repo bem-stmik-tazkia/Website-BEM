@@ -8,7 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import ProjectCard, { ProjectData } from "./ProjectCard";
 import { MahasiswaProfile } from "./MahasiswaCard";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 interface MahasiswaProfileDrawerProps {
   mahasiswa: MahasiswaProfile | null;
@@ -25,6 +25,7 @@ export default function MahasiswaProfileDrawer({
 }: MahasiswaProfileDrawerProps) {
   const t = useTranslations("MahasiswaDrawer");
   const tStatus = useTranslations("StatusBadge");
+  const locale = useLocale();
   const [activeTab, setActiveTab] = useState<"projects" | "skills">("projects");
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -57,7 +58,7 @@ export default function MahasiswaProfileDrawer({
   if (!mahasiswa) return null;
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== "undefined" ? window.location.origin : "");
-  const shareUrl = baseUrl ? `${baseUrl}/mahasiswa?id=${mahasiswa.id}` : "";
+  const shareUrl = baseUrl ? `${baseUrl}/${locale}/mahasiswa?id=${mahasiswa.id}` : "";
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl);
