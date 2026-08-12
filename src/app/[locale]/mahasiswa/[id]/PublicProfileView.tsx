@@ -42,7 +42,7 @@ export default function PublicProfileView({ mahasiswa, projects }: PublicProfile
   const [copiedLink, setCopiedLink] = useState(false);
 
   const shareUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/mahasiswa/${mahasiswa.id}`
+    ? `${window.location.origin}/mahasiswa?id=${mahasiswa.id}`
     : "";
 
   const handleCopyLink = () => {
