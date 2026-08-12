@@ -113,7 +113,7 @@ function MahasiswaShowcaseContent() {
       if (match) {
         autoOpenedRef.current = true;
         setSelectedMahasiswa(match);
-        setShowFullProfile(false);
+        setShowFullProfile(true); // Langsung buka full profile, bukan drawer
       }
     }
   }, [idFromUrl, mahasiswaList]);
