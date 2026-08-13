@@ -364,7 +364,7 @@
   },
   "MahasiswaCard": {
     "batch": "Angkatan",
-    "defaultBio": "Halo! Saya mahasiswa BEM STMIK Tazkia.",
+    "defaultBio": "Halo! Saya mahasiswa STMIK Tazkia.",
     "projects": "Karya",
     "view": "Lihat ",
     "portfolio": "Portfolio"
@@ -474,7 +474,7 @@
     "greetingNight": "Selamat Malam",
     "greetingDefault": "Halo",
     "notFilled": "Belum diisi",
-    "defaultBio": "Halo! Saya mahasiswa BEM STMIK Tazkia."
+    "defaultBio": "Halo! Saya mahasiswa STMIK Tazkia."
   },
   "ProfileView": {
     "angkatan": "Angkatan {year}",
@@ -485,7 +485,7 @@
     "shareProfile": "Bagikan Profil",
     "links": "Tautan",
     "about": "Tentang",
-    "defaultBio": "Halo! Saya mahasiswa BEM STMIK Tazkia yang siap berkolaborasi dan terus belajar hal-hal baru di bidang teknologi.",
+    "defaultBio": "Halo! Saya mahasiswa STMIK Tazkia yang siap berkolaborasi dan terus belajar hal-hal baru di bidang teknologi.",
     "skills": "Keahlian",
     "interestedCollab": "Tertarik berkolaborasi?",
     "collabDesc": "Hubungi via email untuk kerja sama.",

@@ -364,7 +364,7 @@
   },
   "MahasiswaCard": {
     "batch": "バッチ",
-    "defaultBio": "こんにちは！私はBEM STMIK Tazkiaの学生です。",
+    "defaultBio": "こんにちは！私はSTMIK Tazkiaの学生です。",
     "projects": "プロジェクト",
     "view": "見る ",
     "portfolio": "ポートフォリオ"
@@ -474,7 +474,7 @@
     "greetingNight": "おやすみなさい",
     "greetingDefault": "こんにちは",
     "notFilled": "未記入",
-    "defaultBio": "こんにちは！BEM STMIK Tazkiaの学生です。"
+    "defaultBio": "こんにちは！STMIK Tazkiaの学生です。"
   },
   "ProfileView": {
     "angkatan": "バッチ {year}",

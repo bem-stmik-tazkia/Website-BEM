@@ -30,6 +30,7 @@ export default function MahasiswaProfileDrawer({
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [downloadedQR, setDownloadedQR] = useState(false);
+  const [qrTheme, setQrTheme] = useState<"light" | "dark">("light");
 
   const translateStatusBadge = (badgeStr: string) => {
     if (!badgeStr) return badgeStr;
@@ -68,8 +69,8 @@ export default function MahasiswaProfileDrawer({
 
   const handleDownloadQR = async () => {
     try {
-      // Fetch higher res QR for download
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(shareUrl)}&margin=2`;
+      const themeParams = qrTheme === 'dark' ? '&color=ffffff&bgcolor=1a1a1a' : '';
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(shareUrl)}&margin=2${themeParams}`;
       const response = await fetch(qrUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -170,11 +171,9 @@ export default function MahasiswaProfileDrawer({
               <div className="flex flex-col items-end gap-2">
                 {/* Role Badge - from status_badge or fallback */}
                 {(mahasiswa.status_badge || mahasiswa.skills?.[0]) && (
-                  <div className="flex items-center gap-1.5 bg-secondary backdrop-blur-sm rounded-full px-3 py-1 shadow-sm">
-                    <span className="text-white text-xs font-bold">
-                      {mahasiswa.status_badge ? translateStatusBadge(mahasiswa.status_badge) : mahasiswa.skills?.[0]}
-                    </span>
-                  </div>
+                  <span className="inline-block px-3 py-1 rounded-md bg-secondary/10 text-secondary text-[11px] font-extrabold tracking-widest uppercase border border-secondary/20 shadow-sm backdrop-blur-sm">
+                    {mahasiswa.status_badge ? translateStatusBadge(mahasiswa.status_badge) : mahasiswa.skills?.[0]}
+                  </span>
                 )}
                 {/* Top skills - orange accent */}
                 <div className="flex flex-wrap justify-end gap-1.5">
@@ -349,11 +348,35 @@ export default function MahasiswaProfileDrawer({
             </p>
 
             {/* QR Code from free API */}
-            <div className="bg-white p-3 rounded-2xl shadow-sm border border-outline-variant/20 mb-4 flex flex-col items-center">
+            <div className={`p-3 rounded-2xl shadow-sm border border-outline-variant/20 mb-4 flex flex-col items-center transition-colors ${qrTheme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-white'}`}>
+              {/* Theme Toggle */}
+              <div className="flex w-full mb-3 bg-surface-variant/40 rounded-xl p-1 gap-1">
+                <button
+                  onClick={() => setQrTheme('light')}
+                  className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                    qrTheme === 'light' 
+                      ? 'bg-white text-on-surface shadow-sm' 
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  Light Mode
+                </button>
+                <button
+                  onClick={() => setQrTheme('dark')}
+                  className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                    qrTheme === 'dark' 
+                      ? 'bg-[#2a2a2a] text-white shadow-sm' 
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  Dark Mode
+                </button>
+              </div>
+
               <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}&margin=0`} 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}&margin=0${qrTheme === 'dark' ? '&color=ffffff&bgcolor=1a1a1a' : ''}`} 
                 alt="QR Code"
-                className="w-40 h-40 mb-3"
+                className="w-40 h-40 mb-3 rounded-lg"
               />
               <button
                 onClick={handleDownloadQR}

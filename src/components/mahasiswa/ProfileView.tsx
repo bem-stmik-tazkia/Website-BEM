@@ -92,6 +92,7 @@ export default function ProfileView({
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeProjectIdx, setActiveProjectIdx] = useState(0);
   const [downloadedQR, setDownloadedQR] = useState(false);
+  const [qrTheme, setQrTheme] = useState<"light" | "dark">("light");
 
   const SKILL_COLORS = [
     "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600",
@@ -126,7 +127,8 @@ export default function ProfileView({
 
   const handleDownloadQR = async () => {
     try {
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(shareUrl)}&margin=2`;
+      const themeParams = qrTheme === 'dark' ? '&color=ffffff&bgcolor=1a1a1a' : '';
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(shareUrl)}&margin=2${themeParams}`;
       const response = await fetch(qrUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -555,11 +557,35 @@ export default function ProfileView({
               </p>
               
               {/* QR Code */}
-              <div className="bg-white p-3 rounded-2xl shadow-sm border border-outline-variant/20 mb-4 flex flex-col items-center w-full">
+              <div className={`p-3 rounded-2xl shadow-sm border border-outline-variant/20 mb-4 flex flex-col items-center w-full transition-colors ${qrTheme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-white'}`}>
+                {/* Theme Toggle */}
+                <div className="flex w-full mb-3 bg-surface-variant/40 rounded-xl p-1 gap-1">
+                  <button
+                    onClick={() => setQrTheme('light')}
+                    className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                      qrTheme === 'light' 
+                        ? 'bg-white text-on-surface shadow-sm' 
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    Light Mode
+                  </button>
+                  <button
+                    onClick={() => setQrTheme('dark')}
+                    className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                      qrTheme === 'dark' 
+                        ? 'bg-[#2a2a2a] text-white shadow-sm' 
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    Dark Mode
+                  </button>
+                </div>
+                
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}&margin=0`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}&margin=0${qrTheme === 'dark' ? '&color=ffffff&bgcolor=1a1a1a' : ''}`}
                   alt="QR Code"
-                  className="w-40 h-40 mb-3"
+                  className="w-40 h-40 mb-3 rounded-lg"
                   id="qr-code-img"
                 />
                 <button

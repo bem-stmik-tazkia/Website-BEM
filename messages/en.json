@@ -382,7 +382,7 @@
   },
   "MahasiswaCard": {
     "batch": "Batch",
-    "defaultBio": "Hello! I am a BEM STMIK Tazkia student.",
+    "defaultBio": "Hello! I am a STMIK Tazkia student.",
     "projects": "Projects",
     "view": "View ",
     "portfolio": "Portfolio"
@@ -474,7 +474,7 @@
     "greetingNight": "Good Night",
     "greetingDefault": "Hello",
     "notFilled": "Not filled yet",
-    "defaultBio": "Hello! I am a student of BEM STMIK Tazkia."
+    "defaultBio": "Hello! I am a student of STMIK Tazkia."
   },
   "ProfileView": {
     "angkatan": "Batch {year}",

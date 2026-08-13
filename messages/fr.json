@@ -364,7 +364,7 @@
   },
   "MahasiswaCard": {
     "batch": "Promotion",
-    "defaultBio": "Bonjour ! Je suis un étudiant du BEM STMIK Tazkia.",
+    "defaultBio": "Bonjour ! Je suis un étudiant du STMIK Tazkia.",
     "projects": "Projets",
     "view": "Voir ",
     "portfolio": "Portfolio"
@@ -474,7 +474,7 @@
     "greetingNight": "Bonne Nuit",
     "greetingDefault": "Bonjour",
     "notFilled": "Non rempli",
-    "defaultBio": "Bonjour! Je suis étudiant à BEM STMIK Tazkia."
+    "defaultBio": "Bonjour! Je suis étudiant à STMIK Tazkia."
   },
   "ProfileView": {
     "angkatan": "Promotion {year}",

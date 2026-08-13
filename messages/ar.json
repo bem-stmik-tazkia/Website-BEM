@@ -364,7 +364,7 @@
   },
   "MahasiswaCard": {
     "batch": "الدفعة",
-    "defaultBio": "مرحباً! أنا طالب في BEM STMIK Tazkia.",
+    "defaultBio": "مرحباً! أنا طالب في STMIK Tazkia.",
     "projects": "مشاريع",
     "view": "عرض ",
     "portfolio": "الملف"
@@ -474,7 +474,7 @@
     "greetingNight": "طابت ليلتك",
     "greetingDefault": "مرحباً",
     "notFilled": "لم يتم ملؤه بعد",
-    "defaultBio": "مرحباً! أنا طالب في BEM STMIK Tazkia."
+    "defaultBio": "مرحباً! أنا طالب في STMIK Tazkia."
   },
   "ProfileView": {
     "angkatan": "الدفعة {year}",
@@ -485,7 +485,7 @@
     "shareProfile": "مشاركة الملف",
     "links": "روابط",
     "about": "نبذة",
-    "defaultBio": "مرحباً! أنا طالب في BEM STMIK Tazkia مستعد للتعاون وتعلم أشياء جديدة في مجال التكنولوجيا.",
+    "defaultBio": "مرحباً! أنا طالب في STMIK Tazkia مستعد للتعاون وتعلم أشياء جديدة في مجال التكنولوجيا.",
     "skills": "المهارات",
     "interestedCollab": "مهتم بالتعاون؟",
     "collabDesc": "تواصل عبر البريد الإلكتروني للتعاون.",
