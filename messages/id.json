@@ -213,6 +213,8 @@
     "titleAll": "Seluruh Mahasiswa",
     "foundCount": " mahasiswa ditemukan",
     "loadMore": "Muat Lebih Banyak Mahasiswa",
+    "previous": "Sebelumnya",
+    "next": "Selanjutnya",
     "emptyTitle": "Mahasiswa Tidak Ditemukan",
     "emptyDesc": "Tidak ada data mahasiswa yang cocok dengan pencarian kata kunci atau filter angkatan kamu.",
     "resetFilter": "Reset Filter Pencarian"
@@ -747,7 +749,21 @@
     "toastSaveSuccess": "Berhasil Disimpan: Profilmu sudah diperbarui!",
     "unsavedWarning": "Ada perubahan yang belum disimpan. Simpan sekarang agar tidak hilang.",
     "statusBadgeLabel": "Status (Badge) Profil",
-    "cancelBtn": "Batalkan"
+    "cancelBtn": "Batalkan",
+    "prodiAngkatanWarningTitle": "Perhatian!",
+    "prodiAngkatanWarningDesc": "Program Studi dan Angkatan hanya dapat diisi satu kali. Setelah disimpan, data ini tidak dapat diubah lagi. Pastikan pilihanmu sudah benar sebelum menyimpan.",
+    "prodiOnceHint": "Pilih program studi dengan teliti — hanya bisa diisi sekali.",
+    "angkatanOnceHint": "Pilih angkatan dengan teliti — hanya bisa diisi sekali.",
+    "lockedBadge": "Tidak dapat diubah",
+    "chooseProdiBadge": "Pilih prodimu",
+    "chooseAngkatanBadge": "Isi angkatanmu",
+    "selectProdiPlaceholder": "-- Pilih Program Studi --",
+    "selectAngkatanPlaceholder": "-- Pilih Angkatan --",
+    "angkatanOption": "Angkatan {year}",
+    "fromGoogleBadge": "Dari akun Google",
+    "contactEmailHintBadge": "Disarankan email pribadi",
+    "contactEmailPlaceholder": "Misal: namakamu@gmail.com",
+    "contactEmailDesc": "Email ini yang akan dihubungi saat orang mengklik tombol kolaborasi di profilmu."
   },
   "StatusBadge": {
     "openForCollab": "Open for Collab",

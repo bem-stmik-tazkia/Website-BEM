@@ -11,6 +11,7 @@ import { MahasiswaProfile } from "./MahasiswaCard";
 import { useTranslations, useLocale } from "next-intl";
 import { downloadTransparentQr } from "@/utils/qrDownload";
 import { getProdiDisplayLabel } from "@/utils/prodiOptions";
+import { getDisplayBio } from "@/utils/bioDisplay";
 
 interface MahasiswaProfileDrawerProps {
   mahasiswa: MahasiswaProfile | null;
@@ -26,6 +27,7 @@ export default function MahasiswaProfileDrawer({
   onShowFullProfile,
 }: MahasiswaProfileDrawerProps) {
   const t = useTranslations("MahasiswaDrawer");
+  const tCard = useTranslations("MahasiswaCard");
   const tPage = useTranslations("MahasiswaPage");
   const tStatus = useTranslations("StatusBadge");
   const locale = useLocale();
@@ -255,7 +257,7 @@ export default function MahasiswaProfileDrawer({
 
             {/* Bio */}
             <p className="text-on-surface-variant text-sm leading-relaxed mb-6 bg-surface-variant/40 p-4 rounded-2xl border border-outline-variant/20">
-              {mahasiswa.bio || "Halo! Saya mahasiswa BEM STMIK Tazkia."}
+              {getDisplayBio(mahasiswa.bio, tCard("defaultBio"))}
             </p>
 
             {/* Email Direct Action Card */}

@@ -213,6 +213,8 @@
     "titleAll": "すべての大学生",
     "foundCount": " 人の大学生が見つかりました",
     "loadMore": "さらに大学生を読み込む",
+    "previous": "前へ",
+    "next": "次へ",
     "emptyTitle": "大学生が見つかりません",
     "emptyDesc": "検索条件に一致する大学生データはありません。",
     "resetFilter": "検索フィルターをリセット"
@@ -747,7 +749,21 @@
     "toastSaveSuccess": "保存に成功しました: プロフィールが更新されました！",
     "unsavedWarning": "未保存の変更があります。失わないよう今すぐ保存してください。",
     "statusBadgeLabel": "プロフィールステータス（バッジ）",
-    "cancelBtn": "キャンセル"
+    "cancelBtn": "キャンセル",
+    "prodiAngkatanWarningTitle": "重要！",
+    "prodiAngkatanWarningDesc": "専攻と入学年度は一度だけ設定できます。保存後は変更できません。保存前に選択内容をよく確認してください。",
+    "prodiOnceHint": "専攻は慎重に選んでください — 一度だけ入力できます。",
+    "angkatanOnceHint": "入学年度は慎重に選んでください — 一度だけ入力できます。",
+    "lockedBadge": "変更不可",
+    "chooseProdiBadge": "専攻を選択",
+    "chooseAngkatanBadge": "入学年度を入力",
+    "selectProdiPlaceholder": "-- 専攻を選択 --",
+    "selectAngkatanPlaceholder": "-- 入学年度を選択 --",
+    "angkatanOption": "{year}期",
+    "fromGoogleBadge": "Googleアカウントから",
+    "contactEmailHintBadge": "個人メール推奨",
+    "contactEmailPlaceholder": "例: namakamu@gmail.com",
+    "contactEmailDesc": "プロフィールのコラボレーションボタンがクリックされた際に使用されるメールアドレスです。"
   },
   "StatusBadge": {
     "openForCollab": "コラボ受付中",

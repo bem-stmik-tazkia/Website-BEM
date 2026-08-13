@@ -213,6 +213,8 @@
     "titleAll": "جميع طلاب الجامعة",
     "foundCount": " تم العثور على طلاب الجامعة",
     "loadMore": "تحميل المزيد من طلاب الجامعة",
+    "previous": "السابق",
+    "next": "التالي",
     "emptyTitle": "لم يتم العثور على طلاب الجامعة",
     "emptyDesc": "لا توجد بيانات طلاب جامعيين تتطابق مع بحثك أو عامل التصفية.",
     "resetFilter": "إعادة ضبط عامل التصفية"
@@ -747,7 +749,21 @@
     "toastSaveSuccess": "تم الحفظ بنجاح: تم تحديث ملفك الشخصي!",
     "unsavedWarning": "توجد تغييرات لم يتم حفظها. احفظ الآن حتى لا تضيع.",
     "statusBadgeLabel": "حالة الملف الشخصي (شارة)",
-    "cancelBtn": "إلغاء"
+    "cancelBtn": "إلغاء",
+    "prodiAngkatanWarningTitle": "تنبيه!",
+    "prodiAngkatanWarningDesc": "يمكن تعيين البرنامج الدراسي والدفعة مرة واحدة فقط. بعد الحفظ، لا يمكن تغيير هذه الحقول. تأكد من صحة اختياراتك قبل الحفظ.",
+    "prodiOnceHint": "اختر برنامجك الدراسي بعناية — يمكن ملؤه مرة واحدة فقط.",
+    "angkatanOnceHint": "اختر دفعتك بعناية — يمكن ملؤها مرة واحدة فقط.",
+    "lockedBadge": "لا يمكن تغييره",
+    "chooseProdiBadge": "اختر تخصصك",
+    "chooseAngkatanBadge": "أدخل دفعتك",
+    "selectProdiPlaceholder": "-- اختر البرنامج الدراسي --",
+    "selectAngkatanPlaceholder": "-- اختر الدفعة --",
+    "angkatanOption": "الدفعة {year}",
+    "fromGoogleBadge": "من حساب Google",
+    "contactEmailHintBadge": "يُفضل البريد الشخصي",
+    "contactEmailPlaceholder": "مثال: namakamu@gmail.com",
+    "contactEmailDesc": "سيتم استخدام هذا البريد عندما ينقر شخص على زر التعاون في ملفك الشخصي."
   },
   "StatusBadge": {
     "openForCollab": "متاح للتعاون",

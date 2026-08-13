@@ -14,6 +14,7 @@ import ProjectCard, { ProjectData } from "@/components/mahasiswa/ProjectCard";
 import { useTranslations, useLocale } from "next-intl";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { getProdiDisplayLabel } from "@/utils/prodiOptions";
+import { getDisplayBio } from "@/utils/bioDisplay";
 import { downloadTransparentQr } from "@/utils/qrDownload";
 
 export interface ProfileViewData {
@@ -341,7 +342,7 @@ export default function ProfileView({
                   {t("about")}
                 </p>
                 <p className="text-[15px] text-on-surface-variant leading-relaxed">
-                  {profile.bio || t("defaultBio")}
+                  {getDisplayBio(profile.bio, t("defaultBio"))}
                 </p>
               </div>
 

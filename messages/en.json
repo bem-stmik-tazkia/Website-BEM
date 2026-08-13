@@ -231,6 +231,8 @@
     "titleAll": "All Students",
     "foundCount": " students found",
     "loadMore": "Load More Students",
+    "previous": "Previous",
+    "next": "Next",
     "emptyTitle": "Students Not Found",
     "emptyDesc": "No student data matches your keyword search or batch filter.",
     "resetFilter": "Reset Search Filter"
@@ -747,7 +749,21 @@
     "toastSaveSuccess": "Saved Successfully: Your profile has been updated!",
     "unsavedWarning": "You have unsaved changes. Save now so they are not lost.",
     "statusBadgeLabel": "Profile Status (Badge)",
-    "cancelBtn": "Cancel"
+    "cancelBtn": "Cancel",
+    "prodiAngkatanWarningTitle": "Important!",
+    "prodiAngkatanWarningDesc": "Study Program and Cohort can only be set once. After saving, these fields cannot be changed. Make sure your choices are correct before saving.",
+    "prodiOnceHint": "Choose your study program carefully — this can only be filled once.",
+    "angkatanOnceHint": "Choose your cohort carefully — this can only be filled once.",
+    "lockedBadge": "Cannot be changed",
+    "chooseProdiBadge": "Choose your major",
+    "chooseAngkatanBadge": "Fill in your batch",
+    "selectProdiPlaceholder": "-- Select Study Program --",
+    "selectAngkatanPlaceholder": "-- Select Cohort --",
+    "angkatanOption": "Batch {year}",
+    "fromGoogleBadge": "From Google account",
+    "contactEmailHintBadge": "Personal email recommended",
+    "contactEmailPlaceholder": "e.g. yourname@gmail.com",
+    "contactEmailDesc": "This email will be used when someone clicks the collaborate button on your profile."
   },
   "StatusBadge": {
     "openForCollab": "Open for Collab",

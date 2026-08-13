@@ -11,7 +11,7 @@ import { ProjectData } from "@/components/mahasiswa/ProjectCard";
 import { createClient } from "@/utils/supabase/client";
 import Footer from "@/components/layout/Footer";
 import MahasiswaTourClient from "@/components/mahasiswa/MahasiswaTourClient";
-import { FiUserX, FiUsers, FiFolder } from "react-icons/fi";
+import { FiUserX, FiUsers, FiFolder, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useTranslations, useLocale } from "next-intl";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { ALL_PRODI_VALUE, getProdiDisplayLabel, isAllProdi } from "@/utils/prodiOptions";
@@ -25,11 +25,12 @@ function MahasiswaShowcaseContent() {
   const [selectedMahasiswa, setSelectedMahasiswa] = useState<MahasiswaProfile | null>(null);
   const [showFullProfile, setShowFullProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [displayLimit, setDisplayLimit] = useState(12);
+  const [currentPage, setCurrentPage] = useState(1);
   const searchParams = useSearchParams();
   const idFromUrl = searchParams.get("id");
   const router = useRouter();
   const autoOpenedRef = useRef(false);
+  const gridRef = useRef<HTMLElement>(null);
   const t = useTranslations("MahasiswaPage");
   const locale = useLocale();
 
@@ -160,9 +161,27 @@ function MahasiswaShowcaseContent() {
     });
   }, [translatedMahasiswaList, mahasiswaList, projectList, searchQuery, selectedAngkatan, selectedProdi]);
 
+  const ITEMS_PER_PAGE = 12;
+  const totalPages = Math.ceil(filteredMahasiswa.length / ITEMS_PER_PAGE) || 1;
+  const paginatedMahasiswa = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredMahasiswa.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredMahasiswa, currentPage]);
+
+  const getPageNumbers = () => {
+    const pages: number[] = [];
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+    return pages;
+  };
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   // Reset pagination on filter change
   useEffect(() => {
-    setDisplayLimit(12);
+    setCurrentPage(1);
   }, [searchQuery, selectedAngkatan, selectedProdi]);
 
   // Active student's projects for drawer modal
@@ -188,7 +207,7 @@ function MahasiswaShowcaseContent() {
       />
 
       {/* Main Grid Content */}
-      <main className="max-w-7xl mx-auto px-4 md:px-10 py-8 flex-1 w-full pb-40 lg:pb-12">
+      <main ref={gridRef} className="max-w-7xl mx-auto px-4 md:px-10 py-8 flex-1 w-full pb-40 lg:pb-12">
         {/* Section Title Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -247,7 +266,7 @@ function MahasiswaShowcaseContent() {
             className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
           >
             <AnimatePresence>
-              {filteredMahasiswa.slice(0, displayLimit).map((mahasiswa) => (
+              {paginatedMahasiswa.map((mahasiswa) => (
                 <MahasiswaCard
                   key={mahasiswa.id}
                   mahasiswa={mahasiswa}
@@ -258,18 +277,44 @@ function MahasiswaShowcaseContent() {
             </AnimatePresence>
           </motion.div>
           
-          {/* Load More Button */}
-          {filteredMahasiswa.length > displayLimit && (
-            <motion.div 
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="mt-10 flex justify-center w-full"
+              className="mt-10 flex justify-center items-center gap-2 w-full"
             >
               <button
-                onClick={() => setDisplayLimit((prev) => prev + 12)}
-                className="px-8 py-3 rounded-full bg-surface border border-outline-variant/30 text-primary font-bold hover:bg-primary/5 hover:border-primary/50 transition-all shadow-sm flex items-center gap-2"
+                onClick={() => goToPage(Math.max(currentPage - 1, 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1 px-4 py-2 text-sm font-bold text-on-surface-variant hover:text-primary disabled:opacity-40 disabled:hover:text-on-surface-variant transition-colors"
+                aria-label={t("previous")}
               >
-                {t("loadMore")}
+                <FiChevronLeft size={18} />
+                <span className="hidden sm:inline">{t("previous")}</span>
+              </button>
+              {getPageNumbers().map((page) => (
+                <button
+                  key={page}
+                  onClick={() => goToPage(page)}
+                  className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
+                    currentPage === page
+                      ? "bg-primary text-white shadow-md"
+                      : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary hover:text-primary"
+                  }`}
+                  aria-current={currentPage === page ? "page" : undefined}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => goToPage(Math.min(currentPage + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1 px-4 py-2 text-sm font-bold text-on-surface-variant hover:text-primary disabled:opacity-40 disabled:hover:text-on-surface-variant transition-colors"
+                aria-label={t("next")}
+              >
+                <span className="hidden sm:inline">{t("next")}</span>
+                <FiChevronRight size={18} />
               </button>
             </motion.div>
           )}

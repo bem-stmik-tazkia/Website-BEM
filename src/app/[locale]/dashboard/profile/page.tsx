@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/components/ui/Toast";
 import { compressImage } from "@/lib/imageCompression";
+import { DEFAULT_BIO_ID } from "@/utils/bioDisplay";
 
 export default function ProfileSettingsPage() {
   const t = useTranslations("ProfileForm");
@@ -19,9 +20,9 @@ export default function ProfileSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  // true = prodi & angkatan sudah diset admin (read-only untuk user)
-  // false = belum diinput admin, user bisa isi prodi & angkatan sendiri
   const [isAdminSeeded, setIsAdminSeeded] = useState(false);
+  // true = prodi & angkatan sudah pernah disimpan (read-only, tidak bisa diubah lagi)
+  const [isProdiAngkatanLocked, setIsProdiAngkatanLocked] = useState(false);
 
   const DRAFT_KEY = "profile_draft";
 
@@ -76,6 +77,11 @@ export default function ProfileSettingsPage() {
 
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
+
+  const sortedAngkatan = [...masterAngkatan].sort((a, b) => Number(a) - Number(b));
+
+  const isProdiAngkatanSet = (prodi?: string | null, angkatan?: number | string | null) =>
+    Boolean(prodi?.trim()) && angkatan !== null && angkatan !== undefined && angkatan !== "" && Number(angkatan) > 0;
 
   const PREDEFINED_STATUSES = [
     "🚀 Open for Collab",
@@ -195,6 +201,7 @@ export default function ProfileSettingsPage() {
       if (data && !error) {
         // Data ditemukan (dari admin atau login sebelumnya)
         setIsAdminSeeded(true); // Prodi & angkatan dari admin → read-only
+        setIsProdiAngkatanLocked(Boolean(data.prodi && data.angkatan));
         const dbData = {
           full_name: data.full_name || defaultName,
           contact_email: data.contact_email || "",
@@ -235,6 +242,7 @@ export default function ProfileSettingsPage() {
       } else {
         // Belum ada profil sama sekali → auto-insert profil minimal dengan nama Google
         setIsAdminSeeded(false); // Prodi & angkatan belum dari admin → user bisa isi
+        setIsProdiAngkatanLocked(false);
         const minimalProfile = {
           user_id: user.id,
           full_name: defaultName,
@@ -285,6 +293,11 @@ export default function ProfileSettingsPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    if ((name === "prodi" || name === "angkatan") && (isProdiAngkatanLocked || isAdminSeeded)) {
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
     setIsDirty(true);
   };
@@ -358,7 +371,7 @@ export default function ProfileSettingsPage() {
       contact_email: formData.contact_email,
       prodi: formData.prodi,
       angkatan: parseInt(formData.angkatan.toString()) || 2,
-      bio: formData.bio || "Halo! Saya mahasiswa BEM STMIK Tazkia.",
+      bio: formData.bio || DEFAULT_BIO_ID,
       status_badge: formData.status_badge,
       github_url: formData.github_url,
       linkedin_url: formData.linkedin_url,
@@ -403,6 +416,10 @@ export default function ProfileSettingsPage() {
     if (error) {
       toast.error(t("toastSaveError") + error.message);
     } else {
+      if (!isAdminSeeded) {
+        setIsProdiAngkatanLocked(true);
+      }
+
       // Berhasil simpan: hapus draft & reset dirty flag
       localStorage.removeItem(DRAFT_KEY);
       setIsDirty(false);
@@ -550,23 +567,23 @@ export default function ProfileSettingsPage() {
               <p className="text-xs text-on-surface-variant">Email ini yang akan dihubungi saat orang mengklik tombol kolaborasi di profilmu.</p>
             </div>
 
-            {/* {t("studyProgram")} - Read Only jika dari admin, pilih sendiri jika belum */}
+            {/* {t("studyProgram")} - read-only after save, warning style for one-time setup */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-on-surface flex items-center gap-1.5">
                 Program Studi
-                {isAdminSeeded ? (
-                  <span className="text-xs font-normal text-on-surface-variant bg-surface-variant px-2 py-0.5 rounded-full">Tidak dapat diubah</span>
+                {(isAdminSeeded || isProdiAngkatanLocked) ? (
+                  <span className="text-[10px] font-normal text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full">Hanya bisa diisi sekali</span>
                 ) : (
-                  <span className="text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full">Pilih prodimu</span>
+                  <span className="text-[10px] font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full">Wajib diisi • sekali saja</span>
                 )}
               </label>
-              {isAdminSeeded ? (
+              {(isAdminSeeded || isProdiAngkatanLocked) ? (
                 <input
                   type="text"
                   value={formData.prodi}
                   readOnly
                   disabled
-                  className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/30 bg-surface-variant/40 text-on-surface-variant cursor-not-allowed outline-none"
+                  className="w-full px-4 py-2.5 rounded-xl border border-amber-200 bg-amber-50/60 text-amber-800 cursor-not-allowed outline-none"
                 />
               ) : (
                 <select
@@ -582,26 +599,29 @@ export default function ProfileSettingsPage() {
                   ))}
                 </select>
               )}
+              <p className="text-xs text-amber-700/80">
+                Setelah disimpan, data program studi tidak bisa diubah lagi.
+              </p>
             </div>
 
-            {/* Tahun {t("cohort")} - Read Only jika dari admin, isi sendiri jika belum */}
+            {/* Tahun {t("cohort")} - read-only after save, warning style for one-time setup */}
             <div>
               <label className="block text-sm font-bold text-on-surface mb-2 flex items-center gap-2">
                 Angkatan
-                {isAdminSeeded ? (
-                  <span className="text-[10px] bg-surface-variant/50 text-on-surface-variant px-2 py-0.5 rounded-full">Tidak dapat diubah</span>
+                {(isAdminSeeded || isProdiAngkatanLocked) ? (
+                  <span className="text-[10px] font-normal text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full">Hanya bisa diisi sekali</span>
                 ) : (
-                  <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full">Isi angkatanmu</span>
+                  <span className="text-[10px] font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full">Wajib diisi • sekali saja</span>
                 )}
               </label>
-              {isAdminSeeded ? (
+              {(isAdminSeeded || isProdiAngkatanLocked) ? (
                 <input
                   type="number"
                   name="angkatan"
                   value={formData.angkatan}
                   disabled
                   readOnly
-                  className="w-full border rounded-xl px-4 py-3 text-sm outline-none transition-all bg-surface-variant/20 border-outline-variant/30 text-on-surface-variant cursor-not-allowed"
+                  className="w-full border rounded-xl px-4 py-3 text-sm outline-none transition-all bg-amber-50/60 border-amber-200 text-amber-800 cursor-not-allowed"
                 />
               ) : (
                 <select
@@ -617,6 +637,9 @@ export default function ProfileSettingsPage() {
                   ))}
                 </select>
               )}
+              <p className="text-xs text-amber-700/80 mt-1">
+                Setelah disimpan, data angkatan tidak bisa diubah lagi.
+              </p>
             </div>
           </div>
 

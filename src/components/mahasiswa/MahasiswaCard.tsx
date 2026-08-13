@@ -8,6 +8,7 @@ import { FiMail, FiFolder, FiChevronRight } from "react-icons/fi";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { getProdiDisplayLabel } from "@/utils/prodiOptions";
+import { getDisplayBio } from "@/utils/bioDisplay";
 
 export interface MahasiswaProfile {
   id: string;
@@ -171,7 +172,7 @@ export default function MahasiswaCard({ mahasiswa, onSelect, searchQuery = "", e
 
         {/* Bio */}
         <p className="hidden sm:block text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-4 flex-1">
-          {mahasiswa.bio || t("defaultBio")}
+          {getDisplayBio(mahasiswa.bio, t("defaultBio"))}
         </p>
         
         {/* Mobile spacing flex-1 when bio is hidden */}

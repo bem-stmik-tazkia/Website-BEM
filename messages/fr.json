@@ -213,6 +213,8 @@
     "titleAll": "Tous les étudiants universitaires",
     "foundCount": " étudiants universitaires trouvés",
     "loadMore": "Charger plus d'étudiants universitaires",
+    "previous": "Précédent",
+    "next": "Suivant",
     "emptyTitle": "Étudiants universitaires introuvables",
     "emptyDesc": "Aucune donnée d'étudiant universitaire ne correspond à votre recherche.",
     "resetFilter": "Réinitialiser le filtre"
@@ -747,7 +749,21 @@
     "toastSaveSuccess": "Enregistré avec succès : Votre profil a été mis à jour!",
     "unsavedWarning": "Vous avez des modifications non enregistrées. Enregistrez maintenant pour ne pas les perdre.",
     "statusBadgeLabel": "Statut du profil (Badge)",
-    "cancelBtn": "Annuler"
+    "cancelBtn": "Annuler",
+    "prodiAngkatanWarningTitle": "Attention !",
+    "prodiAngkatanWarningDesc": "Le programme d'études et la cohorte ne peuvent être renseignés qu'une seule fois. Après l'enregistrement, ces champs ne pourront plus être modifiés. Vérifiez bien vos choix avant de sauvegarder.",
+    "prodiOnceHint": "Choisissez votre filière avec soin — ne peut être rempli qu'une seule fois.",
+    "angkatanOnceHint": "Choisissez votre promotion avec soin — ne peut être rempli qu'une seule fois.",
+    "lockedBadge": "Non modifiable",
+    "chooseProdiBadge": "Choisissez votre filière",
+    "chooseAngkatanBadge": "Indiquez votre promotion",
+    "selectProdiPlaceholder": "-- Sélectionner un programme --",
+    "selectAngkatanPlaceholder": "-- Sélectionner une promotion --",
+    "angkatanOption": "Promotion {year}",
+    "fromGoogleBadge": "Depuis le compte Google",
+    "contactEmailHintBadge": "Email personnel recommandé",
+    "contactEmailPlaceholder": "ex. votrenom@gmail.com",
+    "contactEmailDesc": "Cet email sera utilisé lorsqu'une personne clique sur le bouton de collaboration sur votre profil."
   },
   "StatusBadge": {
     "openForCollab": "Ouvert à la collaboration",
