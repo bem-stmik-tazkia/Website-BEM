@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FiSearch, FiFilter, FiX } from "react-icons/fi";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import { ALL_PRODI_VALUE, PRODI_FILTER_OPTIONS } from "@/utils/prodiOptions";
 
 const DotLottieReact = dynamic(
   () => import("@lottiefiles/dotlottie-react").then((mod) => mod.DotLottieReact),
@@ -37,9 +38,8 @@ export default function MahasiswaHero({
 }: MahasiswaHeroProps) {
   const t = useTranslations("MahasiswaPage");
   const prodiOptions = [
-    t("filterAll") + " Prodi",
-    "Teknik Informatika",
-    "Sistem Informasi",
+    { value: ALL_PRODI_VALUE, labelKey: "filterAllProdi" as const },
+    ...PRODI_FILTER_OPTIONS,
   ];
 
   return (
@@ -238,17 +238,17 @@ export default function MahasiswaHero({
                   <span className="text-xs text-on-surface-variant font-bold uppercase tracking-wider shrink-0 flex items-center">
                     {t("filterProdi")}
                   </span>
-                  {prodiOptions.map((prodi) => (
+                  {prodiOptions.map(({ value, labelKey }) => (
                     <button
-                      key={prodi}
-                      onClick={() => setSelectedProdi(prodi)}
+                      key={value}
+                      onClick={() => setSelectedProdi(value)}
                       className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 ${
-                        selectedProdi === prodi
+                        selectedProdi === value
                           ? "bg-secondary text-white shadow-sm"
                           : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-secondary hover:text-secondary"
                       }`}
                     >
-                      {prodi}
+                      {t(labelKey)}
                     </button>
                   ))}
                 </div>

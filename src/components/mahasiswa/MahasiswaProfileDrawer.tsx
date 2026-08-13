@@ -10,6 +10,7 @@ import ProjectCard, { ProjectData } from "./ProjectCard";
 import { MahasiswaProfile } from "./MahasiswaCard";
 import { useTranslations, useLocale } from "next-intl";
 import { downloadTransparentQr } from "@/utils/qrDownload";
+import { getProdiDisplayLabel } from "@/utils/prodiOptions";
 
 interface MahasiswaProfileDrawerProps {
   mahasiswa: MahasiswaProfile | null;
@@ -25,6 +26,7 @@ export default function MahasiswaProfileDrawer({
   onShowFullProfile,
 }: MahasiswaProfileDrawerProps) {
   const t = useTranslations("MahasiswaDrawer");
+  const tPage = useTranslations("MahasiswaPage");
   const tStatus = useTranslations("StatusBadge");
   const locale = useLocale();
   const [activeTab, setActiveTab] = useState<"projects" | "skills">("projects");
@@ -198,7 +200,7 @@ export default function MahasiswaProfileDrawer({
                 </div>
                 <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
                   <FiBriefcase size={14} />
-                  <span className="truncate">{mahasiswa.prodi}</span>
+                  <span className="truncate">{getProdiDisplayLabel(mahasiswa.prodi, tPage)}</span>
                 </div>
               </div>
 

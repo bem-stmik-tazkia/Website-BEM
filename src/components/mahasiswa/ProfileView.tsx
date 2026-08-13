@@ -12,7 +12,8 @@ import {
 import { FaWhatsapp, FaTelegram, FaXTwitter } from "react-icons/fa6";
 import ProjectCard, { ProjectData } from "@/components/mahasiswa/ProjectCard";
 import { useTranslations, useLocale } from "next-intl";
-import { useTranslatedContent, useTranslatedList } from "@/hooks/useTranslatedContent";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { getProdiDisplayLabel } from "@/utils/prodiOptions";
 import { downloadTransparentQr } from "@/utils/qrDownload";
 
 export interface ProfileViewData {
@@ -54,16 +55,10 @@ export default function ProfileView({
   onEditProfile,
 }: ProfileViewProps) {
   const t = useTranslations("ProfileView");
+  const tPage = useTranslations("MahasiswaPage");
   const locale = useLocale();
-  
-  const { data: profileObj, isTranslating: isTranslatingProfile } = useTranslatedContent(
-    rawProfile,
-    "mahasiswa_profiles",
-    locale,
-    ["bio", "prodi"],
-    "id"
-  );
-  const profile = profileObj || rawProfile;
+
+  const profile = rawProfile;
 
   const { data: projects, isTranslating: isTranslatingProjects } = useTranslatedList(
     rawProjects,
@@ -87,7 +82,7 @@ export default function ProfileView({
     return badgeStr; // fallback if no match
   };
 
-  const isTranslating = isTranslatingProfile || isTranslatingProjects;
+  const isTranslating = isTranslatingProjects;
   const [projectFilter, setProjectFilter] = useState("Semua");
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -241,7 +236,7 @@ export default function ProfileView({
                 <div className="flex flex-wrap items-center gap-2 text-base font-semibold text-on-surface-variant">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-primary/60" />
-                    {profile.prodi}
+                    {profile.prodi ? getProdiDisplayLabel(profile.prodi, tPage) : ""}
                   </span>
                   {profile.angkatan && (
                     <>

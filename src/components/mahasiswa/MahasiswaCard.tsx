@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { FiMail, FiFolder, FiChevronRight } from "react-icons/fi";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { getProdiDisplayLabel } from "@/utils/prodiOptions";
 
 export interface MahasiswaProfile {
   id: string;
@@ -39,6 +40,7 @@ export interface MahasiswaCardProps {
 export default function MahasiswaCard({ mahasiswa, onSelect, searchQuery = "", editButton }: MahasiswaCardProps) {
   const [imgError, setImgError] = useState(false);
   const t = useTranslations("MahasiswaCard");
+  const tPage = useTranslations("MahasiswaPage");
   const tStatus = useTranslations("StatusBadge");
 
   const translateStatusBadge = (badgeStr: string) => {
@@ -134,7 +136,7 @@ export default function MahasiswaCard({ mahasiswa, onSelect, searchQuery = "", e
             {mahasiswa.full_name}
           </h3>
           <p className="text-[10px] sm:text-xs font-semibold text-on-surface-variant mt-0.5 line-clamp-1">
-            {mahasiswa.prodi}
+            {getProdiDisplayLabel(mahasiswa.prodi, tPage)}
           </p>
         </div>
 

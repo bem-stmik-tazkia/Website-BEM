@@ -14,13 +14,14 @@ import MahasiswaTourClient from "@/components/mahasiswa/MahasiswaTourClient";
 import { FiUserX, FiUsers, FiFolder } from "react-icons/fi";
 import { useTranslations, useLocale } from "next-intl";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { ALL_PRODI_VALUE, getProdiDisplayLabel, isAllProdi } from "@/utils/prodiOptions";
 
 function MahasiswaShowcaseContent() {
   const [mahasiswaList, setMahasiswaList] = useState<MahasiswaProfile[]>([]);
   const [projectList, setProjectList] = useState<(ProjectData & { mahasiswa_id: string })[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAngkatan, setSelectedAngkatan] = useState<number | null>(null);
-  const [selectedProdi, setSelectedProdi] = useState("Semua Prodi");
+  const [selectedProdi, setSelectedProdi] = useState(ALL_PRODI_VALUE);
   const [selectedMahasiswa, setSelectedMahasiswa] = useState<MahasiswaProfile | null>(null);
   const [showFullProfile, setShowFullProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,12 +33,12 @@ function MahasiswaShowcaseContent() {
   const t = useTranslations("MahasiswaPage");
   const locale = useLocale();
 
-  // Auto-translate bio, prodi, dan status_badge mahasiswa dari database
+  // Auto-translate status_badge saja; bio & prodi tetap asli (bio = bahasa pengguna, prodi = i18n statis)
   const { data: translatedMahasiswaList } = useTranslatedList(
     mahasiswaList,
     "mahasiswa_profiles",
     locale,
-    ["bio", "prodi", "status_badge"]
+    ["status_badge"]
   );
 
   // Auto-translate title & description proyek dari database
@@ -120,19 +121,18 @@ function MahasiswaShowcaseContent() {
 
   // Extract available Angkatan dynamically
   const availableAngkatan = useMemo(() => {
-    const years = Array.from(new Set(mahasiswaList.map((m) => m.angkatan))).sort((a, b) => b - a);
+    const years = Array.from(new Set(mahasiswaList.map((m) => m.angkatan))).sort((a, b) => a - b);
     return years;
   }, [mahasiswaList]);
 
-  // Filter logic — filter dari translatedMahasiswaList agar bio yang ditampilkan sudah diterjemahkan
   const filteredMahasiswa = useMemo(() => {
     return translatedMahasiswaList.filter((m) => {
       // Filter by Angkatan
       if (selectedAngkatan !== null && m.angkatan !== selectedAngkatan) {
         return false;
       }
-      // Filter by Prodi — gunakan nilai asli agar tidak terpengaruh terjemahan
-      if (selectedProdi !== "Semua Prodi" && selectedProdi !== t("filterAll") + " Prodi") {
+      // Filter by Prodi — bandingkan nilai kanonik dari database
+      if (!isAllProdi(selectedProdi)) {
         const orig = mahasiswaList.find((orig) => orig.id === m.id) ?? m;
         if (orig.prodi !== selectedProdi) return false;
       }
@@ -205,7 +205,7 @@ function MahasiswaShowcaseContent() {
                 </h2>
                 <p className="text-on-surface-variant text-sm mt-1">
                   {t("foundCount", { count: filteredMahasiswa.length })}
-                  {selectedProdi !== "Semua Prodi" && selectedProdi !== t("filterAll") + " Prodi" ? ` (${selectedProdi})` : ""}
+                  {!isAllProdi(selectedProdi) ? ` (${getProdiDisplayLabel(selectedProdi, t)})` : ""}
                 </p>
               </>
             )}
@@ -292,7 +292,7 @@ function MahasiswaShowcaseContent() {
               onClick={() => {
                 setSearchQuery("");
                 setSelectedAngkatan(null);
-                setSelectedProdi(t("filterAll") + " Prodi");
+                setSelectedProdi(ALL_PRODI_VALUE);
               }}
               className="px-6 py-2.5 rounded-full bg-secondary text-white text-xs font-bold hover:bg-secondary/90 transition-all shadow-md"
             >
