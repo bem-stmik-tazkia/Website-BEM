@@ -9,6 +9,7 @@ import Link from "next/link";
 import ProjectCard, { ProjectData } from "./ProjectCard";
 import { MahasiswaProfile } from "./MahasiswaCard";
 import { useTranslations, useLocale } from "next-intl";
+import { downloadTransparentQr } from "@/utils/qrDownload";
 
 interface MahasiswaProfileDrawerProps {
   mahasiswa: MahasiswaProfile | null;
@@ -69,20 +70,12 @@ export default function MahasiswaProfileDrawer({
 
   const handleDownloadQR = async () => {
     try {
-      const themeParams = qrTheme === 'dark' ? '&color=ffffff&bgcolor=1a1a1a' : '';
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(shareUrl)}&margin=2${themeParams}`;
-      const response = await fetch(qrUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.style.display = "none";
-      a.href = url;
-      a.download = `QR_Profile_${mahasiswa.full_name.replace(/\s+/g, "_")}.png`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
+      await downloadTransparentQr(
+        shareUrl,
+        qrTheme,
+        `QR_Profile_${mahasiswa.full_name.replace(/\s+/g, "_")}.png`
+      );
+
       setDownloadedQR(true);
       setTimeout(() => setDownloadedQR(false), 3000);
     } catch (error) {

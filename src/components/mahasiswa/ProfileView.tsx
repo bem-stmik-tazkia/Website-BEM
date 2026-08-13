@@ -13,6 +13,7 @@ import { FaWhatsapp, FaTelegram, FaXTwitter } from "react-icons/fa6";
 import ProjectCard, { ProjectData } from "@/components/mahasiswa/ProjectCard";
 import { useTranslations, useLocale } from "next-intl";
 import { useTranslatedContent, useTranslatedList } from "@/hooks/useTranslatedContent";
+import { downloadTransparentQr } from "@/utils/qrDownload";
 
 export interface ProfileViewData {
   id?: string;
@@ -127,20 +128,12 @@ export default function ProfileView({
 
   const handleDownloadQR = async () => {
     try {
-      const themeParams = qrTheme === 'dark' ? '&color=ffffff&bgcolor=1a1a1a' : '';
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(shareUrl)}&margin=2${themeParams}`;
-      const response = await fetch(qrUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.style.display = "none";
-      a.href = url;
-      a.download = `QR_Profile_${profile.full_name.replace(/\s+/g, "_")}.png`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
+      await downloadTransparentQr(
+        shareUrl,
+        qrTheme,
+        `QR_Profile_${profile.full_name.replace(/\s+/g, "_")}.png`
+      );
+
       setDownloadedQR(true);
       setTimeout(() => setDownloadedQR(false), 3000);
     } catch (error) {
