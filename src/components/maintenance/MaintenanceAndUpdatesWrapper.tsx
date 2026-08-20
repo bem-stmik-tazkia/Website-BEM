@@ -165,11 +165,11 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="w-full max-w-lg bg-surface border border-outline-variant/30 rounded-3xl p-8 sm:p-10 md:p-12 text-center shadow-2xl relative z-10 flex flex-col items-center mx-auto"
+            className="w-full max-w-lg bg-surface border border-outline-variant/30 rounded-3xl p-6 sm:p-8 text-center shadow-2xl relative z-10 flex flex-col items-center mx-auto"
           >
 
             {/* Lottie Animation */}
-            <div className="w-56 h-56 sm:w-64 sm:h-64 relative -my-4 mb-2 select-none pointer-events-none">
+            <div className="w-40 h-40 sm:w-48 sm:h-48 relative select-none pointer-events-none mb-2">
               <DotLottieReact
                 src="/animations/Maintenance.lottie"
                 loop
@@ -178,18 +178,18 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
             </div>
 
             {/* Main Title */}
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface mb-3 leading-tight">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-on-surface mb-2 leading-tight">
               {t("title")}
             </h1>
 
             {/* Custom / Default Description */}
-            <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed mb-6">
+            <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed mb-4">
               {customMessage || t("defaultDesc")}
             </p>
 
             {/* Estimated Time Card */}
-            <div className="bg-surface-variant/30 border border-outline-variant/30 rounded-2xl px-5 py-3 flex items-center justify-center gap-3 mb-8 w-full max-w-xs">
-              <FiClock className="text-primary shrink-0" size={18} />
+            <div className="bg-surface-variant/30 border border-outline-variant/30 rounded-2xl px-5 py-2.5 flex items-center justify-center gap-3 mb-5 w-full max-w-xs">
+              <FiClock className="text-primary shrink-0" size={16} />
               <div className="text-left">
                 <p className="text-[10px] uppercase font-extrabold tracking-wider text-on-surface-variant/70">
                   {t("estTimeLabel")}
@@ -211,7 +211,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
             </div>
           </motion.div>
 
-          <p className="mt-8 text-xs text-on-surface-variant/60 font-medium">
+          <p className="mt-4 text-xs text-on-surface-variant/60 font-medium">
             BEM STMIK Tazkia &copy; {new Date().getFullYear()} - {t("footerTagline")}
           </p>
         </div>
