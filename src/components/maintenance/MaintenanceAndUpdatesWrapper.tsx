@@ -38,6 +38,8 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
   const [loading, setLoading] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
   const [translatedFeatures, setTranslatedFeatures] = useState<string[]>([]);
+  const [translatedTitle, setTranslatedTitle] = useState("");
+  const [translatedDate, setTranslatedDate] = useState("");
 
   // Auto-translate feature points when locale or releaseNotes changes
   useEffect(() => {
@@ -62,6 +64,46 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
         )
       )
     ).then(setTranslatedFeatures).catch(() => setTranslatedFeatures(releaseNotes.features));
+  }, [releaseNotes, locale]);
+
+  // Auto-translate title and date
+  useEffect(() => {
+    if (!releaseNotes) return;
+    const version = releaseNotes.version || "release";
+
+    // Title
+    if (!releaseNotes.title || locale === "id") {
+      setTranslatedTitle(releaseNotes.title || "");
+    } else {
+      translateContent(`release_title_${version}`, "release_notes", "title", releaseNotes.title, locale)
+        .then(setTranslatedTitle)
+        .catch(() => setTranslatedTitle(releaseNotes.title));
+    }
+
+    // Date — reformat from stored Indonesian string to locale-specific format
+    try {
+      // Parse stored date (e.g. "20 Agustus 2026") via ID locale
+      const bulanId: Record<string, number> = {
+        Januari: 0, Februari: 1, Maret: 2, April: 3, Mei: 4, Juni: 5,
+        Juli: 6, Agustus: 7, September: 8, Oktober: 9, November: 10, Desember: 11,
+      };
+      const parts = (releaseNotes.date || "").split(" ");
+      if (parts.length === 3) {
+        const d = parseInt(parts[0]);
+        const m = bulanId[parts[1]];
+        const y = parseInt(parts[2]);
+        if (!isNaN(d) && m !== undefined && !isNaN(y)) {
+          const dt = new Date(y, m, d);
+          setTranslatedDate(dt.toLocaleDateString(locale === "id" ? "id-ID" : locale === "ar" ? "ar-SA" : locale === "ja" ? "ja-JP" : locale === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "long", year: "numeric" }));
+        } else {
+          setTranslatedDate(releaseNotes.date);
+        }
+      } else {
+        setTranslatedDate(releaseNotes.date);
+      }
+    } catch {
+      setTranslatedDate(releaseNotes.date || "");
+    }
   }, [releaseNotes, locale]);
 
   // Konami Code secret access: ↑ ↑ ↓ ↓ ← → Enter
@@ -290,16 +332,16 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
 
                   {/* Header Badge */}
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-extrabold flex items-center gap-1.5 border border-secondary/20">
-                      <FiStar size={13} /> {releaseNotes.version || "v1.2.0"}
+                    <span className="px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-extrabold border border-secondary/20">
+                      {releaseNotes.version || "v1.2.0"}
                     </span>
                     <span className="text-xs text-on-surface-variant font-medium">
-                      {releaseNotes.date}
+                      {translatedDate || releaseNotes.date}
                     </span>
                   </div>
 
                   {/* Lottie Animation (Car.lottie) */}
-                  <div className="w-48 h-36 sm:w-56 sm:h-40 mx-auto relative -my-2 select-none pointer-events-none">
+                  <div className="w-48 h-36 sm:w-56 sm:h-40 mx-auto relative mt-1 mb-4 select-none pointer-events-none">
                     <DotLottieReact
                       src="/animations/car.lottie"
                       loop
@@ -309,7 +351,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
 
                   {/* Title */}
                   <h2 className="text-xl sm:text-2xl font-extrabold text-on-surface mb-2 text-center leading-tight">
-                    {releaseNotes.title || t("whatsNewTitle")}
+                    {translatedTitle || releaseNotes.title || t("whatsNewTitle")}
                   </h2>
                   <p className="text-xs text-on-surface-variant text-center mb-5">
                     {t("whatsNewDesc")}
