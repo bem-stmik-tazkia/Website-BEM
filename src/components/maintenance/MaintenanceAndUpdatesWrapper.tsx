@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import React, { useEffect, useState, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FiTool, FiClock, FiRefreshCw, FiLock, FiCheckCircle,
-  FiX, FiStar, FiArrowRight
+  FiTool, FiClock, FiRefreshCw,
+  FiCheckCircle, FiX, FiStar
 } from "react-icons/fi";
 import { Link } from "@/i18n/routing";
 import { useTranslations, useLocale } from "next-intl";
@@ -23,6 +23,7 @@ interface ReleaseNotes {
 export default function MaintenanceAndUpdatesWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const locale = useLocale();
+  const router = useRouter();
   const supabase = createClient();
   const t = useTranslations("Maintenance");
 
@@ -36,9 +37,18 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
   const [loading, setLoading] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
 
+  // Konami Code secret access: ↑ ↑ ↓ ↓ ← → Enter
+  const KONAMI = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"];
+  const konamiProgress = useRef(0);
+  // Read sessionStorage gate (set only when Konami is entered)
+  const [konamiUnlocked, setKonamiUnlocked] = useState(false);
+  useEffect(() => {
+    setKonamiUnlocked(sessionStorage.getItem("_bk") === "1");
+  }, [pathname]);
+
   // Exclude admin dashboard from being blocked by maintenance
   const isAdminPath = pathname?.includes("/admin");
-  const isLoginPath = pathname?.includes("/login");
+  // NOTE: /login is NO LONGER automatically excluded — only unlocked via Konami
 
   const checkStatusAndUser = async () => {
     setIsChecking(true);
@@ -109,8 +119,26 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
       })
       .subscribe();
 
+    // Konami Code listener for hidden admin access
+    const handleKonami = (e: KeyboardEvent) => {
+      if (e.key === KONAMI[konamiProgress.current]) {
+        konamiProgress.current += 1;
+        if (konamiProgress.current === KONAMI.length) {
+          konamiProgress.current = 0;
+          // Set session gate then navigate
+          sessionStorage.setItem("_bk", "1");
+          setKonamiUnlocked(true);
+          router.push(`/${locale}/login`);
+        }
+      } else {
+        konamiProgress.current = e.key === KONAMI[0] ? 1 : 0;
+      }
+    };
+    window.addEventListener("keydown", handleKonami);
+
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener("keydown", handleKonami);
     };
   }, [supabase, pathname]);
 
@@ -121,28 +149,24 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
     setShowWhatsNew(false);
   };
 
-  // If maintenance mode is ON, user is NOT admin, and not on admin/login page:
-  const shouldBlockVisitor = maintenanceMode && !isAdmin && !isAdminPath && !isLoginPath;
+  // Block visitors: maintenance ON + not admin + not admin path + not konami-unlocked login path
+  const isLoginPath = pathname?.includes("/login");
+  const shouldBlockVisitor = maintenanceMode && !isAdmin && !isAdminPath && !(isLoginPath && konamiUnlocked);
 
   return (
     <>
       {shouldBlockVisitor ? (
-        <div className="fixed inset-0 z-[9999] bg-surface flex flex-col items-center justify-center p-4 overflow-y-auto">
-          {/* Decorative Gradients */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px] pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-secondary/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="fixed inset-0 z-[9999] bg-surface flex flex-col items-center justify-center px-4 py-8 overflow-y-auto overflow-x-hidden">
+          {/* Decorative Gradients – clipped to prevent side overflow */}
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-1/4 right-0 w-[300px] h-[300px] bg-secondary/10 rounded-full blur-[100px] pointer-events-none" />
 
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="max-w-xl w-full bg-surface border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-2xl relative z-10 flex flex-col items-center"
+            className="w-full max-w-lg bg-surface border border-outline-variant/30 rounded-3xl p-8 sm:p-10 md:p-12 text-center shadow-2xl relative z-10 flex flex-col items-center mx-auto"
           >
-            {/* Maintenance Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold mb-4 animate-pulse">
-              <FiTool size={14} />
-              {t("badgeMode")}
-            </div>
 
             {/* Lottie Animation */}
             <div className="w-56 h-56 sm:w-64 sm:h-64 relative -my-4 mb-2 select-none pointer-events-none">
@@ -184,14 +208,6 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
                 <FiRefreshCw size={15} className={isChecking ? "animate-spin" : ""} />
                 {isChecking ? t("checkingStatus") : t("checkStatus")}
               </button>
-
-              <Link
-                href="/login"
-                className="px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-white bg-primary hover:bg-primary/90 transition-all shadow-md flex items-center justify-center gap-2"
-              >
-                <FiLock size={15} />
-                {t("adminLogin")}
-              </Link>
             </div>
           </motion.div>
 

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { 
   FiActivity, FiHardDrive, FiServer, FiCheckCircle, 
   FiClock, FiFileText, FiBriefcase, FiCalendar, FiUsers, 
-  FiMessageSquare, FiSettings, FiRefreshCw, FiTrash2, FiShield, FiCpu, FiSearch
+  FiMessageSquare, FiSettings, FiRefreshCw, FiTrash2, FiLock, FiCpu
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
@@ -328,7 +328,7 @@ export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoring
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Layanan Utama</span>
-                  <FiShield className="text-emerald-500" size={18} />
+                  <FiLock className="text-emerald-500" size={18} />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2 text-xs">
