@@ -867,5 +867,118 @@
     "submit": "Submit Application",
     "loading": "Loading...",
     "success": "Form successfully submitted! (Demo)"
+  },
+  "ErrorPage": {
+    "title": "System Error Occurred",
+    "desc": "Oops! A technical issue occurred while processing your request. Our team has been notified and is looking into it.",
+    "tryAgain": "Try Again",
+    "backHome": "Back to Home"
+  },
+  "Maintenance": {
+    "badgeMode": "MAINTENANCE MODE ACTIVE",
+    "title": "Site is Under Maintenance",
+    "defaultDesc": "We are currently performing system quality upgrades & infrastructure maintenance. We will be back shortly!",
+    "estTimeLabel": "Estimated Completion",
+    "checkStatus": "Check Latest Status",
+    "checkingStatus": "Checking...",
+    "adminLogin": "Admin Login",
+    "whatsNewTitle": "Portal BEM System Update",
+    "whatsNewDesc": "Here are the new features & improvements just released:",
+    "noFeatureList": "General performance improvements and bug fixes.",
+    "exploreBtn": "Explore BEM Portal",
+    "footerTagline": "Innovation Portal"
+  },
+  "Tour": {
+    "startBtn": "Start Guide Tour",
+    "controls": {
+      "progress": "Step {current} of {total}",
+      "done": "Done",
+      "next": "Next",
+      "prev": "Back"
+    },
+    "home": {
+      "welcome_title": "Welcome!",
+      "welcome_desc": "This is the official portal of BEM STMIK Tazkia. Here you can see the latest information about campus life and student innovation projects.",
+      "innovation_title": "Student Innovation",
+      "innovation_desc": "In this section, you can view the showcase of the best works from STMIK Tazkia students. You can also upload your own project!",
+      "news_title": "News & Announcements",
+      "news_desc": "Don't miss out on information! All the latest news, achievements, and important announcements are here.",
+      "live_title": "Live Events (LIVE)",
+      "live_desc": "Here you can see events happening today in real-time. Don't miss out!",
+      "upcoming_title": "Upcoming Events",
+      "upcoming_desc": "Check the upcoming BEM activity schedule so you can prepare yourself to participate.",
+      "volunteer_title": "Volunteer Registration",
+      "volunteer_desc": "BEM often opens open recruitment for committees. This is your chance to join as a volunteer!",
+      "archive_title": "Activity Archive",
+      "archive_desc": "View the gallery and documentation from exciting events that have been held previously.",
+      "voice_title": "Student Voice",
+      "voice_desc": "Have a suggestion, complaint, or brilliant idea? Share it anonymously through this aspiration box.",
+      "login_title": "Go to Dashboard",
+      "login_desc": "Log in with your campus email to start uploading projects, registering for events, and viewing your activity history. Start your journey now!"
+    },
+    "karya": {
+      "header_title": "Student Project Gallery",
+      "header_desc": "This page is a digital showcase where all the projects, research, and best innovations from STMIK Tazkia students are gathered.",
+      "cta_title": "Upload Your Own Project!",
+      "cta_desc": "Have a cool project? Don't keep it to yourself! Click this button to upload and showcase your work to the entire campus. (Login required)",
+      "filter_title": "Category Filter",
+      "filter_desc": "Use these buttons to filter projects by a specific field, such as Web Apps, Mobile, or IoT.",
+      "search_title": "Search Projects",
+      "search_desc": "Or use this field if you want to search for a specific project title or creator name."
+    },
+    "agenda": {
+      "header_title": "Activity Agenda",
+      "header_desc": "Welcome to the BEM STMIK Tazkia event information center! Find various exciting and beneficial activities here.",
+      "nav_title": "Menu Navigation",
+      "nav_desc": "Use this menu to switch between the regular Agenda/Events list and Open Recruitment or Volunteer vacancy information.",
+      "search_title": "Event Search",
+      "search_desc": "Type an event name or keyword here to quickly find the activity you're looking for.",
+      "filter_title": "Category Filter",
+      "filter_desc": "Click this category to filter the type of activity, for example specifically Technology, Sports, or Arts & Culture.",
+      "calendar_title": "Interactive Calendar",
+      "calendar_desc": "View the activity schedule visually for a month. You can also click on a marked date to see the event details directly!"
+    },
+    "berita": {
+      "header_title": "News Publications",
+      "header_desc": "This page is the official BEM information center. You can read various articles, press releases, and the latest news from campus here.",
+      "search_title": "Search & Filter News",
+      "search_desc": "Use the search field or click an available category to find the article most relevant to your interests.",
+      "featured_title": "Spotlight News",
+      "featured_desc": "This is the most important current article or announcement that is the main spotlight from BEM.",
+      "grid_title": "News Collection",
+      "grid_desc": "Here you can browse all the latest publications. Click on any news card to read the full article.",
+      "popular_title": "Most Popular News",
+      "popular_desc": "A list of articles that have been most read and liked by other students will appear in this column."
+    },
+    "mahasiswa": {
+      "header_title": "Student Directory",
+      "header_desc": "Welcome to the Student Directory page! Here you can search for the profiles of STMIK Tazkia friends along with their project portfolios.",
+      "stats_title": "Directory Statistics",
+      "stats_desc": "A summary of the total registered students, the number of uploaded projects, and the number of batches currently in the system.",
+      "search_title": "Smart Search",
+      "search_desc": "Type a name, student ID, skill, or project title to find students quickly.",
+      "filter_title": "Batch & Major Filter",
+      "filter_desc": "Use these buttons to filter the student list by a specific year of entry or study program."
+    },
+    "kabinet": {
+      "header_title": "BEM Profile",
+      "header_desc": "Welcome to the BEM Profile page! Get to know more about the cabinet name and the movers of BEM STMIK Tazkia for this period.",
+      "vision_title": "Our Direction",
+      "vision_desc": "Here you can read the Vision and Mission that form the foundation of our cabinet's struggle for one period of administration.",
+      "board_title": "Core Board",
+      "board_desc": "Get to know the faces of the Core Board (President, Vice, Secretary, and Treasurer). You can also contact them directly via the available social media buttons!",
+      "proker_title": "Main Work Programs",
+      "proker_desc": "This is a list of large-scale flagship work programs held directly under the direction of the BEM Core Board.",
+      "dept_title": "Departments",
+      "dept_desc": "Explore each existing department. You can click the 'Members' or 'Work Programs' tab on each card to see more details."
+    },
+    "dokumentasi": {
+      "header_title": "Gallery & Documentation",
+      "header_desc": "Welcome to the memory room! All photos and activity documentation from BEM STMIK Tazkia are neatly stored on this page.",
+      "search_title": "Filter & Search",
+      "search_desc": "Use the category buttons to filter the type of activity, or type a specific event name in this search field.",
+      "grid_title": "Album Collection",
+      "grid_desc": "Click on one of these albums (cards) to see the full photo collection of that event. The number of photos is shown in the top right corner of the card."
+    }
   }
 }

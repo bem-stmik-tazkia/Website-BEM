@@ -10,6 +10,7 @@ import {
 import { motion } from "framer-motion";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { createClient } from "@/utils/supabase/client";
+import { recordView } from "@/actions/view";
 import { useToast } from "@/components/ui/Toast";
 import { getDeviceId } from "@/utils/identity";
 import { getTechStack } from "@/lib/techStack";
@@ -157,12 +158,9 @@ export default function ProjectDetailClient() {
           setLiked(true);
         }
 
-        // Increment view via RPC (Cooldown 24 Jam)
-        const { error: rpcError } = await supabase.rpc('increment_karya_view', { 
-          p_karya_id: id, 
-          p_device_id: deviceId,
-          p_user_id: userId
-        });
+        // Direct View Tracking (No Cooldown - Increases on every open)
+        await recordView('karya', id);
+        setViewCount(prev => prev + 1);
         
         // Catatan: Jika RPC berhasil, artinya view bertambah di DB (atau di-ignore jika masih cooldown).
         // Untuk optimisasi UX, kita bisa fetch ulang jumlah view terbaru, atau biarkan saja.
@@ -252,45 +250,20 @@ export default function ProjectDetailClient() {
     }
   }, [sliderImages.length]);
 
-  // Auto-translate project (MUST be above early returns)
-  const { data: translatedProject } = useTranslatedContent(
-    project,
-    "karya",
-    locale,
-    ["title", "description"]
-  );
-
-  const displayProject = translatedProject || project;
+  // Use original project data as entered by user
+  const displayProject = project;
 
   // Handle Features safely for hooks
   const defaultFeatures = React.useMemo(() => [{ title: tDetail("features"), desc: tDetail("noFeatures") }], [tDetail]);
-  const featuresRaw = displayProject && Array.isArray(displayProject.features) && displayProject.features.length > 0
+  const features = displayProject && Array.isArray(displayProject.features) && displayProject.features.length > 0
     ? displayProject.features
     : defaultFeatures;
-    
-  const featuresWithId = React.useMemo(() => featuresRaw.map((f: any, i: number) => ({ ...f, _id: `${displayProject?.id || 'temp'}_feature_${i}` })), [featuresRaw, displayProject?.id]);
-  const { data: translatedFeatures } = useTranslatedList(
-    featuresWithId,
-    "karya_features",
-    locale,
-    ["title", "desc", "description"],
-    "_id"
-  );
-  const features = translatedFeatures || featuresRaw;
 
   // Handle Gallery safely for hooks
-  const galleryRaw = React.useMemo(() => displayProject && Array.isArray(displayProject.gallery) ? displayProject.gallery.map((g: any, i: number) => {
+  const gallery = React.useMemo(() => displayProject && Array.isArray(displayProject.gallery) ? displayProject.gallery.map((g: any, i: number) => {
     if (typeof g === 'string') return { url: g, _id: `${displayProject?.id || 'temp'}_gallery_${i}` };
     return { ...g, _id: `${displayProject?.id || 'temp'}_gallery_${i}` };
   }) : [], [displayProject?.gallery, displayProject?.id]);
-  const { data: translatedGallery } = useTranslatedList(
-    galleryRaw,
-    "karya_gallery",
-    locale,
-    ["caption"],
-    "_id"
-  );
-  const gallery = translatedGallery && translatedGallery.length > 0 ? translatedGallery : galleryRaw;
 
   if (loading) {
     return (

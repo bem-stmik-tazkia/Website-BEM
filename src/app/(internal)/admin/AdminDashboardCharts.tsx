@@ -45,12 +45,16 @@ interface AdminDashboardChartsProps {
   beritaCount: number;
   karyaCount: number;
   agendaCount: number;
+  monthlyUploadData?: { name: string; Berita: number; Karya: number; Agenda: number }[];
+  visitorData?: { name: string; Pengunjung: number }[];
 }
 
 export default function AdminDashboardCharts({
   beritaCount,
   karyaCount,
   agendaCount,
+  monthlyUploadData: customMonthlyData,
+  visitorData: customVisitorData,
 }: AdminDashboardChartsProps) {
   // To avoid hydration mismatch with Recharts, render only on client
   const [mounted, setMounted] = useState(false);
@@ -58,6 +62,9 @@ export default function AdminDashboardCharts({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const chartData = (customMonthlyData && customMonthlyData.length > 0) ? customMonthlyData : monthlyUploadData;
+  const vData = (customVisitorData && customVisitorData.length > 0) ? customVisitorData : visitorData;
 
   if (!mounted) return <div className="h-[400px] w-full flex items-center justify-center animate-pulse bg-surface-variant/20 rounded-2xl">Memuat Grafik...</div>;
 
@@ -82,7 +89,7 @@ export default function AdminDashboardCharts({
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={monthlyUploadData}
+              data={chartData}
               margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
@@ -113,7 +120,7 @@ export default function AdminDashboardCharts({
           <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={visitorData}
+                data={vData}
                 margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
               >
                 <defs>

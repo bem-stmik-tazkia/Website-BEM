@@ -235,7 +235,7 @@ export default function SaranAduan() {
   };
 
   return (
-    <section className="py-10 md:py-20 relative bg-surface-variant overflow-hidden">
+    <section id="saran" className="py-10 md:py-20 relative bg-surface-variant overflow-hidden scroll-mt-24">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 z-0"></div>
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/4 z-0"></div>

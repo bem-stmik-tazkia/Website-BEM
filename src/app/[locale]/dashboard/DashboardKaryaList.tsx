@@ -43,12 +43,7 @@ export default function DashboardKaryaList({ initialKaryaList }: { initialKaryaL
   const locale = useLocale();
   const { toast } = useToast();
 
-  const { data: translatedKaryaList, isTranslating } = useTranslatedList(
-    karyaList,
-    "karya",
-    locale,
-    ["title", "description"]
-  );
+  const isTranslating = false;
 
   // Reset page when filters change
   useEffect(() => {
@@ -178,7 +173,7 @@ export default function DashboardKaryaList({ initialKaryaList }: { initialKaryaL
     );
   }
 
-  const filteredList = translatedKaryaList.filter(karya => {
+  const filteredList = karyaList.filter(karya => {
     // Status filter
     if (activeTab === "pending" && karya.status !== "pending" && karya.status !== "deletion_pending") return false;
     if (activeTab === "approved" && karya.status !== "approved") return false;

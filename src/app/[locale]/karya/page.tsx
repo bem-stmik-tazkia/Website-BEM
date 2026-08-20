@@ -69,13 +69,7 @@ export default function KaryaInovasiPage() {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Auto-translate konten karya
-  const { data: translatedProjects, isTranslating } = useTranslatedList(
-    projects,
-    "karya",
-    locale,
-    ["title", "description"]
-  );
+  const isTranslating = false;
 
   useEffect(() => {
     if (!searchQuery) {
@@ -120,8 +114,8 @@ export default function KaryaInovasiPage() {
     };
   }, [supabase]);
 
-  // Filter projects based on category and search (dari data yg sudah diterjemahkan)
-  const filteredProjects = translatedProjects.filter((project) => {
+  // Filter projects based on category and search (menggunakan data asli)
+  const filteredProjects = projects.filter((project) => {
     const matchesCategory =
       activeCategory === "All Projects" ||
       project.category.toLowerCase() === activeCategory.toLowerCase();

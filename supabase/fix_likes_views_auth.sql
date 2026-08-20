@@ -72,21 +72,21 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 DECLARE
-    last_view TIMESTAMP WITH TIME ZONE;
+    has_viewed boolean;
 BEGIN
     IF p_user_id IS NOT NULL THEN
-        SELECT viewed_at INTO last_view 
-        FROM public.karya_views_log 
-        WHERE karya_id = p_karya_id AND user_id = p_user_id 
-        ORDER BY viewed_at DESC LIMIT 1;
+        SELECT EXISTS(
+            SELECT 1 FROM public.karya_views_log 
+            WHERE karya_id = p_karya_id AND user_id = p_user_id
+        ) INTO has_viewed;
     ELSE
-        SELECT viewed_at INTO last_view 
-        FROM public.karya_views_log 
-        WHERE karya_id = p_karya_id AND device_id = p_device_id 
-        ORDER BY viewed_at DESC LIMIT 1;
+        SELECT EXISTS(
+            SELECT 1 FROM public.karya_views_log 
+            WHERE karya_id = p_karya_id AND device_id = p_device_id
+        ) INTO has_viewed;
     END IF;
 
-    IF last_view IS NULL OR last_view < NOW() - INTERVAL '24 hours' THEN
+    IF NOT has_viewed THEN
         INSERT INTO public.karya_views_log (karya_id, device_id, user_id) 
         VALUES (p_karya_id, COALESCE(p_device_id, 'unknown'), p_user_id);
         

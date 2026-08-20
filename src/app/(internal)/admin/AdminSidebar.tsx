@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { FiHome, FiFileText, FiBriefcase, FiCalendar, FiChevronLeft, FiChevronRight, FiCheckCircle, FiUsers, FiAward, FiImage, FiMessageSquare, FiShield, FiSettings } from "react-icons/fi";
+import { FiHome, FiFileText, FiBriefcase, FiCalendar, FiChevronLeft, FiChevronRight, FiUsers, FiAward, FiImage, FiMessageSquare, FiSettings, FiTool } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 
-const navItems = [
+const mainNavItems = [
   { name: "Dashboard", href: "/admin", icon: FiHome },
   { name: "Kelola Mahasiswa", href: "/admin/mahasiswa", icon: FiUsers },
   { name: "Profil Kabinet", href: "/admin/kabinet", icon: FiAward },
@@ -15,7 +15,11 @@ const navItems = [
   { name: "Kelola Kegiatan", href: "/admin/kegiatan", icon: FiCalendar },
   { name: "Kelola Dokumentasi", href: "/admin/dokumentasi", icon: FiImage },
   { name: "Kotak Saran", href: "/admin/saran-aduan", icon: FiMessageSquare },
+];
+
+const settingsItems = [
   { name: "Master Data", href: "/admin/master-data", icon: FiSettings },
+  { name: "Pengaturan Sistem", href: "/admin/system-settings", icon: FiTool },
 ];
 
 export default function AdminSidebar() {
@@ -24,6 +28,7 @@ export default function AdminSidebar() {
   const fromParam = searchParams?.get("from");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [pendingKaryaCount, setPendingKaryaCount] = useState(0);
+  const [unreadSaranCount, setUnreadSaranCount] = useState(0);
   const supabase = createClient();
 
   useEffect(() => {
@@ -38,38 +43,66 @@ export default function AdminSidebar() {
           setPendingKaryaCount(count);
         }
       } catch (err) {
-        // Ignore network errors during polling/fetching
+        // Ignore network errors
+      }
+    };
+
+    const fetchUnreadSaran = async () => {
+      try {
+        const lastViewedSaran = typeof window !== "undefined"
+          ? (localStorage.getItem("admin_saran_last_viewed") || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+          : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+        const { count, error } = await supabase
+          .from('saran_aduan')
+          .select('*', { count: 'exact', head: true })
+          .gt('created_at', lastViewedSaran);
+
+        if (!error && count !== null) {
+          setUnreadSaranCount(count);
+        }
+      } catch (err) {
+        // Ignore network errors
       }
     };
 
     fetchPendingCount();
+    fetchUnreadSaran();
 
-    // Polling removed in favor of Supabase Realtime below
-    // (A 3-second polling interval causes aggressive token refreshes and network errors)
-
-    // Optional: Set up real-time subscription to auto-update badge
-    const channelName = `karya_changes_${Date.now()}`;
-    const channel = supabase.channel(channelName)
+    const channelKarya = supabase.channel(`karya_sb_${Date.now()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'karya' }, () => {
         fetchPendingCount();
       })
       .subscribe();
 
+    const channelSaran = supabase.channel(`saran_sb_${Date.now()}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'saran_aduan' }, () => {
+        fetchUnreadSaran();
+      })
+      .subscribe();
+
+    const handleSaranRead = () => {
+      fetchUnreadSaran();
+    };
+    window.addEventListener("saran_read", handleSaranRead);
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(channelKarya);
+      supabase.removeChannel(channelSaran);
+      window.removeEventListener("saran_read", handleSaranRead);
     };
   }, [supabase]);
 
   return (
     <aside
-      className={`transition-all duration-300 ease-in-out bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] border-r border-outline-variant/30 md:h-screen md:sticky top-0 flex flex-col shadow-sm w-full shrink-0 z-20 ${isCollapsed ? "md:w-24" : "md:w-72"
+      className={`transition-all duration-300 ease-in-out bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] border-r border-outline-variant/30 md:h-screen md:sticky top-0 flex flex-col shadow-sm w-full shrink-0 z-50 ${isCollapsed ? "md:w-24" : "md:w-72"
         }`}
     >
-      {/* Toggle Button - rendered outside overflow so it doesn't get clipped */}
+      {/* Toggle Button */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="hidden md:flex absolute -right-4 top-10 w-8 h-8 bg-surface border border-outline-variant/30 shadow-sm rounded-full items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary transition-colors z-30"
-        style={{ position: 'absolute', right: '-16px' }}
+        className="hidden md:flex absolute top-8 w-8 h-8 bg-surface border border-outline-variant/30 shadow-md rounded-full items-center justify-center text-on-surface-variant hover:text-primary hover:border-primary transition-all cursor-pointer"
+        style={{ position: 'absolute', right: '-16px', zIndex: 60 }}
       >
         {isCollapsed ? <FiChevronRight size={18} /> : <FiChevronLeft size={18} />}
       </button>
@@ -95,7 +128,7 @@ export default function AdminSidebar() {
 
         {/* Main Nav Items */}
         <div className="space-y-1.5">
-          {navItems.filter(i => i.href !== '/admin/master-data').map((item) => {
+          {mainNavItems.map((item) => {
             let isActive = pathname === item.href || (item.href !== "/admin" && pathname?.startsWith(item.href + "/"));
 
             if (item.href === "/admin/kegiatan" && fromParam === "dokumentasi") {
@@ -130,29 +163,37 @@ export default function AdminSidebar() {
                         {pendingKaryaCount}
                       </span>
                     )}
+                    {item.name === "Kotak Saran" && unreadSaranCount > 0 && (
+                      <span className="bg-purple-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                        {unreadSaranCount}
+                      </span>
+                    )}
                   </span>
                 )}
                 {isCollapsed && item.name === "Kelola Karya" && pendingKaryaCount > 0 && (
                   <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#f8fafc]"></span>
+                )}
+                {isCollapsed && item.name === "Kotak Saran" && unreadSaranCount > 0 && (
+                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-purple-600 rounded-full border-2 border-[#f8fafc]"></span>
                 )}
               </Link>
             );
           })}
         </div>
 
-        {/* Divider + Master Data */}
+        {/* Divider + Settings Items */}
         <div className="mt-4 pt-4 border-t border-outline-variant/20 space-y-1.5">
           {!isCollapsed && (
             <p className="px-4 text-xs font-bold text-on-surface-variant/70 uppercase tracking-wider mb-3 whitespace-nowrap">Pengaturan</p>
           )}
-          {(() => {
-            const masterItem = navItems.find(i => i.href === '/admin/master-data')!;
-            const isActive = pathname?.startsWith('/admin/master-data');
-            const Icon = masterItem.icon;
+          {settingsItems.map((item) => {
+            const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+            const Icon = item.icon;
             return (
               <Link
-                href={masterItem.href}
-                title={isCollapsed ? masterItem.name : ""}
+                key={item.name}
+                href={item.href}
+                title={isCollapsed ? item.name : ""}
                 className={`flex items-center rounded-xl transition-all duration-300 font-semibold text-sm group relative overflow-hidden ${isCollapsed ? "justify-center py-3.5 px-0" : "gap-3 px-4 py-3.5"
                   } ${isActive
                     ? "bg-primary text-white shadow-md shadow-primary/20"
@@ -162,12 +203,12 @@ export default function AdminSidebar() {
                 <Icon size={20} className={`shrink-0 ${isActive ? "text-white" : "text-on-surface-variant/70 group-hover:text-primary"}`} />
                 {!isCollapsed && (
                   <span className="relative z-10 whitespace-nowrap overflow-hidden text-ellipsis flex-1">
-                    {masterItem.name}
+                    {item.name}
                   </span>
                 )}
               </Link>
             );
-          })()}
+          })}
         </div>
       </nav>
 

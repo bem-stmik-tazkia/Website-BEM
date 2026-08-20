@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import LoadingScreen from "./LoadingScreen";
+import MaintenanceAndUpdatesWrapper from "@/components/maintenance/MaintenanceAndUpdatesWrapper";
+import SiteVisitorTracker from "./SiteVisitorTracker";
 
 export default function LayoutClientWrapper({
   children,
@@ -60,13 +62,14 @@ export default function LayoutClientWrapper({
   }, [pathname]);
 
   return (
-    <>
+    <MaintenanceAndUpdatesWrapper>
+      <SiteVisitorTracker />
       <LoadingScreen />
       {!hideLayout && <Navbar />}
       <main className={hideLayout ? "w-full max-w-full" : "flex-1 flex flex-col w-full max-w-full"}>
         {children}
       </main>
       {!hideLayout && <Footer />}
-    </>
+    </MaintenanceAndUpdatesWrapper>
   );
 }

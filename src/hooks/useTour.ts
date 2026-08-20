@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { driver, DriveStep } from "driver.js";
 import "driver.js/dist/driver.css";
+import { useTranslations } from "next-intl";
 
 interface UseTourOptions {
   tourId: string;
@@ -11,6 +12,7 @@ interface UseTourOptions {
 }
 
 export function useTour({ tourId, steps, autoStart = true }: UseTourOptions) {
+  const t = useTranslations("Tour");
   const driverObj = useRef<ReturnType<typeof driver> | null>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -25,10 +27,10 @@ export function useTour({ tourId, steps, autoStart = true }: UseTourOptions) {
       overlayColor: 'rgba(15, 23, 42, 0.85)',
       showProgress: true,
       animate: true,
-      progressText: 'Langkah {{current}} dari {{total}}',
-      doneBtnText: 'Selesai',
-      nextBtnText: 'Lanjut',
-      prevBtnText: 'Kembali',
+      progressText: t("controls.progress", { current: "{{current}}", total: "{{total}}" }),
+      doneBtnText: t("controls.done"),
+      nextBtnText: t("controls.next"),
+      prevBtnText: t("controls.prev"),
       steps: steps,
       onPopoverRender: (popover, { state }) => {
         // Custom styling to match our premium aesthetic

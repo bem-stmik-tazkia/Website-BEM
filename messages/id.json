@@ -867,5 +867,118 @@
     "submit": "Kirim Lamaran",
     "loading": "Memuat...",
     "success": "Formulir berhasil dikirim! (Demo)"
+  },
+  "ErrorPage": {
+    "title": "Terjadi Kesalahan Sistem",
+    "desc": "Ups! Terjadi kendala teknis saat memproses permintaan Anda. Tim kami telah diberitahu dan sedang memperbaikinya.",
+    "tryAgain": "Coba Lagi",
+    "backHome": "Ke Beranda"
+  },
+  "Maintenance": {
+    "badgeMode": "MODE PEMELIHARAAN AKTIF",
+    "title": "Situs Sedang Dalam Pemeliharaan",
+    "defaultDesc": "Kami sedang melakukan peningkatan kualitas sistem & pembaruan infrastruktur. Kami akan kembali secepatnya!",
+    "estTimeLabel": "Estimasi Selesai",
+    "checkStatus": "Cek Status Terbaru",
+    "checkingStatus": "Mengecek...",
+    "adminLogin": "Login Admin",
+    "whatsNewTitle": "Pembaruan Sistem Portal BEM",
+    "whatsNewDesc": "Berikut adalah peningkatan & fitur baru yang baru saja dirilis:",
+    "noFeatureList": "Peningkatan performa dan perbaikan bug secara umum.",
+    "exploreBtn": "Jelajahi Portal BEM",
+    "footerTagline": "Portal Inovasi"
+  },
+  "Tour": {
+    "startBtn": "Mulai Tur Panduan",
+    "controls": {
+      "progress": "Langkah {current} dari {total}",
+      "done": "Selesai",
+      "next": "Lanjut",
+      "prev": "Kembali"
+    },
+    "home": {
+      "welcome_title": "Selamat Datang!",
+      "welcome_desc": "Ini adalah portal resmi BEM STMIK Tazkia. Di sini kamu bisa melihat berbagai informasi terbaru seputar kampus dan karya inovasi mahasiswa.",
+      "innovation_title": "Karya Inovasi",
+      "innovation_desc": "Di bagian ini, kamu bisa melihat pameran karya-karya terbaik dari mahasiswa STMIK Tazkia. Kamu juga bisa upload karyamu sendiri lho!",
+      "news_title": "Berita & Pengumuman",
+      "news_desc": "Jangan sampai ketinggalan informasi! Semua berita terbaru, prestasi, dan pengumuman penting ada di sini.",
+      "live_title": "Event Berjalan (LIVE)",
+      "live_desc": "Di sini kamu bisa melihat acara yang sedang berlangsung hari ini secara real-time. Jangan sampai ketinggalan!",
+      "upcoming_title": "Upcoming Events",
+      "upcoming_desc": "Cek jadwal kegiatan BEM terdekat di masa mendatang agar kamu bisa mempersiapkan diri untuk ikut serta.",
+      "volunteer_title": "Pendaftaran Volunteer",
+      "volunteer_desc": "BEM sering membuka open recruitment untuk kepanitiaan. Ini kesempatanmu untuk bergabung menjadi relawan!",
+      "archive_title": "Arsip Kegiatan",
+      "archive_desc": "Lihat galeri dan dokumentasi dari acara-acara seru yang sudah berhasil dilaksanakan sebelumnya.",
+      "voice_title": "Suara Mahasiswa",
+      "voice_desc": "Punya saran, keluhan, atau ide brilian? Sampaikan langsung secara anonim melalui kotak aspirasi ini.",
+      "login_title": "Masuk ke Dashboard",
+      "login_desc": "Login dengan email kampus untuk mulai upload karya, daftar event, dan melihat riwayat aktivitasmu. Yuk mulai perjalananmu sekarang!"
+    },
+    "karya": {
+      "header_title": "Galeri Karya Mahasiswa",
+      "header_desc": "Halaman ini adalah etalase digital tempat berkumpulnya semua proyek, riset, dan inovasi terbaik dari mahasiswa STMIK Tazkia.",
+      "cta_title": "Unggah Karyamu Sendiri!",
+      "cta_desc": "Punya proyek keren? Jangan disimpan sendiri! Klik tombol ini untuk mengunggah dan memamerkan karyamu ke seluruh kampus. (Membutuhkan login)",
+      "filter_title": "Filter Kategori",
+      "filter_desc": "Gunakan tombol-tombol ini untuk memfilter karya berdasarkan bidang tertentu, seperti Aplikasi Web, Mobile, atau IoT.",
+      "search_title": "Cari Proyek",
+      "search_desc": "Atau gunakan kolom ini jika kamu ingin mencari judul proyek atau nama pembuat secara spesifik."
+    },
+    "agenda": {
+      "header_title": "Agenda Kegiatan",
+      "header_desc": "Selamat datang di pusat informasi acara BEM STMIK Tazkia! Temukan berbagai kegiatan seru dan bermanfaat di sini.",
+      "nav_title": "Navigasi Menu",
+      "nav_desc": "Gunakan menu ini untuk berpindah antara daftar Agenda/Event reguler dan informasi Open Recruitment atau lowongan Volunteer.",
+      "search_title": "Pencarian Event",
+      "search_desc": "Ketik nama atau kata kunci event di sini untuk menemukan kegiatan yang kamu cari dengan cepat.",
+      "filter_title": "Filter Kategori",
+      "filter_desc": "Klik kategori ini untuk menyaring jenis kegiatan, misalnya khusus Teknologi, Olahraga, atau Seni & Budaya.",
+      "calendar_title": "Kalender Interaktif",
+      "calendar_desc": "Lihat jadwal kegiatan secara visual dalam sebulan. Kamu juga bisa mengklik tanggal yang ditandai untuk melihat detail acaranya langsung!"
+    },
+    "berita": {
+      "header_title": "Publikasi Berita",
+      "header_desc": "Halaman ini adalah pusat informasi resmi BEM. Kamu bisa membaca berbagai artikel, rilis pers, dan kabar terbaru dari kampus di sini.",
+      "search_title": "Cari & Filter Berita",
+      "search_desc": "Gunakan kolom pencarian atau klik kategori yang tersedia untuk menemukan artikel yang paling relevan dengan minatmu.",
+      "featured_title": "Berita Sorotan",
+      "featured_desc": "Ini adalah artikel atau pengumuman paling penting saat ini yang menjadi sorotan utama dari BEM.",
+      "grid_title": "Kumpulan Berita",
+      "grid_desc": "Di sini kamu bisa menjelajahi semua publikasi terbaru. Klik pada kartu berita mana saja untuk membaca artikel selengkapnya.",
+      "popular_title": "Berita Terpopuler",
+      "popular_desc": "Daftar artikel yang paling banyak dibaca dan disukai oleh mahasiswa lainnya akan muncul di kolom ini."
+    },
+    "mahasiswa": {
+      "header_title": "Direktori Mahasiswa",
+      "header_desc": "Selamat datang di halaman Direktori Mahasiswa! Di sini kamu bisa mencari profil teman-teman STMIK Tazkia beserta portofolio karya mereka.",
+      "stats_title": "Statistik Direktori",
+      "stats_desc": "Ringkasan total mahasiswa yang terdaftar, jumlah proyek yang telah diunggah, dan jumlah angkatan yang ada di sistem saat ini.",
+      "search_title": "Pencarian Cerdas",
+      "search_desc": "Ketik nama, NIM, keahlian (skill), atau judul proyek untuk menemukan mahasiswa dengan cepat.",
+      "filter_title": "Filter Angkatan & Prodi",
+      "filter_desc": "Gunakan tombol-tombol ini untuk menyaring daftar mahasiswa berdasarkan tahun angkatan atau program studi tertentu."
+    },
+    "kabinet": {
+      "header_title": "Profil BEM",
+      "header_desc": "Selamat datang di halaman Profil BEM! Kenali lebih dekat nama kabinet dan para penggerak BEM STMIK Tazkia periode ini.",
+      "vision_title": "Arah Gerak Kami",
+      "vision_desc": "Di sini kamu bisa membaca Visi dan Misi yang menjadi fondasi perjuangan kabinet kami selama satu periode kepengurusan.",
+      "board_title": "Pengurus Inti",
+      "board_desc": "Kenali wajah-wajah Pengurus Inti (Presiden, Wakil, Sekretaris, dan Bendahara). Kamu juga bisa langsung menghubungi mereka lewat tombol sosial media yang tersedia lho!",
+      "proker_title": "Program Kerja Utama",
+      "proker_desc": "Ini adalah daftar program kerja unggulan skala besar yang diadakan langsung di bawah arahan Pengurus Inti BEM.",
+      "dept_title": "Departemen-Departemen",
+      "dept_desc": "Jelajahi setiap departemen yang ada. Kamu bisa mengklik tab 'Anggota' atau 'Program Kerja' pada masing-masing kartu untuk melihat detail selengkapnya."
+    },
+    "dokumentasi": {
+      "header_title": "Galeri & Dokumentasi",
+      "header_desc": "Selamat datang di ruang memori! Semua foto dan dokumentasi kegiatan dari BEM STMIK Tazkia tersimpan rapi di halaman ini.",
+      "search_title": "Filter & Pencarian",
+      "search_desc": "Gunakan tombol kategori untuk menyaring jenis kegiatan, atau ketik nama event spesifik di kolom pencarian ini.",
+      "grid_title": "Kumpulan Album",
+      "grid_desc": "Klik pada salah satu album (kartu) ini untuk melihat koleksi foto lengkap dari event tersebut. Jumlah foto tertera di pojok kanan atas kartu."
+    }
   }
 }

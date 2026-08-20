@@ -60,14 +60,8 @@ export default function ProfileView({
   const locale = useLocale();
 
   const profile = rawProfile;
-
-  const { data: projects, isTranslating: isTranslatingProjects } = useTranslatedList(
-    rawProjects,
-    "karya",
-    locale,
-    ["title", "description", "category"],
-    "id"
-  );
+  const projects = rawProjects;
+  const isTranslating = false;
 
   const tStatus = useTranslations("StatusBadge");
   const translateStatusBadge = (badgeStr: string) => {
@@ -82,8 +76,6 @@ export default function ProfileView({
     if (isMatched("Mencari Mentor")) return `🔍 ${tStatus("lookingForMentor")}`;
     return badgeStr; // fallback if no match
   };
-
-  const isTranslating = isTranslatingProjects;
   const [projectFilter, setProjectFilter] = useState("Semua");
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);

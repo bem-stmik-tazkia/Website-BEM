@@ -35,7 +35,7 @@ function MahasiswaShowcaseContent() {
   const locale = useLocale();
 
   // Auto-translate status_badge saja; bio & prodi tetap asli (bio = bahasa pengguna, prodi = i18n statis)
-  const { data: translatedMahasiswaList } = useTranslatedList(
+  const { data: translatedMahasiswaList, isTranslating: isTranslatingMhs } = useTranslatedList(
     mahasiswaList,
     "mahasiswa_profiles",
     locale,
@@ -203,7 +203,7 @@ function MahasiswaShowcaseContent() {
         totalMahasiswa={mahasiswaList.length}
         totalProjects={projectList.length}
         availableAngkatan={availableAngkatan}
-        isLoading={isLoading}
+        isLoading={isLoading || (isTranslatingMhs && translatedMahasiswaList.length === 0)}
       />
 
       {/* Main Grid Content */}
@@ -211,7 +211,7 @@ function MahasiswaShowcaseContent() {
         {/* Section Title Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            {isLoading ? (
+            {isLoading || (isTranslatingMhs && translatedMahasiswaList.length === 0) ? (
               <div className="animate-pulse space-y-2">
                 <div className="h-8 bg-surface-variant/60 rounded-xl w-64" />
                 <div className="h-4 bg-surface-variant/40 rounded-lg w-36" />
@@ -232,7 +232,7 @@ function MahasiswaShowcaseContent() {
         </div>
 
         {/* Skeleton Loading Grid */}
-        {isLoading ? (
+        {isLoading || (isTranslatingMhs && translatedMahasiswaList.length === 0) ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
               <div
@@ -261,7 +261,7 @@ function MahasiswaShowcaseContent() {
           </div>
         ) : filteredMahasiswa.length > 0 ? (
           <>
-            <motion.div
+          <motion.div
             layout
             className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
           >

@@ -120,6 +120,7 @@ export function useTranslatedList<T extends Record<string, any>>(
     }
 
     setIsTranslating(true);
+    setTranslated(items);
     prevLangRef.current = targetLang;
 
     Promise.all(

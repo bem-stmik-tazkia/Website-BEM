@@ -20,20 +20,33 @@ export default function LanguageSwitcher({ bottomNavMode = false, floatingMode =
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [hasTour, setHasTour] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Check screen size for desktop
+  useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    checkDesktop();
+    window.addEventListener("resize", checkDesktop);
+    return () => window.removeEventListener("resize", checkDesktop);
+  }, []);
 
   // Check for the Tour Guide button to adjust position dynamically
   useEffect(() => {
     const checkTourBtn = () => {
-      const btn = document.querySelector('button[aria-label="Mulai Tur Panduan"]');
+      const btn = document.querySelector('[data-tour-btn="true"]');
       setHasTour(!!btn);
     };
 
     checkTourBtn();
+    const interval = setInterval(checkTourBtn, 300);
     const observer = new MutationObserver(checkTourBtn);
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
 
-    return () => observer.disconnect();
+    return () => {
+      clearInterval(interval);
+      observer.disconnect();
+    };
   }, [pathname]);
 
   // Close dropdown when clicking outside
@@ -68,10 +81,14 @@ export default function LanguageSwitcher({ bottomNavMode = false, floatingMode =
     ? "relative z-[100]"
     : bottomNavMode
     ? "relative z-[100]"
-    : `relative md:fixed md:bottom-6 md:z-50 transition-all duration-500 ease-in-out ${hasTour ? "md:right-[5.5rem]" : "md:right-6"}`;
+    : "relative md:fixed md:bottom-6 md:right-6 md:z-50 transition-all duration-500 ease-in-out";
 
   return (
-    <div className={containerClasses} ref={dropdownRef}>
+    <div
+      className={containerClasses}
+      style={!floatingMode && !bottomNavMode && hasTour && isDesktop ? { right: "6.25rem" } : undefined}
+      ref={dropdownRef}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isPending}

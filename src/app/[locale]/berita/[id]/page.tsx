@@ -19,6 +19,7 @@ import {
 } from "react-icons/fi";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { toggleLike } from "@/actions/like";
+import { recordView } from "@/actions/view";
 import { createClient } from "@/utils/supabase/client";
 import { getDeviceId } from "@/utils/identity";
 import { useToast } from "@/components/ui/Toast";
@@ -123,12 +124,9 @@ export default function BeritaDetailPage() {
           setLiked(true);
         }
 
-        // Increment view via RPC (Cooldown 24 Jam)
-        await supabase.rpc('increment_berita_view', {
-          p_berita_id: detailData.id,
-          p_device_id: deviceId,
-          p_user_id: userId
-        });
+        // Direct View Tracking (No Cooldown - Increases on every open)
+        await recordView('berita', detailData.id);
+        setViewCount(prev => prev + 1);
 
         // Fetch related based on category
         const { data: relatedData } = await supabase

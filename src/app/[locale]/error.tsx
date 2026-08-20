@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { FiHome, FiRefreshCw } from "react-icons/fi";
 import Navbar from "@/components/layout/Navbar";
+import { useTranslations } from "next-intl";
 
 export default function ErrorBoundary({
   error,
@@ -13,6 +14,8 @@ export default function ErrorBoundary({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("ErrorPage");
+
   useEffect(() => {
     // Optionally log the error to an error reporting service
     console.error("Global Error Boundary caught an error:", error);
@@ -37,11 +40,11 @@ export default function ErrorBoundary({
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold text-on-background mb-2">
-            Terjadi Kesalahan Sistem
+            {t("title")}
           </h1>
           
           <p className="text-xs sm:text-sm text-on-surface-variant mb-6 max-w-md leading-relaxed">
-            Ups! Terjadi kendala teknis saat memproses permintaan Anda. Tim kami telah diberitahu dan sedang memperbaikinya.
+            {t("desc")}
             <br/><br/>
             <span className="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded font-mono break-words border border-red-100">
               {error.message || "Unknown Runtime Error"}
@@ -53,14 +56,14 @@ export default function ErrorBoundary({
               onClick={() => reset()}
               className="px-6 py-3 rounded-full font-bold text-xs sm:text-sm text-on-surface bg-surface-variant/40 hover:bg-surface-variant transition-colors flex items-center justify-center gap-2"
             >
-              <FiRefreshCw size={16} /> Coba Lagi
+              <FiRefreshCw size={16} /> {t("tryAgain")}
             </button>
 
             <Link
               href="/"
               className="px-6 py-3 rounded-full font-bold text-xs sm:text-sm text-white bg-primary hover:bg-primary/90 transition-all shadow-md flex items-center justify-center gap-2"
             >
-              <FiHome size={16} /> Ke Beranda
+              <FiHome size={16} /> {t("backHome")}
             </Link>
           </div>
         </div>

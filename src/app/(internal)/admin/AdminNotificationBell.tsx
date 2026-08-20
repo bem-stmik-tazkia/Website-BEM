@@ -3,15 +3,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
-import { FiBell, FiUpload, FiEdit2, FiTrash2, FiCheck, FiX } from "react-icons/fi";
+import { FiBell, FiUpload, FiEdit2, FiTrash2, FiMessageSquare, FiCheck, FiX } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Notification {
   id: string;
-  type: "upload" | "edit" | "deletion";
+  type: "upload" | "edit" | "deletion" | "saran";
   title: string;
   author: string;
   created_at: string;
+  href?: string;
 }
 
 function timeAgo(dateStr: string): string {
@@ -53,6 +54,15 @@ const TYPE_CONFIG = {
     border: "border-red-100",
     dot: "bg-red-400",
   },
+  saran: {
+    label: "Kotak Saran Baru",
+    icon: FiMessageSquare,
+    bg: "bg-purple-50 dark:bg-purple-950/40",
+    iconColor: "text-purple-500",
+    badge: "bg-purple-500",
+    border: "border-purple-100",
+    dot: "bg-purple-400",
+  },
 };
 
 export default function AdminNotificationBell({ isScrolled, isHome }: { isScrolled?: boolean; isHome?: boolean }) {
@@ -65,28 +75,34 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
   const prevCountRef = useRef(0);
 
   const fetchNotifications = async () => {
-    const { data, error } = await supabase
+    // 1. Fetch Karya
+    const { data: karyaData } = await supabase
       .from("karya")
       .select("id, title, status, pending_edits, edit_reject_reason, created_at, user_id")
       .or("status.in.(pending,deletion_pending),pending_edits.not.is.null")
       .order("created_at", { ascending: false })
       .limit(20);
 
-    if (error || !data) {
-      setNotifications([]);
-      return;
-    }
+    // 2. Fetch Unread Saran
+    const lastViewedSaran = typeof window !== "undefined"
+      ? (localStorage.getItem("admin_saran_last_viewed") || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Filter valids (same logic as karya page)
-    const valid = data.filter(
+    const { data: saranData } = await supabase
+      .from("saran_aduan")
+      .select("id, nama, kategori, deskripsi, created_at")
+      .gt("created_at", lastViewedSaran)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    const validKarya = karyaData ? karyaData.filter(
       (k) =>
         k.status === "pending" ||
         k.status === "deletion_pending" ||
         (k.pending_edits !== null && k.edit_reject_reason === null)
-    );
+    ) : [];
 
-    // Fetch author names
-    const userIds = [...new Set(valid.map((k) => k.user_id).filter(Boolean))];
+    const userIds = [...new Set(validKarya.map((k) => k.user_id).filter(Boolean))];
     let profilesMap: Record<string, string> = {};
     if (userIds.length > 0) {
       const { data: profiles } = await supabase
@@ -96,7 +112,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
       if (profiles) profiles.forEach((p) => (profilesMap[p.id] = p.full_name));
     }
 
-    const mapped: Notification[] = valid.map((k) => ({
+    const mappedKarya: Notification[] = validKarya.map((k) => ({
       id: k.id,
       type:
         k.pending_edits !== null && k.edit_reject_reason === null
@@ -107,31 +123,58 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
       title: k.title || "Tanpa Judul",
       author: profilesMap[k.user_id] || "Unknown User",
       created_at: k.created_at,
+      href: "/admin/karya",
     }));
 
-    const newCount = mapped.length;
+    const mappedSaran: Notification[] = (saranData || []).map((s) => ({
+      id: s.id,
+      type: "saran",
+      title: `${s.kategori === 'aduan' ? 'Aduan' : 'Saran'}: ${s.deskripsi}`,
+      author: s.nama || "Anonim",
+      created_at: s.created_at,
+      href: "/admin/saran-aduan",
+    }));
+
+    const combined = [...mappedKarya, ...mappedSaran].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    const newCount = combined.length;
     if (newCount > prevCountRef.current && prevCountRef.current !== 0) {
-      // New notification arrived — animate the bell
       setAnimating(true);
       setTimeout(() => setAnimating(false), 1000);
       setSeen(false);
     }
     prevCountRef.current = newCount;
-    setNotifications(mapped);
+    setNotifications(combined);
   };
 
   useEffect(() => {
     fetchNotifications();
 
-    const channel = supabase
-      .channel("notif_bell_karya")
+    const channelKarya = supabase
+      .channel(`notif_bell_karya_${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "karya" }, () => {
         fetchNotifications();
       })
       .subscribe();
 
+    const channelSaran = supabase
+      .channel(`notif_bell_saran_${Date.now()}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "saran_aduan" }, () => {
+        fetchNotifications();
+      })
+      .subscribe();
+
+    const handleSaranRead = () => {
+      fetchNotifications();
+    };
+    window.addEventListener("saran_read", handleSaranRead);
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(channelKarya);
+      supabase.removeChannel(channelSaran);
+      window.removeEventListener("saran_read", handleSaranRead);
     };
   }, []);
 
@@ -172,7 +215,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
       {/* Bell Button */}
       <button
         onClick={handleOpen}
-        title="Notifikasi Pengajuan"
+        title="Notifikasi Pengajuan & Kotak Saran"
         className={`relative flex items-center justify-center w-9 h-9 rounded-full transition-all ${
           open
             ? (isScrolled || !isHome
@@ -213,20 +256,13 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
             <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/20 bg-surface-variant/20">
               <div className="flex items-center gap-2">
                 <FiBell size={16} className="text-primary" />
-                <span className="text-sm font-bold text-on-surface">Notifikasi Pengajuan</span>
+                <span className="text-sm font-bold text-on-surface">Notifikasi Masuk</span>
                 {count > 0 && (
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500 text-white">
                     {count}
                   </span>
                 )}
               </div>
-              <Link
-                href="/admin/karya"
-                onClick={() => setOpen(false)}
-                className="text-xs font-semibold text-primary hover:underline"
-              >
-                Lihat Semua →
-              </Link>
             </div>
 
             {/* List */}
@@ -236,7 +272,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
                   <div className="w-12 h-12 rounded-full bg-surface-variant/30 flex items-center justify-center">
                     <FiCheck size={22} className="text-green-500" />
                   </div>
-                  <p className="text-sm font-medium">Semua pengajuan sudah ditangani!</p>
+                  <p className="text-sm font-medium">Semua notifikasi sudah dibaca!</p>
                 </div>
               ) : (
                 notifications.map((notif) => {
@@ -245,7 +281,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
                   return (
                     <Link
                       key={notif.id}
-                      href="/admin/karya"
+                      href={notif.href || "/admin/karya"}
                       onClick={() => setOpen(false)}
                       className={`flex items-start gap-3 px-4 py-3.5 hover:bg-surface-variant/20 transition-colors cursor-pointer group`}
                     >
@@ -284,20 +320,6 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
                 })
               )}
             </div>
-
-            {/* Footer */}
-            {notifications.length > 0 && (
-              <div className="px-4 py-3 border-t border-outline-variant/20 bg-surface-variant/10">
-                <Link
-                  href="/admin/karya"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full py-2 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors"
-                >
-                  <FiCheck size={14} />
-                  Tangani Semua Pengajuan
-                </Link>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

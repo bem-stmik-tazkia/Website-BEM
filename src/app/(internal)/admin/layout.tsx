@@ -29,8 +29,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
       <div className="min-h-screen bg-surface-variant/20 flex flex-col md:flex-row">
-        {/* Sidebar wrapper: relative so the toggle button (-right-4) is positioned relative to sidebar, not clipped */}
-        <div className="relative shrink-0">
+        {/* Sidebar wrapper: relative and z-50 so it sits ABOVE AdminTopbar (z-40) */}
+        <div className="relative shrink-0 z-50">
           <AdminSidebar />
         </div>
 

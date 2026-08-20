@@ -3,16 +3,19 @@
 import { useTour } from "@/hooks/useTour";
 import { FiHelpCircle } from "react-icons/fi";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export default function AgendaTourClient() {
+  const t = useTranslations("Tour");
+
   const { startTour } = useTour({
     tourId: "agenda_tour_v1",
     steps: [
       {
         element: "#tour-agenda-header",
         popover: {
-          title: "Agenda Kegiatan",
-          description: "Selamat datang di pusat informasi acara BEM STMIK Tazkia! Temukan berbagai kegiatan seru dan bermanfaat di sini.",
+          title: t("agenda.header_title"),
+          description: t("agenda.header_desc"),
           side: "bottom",
           align: "start"
         }
@@ -20,8 +23,8 @@ export default function AgendaTourClient() {
       {
         element: "#tour-agenda-tabs",
         popover: {
-          title: "Navigasi Menu",
-          description: "Gunakan menu ini untuk berpindah antara daftar Agenda/Event reguler dan informasi Open Recruitment atau lowongan Volunteer.",
+          title: t("agenda.nav_title"),
+          description: t("agenda.nav_desc"),
           side: "bottom",
           align: "start"
         }
@@ -29,8 +32,8 @@ export default function AgendaTourClient() {
       {
         element: "#tour-agenda-search",
         popover: {
-          title: "Pencarian Event",
-          description: "Ketik nama atau kata kunci event di sini untuk menemukan kegiatan yang kamu cari dengan cepat.",
+          title: t("agenda.search_title"),
+          description: t("agenda.search_desc"),
           side: "bottom",
           align: "center"
         }
@@ -38,8 +41,8 @@ export default function AgendaTourClient() {
       {
         element: "#tour-agenda-filters",
         popover: {
-          title: "Filter Kategori",
-          description: "Klik kategori ini untuk menyaring jenis kegiatan, misalnya khusus Teknologi, Olahraga, atau Seni & Budaya.",
+          title: t("agenda.filter_title"),
+          description: t("agenda.filter_desc"),
           side: "bottom",
           align: "start"
         }
@@ -47,8 +50,8 @@ export default function AgendaTourClient() {
       {
         element: "#tour-agenda-calendar",
         popover: {
-          title: "Kalender Interaktif",
-          description: "Lihat jadwal kegiatan secara visual dalam sebulan. Kamu juga bisa mengklik tanggal yang ditandai untuk melihat detail acaranya langsung!",
+          title: t("agenda.calendar_title"),
+          description: t("agenda.calendar_desc"),
           side: "left",
           align: "center"
         }
@@ -59,16 +62,17 @@ export default function AgendaTourClient() {
 
   return (
     <motion.button
+      data-tour-btn="true"
       initial={{ opacity: 0, scale: 0.5, x: 20 }}
       animate={{ opacity: 1, scale: 1, x: 0 }}
       transition={{ delay: 1, type: "spring", stiffness: 200 }}
       onClick={startTour}
       className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-50 p-3 sm:p-4 rounded-full bg-surface shadow-xl border-2 border-[var(--color-secondary)] text-[var(--color-secondary)] hover:bg-[var(--color-secondary)] hover:border-transparent hover:text-white transition-all hover:scale-110 flex items-center justify-center group"
-      aria-label="Mulai Tur Panduan"
+      aria-label={t("startBtn")}
     >
       <FiHelpCircle size={24} />
       <span className="absolute right-full mr-3 bg-surface text-on-surface-variant text-xs font-bold py-1.5 px-3 rounded-lg border border-outline-variant/30 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-        Mulai Tur Panduan
+        {t("startBtn")}
       </span>
     </motion.button>
   );

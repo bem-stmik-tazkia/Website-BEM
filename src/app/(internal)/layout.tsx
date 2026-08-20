@@ -25,11 +25,15 @@ export const metadata: Metadata = {
   },
 };
 
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const messages = await getMessages();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -49,11 +53,13 @@ export default async function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
       </head>
       <body className="bg-background text-on-background font-sans antialiased transition-colors duration-300" suppressHydrationWarning>
-        <ThemeProvider defaultTheme="system">
-          <ToastProvider>
-            <LayoutClientWrapper isLoggedIn={!!user}>{children}</LayoutClientWrapper>
-          </ToastProvider>
-        </ThemeProvider>
+        <NextIntlClientProvider messages={messages}>
+          <ThemeProvider defaultTheme="system">
+            <ToastProvider>
+              <LayoutClientWrapper isLoggedIn={!!user}>{children}</LayoutClientWrapper>
+            </ToastProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

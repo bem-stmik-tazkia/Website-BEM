@@ -51,23 +51,19 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION increment_berita_view(p_berita_id UUID, p_device_id TEXT, p_user_id UUID DEFAULT NULL)
 RETURNS VOID AS $$
 DECLARE
-    last_view_time TIMESTAMP WITH TIME ZONE;
+    has_viewed BOOLEAN;
 BEGIN
-    -- Cek kapan terakhir kali device/user ini melihat berita ini
-    SELECT created_at INTO last_view_time
-    FROM public.berita_views_log
-    WHERE berita_id = p_berita_id 
-      AND (device_id = p_device_id OR (user_id IS NOT NULL AND user_id = p_user_id))
-    ORDER BY created_at DESC
-    LIMIT 1;
+    SELECT EXISTS (
+        SELECT 1 
+        FROM public.berita_views_log 
+        WHERE berita_id = p_berita_id 
+          AND (device_id = p_device_id OR (user_id IS NOT NULL AND user_id = p_user_id))
+    ) INTO has_viewed;
 
-    -- Jika belum pernah melihat ATAU sudah lewat dari 24 jam, tambah view
-    IF last_view_time IS NULL OR (NOW() - last_view_time) > INTERVAL '24 hours' THEN
-        -- Catat ke log
+    IF NOT has_viewed THEN
         INSERT INTO public.berita_views_log (berita_id, device_id, user_id) 
         VALUES (p_berita_id, p_device_id, p_user_id);
         
-        -- Tambahkan angka di tabel utama
         UPDATE public.berita 
         SET views = COALESCE(views, 0) + 1 
         WHERE id = p_berita_id;

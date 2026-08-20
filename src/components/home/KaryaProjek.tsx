@@ -23,15 +23,8 @@ export default function KaryaProjek({ karyaList = [] }: { karyaList?: any[] }) {
   const t = useTranslations("Project");
   const locale = useLocale();
 
-  // Auto-translate title & description dari database
-  const { data: translatedKarya } = useTranslatedList(
-    karyaList,
-    "karya",
-    locale,
-    ["title", "description"]
-  );
-
-  const projects = translatedKarya.map((k, idx) => ({
+  // Use original user-submitted title & description
+  const projects = karyaList.map((k, idx) => ({
     id: k.id,
     rank: idx + 1,
     badge: k.category || "UMUM",

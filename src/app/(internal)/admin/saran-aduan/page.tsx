@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { FiTrash2, FiMessageSquare, FiEye, FiX, FiLink, FiHelpCircle, FiChevronDown, FiCopy } from "react-icons/fi";
+import { FiTrash2, FiMessageSquare, FiEye, FiX, FiLink, FiHelpCircle, FiChevronDown, FiCopy, FiDownload } from "react-icons/fi";
 import { useToast } from "@/components/ui/Toast";
 
 const GOOGLE_SCRIPT_CODE = `function doPost(e) {
@@ -30,6 +30,7 @@ export default function SaranAduanAdminPage() {
   
   const [saranList, setSaranList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [highlightedIds, setHighlightedIds] = useState<string[]>([]);
   
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [detailItem, setDetailItem] = useState<any | null>(null);
@@ -41,6 +42,8 @@ export default function SaranAduanAdminPage() {
 
   const fetchData = async () => {
     setLoading(true);
+    const lastViewed = localStorage.getItem("admin_saran_last_viewed") || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
     const { data, error } = await supabase
       .from('saran_aduan')
       .select('*')
@@ -48,6 +51,12 @@ export default function SaranAduanAdminPage() {
 
     if (!error && data) {
       setSaranList(data);
+      const newIds = data.filter(item => new Date(item.created_at).getTime() > new Date(lastViewed).getTime()).map(item => item.id);
+      if (newIds.length > 0) {
+        setHighlightedIds(newIds);
+      }
+      localStorage.setItem("admin_saran_last_viewed", new Date().toISOString());
+      window.dispatchEvent(new Event("saran_read"));
     } else {
       setSaranList([]);
     }
@@ -62,7 +71,38 @@ export default function SaranAduanAdminPage() {
   useEffect(() => {
     fetchData();
     fetchWebhookUrl();
+
+    // Supabase Realtime subscription for incoming saran/aduan
+    const channel = supabase
+      .channel("saran_aduan_realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "saran_aduan" },
+        (payload) => {
+          const newRow = payload.new;
+          setSaranList((prev) => [newRow, ...prev]);
+          setHighlightedIds((prev) => [...prev, newRow.id]);
+          toast(`Saran/Aduan baru diterima dari ${newRow.nama || 'Anonim'}!`, "info");
+          localStorage.setItem("admin_saran_last_viewed", new Date().toISOString());
+          window.dispatchEvent(new Event("saran_read"));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  // Remove highlights after 10 seconds
+  useEffect(() => {
+    if (highlightedIds.length > 0) {
+      const timer = setTimeout(() => {
+        setHighlightedIds([]);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedIds]);
 
   const handleDelete = async () => {
     if (!confirmingId) return;
@@ -98,6 +138,52 @@ export default function SaranAduanAdminPage() {
     toast("Script disalin ke clipboard!", "success");
   };
 
+  const handleExportExcel = () => {
+    if (saranList.length === 0) {
+      toast("Tidak ada data saran/aduan untuk diexport.", "error");
+      return;
+    }
+
+    const headers = ["Tanggal", "Nama Pengirim", "Kategori", "Deskripsi"];
+    const rows = saranList.map((item) => [
+      new Date(item.created_at).toLocaleString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      item.nama || "Anonim",
+      item.kategori ? item.kategori.toUpperCase() : "-",
+      item.deskripsi || "-",
+    ]);
+
+    const escapeCsv = (val: string) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const csvContent =
+      "\uFEFF" +
+      [headers, ...rows]
+        .map((row) => row.map(escapeCsv).join(","))
+        .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const today = new Date().toISOString().split("T")[0];
+    link.setAttribute("href", url);
+    link.setAttribute("download", `kotak_saran_aduan_${today}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast("Data berhasil diexport ke file Excel!", "success");
+  };
+
   return (
     <div>
       <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -108,10 +194,20 @@ export default function SaranAduanAdminPage() {
           </h2>
           <p className="text-on-surface-variant mt-1">Daftar aspirasi, kritik, dan saran dari mahasiswa.</p>
         </div>
-        <button onClick={() => setIsSettingsOpen(true)} className="flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2.5 rounded-xl font-bold text-sm transition-colors border border-primary/20 shadow-soft w-fit">
-          <FiLink size={18} />
-          Integrasi Excel
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center gap-2 bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2.5 rounded-xl font-bold text-sm transition-colors shadow-soft w-fit cursor-pointer"
+            title="Download seluruh data ke file Excel (.csv)"
+          >
+            <FiDownload size={18} />
+            Export Excel
+          </button>
+          <button onClick={() => setIsSettingsOpen(true)} className="flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2.5 rounded-xl font-bold text-sm transition-colors border border-primary/20 shadow-soft w-fit cursor-pointer">
+            <FiLink size={18} />
+            Integrasi Excel
+          </button>
+        </div>
       </div>
 
       <div className="bg-surface rounded-2xl border border-outline-variant/20 shadow-sm overflow-hidden">
@@ -136,51 +232,68 @@ export default function SaranAduanAdminPage() {
                   <td colSpan={5} className="py-10 text-center text-on-surface-variant/70">Belum ada saran atau aduan.</td>
                 </tr>
               ) : (
-                saranList.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-50 hover:bg-surface-variant/20/50 transition-colors">
-                    <td className="py-4 px-6 text-sm text-on-surface-variant whitespace-nowrap align-top">
-                      {new Date(item.created_at).toLocaleDateString('id-ID', {
-                        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                      })}
-                    </td>
-                    <td className="py-4 px-6 align-top">
-                      <div className="font-bold text-sm text-on-surface">{item.nama || 'Anonim'}</div>
+                saranList.map((item) => {
+                  const isNew = highlightedIds.includes(item.id);
+                  return (
+                    <tr
+                      key={item.id}
+                      className={`border-b border-gray-100 transition-all duration-700 ${
+                        isNew
+                          ? "bg-purple-500/10 dark:bg-purple-950/30 border-l-4 border-l-purple-500 shadow-sm"
+                          : "hover:bg-surface-variant/20/50"
+                      }`}
+                    >
+                      <td className="py-4 px-6 text-sm text-on-surface-variant whitespace-nowrap align-top">
+                        <div className="flex items-center gap-2">
+                          {new Date(item.created_at).toLocaleDateString('id-ID', {
+                            day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                          })}
+                          {isNew && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-600 text-white uppercase tracking-wider animate-bounce shrink-0">
+                              Baru
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 align-top">
+                        <div className="font-bold text-sm text-on-surface">{item.nama || 'Anonim'}</div>
 
-                    </td>
-                    <td className="py-4 px-6 align-top">
-                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-widest border ${
-                        item.kategori === 'saran' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
-                        item.kategori === 'aduan' ? 'bg-red-50 text-red-600 border-red-100' : 
-                        'bg-gray-50 text-gray-600 border-gray-200'
-                      }`}>
-                        {item.kategori}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-sm text-on-surface align-top">
-                      <div className="max-w-sm line-clamp-2 break-words break-all" title={item.deskripsi}>
-                        {item.deskripsi}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 align-top">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => setDetailItem(item)}
-                          className="w-8 h-8 flex items-center justify-center bg-surface-variant/50 text-on-surface-variant hover:text-primary rounded-lg hover:bg-primary/10 transition-colors border border-outline-variant/30"
-                          title="Lihat Detail"
-                        >
-                          <FiEye size={16} />
-                        </button>
-                        <button
-                          onClick={() => setConfirmingId(item.id)}
-                          className="w-8 h-8 flex items-center justify-center bg-surface-variant/50 text-on-surface-variant hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors border border-outline-variant/30"
-                          title="Hapus"
-                        >
-                          <FiTrash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="py-4 px-6 align-top">
+                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-widest border ${
+                          item.kategori === 'saran' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
+                          item.kategori === 'aduan' ? 'bg-red-50 text-red-600 border-red-100' : 
+                          'bg-gray-50 text-gray-600 border-gray-200'
+                        }`}>
+                          {item.kategori}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-sm text-on-surface align-top">
+                        <div className="max-w-sm line-clamp-2 break-words break-all" title={item.deskripsi}>
+                          {item.deskripsi}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 align-top">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => setDetailItem(item)}
+                            className="w-8 h-8 flex items-center justify-center bg-surface-variant/50 text-on-surface-variant hover:text-primary rounded-lg hover:bg-primary/10 transition-colors border border-outline-variant/30"
+                            title="Lihat Detail"
+                          >
+                            <FiEye size={16} />
+                          </button>
+                          <button
+                            onClick={() => setConfirmingId(item.id)}
+                            className="w-8 h-8 flex items-center justify-center bg-surface-variant/50 text-on-surface-variant hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors border border-outline-variant/30"
+                            title="Hapus"
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
