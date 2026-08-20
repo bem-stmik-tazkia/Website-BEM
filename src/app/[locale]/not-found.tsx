@@ -5,15 +5,12 @@ import Link from "next/link";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { FiHome, FiArrowLeft } from "react-icons/fi";
 import { useTranslations } from "next-intl";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 
 export default function NotFound() {
   const t = useTranslations("NotFound");
   return (
     <>
-      <Navbar />
-      <main className="min-h-[80vh] bg-white dark:bg-background flex items-center justify-center pt-24 pb-16 px-4 relative overflow-hidden">
+      <main className="fixed inset-0 z-[9999] bg-white dark:bg-surface flex flex-col items-center justify-center px-4 py-8 overflow-y-auto overflow-x-hidden">
         {/* Soft background blobs */}
         <div className="absolute top-[-60px] left-[-60px] w-[350px] h-[350px] bg-primary/15 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-[-50px] right-[-50px] w-[300px] h-[300px] bg-secondary/15 rounded-full blur-[90px] pointer-events-none" />
@@ -70,7 +67,6 @@ export default function NotFound() {
           </div>
         </div>
       </main>
-      <Footer />
     </>
   );
 }
