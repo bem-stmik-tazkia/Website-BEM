@@ -215,7 +215,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
               <button
                 onClick={checkStatusAndUser}
                 disabled={isChecking}
-                className="px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-on-surface bg-surface-variant hover:bg-outline-variant/30 transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                className="px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-on-surface bg-surface-variant hover:bg-outline-variant/40 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FiRefreshCw size={15} className={isChecking ? "animate-spin" : ""} />
                 {isChecking ? t("checkingStatus") : t("checkStatus")}

@@ -13,7 +13,7 @@ export default function NotFound() {
   return (
     <>
       <Navbar />
-      <main className="min-h-[80vh] bg-background flex items-center justify-center pt-24 pb-16 px-4 relative overflow-hidden">
+      <main className="min-h-[80vh] bg-white dark:bg-background flex items-center justify-center pt-24 pb-16 px-4 relative overflow-hidden">
         {/* Soft background blobs */}
         <div className="absolute top-[-60px] left-[-60px] w-[350px] h-[350px] bg-primary/15 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-[-50px] right-[-50px] w-[300px] h-[300px] bg-secondary/15 rounded-full blur-[90px] pointer-events-none" />
@@ -33,7 +33,7 @@ export default function NotFound() {
           />
 
           {/* Card content */}
-          <div className="relative z-10 w-full bg-surface rounded-[calc(1.5rem-3px)] p-8 sm:p-12 text-center flex flex-col items-center">
+          <div className="relative z-10 w-full bg-white dark:bg-surface rounded-[calc(1.5rem-3px)] p-8 sm:p-12 text-center flex flex-col items-center">
             {/* Lottie Animation 404 */}
             <div className="w-72 h-72 sm:w-80 sm:h-80 relative -my-4">
               <DotLottieReact
@@ -55,14 +55,14 @@ export default function NotFound() {
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
                 onClick={() => window.history.back()}
-                className="px-6 py-3 rounded-full font-bold text-xs sm:text-sm text-on-surface bg-surface-variant/40 hover:bg-surface-variant transition-colors flex items-center justify-center gap-2"
+                className="px-6 py-3 rounded-full font-bold text-xs sm:text-sm text-on-surface bg-surface-variant/40 hover:bg-surface-variant active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <FiArrowLeft size={16} /> {t("back")}
               </button>
 
               <Link
                 href="/"
-                className="px-6 py-3 rounded-full font-bold text-xs sm:text-sm text-white bg-primary hover:bg-primary/90 transition-all shadow-md flex items-center justify-center gap-2"
+                className="px-6 py-3 rounded-full font-bold text-xs sm:text-sm text-white bg-primary hover:bg-primary/85 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30 active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
               >
                 <FiHome size={16} /> {t("home")}
               </Link>

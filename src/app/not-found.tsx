@@ -1,22 +1,74 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { FiHome, FiArrowLeft } from "react-icons/fi";
 
+// Teks per bahasa (sinkron dengan messages/*.json NotFound)
+const i18n: Record<string, { title: string; desc: string; back: string; home: string; footer: string }> = {
+  id: {
+    title: "Halaman Tidak Ditemukan",
+    desc: "Maaf, halaman yang kamu cari tidak ditemukan, telah dihapus, atau URL-nya salah.",
+    back: "Kembali",
+    home: "Halaman Utama",
+    footer: "Portal Inovasi",
+  },
+  en: {
+    title: "Page Not Found",
+    desc: "Sorry, the page you are looking for could not be found, has been removed, or the URL is incorrect.",
+    back: "Go Back",
+    home: "Back to Home",
+    footer: "Innovation Portal",
+  },
+  fr: {
+    title: "Page Introuvable",
+    desc: "Désolé, la page que vous cherchez est introuvable, a été supprimée ou l'URL est incorrecte.",
+    back: "Retour",
+    home: "Accueil",
+    footer: "Portail d'Innovation",
+  },
+  ar: {
+    title: "الصفحة غير موجودة",
+    desc: "عذراً، الصفحة التي تبحث عنها غير موجودة أو تمت إزالتها أو الرابط غير صحيح.",
+    back: "رجوع",
+    home: "الصفحة الرئيسية",
+    footer: "بوابة الابتكار",
+  },
+  ja: {
+    title: "ページが見つかりません",
+    desc: "申し訳ありませんが、お探しのページは見つかりません。削除されたか、URLが間違っている可能性があります。",
+    back: "戻る",
+    home: "ホームへ",
+    footer: "イノベーションポータル",
+  },
+};
+
 export default function RootNotFound() {
+  const [lang, setLang] = useState<string>("id");
+
+  useEffect(() => {
+    // Detect locale from URL path e.g. /en/login → "en"
+    const segments = window.location.pathname.split("/").filter(Boolean);
+    const detected = segments[0];
+    if (detected && i18n[detected]) {
+      setLang(detected);
+    }
+  }, []);
+
+  const t = i18n[lang] ?? i18n.id;
+
   return (
-    <html lang="id">
+    <html lang={lang}>
       <head>
-        <title>404 - Halaman Tidak Ditemukan | BEM STMIK Tazkia</title>
+        <title>{t.title} | BEM STMIK Tazkia</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
         <style>{`
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
           body {
-            background: #f8f9ff;
+            background: #ffffff;
             font-family: 'Plus Jakarta Sans', sans-serif;
             min-height: 100vh;
             display: flex;
@@ -31,21 +83,18 @@ export default function RootNotFound() {
             position: fixed; top: -60px; left: -60px;
             width: 350px; height: 350px;
             background: rgba(27,64,134,0.15);
-            border-radius: 50%; filter: blur(100px);
-            pointer-events: none;
+            border-radius: 50%; filter: blur(100px); pointer-events: none;
           }
           .blob-orange {
             position: fixed; bottom: -50px; right: -50px;
             width: 300px; height: 300px;
             background: rgba(242,121,30,0.15);
-            border-radius: 50%; filter: blur(90px);
-            pointer-events: none;
+            border-radius: 50%; filter: blur(90px); pointer-events: none;
           }
           .border-wrapper {
             position: relative;
             width: 100%; max-width: 560px;
-            border-radius: 24px;
-            padding: 3px;
+            border-radius: 24px; padding: 3px;
             overflow: hidden;
             box-shadow: 0 25px 60px -15px rgba(27,64,134,0.15);
           }
@@ -62,7 +111,7 @@ export default function RootNotFound() {
           }
           .card {
             position: relative; z-index: 10;
-            width: 100%; background: #f8f9ff;
+            width: 100%; background: #ffffff;
             border-radius: calc(24px - 3px);
             padding: 2.5rem 2rem;
             text-align: center;
@@ -79,18 +128,24 @@ export default function RootNotFound() {
             border: none; cursor: pointer;
             display: flex; align-items: center; gap: 0.5rem;
             font-family: inherit;
+            transition: background 0.2s ease, transform 0.15s ease;
           }
+          .btn-back:hover { background: rgba(0,0,0,0.13); transform: translateX(-2px); }
+          .btn-back:active { transform: scale(0.97); }
           .btn-home {
             padding: 0.75rem 1.5rem; border-radius: 9999px;
             font-weight: 700; font-size: 0.875rem;
             color: #fff; background: #1b4086;
             text-decoration: none;
             display: flex; align-items: center; gap: 0.5rem;
+            transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 14px rgba(27,64,134,0.3);
           }
+          .btn-home:hover { background: #163570; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(27,64,134,0.4); }
+          .btn-home:active { transform: scale(0.97); }
           .footer-text {
             margin-top: 1.5rem;
-            font-size: 0.75rem;
-            color: rgba(0,0,0,0.4);
+            font-size: 0.75rem; color: rgba(0,0,0,0.4);
           }
         `}</style>
       </head>
@@ -109,21 +164,21 @@ export default function RootNotFound() {
                 renderConfig={{ devicePixelRatio: 2 }}
               />
             </div>
-            <h1>Halaman Tidak Ditemukan</h1>
-            <p>Ups! Halaman yang kamu cari tidak ada atau telah dipindahkan. Coba kembali ke halaman utama.</p>
+            <h1>{t.title}</h1>
+            <p>{t.desc}</p>
             <div className="btns">
               <button className="btn-back" onClick={() => window.history.back()}>
-                ← Kembali
+                <FiArrowLeft size={16} /> {t.back}
               </button>
               <Link href="/" className="btn-home">
-                🏠 Halaman Utama
+                <FiHome size={16} /> {t.home}
               </Link>
             </div>
           </div>
         </div>
 
         <p className="footer-text">
-          BEM STMIK Tazkia © {new Date().getFullYear()} - Portal Inovasi
+          BEM STMIK Tazkia © {new Date().getFullYear()} - {t.footer}
         </p>
       </body>
     </html>
