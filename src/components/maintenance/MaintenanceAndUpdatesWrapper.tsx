@@ -176,31 +176,32 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="relative z-10 w-full bg-surface rounded-[calc(1.5rem-3px)] p-6 sm:p-8 text-center flex flex-col items-center"
+              className="relative z-10 w-full bg-surface rounded-[calc(1.5rem-3px)] p-5 sm:p-7 text-center flex flex-col items-center"
             >
 
             {/* Lottie Animation */}
-            <div className="w-64 h-64 sm:w-72 sm:h-72 relative select-none pointer-events-none">
+            <div className="w-56 h-56 sm:w-60 sm:h-60 relative select-none pointer-events-none -mt-2">
               <DotLottieReact
                 src="/animations/Maintenance.lottie"
                 loop
                 autoplay
+                renderConfig={{ devicePixelRatio: 2 }}
               />
             </div>
 
             {/* Main Title */}
-            <h1 className="text-xl sm:text-2xl font-extrabold text-on-surface mb-2 leading-tight">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-on-surface mb-1.5 leading-tight">
               {t("title")}
             </h1>
 
             {/* Custom / Default Description */}
-            <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed mb-4">
+            <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed mb-3">
               {customMessage || t("defaultDesc")}
             </p>
 
             {/* Estimated Time Card */}
-            <div className="bg-surface-variant/30 border border-outline-variant/30 rounded-2xl px-5 py-2.5 flex items-center justify-center gap-3 mb-5 w-full max-w-xs">
-              <FiClock className="text-primary shrink-0" size={16} />
+            <div className="bg-surface-variant/30 border border-outline-variant/30 rounded-2xl px-4 py-2 flex items-center justify-center gap-3 mb-4 w-full max-w-xs">
+              <FiClock className="text-primary shrink-0" size={15} />
               <div className="text-left">
                 <p className="text-[10px] uppercase font-extrabold tracking-wider text-on-surface-variant/70">
                   {t("estTimeLabel")}
