@@ -14,44 +14,63 @@ export default function NotFound() {
     <>
       <Navbar />
       <main className="min-h-[80vh] bg-background flex items-center justify-center pt-24 pb-16 px-4 relative overflow-hidden">
-        {/* Background Gradients */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
+        {/* Soft background blobs */}
+        <div className="absolute top-[-60px] left-[-60px] w-[350px] h-[350px] bg-primary/15 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-[-50px] right-[-50px] w-[300px] h-[300px] bg-secondary/15 rounded-full blur-[90px] pointer-events-none" />
 
-        <div className="max-w-xl w-full bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-xl relative z-10 flex flex-col items-center justify-center animate-fade-up">
-          {/* Lottie Animation 404 */}
-          <div className="w-64 h-64 sm:w-80 sm:h-80 relative -my-4">
-            <DotLottieReact
-              src="/animations/404 error.lottie"
-              loop
-              autoplay
-            />
-          </div>
+        {/* Spinning border wrapper */}
+        <div className="relative w-full max-w-xl mx-auto rounded-3xl p-[3px] overflow-hidden shadow-2xl animate-fade-up">
+          {/* Spinning conic gradient border */}
+          <div
+            className="animate-spin-border absolute"
+            style={{
+              background: "conic-gradient(from 0deg, #f2791e 0% 50%, #1b4086 50% 100%)",
+              width: "300%",
+              height: "300%",
+              top: "-100%",
+              left: "-100%",
+            }}
+          />
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-on-background mb-2">
-            {t("title")}
-          </h1>
-          
-          <p className="text-xs sm:text-sm text-on-surface-variant mb-8 max-w-md leading-relaxed">
-            {t("desc")}
-          </p>
+          {/* Card content */}
+          <div className="relative z-10 w-full bg-surface rounded-[calc(1.5rem-3px)] p-8 sm:p-12 text-center flex flex-col items-center">
+            {/* Lottie Animation 404 */}
+            <div className="w-72 h-72 sm:w-80 sm:h-80 relative -my-4">
+              <DotLottieReact
+                src="/animations/404 error.lottie"
+                loop
+                autoplay
+                renderConfig={{ devicePixelRatio: 2 }}
+              />
+            </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <button
-              onClick={() => window.history.back()}
-              className="px-6 py-3 rounded-full font-bold text-xs sm:text-sm text-on-surface bg-surface-variant/40 hover:bg-surface-variant transition-colors flex items-center justify-center gap-2"
-            >
-              <FiArrowLeft size={16} /> {t("back")}
-            </button>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-on-background mb-2">
+              {t("title")}
+            </h1>
 
-            <Link
-              href="/"
-              className="px-6 py-3 rounded-full font-bold text-xs sm:text-sm text-white bg-primary hover:bg-primary/90 transition-all shadow-md flex items-center justify-center gap-2"
-            >
-              <FiHome size={16} /> {t("home")}
-            </Link>
+            <p className="text-xs sm:text-sm text-on-surface-variant mb-8 max-w-md leading-relaxed">
+              {t("desc")}
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <button
+                onClick={() => window.history.back()}
+                className="px-6 py-3 rounded-full font-bold text-xs sm:text-sm text-on-surface bg-surface-variant/40 hover:bg-surface-variant transition-colors flex items-center justify-center gap-2"
+              >
+                <FiArrowLeft size={16} /> {t("back")}
+              </button>
+
+              <Link
+                href="/"
+                className="px-6 py-3 rounded-full font-bold text-xs sm:text-sm text-white bg-primary hover:bg-primary/90 transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <FiHome size={16} /> {t("home")}
+              </Link>
+            </div>
           </div>
         </div>
       </main>
+      <Footer />
     </>
   );
 }
