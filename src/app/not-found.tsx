@@ -79,18 +79,6 @@ export default function RootNotFound() {
             position: relative;
             overflow: hidden;
           }
-          .blob-blue {
-            position: fixed; top: -60px; left: -60px;
-            width: 350px; height: 350px;
-            background: rgba(27,64,134,0.15);
-            border-radius: 50%; filter: blur(100px); pointer-events: none;
-          }
-          .blob-orange {
-            position: fixed; bottom: -50px; right: -50px;
-            width: 300px; height: 300px;
-            background: rgba(242,121,30,0.15);
-            border-radius: 50%; filter: blur(90px); pointer-events: none;
-          }
           .border-wrapper {
             position: relative;
             width: 100%; max-width: 560px;
@@ -111,7 +99,7 @@ export default function RootNotFound() {
           }
           .card {
             position: relative; z-index: 10;
-            width: 100%; background: #ffffff;
+            width: 100%; background: #f8f9ff;
             border-radius: calc(24px - 3px);
             padding: 2.5rem 2rem;
             text-align: center;
@@ -150,9 +138,6 @@ export default function RootNotFound() {
         `}</style>
       </head>
       <body>
-        <div className="blob-blue" />
-        <div className="blob-orange" />
-
         <div className="border-wrapper">
           <div className="spinner" />
           <div className="card">
