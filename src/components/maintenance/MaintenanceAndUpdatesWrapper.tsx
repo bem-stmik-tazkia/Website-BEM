@@ -7,7 +7,7 @@ import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiTool, FiClock, FiRefreshCw,
-  FiCheckCircle, FiX, FiStar
+  FiCheckCircle, FiX, FiStar, FiArrowRight
 } from "react-icons/fi";
 import { Link } from "@/i18n/routing";
 import { useTranslations, useLocale } from "next-intl";
