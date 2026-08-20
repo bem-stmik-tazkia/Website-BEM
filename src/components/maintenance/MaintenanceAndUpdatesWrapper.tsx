@@ -157,9 +157,9 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
     <>
       {shouldBlockVisitor ? (
         <div className="fixed inset-0 z-[9999] bg-surface flex flex-col items-center justify-center px-4 py-8 overflow-y-auto overflow-x-hidden">
-          {/* Decorative Gradients – clipped to prevent side overflow */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-1/4 right-0 w-[300px] h-[300px] bg-secondary/10 rounded-full blur-[100px] pointer-events-none" />
+          {/* Brand color spots: biru pojok kiri atas, oranye pojok kanan bawah */}
+          <div className="absolute top-[-60px] left-[-60px] w-[350px] h-[350px] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-[-50px] right-[-50px] w-[300px] h-[300px] bg-secondary/20 rounded-full blur-[90px] pointer-events-none" />
 
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
@@ -169,7 +169,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
           >
 
             {/* Lottie Animation */}
-            <div className="w-40 h-40 sm:w-48 sm:h-48 relative select-none pointer-events-none mb-2">
+            <div className="w-52 h-52 sm:w-56 sm:h-56 relative select-none pointer-events-none mb-1">
               <DotLottieReact
                 src="/animations/Maintenance.lottie"
                 loop
@@ -211,7 +211,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
             </div>
           </motion.div>
 
-          <p className="mt-4 text-xs text-on-surface-variant/60 font-medium">
+          <p className="mt-4 text-xs text-white/70 font-medium">
             BEM STMIK Tazkia &copy; {new Date().getFullYear()} - {t("footerTagline")}
           </p>
         </div>
