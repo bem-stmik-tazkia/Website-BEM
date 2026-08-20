@@ -11,10 +11,6 @@ export default function NotFound() {
   return (
     <>
       <main className="fixed inset-0 z-[9999] bg-white dark:bg-surface flex flex-col items-center justify-center px-4 py-8 overflow-y-auto overflow-x-hidden">
-        {/* Soft background blobs */}
-        <div className="absolute top-[-60px] left-[-60px] w-[350px] h-[350px] bg-primary/15 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-[-50px] right-[-50px] w-[300px] h-[300px] bg-secondary/15 rounded-full blur-[90px] pointer-events-none" />
-
         {/* Spinning border wrapper */}
         <div className="relative w-full max-w-xl mx-auto rounded-3xl p-[3px] overflow-hidden shadow-2xl animate-fade-up">
           {/* Spinning conic gradient border */}
@@ -30,7 +26,7 @@ export default function NotFound() {
           />
 
           {/* Card content */}
-          <div className="relative z-10 w-full bg-white dark:bg-surface rounded-[calc(1.5rem-3px)] p-8 sm:p-12 text-center flex flex-col items-center">
+          <div className="relative z-10 w-full bg-surface rounded-[calc(1.5rem-3px)] p-8 sm:p-12 text-center flex flex-col items-center">
             {/* Lottie Animation 404 */}
             <div className="w-72 h-72 sm:w-80 sm:h-80 relative -my-4">
               <DotLottieReact
