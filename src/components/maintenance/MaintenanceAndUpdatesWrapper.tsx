@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import { Link } from "@/i18n/routing";
 import { useTranslations, useLocale } from "next-intl";
+import { translateContent } from "@/utils/translate";
 
 interface ReleaseNotes {
   version: string;
@@ -36,6 +37,32 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
   const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
+  const [translatedFeatures, setTranslatedFeatures] = useState<string[]>([]);
+
+  // Auto-translate feature points when locale or releaseNotes changes
+  useEffect(() => {
+    if (!releaseNotes?.features?.length) {
+      setTranslatedFeatures([]);
+      return;
+    }
+    if (locale === "id") {
+      setTranslatedFeatures(releaseNotes.features);
+      return;
+    }
+    // Translate each feature point in parallel
+    const version = releaseNotes.version || "release";
+    Promise.all(
+      releaseNotes.features.map((feat, idx) =>
+        translateContent(
+          `release_feat_${version}_${idx}`,
+          "release_notes",
+          `feature_${idx}`,
+          feat,
+          locale
+        )
+      )
+    ).then(setTranslatedFeatures).catch(() => setTranslatedFeatures(releaseNotes.features));
+  }, [releaseNotes, locale]);
 
   // Konami Code secret access: ↑ ↑ ↓ ↓ ← → Enter
   const KONAMI = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"];
@@ -232,7 +259,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
           {/* Release Notes / What's New Modal */}
           <AnimatePresence>
             {showWhatsNew && releaseNotes && (
-              <div className="fixed inset-0 z-[9990] flex items-center justify-center p-4">
+              <div id="changelog-modal" className="fixed inset-0 z-[9990] flex items-center justify-center p-4">
                 {/* Backdrop */}
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -290,8 +317,8 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
 
                   {/* Features List */}
                   <div className="bg-surface-variant/20 border border-outline-variant/20 rounded-2xl p-4 mb-6 max-h-56 overflow-y-auto space-y-2.5">
-                    {releaseNotes.features && releaseNotes.features.length > 0 ? (
-                      releaseNotes.features.map((feat, idx) => (
+                    {(translatedFeatures.length > 0 ? translatedFeatures : releaseNotes.features ?? []).length > 0 ? (
+                      (translatedFeatures.length > 0 ? translatedFeatures : releaseNotes.features).map((feat, idx) => (
                         <div key={idx} className="flex items-start gap-2.5">
                           <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
                             <FiCheckCircle size={13} />

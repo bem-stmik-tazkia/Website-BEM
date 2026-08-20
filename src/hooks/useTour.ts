@@ -85,12 +85,35 @@ export function useTour({ tourId, steps, autoStart = true }: UseTourOptions) {
     const hasSeenTour = localStorage.getItem(`tour_completed_${tourId}`);
     
     if (autoStart && !hasSeenTour) {
-      // Small delay to allow elements to render properly
-      const timer = setTimeout(() => {
-        driverObj.current?.drive();
-        localStorage.setItem(`tour_completed_${tourId}`, 'true');
-      }, 1000);
-      return () => clearTimeout(timer);
+      // Wait for the changelog/What's New modal to be closed before starting tour
+      const startWhenReady = () => {
+        const changelogModal = document.getElementById('changelog-modal');
+        if (changelogModal) {
+          // Changelog is open — observe until it's gone
+          const observer = new MutationObserver(() => {
+            if (!document.getElementById('changelog-modal')) {
+              observer.disconnect();
+              setTimeout(() => {
+                driverObj.current?.drive();
+                localStorage.setItem(`tour_completed_${tourId}`, 'true');
+              }, 600); // small buffer after modal closes
+            }
+          });
+          observer.observe(document.body, { childList: true, subtree: true });
+          return () => observer.disconnect();
+        } else {
+          // No changelog modal — start tour normally
+          const timer = setTimeout(() => {
+            driverObj.current?.drive();
+            localStorage.setItem(`tour_completed_${tourId}`, 'true');
+          }, 1000);
+          return () => clearTimeout(timer);
+        }
+      };
+
+      // Give elements time to render first
+      const initTimer = setTimeout(startWhenReady, 800);
+      return () => clearTimeout(initTimer);
     }
   }, [isClient, steps, tourId, autoStart]);
 
