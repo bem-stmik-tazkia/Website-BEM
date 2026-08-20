@@ -128,7 +128,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
           // Set session gate then navigate
           sessionStorage.setItem("_bk", "1");
           setKonamiUnlocked(true);
-          router.push(`/${locale}/login`);
+          router.push("/login");
         }
       } else {
         konamiProgress.current = e.key === KONAMI[0] ? 1 : 0;
@@ -156,20 +156,31 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
   return (
     <>
       {shouldBlockVisitor ? (
-        <div className="fixed inset-0 z-[9999] bg-surface flex flex-col items-center justify-center px-4 py-8 overflow-y-auto overflow-x-hidden">
-          {/* Brand color spots: biru pojok kiri atas, oranye pojok kanan bawah */}
-          <div className="absolute top-[-60px] left-[-60px] w-[350px] h-[350px] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
-          <div className="absolute bottom-[-50px] right-[-50px] w-[300px] h-[300px] bg-secondary/20 rounded-full blur-[90px] pointer-events-none" />
+        <div className="fixed inset-0 z-[9999] bg-white dark:bg-surface flex flex-col items-center justify-center px-4 py-8 overflow-y-auto overflow-x-hidden">
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="w-full max-w-lg bg-surface border border-outline-variant/30 rounded-3xl p-6 sm:p-8 text-center shadow-2xl relative z-10 flex flex-col items-center mx-auto"
-          >
+          {/* Spinning border wrapper */}
+          <div className="relative w-full max-w-lg mx-auto rounded-3xl p-[3px] overflow-hidden shadow-2xl">
+            {/* Spinning conic gradient: oranye kiri, biru kanan */}
+            <div
+              className="animate-spin-border absolute inset-0 w-full h-full"
+              style={{
+                background: "conic-gradient(from 0deg, #f2791e 0% 50%, #1b4086 50% 100%)",
+                width: "300%",
+                height: "300%",
+                top: "-100%",
+                left: "-100%",
+              }}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="relative z-10 w-full bg-surface rounded-[calc(1.5rem-3px)] p-6 sm:p-8 text-center flex flex-col items-center"
+            >
 
             {/* Lottie Animation */}
-            <div className="w-52 h-52 sm:w-56 sm:h-56 relative select-none pointer-events-none mb-1">
+            <div className="w-64 h-64 sm:w-72 sm:h-72 relative select-none pointer-events-none">
               <DotLottieReact
                 src="/animations/Maintenance.lottie"
                 loop
@@ -209,9 +220,10 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
                 {isChecking ? t("checkingStatus") : t("checkStatus")}
               </button>
             </div>
-          </motion.div>
+            </motion.div>
+          </div>
 
-          <p className="mt-4 text-xs text-white/70 font-medium">
+          <p className="mt-4 text-xs text-on-surface-variant/60 font-medium">
             BEM STMIK Tazkia &copy; {new Date().getFullYear()} - {t("footerTagline")}
           </p>
         </div>

@@ -238,6 +238,15 @@ body {
     50% { transform: translateX(4px); }
   }
 
+  /* Spinning border animation for maintenance card */
+  @keyframes spin-border {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin-border {
+    animation: spin-border 5s linear infinite;
+  }
+
   /* Glassmorphism */
   .glass {
     background: rgba(255, 255, 255, 0.7);
