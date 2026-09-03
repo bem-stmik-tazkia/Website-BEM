@@ -19,7 +19,7 @@ export default function Footer() {
     return () => clearInterval(interval);
   }, []);
   return (
-    <footer className="w-full pt-20 pb-8 bg-primary text-white overflow-hidden relative">
+    <footer className="w-full pt-20 pb-28 lg:pb-8 bg-primary text-white overflow-hidden relative">
       <div className="absolute top-0 right-0 w-96 h-96 bg-secondary/20 rounded-full blur-3xl opacity-30 -translate-y-1/2 translate-x-1/2"></div>
 
       <div className="px-5 md:px-10 max-w-7xl mx-auto flex flex-col gap-12 relative z-10">
@@ -78,7 +78,7 @@ export default function Footer() {
           <div className="md:col-span-2 flex flex-col gap-6">
             <h4 className="text-lg text-white font-bold tracking-wide">{t("social")}</h4>
 
-            <div className="grid grid-cols-2 gap-4 text-white/80 mt-2 w-fit">
+            <div className="flex flex-row gap-4 text-white/80 mt-2">
               <a
                 className="hover:text-[#E1306C] hover:-translate-y-1 hover:scale-110 transition-all duration-300 p-2 bg-white/10 rounded-xl hover:bg-white"
                 href="https://www.instagram.com/bem_stmiktazkia?igsh=amNsbWRqODVwemV4"
