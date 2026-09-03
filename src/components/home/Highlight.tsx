@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 const highlightLinks = [
   { color: "primary", link: "/berita" },
-  { color: "secondary", link: "/karya" },
+  { color: "secondary", link: "/dokumentasi" },
   { color: "tertiary", link: "/agenda" },
 ];
 

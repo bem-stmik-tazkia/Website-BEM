@@ -24,27 +24,7 @@ export default function Footer() {
 
       <div className="px-5 md:px-10 max-w-7xl mx-auto flex flex-col gap-12 relative z-10">
 
-        {/* Karya & Inovasi Showcase Banner */}
-        <div className="w-full bg-surface/10 border border-white/10 rounded-2xl md:rounded-3xl p-6 md:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-8 shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
 
-          <div className="flex-1 relative z-10">
-            <h3 className="text-xl md:text-3xl text-white font-bold mb-2">{t("ctaTitle")}</h3>
-            <p className="text-white/80 text-sm md:text-base max-w-xl leading-relaxed">
-              {t("ctaDesc")}
-            </p>
-          </div>
-
-          <div className="relative w-full md:w-auto shrink-0 z-10">
-            <Link
-              href="/dashboard/upload"
-              className="group bg-secondary text-white font-bold py-3.5 px-6 md:px-8 rounded-2xl text-sm md:text-base hover:bg-secondary/90 hover:-translate-y-0.5 hover:shadow-[0_0_25px_rgba(242,121,30,0.5)] transition-all duration-300 flex items-center justify-center gap-2.5 whitespace-nowrap shadow-soft"
-            >
-              <span>{t("ctaBtn")}</span>
-              <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </Link>
-          </div>
-        </div>
 
         {/* Main Footer Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
@@ -90,8 +70,6 @@ export default function Footer() {
             <h4 className="text-lg text-white font-bold tracking-wide">{t("quickLinks")}</h4>
             <div className="flex flex-col gap-3 text-white/80 text-sm">
               <Link href="/kabinet" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{nav("cabinet")}</Link>
-              <Link href="/mahasiswa" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{nav("students")}</Link>
-              <Link href="/karya" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{nav("projects")}</Link>
               <Link href="/berita" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{nav("news")}</Link>
               <Link href="/#saran" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{t("feedbackBox")}</Link>
             </div>

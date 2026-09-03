@@ -8,17 +8,14 @@ import { createClient } from "@/utils/supabase/client";
 
 const mainNavItems = [
   { name: "Dashboard", href: "/admin", icon: FiHome },
-  { name: "Kelola Mahasiswa", href: "/admin/mahasiswa", icon: FiUsers },
   { name: "Profil Kabinet", href: "/admin/kabinet", icon: FiAward },
   { name: "Kelola Berita", href: "/admin/berita", icon: FiFileText },
-  { name: "Kelola Karya", href: "/admin/karya", icon: FiBriefcase },
   { name: "Kelola Kegiatan", href: "/admin/kegiatan", icon: FiCalendar },
   { name: "Kelola Dokumentasi", href: "/admin/dokumentasi", icon: FiImage },
   { name: "Kotak Saran", href: "/admin/saran-aduan", icon: FiMessageSquare },
 ];
 
 const settingsItems = [
-  { name: "Master Data", href: "/admin/master-data", icon: FiSettings },
   { name: "Pengaturan Sistem", href: "/admin/system-settings", icon: FiTool },
 ];
 
@@ -27,25 +24,12 @@ export default function AdminSidebar() {
   const searchParams = useSearchParams();
   const fromParam = searchParams?.get("from");
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [pendingKaryaCount, setPendingKaryaCount] = useState(0);
+
   const [unreadSaranCount, setUnreadSaranCount] = useState(0);
   const supabase = createClient();
 
   useEffect(() => {
-    const fetchPendingCount = async () => {
-      try {
-        const { count, error } = await supabase
-          .from('karya')
-          .select('*', { count: 'exact', head: true })
-          .or('status.in.(pending,deletion_pending),and(pending_edits.not.is.null,edit_reject_reason.is.null)');
 
-        if (!error && count !== null) {
-          setPendingKaryaCount(count);
-        }
-      } catch (err) {
-        // Ignore network errors
-      }
-    };
 
     const fetchUnreadSaran = async () => {
       try {
@@ -66,14 +50,7 @@ export default function AdminSidebar() {
       }
     };
 
-    fetchPendingCount();
     fetchUnreadSaran();
-
-    const channelKarya = supabase.channel(`karya_sb_${Date.now()}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'karya' }, () => {
-        fetchPendingCount();
-      })
-      .subscribe();
 
     const channelSaran = supabase.channel(`saran_sb_${Date.now()}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'saran_aduan' }, () => {
@@ -87,7 +64,6 @@ export default function AdminSidebar() {
     window.addEventListener("saran_read", handleSaranRead);
 
     return () => {
-      supabase.removeChannel(channelKarya);
       supabase.removeChannel(channelSaran);
       window.removeEventListener("saran_read", handleSaranRead);
     };
@@ -158,11 +134,7 @@ export default function AdminSidebar() {
                 {!isCollapsed && (
                   <span className="relative z-10 whitespace-nowrap overflow-hidden text-ellipsis flex-1 flex justify-between items-center">
                     {item.name}
-                    {item.name === "Kelola Karya" && pendingKaryaCount > 0 && (
-                      <span className="bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm">
-                        {pendingKaryaCount}
-                      </span>
-                    )}
+
                     {item.name === "Kotak Saran" && unreadSaranCount > 0 && (
                       <span className="bg-purple-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
                         {unreadSaranCount}
@@ -170,9 +142,7 @@ export default function AdminSidebar() {
                     )}
                   </span>
                 )}
-                {isCollapsed && item.name === "Kelola Karya" && pendingKaryaCount > 0 && (
-                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#f8fafc]"></span>
-                )}
+
                 {isCollapsed && item.name === "Kotak Saran" && unreadSaranCount > 0 && (
                   <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-purple-600 rounded-full border-2 border-[#f8fafc]"></span>
                 )}

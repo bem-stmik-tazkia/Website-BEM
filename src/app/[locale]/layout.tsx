@@ -7,12 +7,12 @@ import Script from "next/script";
 import "../globals.css";
 
 export const metadata: Metadata = {
-  title: "BEM STMIK Tazkia | Portal Inovasi Mahasiswa",
-  description: "Website Resmi BEM STMIK Tazkia dan Etalase Karya Inovasi Teknologi Mahasiswa",
-  keywords: ["BEM STMIK Tazkia", "Karya Mahasiswa", "Inovasi", "Teknologi", "Dashboard", "Portofolio", "Kampus"],
+  title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
+  description: "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
+  keywords: ["BEM STMIK Tazkia", "Badan Eksekutif Mahasiswa", "STMIK Tazkia", "Agenda", "Berita", "Dokumentasi", "Kabinet"],
   openGraph: {
-    title: "BEM STMIK Tazkia | Portal Inovasi Mahasiswa",
-    description: "Website Resmi BEM STMIK Tazkia dan Etalase Karya Inovasi Teknologi Mahasiswa",
+    title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
+    description: "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
     url: "https://bem-stmik-tazkia.vercel.app",
     siteName: "BEM STMIK Tazkia",
     locale: "id_ID",
@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "BEM STMIK Tazkia | Portal Inovasi Mahasiswa",
-    description: "Website Resmi BEM STMIK Tazkia dan Etalase Karya Inovasi Teknologi Mahasiswa",
+    title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
+    description: "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
   },
 };
 

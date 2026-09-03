@@ -11,22 +11,18 @@ import AdminMonitoringSection from "./AdminMonitoringSection";
 
 interface AdminDashboardClientProps {
   bCount: number;
-  kCount: number;
+
   aCount: number;
-  mCount: number;
+
   topBerita: { title: string; views: number }[] | null;
-  topKarya: { title: string; views: number; likes: number }[] | null;
-  monthlyUploadData?: { name: string; Berita: number; Karya: number; Agenda: number }[];
+  monthlyUploadData?: { name: string; Berita: number; Agenda: number }[];
   visitorData?: { name: string; Pengunjung: number }[];
 }
 
 export default function AdminDashboardClient({
   bCount,
-  kCount,
   aCount,
-  mCount,
   topBerita,
-  topKarya,
   monthlyUploadData,
   visitorData,
 }: AdminDashboardClientProps) {
@@ -34,9 +30,7 @@ export default function AdminDashboardClient({
 
   const stats = [
     { label: "Total Berita", value: bCount, icon: <FiFileText size={22} />, color: "from-blue-500 to-blue-600 text-white", shadow: "shadow-blue-500/20" },
-    { label: "Total Karya", value: kCount, icon: <FiBriefcase size={22} />, color: "from-purple-500 to-purple-600 text-white", shadow: "shadow-purple-500/20" },
     { label: "Total Agenda", value: aCount, icon: <FiCalendar size={22} />, color: "from-emerald-500 to-emerald-600 text-white", shadow: "shadow-emerald-500/20" },
-    { label: "Total Mahasiswa", value: mCount, icon: <FiUsers size={22} />, color: "from-amber-500 to-amber-600 text-white", shadow: "shadow-amber-500/20" },
   ];
 
   return (
@@ -121,7 +115,7 @@ export default function AdminDashboardClient({
             {/* Main Charts Area */}
             <AdminDashboardCharts 
               beritaCount={bCount} 
-              karyaCount={kCount} 
+
               agendaCount={aCount} 
               monthlyUploadData={monthlyUploadData}
               visitorData={visitorData}
@@ -162,37 +156,7 @@ export default function AdminDashboardClient({
                 </div>
               </div>
 
-              {/* Top Karya */}
-              <div className="bg-surface rounded-2xl border border-outline-variant/20 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
-                      <FiHeart size={18} />
-                    </div>
-                    <h3 className="text-lg font-bold text-on-surface">Top Karya Terpopuler</h3>
-                  </div>
-                </div>
 
-                <div className="space-y-3">
-                  {topKarya?.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-variant/20 transition-colors">
-                      <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs shrink-0">
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-on-surface truncate">{item.title}</p>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-on-surface bg-surface-variant/30 px-3 py-1 rounded-full">
-                        <FiHeart size={12} className="text-red-500" />
-                        {item.likes || 0}
-                      </div>
-                    </div>
-                  ))}
-                  {(!topKarya || topKarya.length === 0) && (
-                    <p className="text-xs text-on-surface-variant text-center py-4">Belum ada data karya.</p>
-                  )}
-                </div>
-              </div>
 
             </div>
           </motion.div>

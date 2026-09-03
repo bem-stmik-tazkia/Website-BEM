@@ -218,9 +218,10 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
     setShowWhatsNew(false);
   };
 
-  // Block visitors: maintenance ON + not admin + not admin path + not konami-unlocked login path
+  // Block visitors: maintenance ON + not admin + not admin path + not konami-unlocked login path + not in development
   const isLoginPath = pathname?.includes("/login");
-  const shouldBlockVisitor = maintenanceMode && !isAdmin && !isAdminPath && !(isLoginPath && konamiUnlocked);
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const shouldBlockVisitor = maintenanceMode && !isAdmin && !isAdminPath && !(isLoginPath && konamiUnlocked) && !isDevelopment;
 
   return (
     <>

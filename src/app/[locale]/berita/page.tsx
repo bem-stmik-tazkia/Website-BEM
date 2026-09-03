@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { 
-  FiSearch, 
-  FiCalendar, 
-  FiArrowRight, 
+import {
+  FiSearch,
+  FiCalendar,
+  FiArrowRight,
   FiHeart,
   FiEye,
   FiChevronLeft,
@@ -99,7 +99,7 @@ export default function BeritaPage() {
 
   // Categories list
   const categories = ["Semua", "Berita", "Artikel", "Rilis", "Kampus", "Pendidikan"];
-  
+
   const translateCategory = (cat: string) => {
     if (cat === "Semua") return t("catAll");
     if (cat === "Berita") return t("categoryNews");
@@ -114,12 +114,12 @@ export default function BeritaPage() {
   const filteredNews = useMemo(() => {
     const listToFilter = selectedCategory === "Semua" && debouncedSearchQuery === "" ? newsList : allNews;
     return listToFilter.filter((item) => {
-      const matchesSearch = 
+      const matchesSearch =
         item.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
         item.excerpt.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
-      
-      const matchesCategory = 
-        selectedCategory === "Semua" || 
+
+      const matchesCategory =
+        selectedCategory === "Semua" ||
         item.category.toLowerCase() === selectedCategory.toLowerCase();
 
       return matchesSearch && matchesCategory;
@@ -150,12 +150,9 @@ export default function BeritaPage() {
 
       {/* Main Container */}
       <main className="px-container-padding-mobile md:px-container-padding-desktop max-w-7xl mx-auto w-full pt-8">
-        
+
         {/* Header */}
         <header id="tour-berita-header" className="mb-8 md:mb-10 text-left">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-secondary-container text-secondary font-semibold text-xs uppercase tracking-wider mb-4">
-            {t("latestNews")}
-          </div>
           <h1 className="font-display-lg text-3xl md:text-5xl text-primary mb-3 md:mb-4 font-black tracking-tight leading-tight">
             {t("pageTitle")}
           </h1>
@@ -191,11 +188,10 @@ export default function BeritaPage() {
               <button
                 key={category}
                 onClick={() => handleCategoryChange(category)}
-                className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
-                  selectedCategory === category
+                className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${selectedCategory === category
                     ? "bg-primary text-on-primary shadow-soft"
                     : "bg-surface-variant/45 text-on-surface-variant hover:bg-surface-variant/80"
-                }`}
+                  }`}
               >
                 {translateCategory(category)}
               </button>
@@ -207,13 +203,13 @@ export default function BeritaPage() {
         {selectedCategory === "Semua" && searchQuery === "" && featuredNews && (
           <section id="tour-berita-featured" className="mb-12">
             <div className="group relative rounded-3xl overflow-hidden shadow-md border border-outline-variant/20 bg-surface min-h-[350px] md:min-h-[400px] flex flex-col justify-end transition-all duration-300 hover:shadow-xl">
-              <div 
+              <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
                 style={{ backgroundImage: `url('${featuredNews.image_url}')` }}
               ></div>
               {/* Gradient Overlay for Text Visibility */}
               <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/50 to-transparent"></div>
-              
+
               {/* Featured Badge */}
               <div className="absolute top-6 left-6 z-10 flex flex-wrap items-center gap-2 pr-6">
                 <span className="bg-secondary text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm whitespace-nowrap">
@@ -233,7 +229,7 @@ export default function BeritaPage() {
                   {featuredNews.excerpt}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                  <Link 
+                  <Link
                     href={`/berita/${featuredNews.slug}`}
                     className="inline-flex items-center gap-2 bg-secondary text-white hover:bg-secondary/90 transition-all duration-300 px-6 py-3 rounded-full font-bold text-xs md:text-sm hover:translate-x-1"
                   >
@@ -251,7 +247,7 @@ export default function BeritaPage() {
 
         {/* Main Grid Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
+
           {/* Left Column: News Grid (8/12) */}
           <div id="tour-berita-grid" className="lg:col-span-8 flex flex-col gap-6 md:gap-8 order-2 lg:order-1">
             <h3 className="text-base md:text-lg font-bold text-primary pb-2.5 border-b border-outline-variant/30 flex items-center gap-2 uppercase tracking-wide">
@@ -368,16 +364,15 @@ export default function BeritaPage() {
                 >
                   <FiChevronLeft size={18} />
                 </button>
-                
+
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
-                      currentPage === page
+                    className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${currentPage === page
                         ? "bg-secondary text-white shadow-glow"
                         : "border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container"
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>
@@ -397,7 +392,7 @@ export default function BeritaPage() {
 
           {/* Right Column: Sidebar (4/12) */}
           <aside id="tour-berita-popular" className="lg:col-span-4 flex flex-col gap-6 w-full order-1 lg:order-2">
-            
+
             {/* Sidebar Title */}
             <h3 className="text-base md:text-lg font-bold text-primary pb-2.5 border-b border-outline-variant/30 flex items-center gap-2 uppercase tracking-wide">
               <span className="w-2.5 h-4 bg-secondary rounded-full inline-block"></span>
@@ -456,7 +451,7 @@ export default function BeritaPage() {
         </div>
 
       </main>
-      
+
       <BeritaTourClient />
     </div>
   );

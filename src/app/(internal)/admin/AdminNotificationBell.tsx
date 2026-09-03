@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface Notification {
   id: string;
-  type: "upload" | "edit" | "deletion" | "saran";
+  type: "saran";
   title: string;
   author: string;
   created_at: string;
@@ -27,33 +27,6 @@ function timeAgo(dateStr: string): string {
 }
 
 const TYPE_CONFIG = {
-  upload: {
-    label: "Upload Karya Baru",
-    icon: FiUpload,
-    bg: "bg-blue-50 dark:bg-blue-950/40",
-    iconColor: "text-blue-500",
-    badge: "bg-blue-500",
-    border: "border-blue-100",
-    dot: "bg-blue-400",
-  },
-  edit: {
-    label: "Usulan Edit",
-    icon: FiEdit2,
-    bg: "bg-amber-50 dark:bg-amber-950/40",
-    iconColor: "text-amber-500",
-    badge: "bg-amber-500",
-    border: "border-amber-100",
-    dot: "bg-amber-400",
-  },
-  deletion: {
-    label: "Permintaan Hapus",
-    icon: FiTrash2,
-    bg: "bg-red-50 dark:bg-red-950/40",
-    iconColor: "text-red-500",
-    badge: "bg-red-500",
-    border: "border-red-100",
-    dot: "bg-red-400",
-  },
   saran: {
     label: "Kotak Saran Baru",
     icon: FiMessageSquare,
@@ -75,14 +48,6 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
   const prevCountRef = useRef(0);
 
   const fetchNotifications = async () => {
-    // 1. Fetch Karya
-    const { data: karyaData } = await supabase
-      .from("karya")
-      .select("id, title, status, pending_edits, edit_reject_reason, created_at, user_id")
-      .or("status.in.(pending,deletion_pending),pending_edits.not.is.null")
-      .order("created_at", { ascending: false })
-      .limit(20);
-
     // 2. Fetch Unread Saran
     const lastViewedSaran = typeof window !== "undefined"
       ? (localStorage.getItem("admin_saran_last_viewed") || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
@@ -95,37 +60,6 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
       .order("created_at", { ascending: false })
       .limit(20);
 
-    const validKarya = karyaData ? karyaData.filter(
-      (k) =>
-        k.status === "pending" ||
-        k.status === "deletion_pending" ||
-        (k.pending_edits !== null && k.edit_reject_reason === null)
-    ) : [];
-
-    const userIds = [...new Set(validKarya.map((k) => k.user_id).filter(Boolean))];
-    let profilesMap: Record<string, string> = {};
-    if (userIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", userIds);
-      if (profiles) profiles.forEach((p) => (profilesMap[p.id] = p.full_name));
-    }
-
-    const mappedKarya: Notification[] = validKarya.map((k) => ({
-      id: k.id,
-      type:
-        k.pending_edits !== null && k.edit_reject_reason === null
-          ? "edit"
-          : k.status === "deletion_pending"
-          ? "deletion"
-          : "upload",
-      title: k.title || "Tanpa Judul",
-      author: profilesMap[k.user_id] || "Unknown User",
-      created_at: k.created_at,
-      href: "/admin/karya",
-    }));
-
     const mappedSaran: Notification[] = (saranData || []).map((s) => ({
       id: s.id,
       type: "saran",
@@ -135,7 +69,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
       href: "/admin/saran-aduan",
     }));
 
-    const combined = [...mappedKarya, ...mappedSaran].sort(
+    const combined = [...mappedSaran].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
@@ -152,13 +86,6 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
   useEffect(() => {
     fetchNotifications();
 
-    const channelKarya = supabase
-      .channel(`notif_bell_karya_${Date.now()}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "karya" }, () => {
-        fetchNotifications();
-      })
-      .subscribe();
-
     const channelSaran = supabase
       .channel(`notif_bell_saran_${Date.now()}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "saran_aduan" }, () => {
@@ -172,7 +99,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
     window.addEventListener("saran_read", handleSaranRead);
 
     return () => {
-      supabase.removeChannel(channelKarya);
+
       supabase.removeChannel(channelSaran);
       window.removeEventListener("saran_read", handleSaranRead);
     };
@@ -281,7 +208,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
                   return (
                     <Link
                       key={notif.id}
-                      href={notif.href || "/admin/karya"}
+                      href={notif.href || "/admin/saran-aduan"}
                       onClick={() => setOpen(false)}
                       className={`flex items-start gap-3 px-4 py-3.5 hover:bg-surface-variant/20 transition-colors cursor-pointer group`}
                     >

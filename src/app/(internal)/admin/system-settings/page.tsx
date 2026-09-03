@@ -30,9 +30,9 @@ export default function SystemSettingsPage() {
     rVersion: "v1.2.0",
     rTitle: "Pembaruan Sistem Portal BEM",
     rFeatures: [
-      "Peningkatan stabilitas performa muat halaman",
-      "Fitur pencarian mahasiswa berdasarkan angkatan & prodi",
-      "Pembaruan antarmuka dan penanganan notifikasi real-time",
+      "Penyempurnaan dukungan multi-bahasa di berbagai area website",
+      "Peningkatan kenyamanan tampilan dan kelancaran akses pengguna (User Experience)",
+      "Perbaikan stabilitas sistem secara keseluruhan",
     ],
     rPublished: true,
   });
@@ -40,12 +40,12 @@ export default function SystemSettingsPage() {
   const [mMode, setMMode] = useState(false);
   const [mTime, setMTime] = useState("1-2 Jam");
   const [mMsg, setMMsg] = useState("");
-  const [rVersion, setRVersion] = useState("v1.2.0");
-  const [rTitle, setRTitle] = useState("Pembaruan Sistem Portal BEM");
+  const [rVersion, setRVersion] = useState("v1.3.0");
+  const [rTitle, setRTitle] = useState("Peningkatan Stabilitas & Kenyamanan Sistem");
   const [rFeatures, setRFeatures] = useState<string[]>([
-    "Peningkatan stabilitas performa muat halaman",
-    "Fitur pencarian mahasiswa berdasarkan angkatan & prodi",
-    "Pembaruan antarmuka dan penanganan notifikasi real-time",
+      "Penyempurnaan dukungan multi-bahasa di berbagai area website",
+      "Peningkatan kenyamanan tampilan dan kelancaran akses pengguna (User Experience)",
+      "Perbaikan stabilitas sistem secara keseluruhan",
   ]);
   const [rPublished, setRPublished] = useState(true);
   const [newFeatureInput, setNewFeatureInput] = useState("");

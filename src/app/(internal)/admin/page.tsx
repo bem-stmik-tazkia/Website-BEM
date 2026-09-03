@@ -10,36 +10,24 @@ export default async function AdminDashboardPage() {
   // Fetch real count metrics from Supabase database
   const [
     { count: beritaCount },
-    { count: karyaCount },
     { count: agendaCount },
-    { count: mhsCount },
     beritaDatesRes,
-    karyaDatesRes,
     agendaDatesRes,
     topBeritaRes,
-    topKaryaRes,
     beritaViewsRes,
-    karyaViewsRes,
     siteVisitorsRes,
   ] = await Promise.all([
     supabase.from('berita').select('*', { count: 'exact', head: true }),
-    supabase.from('karya').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
     supabase.from('agendas').select('*', { count: 'exact', head: true }),
-    supabase.from('mahasiswa_profiles').select('*', { count: 'exact', head: true }),
     supabase.from('berita').select('created_at'),
-    supabase.from('karya').select('created_at').eq('status', 'approved'),
     supabase.from('agendas').select('created_at'),
     supabase.from('berita').select('title, views').order('views', { ascending: false }).limit(3),
-    supabase.from('karya').select('title, views, likes').eq('status', 'approved').order('likes', { ascending: false }).limit(3),
     supabase.from('berita').select('views, created_at'),
-    supabase.from('karya').select('views, created_at').eq('status', 'approved'),
     supabase.from('site_visitors').select('created_at'),
   ]);
 
   const bCount = beritaCount || 0;
-  const kCount = karyaCount || 0;
   const aCount = agendaCount || 0;
-  const mCount = mhsCount || 0;
 
   // Build real monthly upload & visitor view statistics for the last 6 months
   const now = new Date();
@@ -57,11 +45,7 @@ export default async function AdminDashboardPage() {
       return dt.getFullYear() === m.year && dt.getMonth() === m.monthIdx;
     }).length || 0;
 
-    const countK = karyaDatesRes.data?.filter(item => {
-      if (!item.created_at) return false;
-      const dt = new Date(item.created_at);
-      return dt.getFullYear() === m.year && dt.getMonth() === m.monthIdx;
-    }).length || 0;
+
 
     const countA = agendaDatesRes.data?.filter(item => {
       if (!item.created_at) return false;
@@ -72,7 +56,7 @@ export default async function AdminDashboardPage() {
     return {
       name: m.name,
       Berita: countB,
-      Karya: countK,
+
       Agenda: countA,
     };
   });
@@ -100,14 +84,7 @@ export default async function AdminDashboardPage() {
         }
       });
 
-      karyaViewsRes.data?.forEach(k => {
-        if (k.created_at) {
-          const dt = new Date(k.created_at);
-          if (dt.getFullYear() < m.year || (dt.getFullYear() === m.year && dt.getMonth() <= m.monthIdx)) {
-            totalVisitors += (k.views || 0);
-          }
-        }
-      });
+
     }
 
     return {
@@ -119,11 +96,8 @@ export default async function AdminDashboardPage() {
   return (
     <AdminDashboardClient
       bCount={bCount}
-      kCount={kCount}
       aCount={aCount}
-      mCount={mCount}
       topBerita={topBeritaRes.data}
-      topKarya={topKaryaRes.data}
       monthlyUploadData={monthlyUploadData}
       visitorData={visitorData}
     />

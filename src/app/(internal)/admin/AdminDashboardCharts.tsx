@@ -22,12 +22,12 @@ import {
 // ----------------------------------------
 
 const monthlyUploadData = [
-  { name: "Jan", Berita: 12, Karya: 4, Agenda: 2 },
-  { name: "Feb", Berita: 19, Karya: 6, Agenda: 3 },
-  { name: "Mar", Berita: 15, Karya: 8, Agenda: 5 },
-  { name: "Apr", Berita: 22, Karya: 10, Agenda: 4 },
-  { name: "Mei", Berita: 28, Karya: 15, Agenda: 8 },
-  { name: "Jun", Berita: 35, Karya: 20, Agenda: 12 },
+  { name: "Jan", Berita: 12, Agenda: 2 },
+  { name: "Feb", Berita: 19, Agenda: 3 },
+  { name: "Mar", Berita: 15, Agenda: 5 },
+  { name: "Apr", Berita: 22, Agenda: 4 },
+  { name: "Mei", Berita: 28, Agenda: 8 },
+  { name: "Jun", Berita: 35, Agenda: 12 },
 ];
 
 const visitorData = [
@@ -39,19 +39,17 @@ const visitorData = [
   { name: "Jun", Pengunjung: 3400 },
 ];
 
-const COLORS = ["#3b82f6", "#a855f7", "#22c55e"]; // Blue, Purple, Green
+const COLORS = ["#3b82f6", "#22c55e"]; // Blue, Green
 
 interface AdminDashboardChartsProps {
   beritaCount: number;
-  karyaCount: number;
   agendaCount: number;
-  monthlyUploadData?: { name: string; Berita: number; Karya: number; Agenda: number }[];
+  monthlyUploadData?: { name: string; Berita: number; Agenda: number }[];
   visitorData?: { name: string; Pengunjung: number }[];
 }
 
 export default function AdminDashboardCharts({
   beritaCount,
-  karyaCount,
   agendaCount,
   monthlyUploadData: customMonthlyData,
   visitorData: customVisitorData,
@@ -70,7 +68,6 @@ export default function AdminDashboardCharts({
 
   const distributionData = [
     { name: "Berita", value: beritaCount },
-    { name: "Karya", value: karyaCount },
     { name: "Agenda", value: agendaCount },
   ];
 
@@ -101,7 +98,6 @@ export default function AdminDashboardCharts({
               />
               <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
               <Bar dataKey="Berita" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
-              <Bar dataKey="Karya" fill="#a855f7" radius={[4, 4, 0, 0]} barSize={20} />
               <Bar dataKey="Agenda" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={20} />
             </BarChart>
           </ResponsiveContainer>
@@ -172,7 +168,7 @@ export default function AdminDashboardCharts({
             {/* Center Text */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span className="text-3xl font-black text-on-surface leading-none">
-                {beritaCount + karyaCount + agendaCount}
+                {beritaCount + agendaCount}
               </span>
               <span className="text-xs text-on-surface-variant font-medium">Total</span>
             </div>

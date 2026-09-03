@@ -19,36 +19,6 @@ import {
 
 // ─── DATA ───────────────────────────────────────────────────────────────────
 
-const karya = [
-  {
-    id: 1,
-    badge: "TECHNOLOGY",
-    title: "Autonomous Campus Rover",
-    desc: "Robot pengiriman mandiri untuk logistik intra-kampus menggunakan algoritma SLAM dan navigasi berbasis AI.",
-    imgUrl: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&q=80",
-    likes: 145,
-    views: "1.2k",
-  },
-  {
-    id: 2,
-    badge: "UI/UX",
-    title: "Student Portal Redesign",
-    desc: "Transformasi menyeluruh pengalaman digital mahasiswa, meningkatkan task completion rate hingga 67%.",
-    imgUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
-    likes: 312,
-    views: "2.8k",
-  },
-  {
-    id: 3,
-    badge: "RESEARCH",
-    title: "Sustainable Energy Audit",
-    desc: "Analisis konsumsi energi kampus berbasis IoT & machine learning dengan potensi penghematan 28%.",
-    imgUrl: "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&q=80",
-    likes: 89,
-    views: "654",
-  },
-];
-
 const volunteer = [
   {
     id: 1,
@@ -143,11 +113,11 @@ const dokumentasi = [
 
 const panels = [
   {
-    id: "karya",
-    label: "Highlight Karya",
-    icon: <FiStar size={14} />,
-    accent: "#1b4086",
-    accentLight: "#e1e7ff",
+    id: "dokumentasi",
+    label: "Dokumentasi",
+    icon: <FiCamera size={14} />,
+    accent: "#7c3aed",
+    accentLight: "#ede9fe",
   },
   {
     id: "volunteer",
@@ -163,13 +133,6 @@ const panels = [
     accent: "#006684",
     accentLight: "#bce9ff",
   },
-  {
-    id: "dokumentasi",
-    label: "Dokumentasi",
-    icon: <FiCamera size={14} />,
-    accent: "#7c3aed",
-    accentLight: "#ede9fe",
-  },
 ];
 
 const AUTOPLAY_INTERVAL = 5000;
@@ -177,38 +140,7 @@ const AUTOPLAY_INTERVAL = 5000;
 // ─── PANEL CONTENT COMPONENTS ───────────────────────────────────────────────
 
 function KaryaPanel() {
-  return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h3 className="text-xl font-extrabold text-primary leading-tight">Karya & Inovasi</h3>
-          <p className="text-xs text-on-surface-variant mt-0.5">Inovasi terbaik mahasiswa STMIK Tazkia</p>
-        </div>
-        <Link href="/karya" className="group flex items-center gap-1 text-primary text-xs font-bold hover:text-secondary transition-colors whitespace-nowrap">
-          Lihat Semua <FiArrowRight className="group-hover:translate-x-0.5 transition-transform" size={12} />
-        </Link>
-      </div>
-      <div className="flex flex-col gap-3 flex-1 overflow-hidden">
-        {karya.map((item) => (
-          <Link
-            key={item.id}
-            href={`/karya/${item.id}`}
-            className="group flex gap-3 items-center p-3 rounded-2xl bg-surface border border-outline-variant/20 hover:border-primary/30 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
-          >
-            <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-variant/30">
-              <img src={item.imgUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="text-[10px] font-bold text-primary/70 uppercase tracking-wider">{item.badge}</span>
-              <p className="font-bold text-sm text-on-background group-hover:text-primary transition-colors leading-tight line-clamp-2">{item.title}</p>
-              <p className="text-xs text-on-surface-variant line-clamp-1 mt-0.5">{item.desc}</p>
-            </div>
-            <FiArrowRight size={14} className="text-outline shrink-0 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
+  return null;
 }
 
 function VolunteerPanel() {
@@ -331,7 +263,7 @@ function DokumentasiPanel() {
   );
 }
 
-const panelComponents = [KaryaPanel, VolunteerPanel, EventPanel, DokumentasiPanel];
+const panelComponents = [DokumentasiPanel, VolunteerPanel, EventPanel];
 
 // ─── MAIN CAROUSEL ──────────────────────────────────────────────────────────
 

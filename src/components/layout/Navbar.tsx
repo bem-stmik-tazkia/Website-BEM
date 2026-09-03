@@ -6,10 +6,9 @@ import NativeLink from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/routing";
-import { FiHome, FiAward, FiCalendar, FiBookOpen, FiUser, FiUsers, FiLogOut, FiChevronDown, FiGrid, FiX } from "react-icons/fi";
+import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid, FiX } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
-import UserNotificationBell from "@/components/layout/UserNotificationBell";
 import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
@@ -25,7 +24,6 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
   const pathname = usePathname();
   const router = useRouter();
   const isHome = pathname === "/";
-  const isDashboard = pathname?.startsWith("/dashboard");
   const supabase = createClient();
 
   const currentPath = pendingPath || pathname;
@@ -35,8 +33,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
-        const { data: mhsProfile } = await supabase.from('mahasiswa_profiles').select('angkatan').eq('user_id', user.id).maybeSingle();
-        setUserProfile({ ...user, ...profile, has_completed_profile: !!mhsProfile?.angkatan });
+        setUserProfile({ ...user, ...profile });
       } else {
         setUserProfile(null);
       }
@@ -48,26 +45,12 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
   useEffect(() => {
     router.prefetch("/");
     router.prefetch("/agenda");
-    router.prefetch("/karya");
-    router.prefetch("/mahasiswa");
     router.prefetch("/berita");
     router.prefetch("/kabinet");
     router.prefetch("/dokumentasi");
   }, [router]);
 
-  useEffect(() => {
-    if (userProfile && userProfile.has_completed_profile === false) {
-      const hasSeen = localStorage.getItem("hasSeenProfileTooltip");
-      if (!hasSeen) {
-        setHideProfileTooltip(false);
-        const timer = setTimeout(() => {
-          setHideProfileTooltip(true);
-          localStorage.setItem("hasSeenProfileTooltip", "true");
-        }, 5000);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [userProfile]);
+
 
   // Handle click outside for profile dropdown
   useEffect(() => {
@@ -104,25 +87,10 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
 
   const navLinks = [
     { name: t("home"), path: "/" },
-    { name: t("projects"), path: "/karya" },
-    { name: t("students"), path: "/mahasiswa" },
     { name: t("agenda"), path: "/agenda" },
-    {
-      name: t("publications"),
-      dropdown: true,
-      children: [
-        { name: t("news"), path: "/berita" },
-        { name: t("documentation"), path: "/dokumentasi" }
-      ]
-    },
-    {
-      name: t("cabinet"),
-      dropdown: true,
-      children: [
-        { name: t("menuCab"), path: "/kabinet" },
-        { name: t("feedbackTitle"), path: "/#saran" }
-      ]
-    },
+    { name: t("news"), path: "/berita" },
+    { name: t("documentation"), path: "/dokumentasi" },
+    { name: t("menuCab"), path: "/kabinet" }
   ];
 
   return (
@@ -173,43 +141,6 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           {/* Desktop Nav Links */}
           <div className="hidden lg:flex lg:gap-4 xl:gap-8 items-center font-semibold text-sm">
             {navLinks.map((link) => {
-              if (link.dropdown) {
-                const isActive = link.children?.some(child => pathname === child.path);
-                return (
-                  <div key={link.name} className="relative group">
-                    <button
-                      className={`flex items-center gap-1 py-2 transition-colors duration-300 after:absolute after:bottom-[-4px] after:left-0 after:h-1 after:rounded-full after:transition-all after:duration-300 ${isActive
-                        ? `font-bold after:w-full after:bg-secondary ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"}`
-                        : isScrolled
-                          ? "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
-                          : isHome
-                            ? "text-white/80 after:w-0 hover:after:w-full after:bg-surface hover:text-white"
-                            : "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
-                        }`}
-                    >
-                      {link.name}
-                      <svg className="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {/* Dropdown Menu */}
-                    <div className="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 min-w-[200px]">
-                      <div className="bg-surface rounded-xl shadow-lg border border-outline-variant/30 py-2 overflow-hidden flex flex-col">
-                        {link.children?.map((child) => (
-                          <Link
-                            key={child.name}
-                            href={child.path}
-                            className="px-4 py-2.5 text-on-surface-variant hover:bg-primary-container hover:text-primary transition-colors text-sm font-semibold"
-                          >
-                            {child.name}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
               const isActive = pathname === link.path;
               return (
                 <Link
@@ -231,24 +162,22 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           </div>
 
           {/* Action Button (Mobile, Tablet, Desktop) */}
-          <div id="tour-login-btn" className="flex items-center ml-auto lg:ml-0 gap-2 md:gap-3">
-            <LanguageSwitcher />
-            {userProfile && (
-              userProfile.role === 'admin' ? (
-                <AdminNotificationBell isScrolled={isScrolled} isHome={isHome} />
-              ) : (
-                <UserNotificationBell isScrolled={isScrolled} isHome={isHome} />
-              )
+          <div id="tour-login-btn" className="flex items-center gap-2 md:gap-3 ml-auto lg:ml-0">
+            <LanguageSwitcher isScrolled={isScrolled} isHome={isHome} />
+            {userProfile && userProfile.role === 'admin' && (
+              <AdminNotificationBell isScrolled={isScrolled} isHome={isHome} />
             )}
-            {userProfile ? (
+            {userProfile && (
               <div className="relative" ref={profileMenuRef}>
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className={`flex items-center md:gap-2 md:pl-2 md:pr-4 md:py-1.5 rounded-full md:border transition-all md:hover:shadow-soft ${isScrolled
-                      ? "md:bg-surface md:border-outline-variant/50 text-on-surface hover:text-primary md:hover:border-primary"
+                  className={`flex items-center gap-3 ml-1 md:ml-2 p-1.5 md:p-2 pr-3 md:pr-4 rounded-full border transition-all ${showProfileMenu
+                    ? "bg-primary text-white border-primary shadow-lg shadow-primary/30"
+                    : isScrolled
+                      ? "bg-surface border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5 text-on-surface"
                       : isHome
-                        ? "md:bg-surface/10 md:backdrop-blur-md md:border-white/20 text-white hover:text-white/80 md:hover:bg-surface/20"
-                        : "md:bg-surface/80 md:backdrop-blur-md md:border-outline-variant/30 text-on-surface hover:text-primary md:hover:border-primary"
+                        ? "bg-surface/10 border-white/20 hover:bg-surface/20 hover:border-white/40 text-white"
+                        : "bg-surface border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5 text-on-surface"
                     }`}
                 >
                   <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-sm">
@@ -267,18 +196,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                   <FiChevronDown className={`transition-transform ${showProfileMenu ? 'rotate-180' : ''} text-sm md:text-base`} />
                 </button>
 
-                {!hideProfileTooltip && userProfile?.has_completed_profile === false && (
-                  <div className="absolute top-full right-0 mt-4 mr-2 md:mr-0 z-50 animate-bounce cursor-pointer" onClick={() => { setHideProfileTooltip(true); localStorage.setItem("hasSeenProfileTooltip", "true"); }}>
-                    <div className="bg-[var(--color-secondary)] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-secondary/30 relative whitespace-nowrap flex items-center gap-2">
-                      <span>{t("profileTooltip")}</span>
-                      <button className="text-white/80 hover:text-white" onClick={(e) => { e.stopPropagation(); setHideProfileTooltip(true); localStorage.setItem("hasSeenProfileTooltip", "true"); }}>
-                        <FiX size={14} />
-                      </button>
-                      {/* Triangle Pointer */}
-                      <div className="absolute -top-1.5 right-6 w-3 h-3 bg-[var(--color-secondary)] rotate-45 rounded-sm"></div>
-                    </div>
-                  </div>
-                )}
+
 
                 <AnimatePresence>
                   {showProfileMenu && (
@@ -299,7 +217,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                         <p className="text-xs text-on-surface-variant truncate">{userProfile.email}</p>
                       </div>
 
-                      {userProfile.role === 'admin' ? (
+                      {userProfile.role === 'admin' && (
                         <NativeLink
                           href="/admin"
                           onClick={() => setShowProfileMenu(false)}
@@ -308,16 +226,8 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                           <FiGrid size={16} />
                           {t("dashboardAdmin")}
                         </NativeLink>
-                      ) : (
-                        <Link
-                          href="/dashboard"
-                          onClick={() => setShowProfileMenu(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-on-surface hover:bg-primary/10 hover:text-primary transition-colors"
-                        >
-                          <FiGrid size={16} />
-                          {t("dashboardKarya")}
-                        </Link>
                       )}
+
 
                       <div className="h-px bg-outline-variant/20 my-1 mx-4"></div>
 
@@ -332,18 +242,6 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                   )}
                 </AnimatePresence>
               </div>
-            ) : (
-              <NativeLink
-                href="/login"
-                className={`ml-2 md:ml-4 px-5 py-2 md:px-8 md:py-3 rounded-full font-semibold text-sm md:text-base transition-all hover:-translate-y-0.5 shadow-soft ${isScrolled
-                  ? "bg-secondary text-on-primary hover:bg-secondary/90 shadow-secondary/30"
-                  : isHome
-                    ? "bg-surface/15 backdrop-blur-md border border-white/40 text-white hover:bg-secondary hover:border-secondary"
-                    : "bg-secondary text-on-primary hover:bg-secondary/90 shadow-secondary/30"
-                  }`}
-              >
-                {t("login")}
-              </NativeLink>
             )}
           </div>
         </div>
@@ -355,9 +253,8 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
       )}
 
       {/* Mobile & Tablet Bottom Navigation Bar */}
-      {!isDashboard && (
-        <>
-          <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-lg border-t border-outline-variant/30 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] pb-5 pt-2 px-1 flex justify-between items-center rounded-t-3xl touch-manipulation">
+      <>
+        <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-lg border-t border-outline-variant/30 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] pb-5 pt-2 px-1 flex justify-between items-center rounded-t-3xl touch-manipulation">
             <Link
               href="/"
               onClick={() => { setPendingPath("/"); setActiveBottomSheet(null); }}
@@ -376,25 +273,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
               <span className="text-[9px] font-bold">{t("agenda")}</span>
             </Link>
 
-            <Link
-              href="/karya"
-              onClick={() => { setPendingPath("/karya"); setActiveBottomSheet(null); }}
-              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/karya") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-            >
-              <div className="bg-primary text-white p-2.5 rounded-full -mt-5 shadow-glow border-4 border-white flex items-center justify-center">
-                <FiAward size={20} />
-              </div>
-              <span className="text-[9px] font-bold">{t("projects")}</span>
-            </Link>
 
-            <Link
-              href="/mahasiswa"
-              onClick={() => { setPendingPath("/mahasiswa"); setActiveBottomSheet(null); }}
-              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/mahasiswa") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-            >
-              <FiUsers size={20} className={currentPath.startsWith("/mahasiswa") ? "fill-secondary/20" : ""} />
-              <span className="text-[9px] font-bold">{t("students")}</span>
-            </Link>
 
             <button
               onClick={() => setActiveBottomSheet(activeBottomSheet === 'more' ? null : 'more')}
@@ -411,7 +290,6 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
             </button>
           </nav>
         </>
-      )}
 
       {/* Overlay for Bottom Sheet */}
       <AnimatePresence>

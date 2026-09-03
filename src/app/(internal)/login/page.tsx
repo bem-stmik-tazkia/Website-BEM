@@ -4,10 +4,26 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Protect the route using the same secret code as maintenance
+    if (sessionStorage.getItem('_bk') !== '1') {
+      // Detect locale from pathname e.g. /en/login → /en
+      const segments = pathname.split('/').filter(Boolean);
+      const locale = segments[0] || 'id';
+      router.replace(`/${locale}`);
+    } else {
+      setIsUnlocked(true);
+    }
+  }, []);
 
   useEffect(() => {
     // Check if there's an error in the URL (e.g. from callback or domain restriction)
@@ -25,7 +41,7 @@ export default function LoginPage() {
     setError(null);
 
     const params = new URLSearchParams(window.location.search);
-    const nextPath = params.get('next') || '/dashboard';
+    const nextPath = params.get('next') || '/admin';
 
     const supabase = createClient();
 
@@ -44,6 +60,8 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  if (!isUnlocked) return null;
 
   return (
     <main className="min-h-screen bg-surface-variant/30 flex items-center justify-center p-4 relative overflow-hidden">
@@ -72,8 +90,8 @@ export default function LoginPage() {
               className="w-full h-full object-contain hover:scale-105 transition-transform"
             />
           </div>
-          <h1 className="text-2xl font-display-md text-on-background mb-1.5 font-bold">Selamat Datang 👋</h1>
-          <p className="text-sm text-on-surface-variant">Silakan masuk menggunakan email kampus.</p>
+          <h1 className="text-2xl font-display-md text-on-background mb-1.5 font-bold">Portal Admin BEM 🛡️</h1>
+          <p className="text-sm text-on-surface-variant">Masuk menggunakan akun Google pengurus BEM.</p>
         </div>
 
         {/* Error Message */}
@@ -84,12 +102,12 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Campus Email Info Box */}
+        {/* Admin Only Info Box */}
         <div className="p-3.5 bg-primary/5 border border-primary/20 rounded-xl text-xs text-on-surface-variant flex items-start gap-2.5 mb-6">
-          <span className="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">info</span>
+          <span className="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">admin_panel_settings</span>
           <div>
-            <p className="font-bold text-primary mb-0.5">Khusus Mahasiswa</p>
-            <p>Gunakan email resmi kampus saat melakukan login Google.</p>
+            <p className="font-bold text-primary mb-0.5">Khusus Pengurus BEM</p>
+            <p>Halaman login ini hanya untuk anggota & pengurus aktif BEM STMIK Tazkia.</p>
           </div>
         </div>
 

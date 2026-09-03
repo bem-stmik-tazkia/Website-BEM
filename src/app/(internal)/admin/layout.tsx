@@ -24,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .single();
 
   if (profile?.role !== 'admin') {
-    redirect('/dashboard');
+    redirect('/');
   }
 
   return (

@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BEM STMIK Tazkia — Portal Resmi & Inovasi Mahasiswa
 
-## Getting Started
+Ini adalah *source code* untuk website resmi **Badan Eksekutif Mahasiswa (BEM) STMIK Tazkia**. Website ini berfungsi sebagai pusat informasi publik (agenda, berita, volunteer, dokumentasi kegiatan) dan memiliki sistem admin internal untuk manajemen konten.
 
-First, run the development server:
+## 🌟 Fitur Utama
+
+- **Multi-Bahasa (i18n):** Mendukung 5 bahasa (Indonesia, English, Français, العربية, 日本語) dengan deteksi bahasa otomatis.
+- **Admin Dashboard Terproteksi:** Sistem login khusus untuk pengurus BEM terintegrasi dengan **Supabase Auth**.
+- **Manajemen Konten:** Admin dapat mengatur dan mempublikasikan Agenda, Berita, Volunteer, Dokumentasi, Kabinet, dan melihat Saran/Aduan dari mahasiswa.
+- **Tour Guide Otomatis:** Fitur _onboarding_ / panduan interaktif menggunakan `driver.js` untuk pengguna baru.
+- **Performa & Animasi:** Dibangun menggunakan Next.js App Router dengan animasi transisi yang mulus dari `framer-motion` dan animasi Lottie.
+- **Keamanan:** Rute internal dan API route dilindungi oleh Middleware Supabase + konfirmasi konami-style code untuk login admin.
+
+## 🛠️ Tech Stack
+
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
+- **Database & Auth:** [Supabase](https://supabase.com/)
+- **Multi-language:** [next-intl](https://next-intl-docs.vercel.app/)
+- **Animasi:** [Framer Motion](https://www.framer.com/motion/) & [DotLottie](https://lottiefiles.com/dotlottie)
+- **Icons:** [React Icons](https://react-icons.github.io/react-icons/) & Google Material Symbols
+
+---
+
+## 🚀 Cara Menjalankan di Lokal (Local Development)
+
+### 1. Prasyarat
+Pastikan Anda sudah menginstal:
+- **Node.js** (versi 18.x atau terbaru)
+- **npm** atau **yarn**
+
+### 2. Instalasi Dependensi
+Clone repository ini, lalu jalankan perintah instalasi:
+
+```bash
+npm install
+# atau
+yarn install
+```
+
+### 3. Pengaturan Environment Variables (Variabel Lingkungan)
+Buat file bernama `.env.local` di folder *root* proyek (sejajar dengan `package.json`), dan isi dengan kredensial Supabase Anda:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://[YOUR_SUPABASE_PROJECT_ID].supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=[YOUR_SUPABASE_ANON_KEY]
+```
+*(Hubungi pengembang sebelumnya atau ketua departemen IT BEM untuk mendapatkan kunci ini)*
+
+### 4. Menjalankan Development Server
+Mulai jalankan proyek dengan perintah:
 
 ```bash
 npm run dev
-# or
+# atau
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka `http://localhost:3000` di *browser* Anda. Website sudah siap digunakan!
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📂 Struktur Direktori Penting
 
-## Learn More
+- `/messages` — Berisi file terjemahan `.json` untuk 5 bahasa (`id`, `en`, `fr`, `ar`, `ja`).
+- `/src/app` — Folder App Router Next.js.
+  - `/[locale]` — Halaman utama publik (Home, Berita, Agenda, Volunteer, dll).
+  - `/(internal)` — Halaman terproteksi (Login & Admin Dashboard).
+- `/src/components` — Komponen UI React yang dapat digunakan ulang (Navbar, Footer, Charts, dll).
+- `/src/utils/supabase` — Konfigurasi _client_ dan _server_ untuk Supabase.
+- `/src/middleware.ts` & `/src/proxy.ts` — Middleware untuk mendeteksi bahasa dan mengamankan rute admin.
 
-To learn more about Next.js, take a look at the following resources:
+## 🔐 Cara Akses Admin
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Karena halaman admin tersembunyi untuk publik, Anda harus:
+1. Mengetikkan URL `/login` di *browser*.
+2. Memasukkan "kode rahasia" di _keyboard_ (opsional, disesuaikan dengan konfigurasi tim IT BEM) sebelum form login muncul.
+3. Login menggunakan **Akun Google** yang telah diberikan akses `role: admin` di database Supabase (tabel `profiles`).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📜 Lisensi & Hak Cipta
+Website ini dikembangkan secara internal untuk kepentingan BEM STMIK Tazkia. Hak cipta © BEM STMIK Tazkia.

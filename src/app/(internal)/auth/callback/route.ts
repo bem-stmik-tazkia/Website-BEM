@@ -50,14 +50,13 @@ export async function GET(request: NextRequest) {
         if (profile?.role === 'admin') {
           return NextResponse.redirect(`${publicOrigin}/admin`)
         }
+        // Non-admin users: sign them out and redirect to login with error
+        await supabase.auth.signOut()
+        return NextResponse.redirect(`${publicOrigin}/login?error=Akses+ditolak.+Halaman+ini+khusus+untuk+pengurus+BEM.`)
       }
 
-      // Add /id locale prefix if next doesn't already have a locale prefix
-      const locales = ['id', 'en', 'ar', 'ja', 'fr'];
-      const hasLocalePrefix = locales.some(locale => next.startsWith(`/${locale}/`) || next === `/${locale}`);
-      const nextWithLocale = hasLocalePrefix ? next : `/id${next}`;
-
-      return NextResponse.redirect(`${publicOrigin}${nextWithLocale}`)
+      // No user found, redirect to home
+      return NextResponse.redirect(`${publicOrigin}/`)
     }
   }
 

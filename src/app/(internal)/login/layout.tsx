@@ -19,7 +19,8 @@ export default async function LoginLayout({
     if (profile?.role === 'admin') {
       redirect('/admin');
     } else {
-      redirect('/dashboard');
+      // Non-admin users are not allowed — redirect to home
+      redirect('/');
     }
   }
 

@@ -19,7 +19,6 @@ export default async function middleware(request: NextRequest) {
   // 2. Cek apakah ini route internal yang TIDAK butuh multi-bahasa
   const pathname = request.nextUrl.pathname;
   const isInternalRoute = pathname.startsWith('/admin') || 
-                          pathname.startsWith('/dashboard') || 
                           pathname.startsWith('/login') || 
                           pathname.startsWith('/auth');
 

@@ -38,10 +38,10 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect /admin routes
+  // Protect /admin routes — only admin users can access
   if (request.nextUrl.pathname.startsWith('/admin')) {
     if (!user) {
-      // no user, potentially respond by redirecting the user to the login page
+      // Not logged in — redirect to login
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('next', request.nextUrl.pathname)
@@ -56,19 +56,9 @@ export async function updateSession(request: NextRequest) {
       .maybeSingle()
 
     if (profile?.role !== 'admin') {
-      // User is not an admin, redirect to user dashboard
+      // Non-admin — redirect to home
       const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
-      return NextResponse.redirect(url)
-    }
-  }
-
-  // Protect /dashboard routes (only logged-in users)
-  if (request.nextUrl.pathname.startsWith('/dashboard')) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      url.searchParams.set('next', request.nextUrl.pathname)
+      url.pathname = '/'
       return NextResponse.redirect(url)
     }
   }
@@ -83,14 +73,15 @@ export async function updateSession(request: NextRequest) {
 
     const url = request.nextUrl.clone()
     const nextPath = request.nextUrl.searchParams.get('next')
-    
+
     if (nextPath) {
       url.pathname = nextPath
       url.searchParams.delete('next')
     } else {
-      url.pathname = profile?.role === 'admin' ? '/admin' : '/dashboard'
+      // Only admins use the login page — always go to /admin
+      url.pathname = profile?.role === 'admin' ? '/admin' : '/'
     }
-    
+
     return NextResponse.redirect(url)
   }
 
