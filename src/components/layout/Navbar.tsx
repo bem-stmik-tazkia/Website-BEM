@@ -6,7 +6,7 @@ import NativeLink from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/routing";
-import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid, FiX } from "react-icons/fi";
+import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
@@ -90,7 +90,8 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
     { name: t("agenda"), path: "/agenda" },
     { name: t("news"), path: "/berita" },
     { name: t("documentation"), path: "/dokumentasi" },
-    { name: t("menuCab"), path: "/kabinet" }
+    { name: t("menuCab"), path: "/kabinet" },
+    { name: t("menuFeedback"), path: "/#saran" },
   ];
 
   return (
@@ -275,111 +276,34 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
 
 
 
-            <button
-              onClick={() => setActiveBottomSheet(activeBottomSheet === 'more' ? null : 'more')}
-              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${activeBottomSheet === 'more' ||
-                  currentPath.startsWith("/berita") ||
-                  currentPath.startsWith("/dokumentasi") ||
-                  currentPath.startsWith("/kabinet")
-                  ? "text-secondary"
-                  : "text-on-surface-variant hover:text-primary"
-                }`}
+            <Link
+              href="/berita"
+              onClick={() => { setPendingPath("/berita"); setActiveBottomSheet(null); }}
+              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/berita") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
             >
-              <FiGrid size={20} className={activeBottomSheet === 'more' || currentPath.startsWith("/berita") || currentPath.startsWith("/dokumentasi") || currentPath.startsWith("/kabinet") ? "fill-secondary/20" : ""} />
-              <span className="text-[9px] font-bold">{t("others")}</span>
-            </button>
+              <FiBookOpen size={20} className={currentPath.startsWith("/berita") ? "fill-secondary/20" : ""} />
+              <span className="text-[9px] font-bold">{t("menuNews")}</span>
+            </Link>
+
+            <Link
+              href="/dokumentasi"
+              onClick={() => { setPendingPath("/dokumentasi"); setActiveBottomSheet(null); }}
+              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/dokumentasi") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+            >
+              <span className={`material-symbols-outlined text-[20px] ${currentPath.startsWith("/dokumentasi") ? "text-secondary" : ""}`}>photo_library</span>
+              <span className="text-[9px] font-bold">{t("menuDoc")}</span>
+            </Link>
+
+            <Link
+              href="/kabinet"
+              onClick={() => { setPendingPath("/kabinet"); setActiveBottomSheet(null); }}
+              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/kabinet") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+            >
+              <FiUser size={20} className={currentPath.startsWith("/kabinet") ? "fill-secondary/20" : ""} />
+              <span className="text-[9px] font-bold">{t("menuCab")}</span>
+            </Link>
           </nav>
         </>
-
-      {/* Overlay for Bottom Sheet */}
-      <AnimatePresence>
-        {activeBottomSheet && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
-            onClick={() => setActiveBottomSheet(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Bottom Sheets */}
-      <AnimatePresence>
-        {activeBottomSheet === 'more' && (
-          <motion.div
-            initial={{ y: "100%", opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="lg:hidden fixed bottom-20 left-3 right-3 z-50 bg-surface rounded-3xl shadow-2xl overflow-hidden border border-outline-variant/30"
-          >
-            {/* Header */}
-            <div className="px-5 pt-4 pb-3 border-b border-outline-variant/20 flex items-center justify-between">
-              <p className="text-sm font-extrabold text-on-surface">{t("moreMenu")}</p>
-              <button onClick={() => setActiveBottomSheet(null)} className="p-1.5 rounded-full hover:bg-surface-variant transition-colors">
-                <FiX size={16} className="text-on-surface-variant" />
-              </button>
-            </div>
-            {/* 2x2 Grid Menu */}
-            <div className="grid grid-cols-2 gap-px bg-outline-variant/10 p-2">
-              <Link
-                href="/berita"
-                onClick={() => { setPendingPath("/berita"); setActiveBottomSheet(null); }}
-                className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
-              >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <FiBookOpen size={18} className="text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-on-surface">{t("menuNews")}</p>
-                  <p className="text-[10px] text-on-surface-variant">{t("menuNewsDesc")}</p>
-                </div>
-              </Link>
-              <Link
-                href="/dokumentasi"
-                onClick={() => { setPendingPath("/dokumentasi"); setActiveBottomSheet(null); }}
-                className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
-              >
-                <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-secondary text-[18px]">photo_library</span>
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-on-surface">{t("menuDoc")}</p>
-                  <p className="text-[10px] text-on-surface-variant">{t("menuDocDesc")}</p>
-                </div>
-              </Link>
-              <Link
-                href="/kabinet"
-                onClick={() => { setPendingPath("/kabinet"); setActiveBottomSheet(null); }}
-                className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
-              >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <FiUser size={18} className="text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-on-surface">{t("menuCab")}</p>
-                  <p className="text-[10px] text-on-surface-variant">{t("menuCabDesc")}</p>
-                </div>
-              </Link>
-              <Link
-                href="/#saran"
-                onClick={() => { setPendingPath("/#saran"); setActiveBottomSheet(null); }}
-                className="flex items-center gap-3 px-4 py-4 bg-surface rounded-2xl hover:bg-primary/5 active:bg-primary/10 transition-colors"
-              >
-                <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-secondary text-[18px]">chat_bubble</span>
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-on-surface">{t("menuFeedback")}</p>
-                  <p className="text-[10px] text-on-surface-variant">{t("menuFeedbackDesc")}</p>
-                </div>
-              </Link>
-            </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
 
 
       {/* Logout Confirmation Modal */}
