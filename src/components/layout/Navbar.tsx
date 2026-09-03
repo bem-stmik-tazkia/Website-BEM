@@ -6,7 +6,7 @@ import NativeLink from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/routing";
-import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown } from "react-icons/fi";
+import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
