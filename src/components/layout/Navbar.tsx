@@ -163,7 +163,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
 
           {/* Action Button (Mobile, Tablet, Desktop) */}
           <div id="tour-login-btn" className="flex items-center gap-2 md:gap-3 ml-auto lg:ml-0">
-            <LanguageSwitcher isScrolled={isScrolled} isHome={isHome} />
+            <LanguageSwitcher />
             {userProfile && userProfile.role === 'admin' && (
               <AdminNotificationBell isScrolled={isScrolled} isHome={isHome} />
             )}
