@@ -123,7 +123,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 className="h-10 w-auto md:h-12 lg:h-14 object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </div>
-            <div className="hidden sm:flex flex-row items-center gap-1.5">
+            <div className="flex flex-row items-center gap-1.5">
               <span
                 className={`font-bold leading-none text-lg md:text-xl transition-colors duration-300 ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"
                   }`}
