@@ -18,15 +18,6 @@ export default function HomeTourClient() {
         }
       },
       {
-        element: "#tour-karya-projek",
-        popover: {
-          title: t("home.innovation_title"),
-          description: t("home.innovation_desc"),
-          side: "top",
-          align: "center"
-        }
-      },
-      {
         element: "#tour-berita-sorotan",
         popover: {
           title: t("home.news_title"),

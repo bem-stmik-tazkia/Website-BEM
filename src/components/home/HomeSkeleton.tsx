@@ -3,36 +3,6 @@
  * Used as Suspense fallbacks to show placeholder UI while data is being fetched
  */
 
-/** Skeleton for KaryaProjek section */
-export function KaryaSkeleton() {
-  return (
-    <section className="py-12 md:py-20 px-4 sm:px-6 md:px-10 bg-background overflow-hidden">
-      <div className="max-w-7xl mx-auto">
-        {/* Header skeleton */}
-        <div className="flex items-start sm:items-center justify-between gap-4 mb-8 animate-pulse">
-          <div className="flex flex-col gap-2">
-            <div className="h-5 w-24 bg-surface-variant/60 rounded-full" />
-            <div className="h-9 w-48 bg-surface-variant/60 rounded-xl" />
-            <div className="h-4 w-36 bg-surface-variant/40 rounded-md" />
-          </div>
-          <div className="h-4 w-20 bg-surface-variant/40 rounded-md" />
-        </div>
-        {/* Cards skeleton */}
-        <div className="hidden lg:grid grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="animate-pulse rounded-3xl aspect-[4/3] bg-surface-variant/50"
-            />
-          ))}
-        </div>
-        {/* Mobile skeleton */}
-        <div className="lg:hidden animate-pulse rounded-3xl aspect-[4/3] bg-surface-variant/50 w-full max-w-2xl mx-auto" />
-      </div>
-    </section>
-  );
-}
-
 /** Skeleton for BeritaSorotan section */
 export function BeritaSkeleton() {
   return (

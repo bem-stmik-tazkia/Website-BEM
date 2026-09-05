@@ -139,10 +139,6 @@ const AUTOPLAY_INTERVAL = 5000;
 
 // ─── PANEL CONTENT COMPONENTS ───────────────────────────────────────────────
 
-function KaryaPanel() {
-  return null;
-}
-
 function VolunteerPanel() {
   return (
     <div className="h-full flex flex-col">
@@ -345,7 +341,7 @@ export default function HomepageCarousel() {
             <h2 className="text-2xl sm:text-3xl font-extrabold text-on-background leading-tight">
               Jelajahi BEM
             </h2>
-            <p className="text-xs sm:text-sm text-on-surface-variant mt-1">Geser untuk menjelajahi karya, event, volunteer & dokumentasi</p>
+            <p className="text-xs sm:text-sm text-on-surface-variant mt-1">Geser untuk menjelajahi event, volunteer &amp; dokumentasi</p>
           </div>
           {/* Prev / Next */}
           <div className="flex items-center gap-2">
