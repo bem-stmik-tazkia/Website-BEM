@@ -897,9 +897,7 @@
     },
     "home": {
       "welcome_title": "Bienvenue !",
-      "welcome_desc": "Ceci est le portail officiel du BEM STMIK Tazkia. Vous pouvez y trouver les dernières informations sur la vie du campus et les projets innovants des étudiants.",
-      "innovation_title": "Innovations Étudiantes",
-      "innovation_desc": "Dans cette section, vous pouvez voir les meilleures œuvres des étudiants de STMIK Tazkia. Vous pouvez aussi télécharger vos propres projets !",
+      "welcome_desc": "Ceci est le portail officiel du BEM STMIK Tazkia. Vous pouvez y trouver les dernières informations sur la vie du campus et les activités des étudiants.",
       "news_title": "Actualités & Annonces",
       "news_desc": "Ne manquez aucune information ! Toutes les dernières nouvelles, réalisations et annonces importantes sont ici.",
       "live_title": "Événements en Direct (LIVE)",
@@ -913,17 +911,7 @@
       "voice_title": "Voix des Étudiants",
       "voice_desc": "Vous avez une suggestion, une plainte ou une idée brillante ? Partagez-la anonymement via cette boîte à aspirations.",
       "login_title": "Aller au Tableau de Bord",
-      "login_desc": "Connectez-vous avec votre email universitaire pour commencer à télécharger des projets et vous inscrire aux événements. Commencez maintenant !"
-    },
-    "karya": {
-      "header_title": "Galerie de Projets Étudiants",
-      "header_desc": "Cette page est une vitrine numérique où sont rassemblés tous les projets et innovations des étudiants de STMIK Tazkia.",
-      "cta_title": "Téléchargez Votre Propre Projet !",
-      "cta_desc": "Vous avez un projet sympa ? Cliquez ici pour le télécharger et le présenter à tout le campus. (Connexion requise)",
-      "filter_title": "Filtre de Catégorie",
-      "filter_desc": "Utilisez ces boutons pour filtrer les projets par domaine.",
-      "search_title": "Rechercher des Projets",
-      "search_desc": "Utilisez ce champ pour rechercher un titre de projet ou le nom d'un créateur."
+      "login_desc": "Connectez-vous avec votre email universitaire pour vous inscrire aux événements. Commencez maintenant !"
     },
     "agenda": {
       "header_title": "Agenda des Activités",

@@ -897,9 +897,7 @@
     },
     "home": {
       "welcome_title": "Selamat Datang!",
-      "welcome_desc": "Ini adalah portal resmi BEM STMIK Tazkia. Di sini kamu bisa melihat berbagai informasi terbaru seputar kampus dan karya inovasi mahasiswa.",
-      "innovation_title": "Karya Inovasi",
-      "innovation_desc": "Di bagian ini, kamu bisa melihat pameran karya-karya terbaik dari mahasiswa STMIK Tazkia. Kamu juga bisa upload karyamu sendiri lho!",
+      "welcome_desc": "Ini adalah portal resmi BEM STMIK Tazkia. Di sini kamu bisa melihat berbagai informasi terbaru seputar kampus dan kegiatan mahasiswa.",
       "news_title": "Berita & Pengumuman",
       "news_desc": "Jangan sampai ketinggalan informasi! Semua berita terbaru, prestasi, dan pengumuman penting ada di sini.",
       "live_title": "Event Berjalan (LIVE)",
@@ -913,17 +911,7 @@
       "voice_title": "Suara Mahasiswa",
       "voice_desc": "Punya saran, keluhan, atau ide brilian? Sampaikan langsung secara anonim melalui kotak aspirasi ini.",
       "login_title": "Masuk ke Dashboard",
-      "login_desc": "Login dengan email kampus untuk mulai upload karya, daftar event, dan melihat riwayat aktivitasmu. Yuk mulai perjalananmu sekarang!"
-    },
-    "karya": {
-      "header_title": "Galeri Karya Mahasiswa",
-      "header_desc": "Halaman ini adalah etalase digital tempat berkumpulnya semua proyek, riset, dan inovasi terbaik dari mahasiswa STMIK Tazkia.",
-      "cta_title": "Unggah Karyamu Sendiri!",
-      "cta_desc": "Punya proyek keren? Jangan disimpan sendiri! Klik tombol ini untuk mengunggah dan memamerkan karyamu ke seluruh kampus. (Membutuhkan login)",
-      "filter_title": "Filter Kategori",
-      "filter_desc": "Gunakan tombol-tombol ini untuk memfilter karya berdasarkan bidang tertentu, seperti Aplikasi Web, Mobile, atau IoT.",
-      "search_title": "Cari Proyek",
-      "search_desc": "Atau gunakan kolom ini jika kamu ingin mencari judul proyek atau nama pembuat secara spesifik."
+      "login_desc": "Login dengan email kampus untuk mulai daftar event dan melihat riwayat aktivitasmu. Yuk mulai perjalananmu sekarang!"
     },
     "agenda": {
       "header_title": "Agenda Kegiatan",
