@@ -2,7 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 
-export async function toggleLike(table: 'berita' | 'karya', id: string, increment: boolean) {
+export async function toggleLike(table: 'berita', id: string, increment: boolean) {
   const supabase = await createClient();
   
   // Get current likes

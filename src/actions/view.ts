@@ -2,7 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 
-export async function recordView(table: 'berita' | 'karya' | 'agendas', id: string) {
+export async function recordView(table: 'berita' | 'agendas', id: string) {
   const supabase = await createClient();
   
   // Get current views

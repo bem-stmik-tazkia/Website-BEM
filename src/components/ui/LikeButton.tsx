@@ -14,7 +14,7 @@ export default function LikeButton({
 }: { 
   initialLikes: number; 
   id: string; 
-  table: 'berita' | 'karya'; 
+  table: 'berita'; 
   label?: string; 
   size?: number; 
 }) {

@@ -50,7 +50,6 @@ export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoring
       }
 
       // Prepare base queries
-      let qKarya = supabase.from('karya').select('id, title, created_at, status').order('created_at', { ascending: false }).limit(20);
       let qBerita = supabase.from('berita').select('id, title, created_at').order('created_at', { ascending: false }).limit(20);
       let qAgenda = supabase.from('agendas').select('id, title, created_at').order('created_at', { ascending: false }).limit(20);
       let qSaran = supabase.from('saran_aduan').select('id, subjek, created_at').order('created_at', { ascending: false }).limit(20);
@@ -58,68 +57,20 @@ export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoring
 
       // Apply date filter if not "all"
       if (fromDateStr) {
-        qKarya = qKarya.gte('created_at', fromDateStr);
         qBerita = qBerita.gte('created_at', fromDateStr);
         qAgenda = qAgenda.gte('created_at', fromDateStr);
         qSaran = qSaran.gte('created_at', fromDateStr);
         qSettings = qSettings.gte('updated_at', fromDateStr);
       }
 
-      const [karyaRes, beritaRes, agendaRes, saranRes, settingsRes] = await Promise.all([
-        qKarya, qBerita, qAgenda, qSaran, qSettings
+      const [beritaRes, agendaRes, saranRes, settingsRes] = await Promise.all([
+        qBerita, qAgenda, qSaran, qSettings
       ]);
 
       const roundTrip = Date.now() - start;
       setLatencyMs(Math.max(roundTrip, 12));
 
       const compiledLogs: ActivityLogItem[] = [];
-
-      // Map Karya
-      if (karyaRes.data) {
-        karyaRes.data.forEach(item => {
-          // 1. Log Pengajuan (Selalu ada)
-          compiledLogs.push({
-            id: `karya-submit-${item.id}`,
-            type: 'create',
-            title: `Pengajuan Karya: "${item.title}"`,
-            description: `Karya baru diajukan oleh Mahasiswa.`,
-            actor: "Mahasiswa",
-            timeAgo: formatTimeAgo(item.created_at),
-            rawDate: new Date(item.created_at || 0).getTime(),
-            icon: <FiBriefcase size={16} />,
-            badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20"
-          });
-
-          // 2. Log Approval/Rejection (Hanya jika status bukan pending)
-          if (item.status === 'approved') {
-            const approvalDateStr = new Date(item.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            compiledLogs.push({
-              id: `karya-approve-${item.id}`,
-              type: 'update',
-              title: `Karya Disetujui: "${item.title}"`,
-              description: `Karya telah disetujui dan dipublikasikan (Tgl: ${approvalDateStr}).`,
-              actor: "Admin BEM",
-              timeAgo: formatTimeAgo(item.created_at),
-              rawDate: new Date(item.created_at || 0).getTime() + 1000,
-              icon: <FiCheckCircle size={16} />,
-              badgeColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-            });
-          } else if (item.status === 'rejected') {
-            const rejectDateStr = new Date(item.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            compiledLogs.push({
-              id: `karya-reject-${item.id}`,
-              type: 'update',
-              title: `Karya Ditolak: "${item.title}"`,
-              description: `Pengajuan karya telah ditolak (Tgl: ${rejectDateStr}).`,
-              actor: "Admin BEM",
-              timeAgo: formatTimeAgo(item.created_at),
-              rawDate: new Date(item.created_at || 0).getTime() + 1000,
-              icon: <FiTrash2 size={16} />,
-              badgeColor: "bg-red-500/10 text-red-600 border-red-500/20"
-            });
-          }
-        });
-      }
 
       // Map Berita
       if (beritaRes.data) {
@@ -373,7 +324,7 @@ export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoring
                 </span>
                 <h3 className="text-xl font-bold text-on-surface">Riwayat & Log Aktivitas (Audit Trail)</h3>
               </div>
-              <p className="text-xs text-on-surface-variant mt-1">Catatan kronologis perubahan data, pengunggahan karya, berita, dan aktivitas sistem.</p>
+              <p className="text-xs text-on-surface-variant mt-1">Catatan kronologis perubahan data, publikasi berita, dan aktivitas sistem.</p>
             </div>
 
             {/* Filter Pills & Time */}
