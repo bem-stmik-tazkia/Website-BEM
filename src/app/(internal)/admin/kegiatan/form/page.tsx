@@ -29,6 +29,7 @@ export default function KegiatanFormPage() {
     type: (typeParam as any) || (fromParam === 'dokumentasi' ? 'dokumentasi' : 'event'),
     category: "",
     date: "",
+    end_date: "",
     time_range: "",
     deadline: "",
     location: "",
@@ -72,6 +73,7 @@ export default function KegiatanFormPage() {
       getKegiatanById(id).then((data) => {
         if (data) {
           if (data.date) data.date = data.date.split('T')[0];
+          if (data.end_date) data.end_date = data.end_date.split('T')[0];
           if (data.deadline) data.deadline = data.deadline.split('T')[0];
           setFormData(data);
           setInitialData(JSON.parse(JSON.stringify(data))); // Deep copy for accurate isDirty check
@@ -205,16 +207,7 @@ export default function KegiatanFormPage() {
       if (!formData.location?.trim()) newErrors.location = "Lokasi wajib diisi";
       if (!formData.description?.trim()) newErrors.description = "Deskripsi wajib diisi";
       
-      if (formData.type === 'event') {
-        if (!formData.speakers || formData.speakers.length === 0) {
-          newErrors.speakers = "Minimal wajib mengisi 1 pembicara";
-        } else {
-          formData.speakers.forEach((s, idx) => {
-            if (!s.name?.trim()) newErrors[`speaker_${idx}_name`] = "Nama wajib diisi";
-            if (!s.role?.trim()) newErrors[`speaker_${idx}_role`] = "Profesi wajib diisi";
-          });
-        }
-      } else if (formData.type === 'dokumentasi') {
+      if (formData.type === 'event' || formData.type === 'dokumentasi') {
         if (formData.speakers && formData.speakers.length > 0) {
           formData.speakers.forEach((s, idx) => {
             if (s.name?.trim() || s.role?.trim() || s.photo?.trim()) {
@@ -442,11 +435,15 @@ export default function KegiatanFormPage() {
             {formData.type === 'event' || formData.type === 'dokumentasi' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div id="field-date" className="space-y-2">
-                  <label className="text-sm font-bold text-on-surface">Tanggal Pelaksanaan <span className="text-red-500">*</span></label>
+                  <label className="text-sm font-bold text-on-surface">Tanggal Mulai <span className="text-red-500">*</span></label>
                   <input type="date" name="date" value={formData.date || ""} onChange={handleChange} className={`w-full bg-background border ${formErrors.date ? "border-red-500 bg-red-50" : "border-outline-variant/50"} rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} />
                   {formErrors.date && <p className="text-xs text-red-500 mt-1">{formErrors.date}</p>}
                 </div>
-                <div id="field-time_range" className="space-y-2">
+                <div id="field-end_date" className="space-y-2">
+                  <label className="text-sm font-bold text-on-surface">Tanggal Selesai <span className="font-normal text-on-surface-variant text-xs">(Opsional)</span></label>
+                  <input type="date" name="end_date" value={formData.end_date || ""} onChange={handleChange} min={formData.date || ""} className={`w-full bg-background border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} />
+                </div>
+                <div id="field-time_range" className="space-y-2 md:col-span-2">
                   <label className="text-sm font-bold text-on-surface">Rentang Waktu <span className="text-red-500">*</span></label>
                   <input type="text" name="time_range" value={formData.time_range || ""} onChange={handleChange} className={`w-full bg-background border ${formErrors.time_range ? "border-red-500 bg-red-50" : "border-outline-variant/50"} rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} placeholder="Contoh: 08:00 - 15:00 WIB" />
                   {formErrors.time_range && <p className="text-xs text-red-500 mt-1">{formErrors.time_range}</p>}

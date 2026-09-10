@@ -38,5 +38,7 @@ export async function saveBerita(formData: FormData) {
 
   revalidatePath('/admin/berita');
   revalidatePath('/berita');
+  const { revalidateTag } = require('next/cache');
+  revalidateTag('berita');
   redirect('/admin/berita');
 }

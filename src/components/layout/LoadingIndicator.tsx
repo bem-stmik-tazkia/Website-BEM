@@ -13,7 +13,7 @@ export default function LoadingIndicator() {
         <div className="loading-dot"></div>
         <div className="loading-dot"></div>
       </div>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style href="loading-indicator" precedence="default" dangerouslySetInnerHTML={{ __html: `
         .loading-dot {
           width: 10px;
           height: 10px;

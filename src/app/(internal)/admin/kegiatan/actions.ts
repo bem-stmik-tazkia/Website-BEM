@@ -110,6 +110,10 @@ export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
   revalidatePath("/agenda");
   revalidatePath("/admin/dokumentasi");
   revalidatePath("/publikasi/dokumentasi");
+  revalidatePath("/dokumentasi");
+  
+  const { revalidateTag } = require("next/cache");
+  revalidateTag("agenda");
 }
 
 export async function deleteKegiatan(id: string) {
@@ -125,6 +129,10 @@ export async function deleteKegiatan(id: string) {
   revalidatePath("/agenda");
   revalidatePath("/admin/dokumentasi");
   revalidatePath("/publikasi/dokumentasi");
+  revalidatePath("/dokumentasi");
+  
+  const { revalidateTag } = require("next/cache");
+  revalidateTag("agenda");
   return data;
 }
 

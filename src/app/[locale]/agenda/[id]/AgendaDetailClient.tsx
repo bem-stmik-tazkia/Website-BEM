@@ -51,19 +51,22 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
     }
   };
 
-  const getEventStatus = (dateStr?: string | null) => {
+  const getEventStatus = (dateStr?: string | null, endDateStr?: string | null) => {
     if (!dateStr) return t("statusUpcoming");
     const eventDate = new Date(dateStr);
+    const endDate = endDateStr ? new Date(endDateStr) : eventDate;
     const today = new Date();
+    
     eventDate.setHours(0,0,0,0);
+    endDate.setHours(0,0,0,0);
     today.setHours(0,0,0,0);
     
-    if (eventDate < today) return t("statusDone");
-    if (eventDate.getTime() === today.getTime()) return t("statusLive");
+    if (endDate < today) return t("statusDone");
+    if (eventDate <= today && today <= endDate) return t("statusLive");
     return t("statusUpcoming");
   };
 
-  const eventStatus = getEventStatus(agenda.date);
+  const eventStatus = getEventStatus(agenda.date, agenda.end_date);
   const isLive = eventStatus === t("statusLive");
   const isFinished = eventStatus === t("statusDone");
   const isManualDokumentasi = agenda.type === 'dokumentasi';
@@ -194,7 +197,31 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
             <div className="flex flex-col md:flex-row md:items-center gap-x-6 gap-y-1.5 md:gap-y-3 text-xs md:text-base text-white/90 font-medium">
               <span className="flex items-center gap-2">
                 <FiCalendar className="text-[var(--color-secondary)] shrink-0" size={16} /> 
-                {agenda.date || agenda.deadline ? new Date(agenda.date || agenda.deadline!).toLocaleDateString(locale === 'en' ? 'en-GB' : locale === 'ar' ? 'ar-SA' : locale === 'fr' ? 'fr-FR' : locale === 'ja' ? 'ja-JP' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "-"}
+                {(() => {
+                  const startDate = agenda.date || agenda.deadline;
+                  if (!startDate) return "-";
+                  const startOpt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+                  const endOpt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+                  
+                  const startStr = new Date(startDate).toLocaleDateString(locale === 'en' ? 'en-GB' : 'id-ID', startOpt);
+                  
+                  if (agenda.end_date && agenda.end_date !== agenda.date) {
+                    const dStart = new Date(startDate);
+                    const dEnd = new Date(agenda.end_date);
+                    if (dStart.getMonth() === dEnd.getMonth() && dStart.getFullYear() === dEnd.getFullYear()) {
+                       // Same month and year: "12 - 14 September 2026"
+                       return `${dStart.getDate()} - ${dEnd.toLocaleDateString(locale === 'en' ? 'en-GB' : 'id-ID', endOpt)}`;
+                    } else if (dStart.getFullYear() === dEnd.getFullYear()) {
+                       // Same year, diff month: "12 Aug - 14 Sep 2026"
+                       return `${dStart.getDate()} ${dStart.toLocaleDateString(locale === 'en' ? 'en-GB' : 'id-ID', { month: 'short' })} - ${dEnd.toLocaleDateString(locale === 'en' ? 'en-GB' : 'id-ID', endOpt)}`;
+                    } else {
+                       // Diff year
+                       return `${startStr} - ${dEnd.toLocaleDateString(locale === 'en' ? 'en-GB' : 'id-ID', endOpt)}`;
+                    }
+                  }
+                  
+                  return startStr;
+                })()}
               </span>
               {agenda.time_range && agenda.time_range !== "-" && (
                 <span className="flex items-center gap-2">

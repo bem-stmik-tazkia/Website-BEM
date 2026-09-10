@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { createClient } from "@/utils/supabase/server";
 import Script from "next/script";
+import NextTopLoader from 'nextjs-toploader';
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -67,6 +68,14 @@ export default async function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
       </head>
       <body className="bg-background text-on-background font-sans antialiased transition-colors duration-300" suppressHydrationWarning>
+        <NextTopLoader
+          color="#f2791e"
+          initialPosition={0.08}
+          height={4}
+          showSpinner={false}
+          easing="ease"
+          speed={200}
+        />
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider defaultTheme="system">
             <ToastProvider>

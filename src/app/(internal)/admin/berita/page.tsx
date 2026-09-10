@@ -19,6 +19,8 @@ async function handleDelete(formData: FormData) {
     
     revalidatePath("/admin/berita");
     revalidatePath("/berita");
+    const { revalidateTag } = require("next/cache");
+    revalidateTag("berita");
   }
 }
 
@@ -31,6 +33,8 @@ async function handleTogglePublish(formData: FormData) {
     await supabase.from("berita").update({ is_published: !currentStatus }).eq("id", id);
     revalidatePath("/admin/berita");
     revalidatePath("/berita");
+    const { revalidateTag } = require("next/cache");
+    revalidateTag("berita");
   }
 }
 

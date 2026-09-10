@@ -4,6 +4,7 @@ export interface AgendaKegiatan {
   slug: string;
   type: 'event' | 'volunteer' | 'dokumentasi';
   date: string | null;
+  end_date?: string;
   location: string | null;
   image_url: string | null;
   registration_link: string | null;

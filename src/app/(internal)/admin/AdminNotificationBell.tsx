@@ -252,7 +252,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
       </AnimatePresence>
 
       {/* Wiggle keyframes via style tag */}
-      <style>{`
+      <style href="admin-notification-bell-style" precedence="default">{`
         @keyframes wiggle {
           0%, 100% { transform: rotate(0deg); }
           15% { transform: rotate(-15deg); }

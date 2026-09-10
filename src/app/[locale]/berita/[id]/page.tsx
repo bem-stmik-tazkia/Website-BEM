@@ -124,9 +124,13 @@ export default function BeritaDetailPage() {
           setLiked(true);
         }
 
-        // Direct View Tracking (No Cooldown - Increases on every open)
-        await recordView('berita', detailData.id);
-        setViewCount(prev => prev + 1);
+        // Anti-Spam Direct View Tracking (1 View per Session per Article)
+        const sessionKey = `viewed_berita_${detailData.id}`;
+        if (!sessionStorage.getItem(sessionKey)) {
+          await recordView('berita', detailData.id);
+          setViewCount(prev => prev + 1);
+          sessionStorage.setItem(sessionKey, 'true');
+        }
 
         // Fetch related based on category
         const { data: relatedData } = await supabase
@@ -278,7 +282,7 @@ export default function BeritaDetailPage() {
         {/* Article Body */}
         <article className="lg:col-span-8 bg-surface rounded-3xl p-8 md:p-12 border border-outline-variant/20 shadow-sm">
           {/* Inject CSS langsung ke DOM agar pasti bisa override Tailwind */}
-          <style>{`
+          <style href="berita-detail-style" precedence="default">{`
             .ql-content ul { list-style-type: disc !important; padding-left: 1.8em !important; margin: 0.5em 0 !important; }
             .ql-content ol { list-style-type: decimal !important; padding-left: 1.8em !important; margin: 0.5em 0 !important; }
             .ql-content li { display: list-item !important; }

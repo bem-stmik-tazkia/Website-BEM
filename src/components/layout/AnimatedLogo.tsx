@@ -13,7 +13,7 @@ export default function AnimatedLogo() {
         <div className="rect rect-6"></div>
         <div className="rect rect-7"></div>
       </div>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style href="animated-logo" precedence="default" dangerouslySetInnerHTML={{ __html: `
         .logo-wrapper {
           transform: scale(0.4);
           display: flex;

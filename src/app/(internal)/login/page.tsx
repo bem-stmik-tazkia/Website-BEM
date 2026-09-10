@@ -14,15 +14,7 @@ export default function LoginPage() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Protect the route using the same secret code as maintenance
-    if (sessionStorage.getItem('_bk') !== '1') {
-      // Detect locale from pathname e.g. /en/login → /en
-      const segments = pathname.split('/').filter(Boolean);
-      const locale = segments[0] || 'id';
-      router.replace(`/${locale}`);
-    } else {
-      setIsUnlocked(true);
-    }
+    setIsUnlocked(true);
   }, []);
 
   useEffect(() => {
@@ -50,7 +42,7 @@ export default function LoginPage() {
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
         queryParams: {
-          prompt: 'consent select_account',
+          prompt: 'select_account',
         },
       }
     });

@@ -102,13 +102,14 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
   const agendas = translatedData.filter(item => {
     if (item.type !== 'event' || !item.is_published) return false;
 
-    // Sembunyikan event yang sudah selesai (akan dipindahkan ke Dokumentasi)
-    if (item.date) {
-      const eventDate = new Date(item.date);
+    // Sembunyikan event yang sudah selesai (cek end_date jika ada, baru cek date)
+    const finishDateStr = item.end_date || item.date;
+    if (finishDateStr) {
+      const finishDate = new Date(finishDateStr);
       const today = new Date();
-      eventDate.setHours(0, 0, 0, 0);
+      finishDate.setHours(0, 0, 0, 0);
       today.setHours(0, 0, 0, 0);
-      if (eventDate < today) return false;
+      if (finishDate < today) return false;
     }
 
     return true;
@@ -124,15 +125,17 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
     return deadlineDate >= today;
   });
 
-  const getEventStatus = (dateStr?: string | null) => {
+  const getEventStatus = (dateStr?: string | null, endDateStr?: string | null) => {
     if (!dateStr) return t("statusUpcoming");
     const eventDate = new Date(dateStr);
+    const endDate = endDateStr ? new Date(endDateStr) : eventDate;
     const today = new Date();
     eventDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
 
-    if (eventDate < today) return t("statusDone");
-    if (eventDate.getTime() === today.getTime()) return t("statusLive");
+    if (endDate < today) return t("statusDone");
+    if (eventDate <= today && today <= endDate) return t("statusLive");
     return t("statusUpcoming");
   };
 
@@ -290,7 +293,7 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
             ) : filteredAgendas.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {paginatedAgendas.map((agenda, index) => {
-                  const eventStatus = getEventStatus(agenda.date);
+                  const eventStatus = getEventStatus(agenda.date, agenda.end_date);
                   return (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -328,7 +331,10 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
 
                           <div className="flex flex-col gap-1.5 md:gap-2 text-xs md:text-sm text-on-surface-variant mb-4 md:mb-6 flex-grow">
                             <span className="flex items-center gap-2">
-                              <FiCalendar className="text-[var(--color-secondary)] shrink-0" size={16} /> {formatDateToIndo(agenda.date)}
+                              <FiCalendar className="text-[var(--color-secondary)] shrink-0" size={16} />
+                              {agenda.end_date && agenda.end_date !== agenda.date
+                                ? `${new Date(agenda.date!).getDate()} - ${formatDateToIndo(agenda.end_date)}`
+                                : formatDateToIndo(agenda.date)}
                             </span>
                             <span className="flex items-center gap-2">
                               <FiClock size={13} className="text-primary shrink-0" /> {agenda.time_range}

@@ -1,6 +1,6 @@
 import React from "react";
 import AgendaClient from "./AgendaClient";
-import { getKegiatans } from "@/app/(internal)/admin/kegiatan/actions";
+import { getCachedAgenda } from "@/app/(public)/actions/public-data";
 
 export const metadata = {
   title: "Agenda & Kegiatan - BEM STMIK Tazkia",
@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 export default async function AgendaPage() {
-  const kegiatans = await getKegiatans();
+  const kegiatans = await getCachedAgenda();
 
-  return <AgendaClient data={kegiatans} />;
+  return <AgendaClient data={kegiatans as any[]} />;
 }

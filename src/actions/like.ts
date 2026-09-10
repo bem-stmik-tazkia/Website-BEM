@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function toggleLike(table: 'berita', id: string, increment: boolean) {
   const supabase = await createClient();
@@ -11,5 +12,8 @@ export async function toggleLike(table: 'berita', id: string, increment: boolean
   if (data) {
     const newLikes = increment ? data.likes + 1 : data.likes - 1;
     await supabase.from(table).update({ likes: Math.max(0, newLikes) }).eq('id', id);
+    
+    // Clear the cache so the grid updates
+    revalidatePath('/', 'layout');
   }
 }

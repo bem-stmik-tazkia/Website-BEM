@@ -7,7 +7,7 @@ import { getTranslations } from "next-intl/server";
 export default async function KabinetPage() {
   const supabase = await createClient();
   const t = await getTranslations("KabinetPage");
-  
+
   const { data: kabinet, error } = await supabase
     .from("kabinet_profiles")
     .select("*")
