@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { AgendaKegiatan } from "@/types/agenda";
 
 export async function getKegiatans() {
@@ -58,6 +58,7 @@ export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
         slug: data.slug,
         type: data.type,
         date: data.date || null,
+        end_date: data.end_date || null,
         location: data.location || null,
         image_url: data.image_url,
         registration_link: data.registration_link,
@@ -86,6 +87,7 @@ export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
         slug: data.slug,
         type: data.type,
         date: data.date || null,
+        end_date: data.end_date || null,
         location: data.location || null,
         image_url: data.image_url,
         registration_link: data.registration_link,
@@ -109,11 +111,7 @@ export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
   revalidatePath("/admin/kegiatan");
   revalidatePath("/agenda");
   revalidatePath("/admin/dokumentasi");
-  revalidatePath("/publikasi/dokumentasi");
   revalidatePath("/dokumentasi");
-  
-  const { revalidateTag } = require("next/cache");
-  revalidateTag("agenda");
 }
 
 export async function deleteKegiatan(id: string) {
