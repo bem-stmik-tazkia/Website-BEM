@@ -451,7 +451,7 @@ export default function KegiatanFormPage() {
                 <div id="field-speakers" className="space-y-4 md:col-span-2 border-t border-outline-variant/30 pt-4 mt-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-bold text-on-surface">Detail Pembicara / Pemateri {formData.type === 'event' ? <><span className="text-red-500">*</span> <span className="font-normal text-on-surface-variant text-xs">(Min. 1)</span></> : <span className="font-normal text-on-surface-variant text-xs">(Opsional)</span>}</h4>
+                      <h4 className="text-sm font-bold text-on-surface">Detail Pembicara / Pemateri <span className="font-normal text-on-surface-variant text-xs">(Opsional)</span></h4>
                       {formErrors.speakers && <p className="text-xs text-red-500 mt-1">{formErrors.speakers}</p>}
                     </div>
                     <button 
@@ -486,7 +486,7 @@ export default function KegiatanFormPage() {
                           </button>
                           
                           <div className="space-y-2">
-                            <label className="text-xs font-bold text-on-surface">Nama Pembicara {formData.type === 'event' && <span className="text-red-500">*</span>}</label>
+                            <label className="text-xs font-bold text-on-surface">Nama Pembicara</label>
                             <input 
                               type="text" 
                               name={`speaker_${index}_name`}
@@ -505,7 +505,7 @@ export default function KegiatanFormPage() {
                             {formErrors[`speaker_${index}_name`] && <p className="text-xs text-red-500 mt-1">{formErrors[`speaker_${index}_name`]}</p>}
                           </div>
                           <div className="space-y-2">
-                            <label className="text-xs font-bold text-on-surface">Profesi / Jabatan {formData.type === 'event' && <span className="text-red-500">*</span>}</label>
+                            <label className="text-xs font-bold text-on-surface">Profesi / Jabatan</label>
                             <input 
                               type="text" 
                               name={`speaker_${index}_role`}

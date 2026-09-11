@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 
+const MotionLink = motion(Link);
+
 const highlightLinks = [
   { color: "primary", link: "/berita" },
   { color: "secondary", link: "/dokumentasi" },
@@ -29,13 +31,14 @@ export default function Highlight() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {highlightLinks.map((item, index) => (
-            <motion.div
+            <MotionLink
               key={index}
+              href={item.link}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: index * 0.15 }}
-              className={`bg-surface rounded-3xl p-8 hover:shadow-xl transition-all duration-500 flex flex-col h-full group border border-outline-variant/30 hover:border-${item.color}/50 hover:-translate-y-3 relative overflow-hidden`}
+              className={`bg-surface rounded-3xl p-8 hover:shadow-xl transition-all duration-500 flex flex-col h-full group border border-outline-variant/30 hover:border-${item.color}/50 hover:-translate-y-3 relative overflow-hidden block`}
             >
               <div className={`absolute inset-0 bg-gradient-to-br from-${item.color}/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
               <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-${item.color}-container text-${item.color} text-xs font-semibold mb-6 w-fit group-hover:scale-105 group-hover:bg-${item.color} group-hover:text-white transition-all duration-300 relative z-10`}>
@@ -49,14 +52,13 @@ export default function Highlight() {
                 {t(`item${index}Desc`)}
               </p>
               <div className="mt-auto relative z-10">
-                <Link
-                  href={item.link}
+                <span
                   className={`w-full bg-surface-container-high text-${item.color} px-6 py-3 rounded-full font-semibold group-hover:bg-${item.color} group-hover:text-white hover:shadow-lg hover:scale-[1.02] transition-all duration-300 flex justify-center`}
                 >
                   {t(`item${index}Btn`)}
-                </Link>
+                </span>
               </div>
-            </motion.div>
+            </MotionLink>
           ))}
         </div>
 

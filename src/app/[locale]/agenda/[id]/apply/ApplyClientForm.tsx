@@ -38,6 +38,17 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isClosed || isQuotaFull) return;
+
+    // Rate limit check (3 minutes cooldown per agenda)
+    const lastSubmitTime = localStorage.getItem(`last_volunteer_submit_${agenda.id}`);
+    if (lastSubmitTime) {
+      const timeDiff = Date.now() - parseInt(lastSubmitTime, 10);
+      const cooldownMinutes = 3;
+      if (timeDiff < cooldownMinutes * 60 * 1000) {
+        showErrorToast(`Tunggu ${Math.ceil((cooldownMinutes * 60 * 1000 - timeDiff) / 60000)} menit sebelum mendaftar lagi.`);
+        return;
+      }
+    }
     
     // Validate required fields and formats
     const newInvalidFields: Record<string, string> = {};
@@ -99,6 +110,10 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
       await submitVolunteerApplication(agenda.id, responses);
       setIsSuccess(true);
       showSuccessToast(t("successToast"));
+      
+      // Set cooldown di localStorage
+      localStorage.setItem(`last_volunteer_submit_${agenda.id}`, Date.now().toString());
+      
       try {
         localStorage.removeItem(`draft_agenda_${agenda.id}`);
       } catch (e) {}

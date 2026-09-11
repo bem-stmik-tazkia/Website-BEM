@@ -27,16 +27,19 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Do not run code between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
   // IMPORTANT: DO NOT use supabase.auth.getSession() here!
-  // It returns the data from the cookie which could be spoofed.
-  // getUser() returns the data after validating the token to the Supabase API.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // getUser() memvalidasi token ke Supabase API (tidak bisa di-spoof).
+  // Dibungkus try-catch agar jika Supabase tidak bisa dijangkau (timeout/offline),
+  // halaman publik tetap dapat diakses alih-alih crash dengan error 500.
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch (err) {
+    // Supabase tidak bisa dijangkau — lanjutkan sebagai guest
+    // Route yang dilindungi (/admin) akan tetap di-redirect ke /login
+    console.error('[Middleware] Supabase getUser failed (network issue?):', err);
+  }
 
   // Protect /admin routes — only admin users can access
   if (request.nextUrl.pathname.startsWith('/admin')) {
@@ -49,14 +52,22 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle()
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
 
-    if (profile?.role !== 'admin') {
-      // Non-admin — redirect to home
+      if (profile?.role !== 'admin') {
+        // Non-admin — redirect to home
+        const url = request.nextUrl.clone()
+        url.pathname = '/'
+        return NextResponse.redirect(url)
+      }
+    } catch (err) {
+      // Gagal cek role — amankan dengan redirect ke home
+      console.error('[Middleware] Supabase profile check failed:', err);
       const url = request.nextUrl.clone()
       url.pathname = '/'
       return NextResponse.redirect(url)
@@ -65,12 +76,6 @@ export async function updateSession(request: NextRequest) {
 
   // Prevent logged-in users from accessing /login
   if (user && request.nextUrl.pathname === '/login') {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle()
-
     const url = request.nextUrl.clone()
     const nextPath = request.nextUrl.searchParams.get('next')
 
@@ -78,8 +83,18 @@ export async function updateSession(request: NextRequest) {
       url.pathname = nextPath
       url.searchParams.delete('next')
     } else {
-      // Only admins use the login page — always go to /admin
-      url.pathname = profile?.role === 'admin' ? '/admin' : '/'
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle()
+        // Only admins use the login page — always go to /admin
+        url.pathname = profile?.role === 'admin' ? '/admin' : '/'
+      } catch (err) {
+        console.error('[Middleware] Supabase profile check (login) failed:', err);
+        url.pathname = '/'
+      }
     }
 
     return NextResponse.redirect(url)

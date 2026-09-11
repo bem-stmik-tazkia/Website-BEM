@@ -153,9 +153,10 @@ function VolunteerPanel() {
       </div>
       <div className="flex flex-col gap-3 flex-1 overflow-hidden">
         {volunteer.map((vol) => (
-          <div
+          <Link
             key={vol.id}
-            className="group flex gap-3 items-center p-3 rounded-2xl bg-surface border border-outline-variant/20 hover:border-secondary/30 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
+            href={`/volunteer/${vol.id}`}
+            className="group flex gap-3 items-center p-3 rounded-2xl bg-surface border border-outline-variant/20 hover:border-secondary/30 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
           >
             <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-variant/30 relative">
               <img src={vol.imgUrl} alt={vol.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -168,10 +169,10 @@ function VolunteerPanel() {
               <p className="font-bold text-sm text-on-background group-hover:text-secondary transition-colors leading-tight">{vol.title}</p>
               <p className="text-[10px] text-on-surface-variant mt-0.5">Deadline: <span className="font-semibold">{vol.deadline}</span></p>
             </div>
-            <Link href={`/volunteer/${vol.id}`} className="shrink-0 bg-secondary text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full hover:bg-secondary/90 transition-colors">
+            <span className="shrink-0 bg-secondary text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full hover:bg-secondary/90 transition-colors">
               Apply
-            </Link>
-          </div>
+            </span>
+          </Link>
         ))}
       </div>
     </div>

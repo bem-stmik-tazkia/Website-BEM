@@ -124,12 +124,26 @@ export default function BeritaDetailPage() {
           setLiked(true);
         }
 
-        // Anti-Spam Direct View Tracking (1 View per Session per Article)
-        const sessionKey = `viewed_berita_${detailData.id}`;
-        if (!sessionStorage.getItem(sessionKey)) {
-          await recordView('berita', detailData.id);
-          setViewCount(prev => prev + 1);
-          sessionStorage.setItem(sessionKey, 'true');
+        // Anti-Spam View Tracking: localStorage (24h) sebagai fast guard,
+        // DB-level cooldown sebagai fallback jika localStorage dihapus user.
+        const viewKey = `viewed_berita_${detailData.id}`;
+        const lastViewedAt = localStorage.getItem(viewKey);
+        const cooldownMs = 24 * 60 * 60 * 1000; // 24 jam
+        const now = Date.now();
+        const isStillInCooldown = lastViewedAt && (now - parseInt(lastViewedAt, 10)) < cooldownMs;
+
+        if (!isStillInCooldown) {
+          // Kirim ke DB — RPC `record_berita_view` juga cek cooldown 24 jam di DB
+          const counted = await recordView('berita', detailData.id, deviceId);
+          if (counted) {
+            setViewCount(prev => prev + 1);
+            // Simpan timestamp di localStorage sebagai fast guard
+            localStorage.setItem(viewKey, String(now));
+          } else if (!lastViewedAt) {
+            // DB bilang masih cooldown padahal localStorage kosong (user hapus data),
+            // update localStorage agar guard bekerja lagi ke depannya
+            localStorage.setItem(viewKey, String(now));
+          }
         }
 
         // Fetch related based on category

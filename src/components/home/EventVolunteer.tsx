@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { FiCalendar, FiMapPin, FiClock, FiArrowRight, FiZap, FiCheckCircle, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import SafeLottie from "@/components/ui/SafeLottie";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 
@@ -33,10 +34,10 @@ export default function EventVolunteer({
   const locale = useLocale();
 
   // Auto-translate konten event dari database
-  const { data: translatedLive } = useTranslatedList(liveEvents, "agenda_kegiatan", locale, ["title", "description"]);
-  const { data: translatedUpcoming } = useTranslatedList(upcomingEvents, "agenda_kegiatan", locale, ["title", "description"]);
-  const { data: translatedVolunteer } = useTranslatedList(volunteerOpportunities, "agenda_kegiatan", locale, ["title", "description"]);
-  const { data: translatedPast } = useTranslatedList(pastEvents, "agenda_kegiatan", locale, ["title", "description"]);
+  const { data: translatedLive } = useTranslatedList(liveEvents, "agenda_kegiatan", locale, ["title", "description", "category", "location"]);
+  const { data: translatedUpcoming } = useTranslatedList(upcomingEvents, "agenda_kegiatan", locale, ["title", "description", "category", "location"]);
+  const { data: translatedVolunteer } = useTranslatedList(volunteerOpportunities, "agenda_kegiatan", locale, ["title", "description", "category", "location"]);
+  const { data: translatedPast } = useTranslatedList(pastEvents, "agenda_kegiatan", locale, ["title", "description", "category", "location"]);
 
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -303,7 +304,7 @@ export default function EventVolunteer({
               }
             }}
           >
-            <div className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-lg group cursor-pointer h-[280px] sm:h-[300px] md:h-[350px]">
+            <Link href={`/agenda/${liveEvents[activeLive].id}`} className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-lg group cursor-pointer h-[280px] sm:h-[300px] md:h-[350px] block">
               {liveEvents.length > 1 && (
                 <div
                   className="absolute top-0 left-0 h-1.5 z-20 transition-none rounded-full"
@@ -338,7 +339,7 @@ export default function EventVolunteer({
                   {/* Content */}
                   <div className="relative z-10 w-full md:w-3/4">
                     <span className="bg-surface/20 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm w-fit border border-white/30 mb-3 inline-block">
-                      {liveEvents[activeLive].category}
+                      {(translatedLive[activeLive] ?? liveEvents[activeLive]).category}
                     </span>
 
                     <h3 className="text-white text-xl sm:text-2xl md:text-3xl font-bold mb-3 leading-tight drop-shadow-md">{(translatedLive[activeLive] ?? liveEvents[activeLive]).title}</h3>
@@ -346,7 +347,7 @@ export default function EventVolunteer({
                     <div className="flex flex-col gap-1 text-white/90 text-xs sm:text-sm mb-5 font-medium">
                       <span className="flex items-center gap-2"><FiCalendar size={14} className="text-white/70" /> {formatDateToIndo(liveEvents[activeLive].date)}</span>
                       <span className="flex items-center gap-2"><FiClock size={14} className="text-white/70" /> {liveEvents[activeLive].time_range}</span>
-                      <span className="flex items-center gap-2"><FiMapPin size={14} className="text-white/70" /> {liveEvents[activeLive].location || "Online"}</span>
+                      <span className="flex items-center gap-2"><FiMapPin size={14} className="text-white/70" /> {(translatedLive[activeLive] ?? liveEvents[activeLive]).location || "Online"}</span>
                     </div>
 
                     <div>
@@ -357,7 +358,7 @@ export default function EventVolunteer({
                   </div>
                 </motion.div>
               </AnimatePresence>
-            </div>
+            </Link>
 
             {liveEvents.length > 1 && (
               <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 z-20 flex gap-3">
@@ -424,16 +425,16 @@ export default function EventVolunteer({
             </div>
 
             {upcomingEvents.length === 0 ? (
-              <div className="bg-white border border-outline-variant/30 rounded-3xl p-6 text-center shadow-sm flex flex-col items-center justify-center gap-2">
+              <Link href="/agenda" className="group block bg-white border border-outline-variant/30 rounded-3xl p-6 text-center shadow-sm flex flex-col items-center justify-center gap-2 hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer">
                 <div className="w-24 h-24 relative -my-1">
-                  <DotLottieReact src="/animations/Calendar.lottie" loop autoplay />
+                  <SafeLottie src="/animations/Calendar.lottie" loop autoplay />
                 </div>
-                <h3 className="text-base font-bold text-on-background">{t("noUpcomingTitle")}</h3>
+                <h3 className="text-base font-bold text-on-background group-hover:text-primary transition-colors">{t("noUpcomingTitle")}</h3>
                 <p className="text-xs text-on-surface-variant leading-relaxed max-w-xs">{t("noUpcomingDesc")}</p>
-                <Link href="/agenda" className="mt-2 inline-flex items-center gap-2 bg-primary text-white text-xs font-bold px-5 py-2.5 rounded-full hover:bg-primary/95 transition-all shadow-md">
+                <span className="mt-2 inline-flex items-center gap-2 bg-primary text-white text-xs font-bold px-5 py-2.5 rounded-full group-hover:bg-primary/95 transition-all shadow-md">
                   {t("viewArchive")} <FiArrowRight />
-                </Link>
-              </div>
+                </span>
+              </Link>
             ) : (
               <div
                 className="relative"
@@ -482,19 +483,21 @@ export default function EventVolunteer({
                         if (info.offset.x > 40) prev();
                       }}
                     >
+                      {/* Full-cover link agar seluruh banner bisa diklik */}
+                      <Link href={`/agenda/${upcomingEvents[active].id}`} className="absolute inset-0 z-10" aria-label={upcomingEvents[active].title} />
                       <img src={upcomingEvents[active].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={upcomingEvents[active].title} className="w-full h-full object-cover select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                      <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                      <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-20">
                         {(translatedUpcoming[active] ?? upcomingEvents[active]).category}
                       </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white z-20">
                         <h3 className="font-extrabold text-sm leading-tight mb-2">{(translatedUpcoming[active] ?? upcomingEvents[active]).title}</h3>
                         <div className="flex flex-col gap-0.5 text-white/80 text-[10px] mb-3">
                           <span className="flex items-center gap-1.5"><FiCalendar size={11} className="text-secondary" /> {formatDateToIndo(upcomingEvents[active].date)}</span>
                           <span className="flex items-center gap-1.5"><FiClock size={11} className="text-secondary" /> {upcomingEvents[active].time_range}</span>
-                          <span className="flex items-center gap-1.5"><FiMapPin size={11} className="text-secondary" /> {upcomingEvents[active].location || "Online"}</span>
+                          <span className="flex items-center gap-1.5"><FiMapPin size={11} className="text-secondary" /> {(translatedUpcoming[active] ?? upcomingEvents[active]).location || "Online"}</span>
                         </div>
-                        <Link href={`/agenda/${upcomingEvents[active].id}`} className="bg-primary text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-1.5">
+                        <Link href={`/agenda/${upcomingEvents[active].id}`} className="relative z-30 bg-primary text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-1.5">
                           {t("detailEvent")} <FiArrowRight size={12} />
                         </Link>
                       </div>
@@ -542,13 +545,13 @@ export default function EventVolunteer({
             </div>
 
             {volunteerOpportunities.length === 0 ? (
-              <div className="bg-white border border-outline-variant/30 rounded-3xl p-6 text-center shadow-sm flex flex-col items-center justify-center gap-2">
+              <Link href="/agenda?tab=volunteer" className="group block bg-white border border-outline-variant/30 rounded-3xl p-6 text-center shadow-sm flex flex-col items-center justify-center gap-2 hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer">
                 <div className="w-24 h-24 relative -my-1">
-                  <DotLottieReact src="/animations/Calendar.lottie" loop autoplay />
+                  <SafeLottie src="/animations/Calendar.lottie" loop autoplay />
                 </div>
-                <h3 className="text-base font-bold text-on-background">{t("noVolTitle")}</h3>
+                <h3 className="text-base font-bold text-on-background group-hover:text-primary transition-colors">{t("noVolTitle")}</h3>
                 <p className="text-xs text-on-surface-variant leading-relaxed max-w-xs">{t("noVolDesc")}</p>
-              </div>
+              </Link>
             ) : (
               <div
                 className="relative"
@@ -594,14 +597,16 @@ export default function EventVolunteer({
                         if (info.offset.x > 40) prevVol();
                       }}
                     >
+                      {/* Full-cover link agar seluruh banner bisa diklik */}
+                      <Link href={`/agenda/${volunteerOpportunities[activeVol].id}`} className="absolute inset-0 z-10" aria-label={volunteerOpportunities[activeVol].title} />
                       <img src={volunteerOpportunities[activeVol].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={volunteerOpportunities[activeVol].title} className="w-full h-full object-cover select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
                       {volunteerOpportunities[activeVol].is_urgent && (
-                        <div className="absolute top-4 left-4 bg-red-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                        <div className="absolute top-4 left-4 bg-red-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm z-20">
                           <FiClock size={10} /> {t("urgent")}
                         </div>
                       )}
-                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white z-20">
                          <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block mb-1">{(translatedVolunteer[activeVol] ?? volunteerOpportunities[activeVol]).category}</span>
                          <h3 className="font-extrabold text-sm leading-tight mb-1">{(translatedVolunteer[activeVol] ?? volunteerOpportunities[activeVol]).title}</h3>
                          <p className="text-white/80 text-[10px] mb-2 leading-relaxed line-clamp-2">{(translatedVolunteer[activeVol] ?? volunteerOpportunities[activeVol]).description}</p>
@@ -609,7 +614,7 @@ export default function EventVolunteer({
                           <FiClock size={11} className="text-secondary" />
                           <span>{t("deadline")}: <span className="font-semibold text-white">{formatDateToIndo(volunteerOpportunities[activeVol].deadline)}</span></span>
                         </div>
-                        <Link href={`/agenda/${volunteerOpportunities[activeVol].id}`} className="bg-primary text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-1.5">
+                        <Link href={`/agenda/${volunteerOpportunities[activeVol].id}`} className="relative z-30 bg-primary text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-1.5">
                           <FiCheckCircle size={12} /> {t("applyPos")}
                         </Link>
                       </div>
@@ -657,13 +662,13 @@ export default function EventVolunteer({
             </div>
 
             {pastEvents.length === 0 ? (
-              <div className="bg-white border border-outline-variant/30 rounded-3xl p-6 text-center shadow-sm flex flex-col items-center justify-center gap-2">
+              <Link href="/dokumentasi" className="group block bg-white border border-outline-variant/30 rounded-3xl p-6 text-center shadow-sm flex flex-col items-center justify-center gap-2 hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer">
                 <div className="w-24 h-24 relative -my-1">
-                  <DotLottieReact src="/animations/Calendar.lottie" loop autoplay />
+                  <SafeLottie src="/animations/Calendar.lottie" loop autoplay />
                 </div>
-                <h3 className="text-base font-bold text-on-background">{t("noPastTitle")}</h3>
+                <h3 className="text-base font-bold text-on-background group-hover:text-primary transition-colors">{t("noPastTitle")}</h3>
                 <p className="text-xs text-on-surface-variant leading-relaxed max-w-xs">{t("noPastDesc")}</p>
-              </div>
+              </Link>
             ) : (
               <div
                 className="relative"
@@ -709,14 +714,16 @@ export default function EventVolunteer({
                         if (info.offset.x > 40) prevPast();
                       }}
                     >
+                      {/* Full-cover link agar seluruh banner bisa diklik */}
+                      <Link href={`/agenda/${pastEvents[activePast].id}`} className="absolute inset-0 z-10" aria-label={pastEvents[activePast].title} />
                       <img src={pastEvents[activePast].image_url || pastEvents[activePast].gallery?.[0] || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={pastEvents[activePast].title} className="w-full h-full object-cover grayscale select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
-                      <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                      <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-20">
                         {(translatedPast[activePast] ?? pastEvents[activePast]).category}
                       </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white z-20">
                         <h3 className="font-extrabold text-sm leading-tight mb-3">{(translatedPast[activePast] ?? pastEvents[activePast]).title}</h3>
-                        <Link href={`/agenda/${pastEvents[activePast].id}`} className="bg-surface/20 text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-surface/30 transition-all duration-300 inline-flex items-center gap-1.5 border border-white/20 backdrop-blur-sm">
+                        <Link href={`/agenda/${pastEvents[activePast].id}`} className="relative z-30 bg-surface/20 text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-surface/30 transition-all duration-300 inline-flex items-center gap-1.5 border border-white/20 backdrop-blur-sm">
                           {t("viewDocs")} <FiArrowRight size={12} />
                         </Link>
                       </div>

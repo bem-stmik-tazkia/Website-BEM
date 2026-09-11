@@ -5,6 +5,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { createClient } from "@/utils/supabase/server";
 import Script from "next/script";
 import NextTopLoader from 'nextjs-toploader';
+import SiteVisitorTracker from "@/components/SiteVisitorTracker";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -79,6 +80,7 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider defaultTheme="system">
             <ToastProvider>
+              <SiteVisitorTracker />
               <LayoutClientWrapper isLoggedIn={!!user}>{children}</LayoutClientWrapper>
             </ToastProvider>
           </ThemeProvider>

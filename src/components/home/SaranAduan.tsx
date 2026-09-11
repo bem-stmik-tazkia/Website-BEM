@@ -167,6 +167,17 @@ export default function SaranAduan() {
       return;
     }
 
+    // Rate limit check (10 minutes cooldown)
+    const lastSubmitTime = localStorage.getItem("last_saran_submit_time");
+    if (lastSubmitTime) {
+      const timeDiff = Date.now() - parseInt(lastSubmitTime, 10);
+      const cooldownMinutes = 10;
+      if (timeDiff < cooldownMinutes * 60 * 1000) {
+        setErrorMsg(`Tunggu sekitar ${Math.ceil((cooldownMinutes * 60 * 1000 - timeDiff) / 60000)} menit lagi sebelum mengirim saran baru.`);
+        return;
+      }
+    }
+
     // Handle empty name
     const finalNama = nama && nama.trim() !== "" ? nama : t("namePlaceholder");
 
@@ -221,6 +232,9 @@ export default function SaranAduan() {
       setKategori("");
       setDeskripsi("");
       generateCaptcha(); // Reset puzzle untuk pengiriman berikutnya
+      
+      // Set cooldown di localStorage
+      localStorage.setItem("last_saran_submit_time", Date.now().toString());
 
       // Hilangkan pesan sukses setelah 5 detik
       setTimeout(() => {

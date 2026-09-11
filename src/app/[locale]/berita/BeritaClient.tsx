@@ -11,12 +11,11 @@ import {
   FiChevronLeft,
   FiChevronRight
 } from "react-icons/fi";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import LikeButton from "@/components/ui/LikeButton";
 import { motion } from "framer-motion";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import BeritaTourClient from "@/components/berita/BeritaTourClient";
-import { useTranslatedList, useTranslatedContent } from "@/hooks/useTranslatedContent";
 
 interface NewsItem {
   id: string;
@@ -32,7 +31,6 @@ interface NewsItem {
 
 export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] }) {
   const t = useTranslations("BeritaPage");
-  const locale = useLocale();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -85,19 +83,14 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
     fetchLatestStats();
   }, [initialNews]);
 
-  // Auto-translate konten dinamis dari database
-  const { data: translatedNews, isTranslating: isTranslatingNews } = useTranslatedList(
-    allNews,
-    "berita",
-    locale,
-    ["title", "excerpt"]
-  );
+  // Konten berita ditampilkan dalam bahasa asli (tanpa terjemahan)
+  const isTranslatingNews = false;
 
-  // Compute featured, popular, and grid news dynamically (dari data yang sudah diterjemahkan)
-  const featuredNews = translatedNews.length > 0 ? translatedNews[0] : null;
+  // Compute featured, popular, and grid news dynamically
+  const featuredNews = allNews.length > 0 ? allNews[0] : null;
   // All news appear in the grid (not sliced), so even 1 article is visible
-  const newsList = translatedNews;
-  const popularNews = [...translatedNews].sort((a, b) => b.views - a.views).slice(0, 3);
+  const newsList = allNews;
+  const popularNews = [...allNews].sort((a, b) => b.views - a.views).slice(0, 3);
 
   // Categories list
   const categories = ["Semua", "Berita", "Artikel", "Rilis", "Kampus", "Pendidikan"];

@@ -14,6 +14,7 @@ import {
   FiGrid
 } from "react-icons/fi";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import SafeLottie from "@/components/ui/SafeLottie";
 import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo } from "@/utils/dateFormatter";
 import AgendaCalendarView from "@/components/agenda/AgendaCalendarView";
@@ -35,11 +36,11 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
 
   // Auto-translate konten agenda
   const { data: translatedAgendas, isTranslating: isTranslatingAgendas } = useTranslatedList(
-    rawAgendas, "agenda_kegiatan", locale, ["title", "description", "location"]
+    rawAgendas, "agenda_kegiatan", locale, ["title", "description", "category", "location"]
   );
   // Auto-translate konten volunteer (dengan TTL jika ada deadline)
   const { data: translatedVolunteers, isTranslating: isTranslatingVolunteers } = useTranslatedList(
-    rawVolunteers, "agenda_kegiatan", locale, ["title", "description"]
+    rawVolunteers, "agenda_kegiatan", locale, ["title", "description", "category", "location"]
   );
 
   // Gabungkan kembali
@@ -360,19 +361,31 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                 })}
               </div>
             ) : (
-              <div className="bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2">
-                <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
-                  <DotLottieReact src="/animations/Calendar.lottie" loop autoplay />
+              searchQuery ? (
+                <div className="bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2">
+                  <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
+                    <SafeLottie src="/animations/Calendar.lottie" loop autoplay />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-on-background">
+                    {t("noEventSearchTitle")}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
+                    {`${t("noEventSearchDesc")} "${searchQuery}".`}
+                  </p>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-on-background">
-                  {searchQuery ? t("noEventSearchTitle") : t("noEventEmptyTitle")}
-                </h3>
-                <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
-                  {searchQuery
-                    ? `${t("noEventSearchDesc")} "${searchQuery}".`
-                    : t("noEventEmptyDesc")}
-                </p>
-              </div>
+              ) : (
+                <Link href="/agenda" className="group block bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2 hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer">
+                  <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
+                    <SafeLottie src="/animations/Calendar.lottie" loop autoplay />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-on-background group-hover:text-primary transition-colors">
+                    {t("noEventEmptyTitle")}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
+                    {t("noEventEmptyDesc")}
+                  </p>
+                </Link>
+              )
             )}
 
             {/* Pagination Controls */}
@@ -433,19 +446,31 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                 </div>
               ))
             ) : filteredVolunteers.length === 0 ? (
-              <div className="col-span-1 md:col-span-2 bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2 w-full">
-                <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
-                  <DotLottieReact src="/animations/Calendar.lottie" loop autoplay />
+              volunteerSearchQuery ? (
+                <div className="col-span-1 md:col-span-2 bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2 w-full">
+                  <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
+                    <SafeLottie src="/animations/Calendar.lottie" loop autoplay />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-on-background">
+                    {t("noVolSearchTitle")}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
+                    {`${t("noVolSearchDesc")} "${volunteerSearchQuery}".`}
+                  </p>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-on-background">
-                  {volunteerSearchQuery ? t("noVolSearchTitle") : t("noVolEmptyTitle")}
-                </h3>
-                <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
-                  {volunteerSearchQuery
-                    ? `${t("noVolSearchDesc")} "${volunteerSearchQuery}".`
-                    : t("noVolEmptyDesc")}
-                </p>
-              </div>
+              ) : (
+                <Link href="/agenda?tab=volunteer" className="group col-span-1 md:col-span-2 block bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2 w-full hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer">
+                  <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
+                    <SafeLottie src="/animations/Calendar.lottie" loop autoplay />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-on-background group-hover:text-primary transition-colors">
+                    {t("noVolEmptyTitle")}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
+                    {t("noVolEmptyDesc")}
+                  </p>
+                </Link>
+              )
             ) : (
               filteredVolunteers.map((vol, index) => (
                 <motion.div

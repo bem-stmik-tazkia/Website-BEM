@@ -3,6 +3,8 @@
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import SafeLottie from "@/components/ui/SafeLottie";
 
 // ============================================================
 // DATA (Now fetched dynamically)
@@ -190,7 +192,7 @@ function Pagination({
 export default function DokumentasiClient({ initialData }: { initialData: any[] }) {
   const t = useTranslations("DokumentasiPage");
   const locale = useLocale();
-  const { useTranslatedList } = require("@/hooks/useTranslatedContent");
+
   const [activeFilter, setActiveFilter] = useState("semua");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -397,40 +399,53 @@ export default function DokumentasiClient({ initialData }: { initialData: any[] 
         ) : paginated.length === 0 ? (
           (() => {
             const isUserSearching = searchQuery.trim() !== "" || debouncedSearchQuery.trim() !== "" || activeFilter !== "semua";
-            return (
+            return isUserSearching ? (
               <div className="bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-lg mx-auto flex flex-col items-center justify-center gap-2 my-8">
                 <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
-                  <DotLottieReact
+                  <SafeLottie
                     src="/animations/Calendar.lottie"
                     loop
                     autoplay
                   />
                 </div>
                 <h3 className="text-lg md:text-xl font-bold text-on-background">
-                  {isUserSearching ? t("notFoundTitle") : t("emptyTitle")}
+                  {t("notFoundTitle")}
                 </h3>
                 <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
-                  {isUserSearching
-                    ? searchQuery
-                      ? t("notFoundDescSearch", { query: searchQuery })
-                      : t("notFoundDescFilter", { filter: activeFilter })
-                    : t("emptyDesc")}
+                  {searchQuery
+                    ? t("notFoundDescSearch", { query: searchQuery })
+                    : t("notFoundDescFilter", { filter: activeFilter })}
                 </p>
-                {isUserSearching && (
-                  <button
-                    onClick={() => {
-                      setActiveFilter("semua");
-                      setSearchQuery("");
-                      setCurrentPage(1);
-                    }}
-                    className="mt-3 inline-flex items-center gap-2 bg-primary text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md"
-                  >
-                    {t("resetBtn")}
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    setActiveFilter("semua");
+                    setSearchQuery("");
+                    setCurrentPage(1);
+                  }}
+                  className="mt-3 inline-flex items-center gap-2 bg-primary text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md"
+                >
+                  {t("resetBtn")}
+                </button>
               </div>
+            ) : (
+              <Link href="/dokumentasi" className="group block bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-lg mx-auto flex flex-col items-center justify-center gap-2 my-8 hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer">
+                <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
+                  <SafeLottie
+                    src="/animations/Calendar.lottie"
+                    loop
+                    autoplay
+                  />
+                </div>
+                <h3 className="text-lg md:text-xl font-bold text-on-background group-hover:text-primary transition-colors">
+                  {t("emptyTitle")}
+                </h3>
+                <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
+                  {t("emptyDesc")}
+                </p>
+              </Link>
             );
           })()
+
         ) : (
           <div className="flex flex-row overflow-x-auto gap-5 pb-4 scrollbar-hide sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:pb-0 flex-nowrap sm:flex-wrap">
             {paginated.map((item) => (
