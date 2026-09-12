@@ -77,7 +77,9 @@
     "noPastTitle": "Belum Ada Arsip",
     "noPastDesc": "Belum ada data dokumentasi kegiatan.",
     "viewDocs": "Lihat Dokumentasi",
-    "detailEvent": "Detail Event"
+    "detailEvent": "Detail Event",
+    "notOpenedYet": "Pendaftaran belum dibuka!",
+    "loading": "Membuka halaman..."
   },
   "News": {
     "title": "Berita Sorotan",

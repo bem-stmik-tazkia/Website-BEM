@@ -95,7 +95,9 @@
     "noPastTitle": "No Archives Yet",
     "noPastDesc": "There is no event documentation data yet.",
     "viewDocs": "View Documentation",
-    "detailEvent": "Event Details"
+    "detailEvent": "Event Details",
+    "notOpenedYet": "Registration hasn't opened yet!",
+    "loading": "Loading page..."
   },
   "News": {
     "title": "Featured News",

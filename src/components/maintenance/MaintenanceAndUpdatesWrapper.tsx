@@ -341,7 +341,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
                   </div>
 
                   {/* Lottie Animation (Car.lottie) */}
-                  <div className="w-48 h-36 sm:w-56 sm:h-40 mx-auto relative mt-1 mb-4 select-none pointer-events-none">
+                  <div className="w-32 h-24 sm:w-40 sm:h-28 mx-auto relative mt-1 mb-3 select-none pointer-events-none">
                     <SafeLottie
                       src="/animations/car.lottie"
                       loop
@@ -350,22 +350,27 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
                   </div>
 
                   {/* Title */}
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-on-surface mb-2 text-center leading-tight">
+                  <h2 className="text-lg sm:text-xl font-extrabold text-on-surface mb-1.5 text-center leading-tight">
                     {translatedTitle || releaseNotes.title || t("whatsNewTitle")}
                   </h2>
-                  <p className="text-xs text-on-surface-variant text-center mb-5">
+                  <p className="text-[11px] sm:text-xs text-on-surface-variant text-center mb-4">
                     {t("whatsNewDesc")}
                   </p>
 
                   {/* Features List */}
-                  <div className="bg-surface-variant/20 border border-outline-variant/20 rounded-2xl p-4 mb-6 max-h-56 overflow-y-auto space-y-2.5">
-                    {(translatedFeatures.length > 0 ? translatedFeatures : releaseNotes.features ?? []).length > 0 ? (
+                  <div className="bg-surface-variant/20 border border-outline-variant/20 rounded-2xl p-3 sm:p-4 mb-5 max-h-48 overflow-y-auto space-y-2">
+                    {locale !== "id" && translatedFeatures.length === 0 ? (
+                       <div className="flex items-center justify-center py-4 space-x-2 animate-pulse">
+                         <div className="w-4 h-4 rounded-full bg-primary/20"></div>
+                         <p className="text-xs text-on-surface-variant">Translating features...</p>
+                       </div>
+                    ) : (translatedFeatures.length > 0 ? translatedFeatures : releaseNotes.features ?? []).length > 0 ? (
                       (translatedFeatures.length > 0 ? translatedFeatures : releaseNotes.features).map((feat, idx) => (
-                        <div key={idx} className="flex items-start gap-2.5">
-                          <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                            <FiCheckCircle size={13} />
+                        <div key={idx} className="flex items-start gap-2">
+                          <div className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                            <FiCheckCircle size={10} />
                           </div>
-                          <p className="text-xs sm:text-sm font-semibold text-on-surface leading-snug">
+                          <p className="text-[11px] sm:text-xs font-medium text-on-surface leading-relaxed">
                             {feat}
                           </p>
                         </div>

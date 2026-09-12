@@ -40,6 +40,9 @@ export default function EventVolunteer({
   const { data: translatedVolunteer } = useTranslatedList(volunteerOpportunities, "agenda_kegiatan", locale, ["title", "description", "category", "location"]);
   const { data: translatedPast } = useTranslatedList(pastEvents, "agenda_kegiatan", locale, ["title", "description", "category", "location"]);
 
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(1);
   const [paused, setPaused] = useState(false);
@@ -614,13 +617,27 @@ export default function EventVolunteer({
                         vToday.setHours(0, 0, 0, 0);
                         const vDaysLeftStart = Math.ceil((vStart.getTime() - vToday.getTime()) / (1000 * 60 * 60 * 24));
                         
-                        if (!isDraggingVol.current && vDaysLeftStart <= 0) {
-                          router.push(`/agenda/${volunteerOpportunities[activeVol].id}`);
+                        if (!isDraggingVol.current) {
+                          if (vDaysLeftStart > 0) {
+                            setToastMessage(t("notOpenedYet"));
+                            setTimeout(() => setToastMessage(null), 3500);
+                          } else {
+                            setLoadingId(volunteerOpportunities[activeVol].id);
+                            router.push(`/agenda/${volunteerOpportunities[activeVol].id}`);
+                          }
                         }
                       }}
                     >
                       <img src={volunteerOpportunities[activeVol].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={volunteerOpportunities[activeVol].title} className="w-full h-full object-cover select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
+                      
+                      {/* Loading Overlay */}
+                      {loadingId === volunteerOpportunities[activeVol].id && (
+                        <div className="absolute inset-0 z-[40] bg-surface/40 backdrop-blur-sm flex flex-col items-center justify-center">
+                          <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin mb-2" />
+                          <span className="text-white text-[10px] font-bold tracking-wider">{t("loading") || "Loading..."}</span>
+                        </div>
+                      )}
                       {volunteerOpportunities[activeVol].is_urgent && (
                         <div className="absolute top-4 left-4 bg-red-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm z-20">
                           <FiClock size={10} /> {t("urgent")}
@@ -791,6 +808,20 @@ export default function EventVolunteer({
 
         </div>
       </div>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 20, x: "-50%" }}
+            className="fixed bottom-8 left-1/2 z-[9999] bg-surface text-on-surface border border-outline-variant/30 shadow-2xl px-5 py-2.5 rounded-full font-bold text-xs flex items-center gap-2"
+          >
+            <FiClock className="text-secondary" /> {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

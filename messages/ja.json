@@ -77,7 +77,9 @@
     "noPastTitle": "まだアーカイブはありません",
     "noPastDesc": "イベントのドキュメントデータはまだありません。",
     "viewDocs": "ドキュメントを見る",
-    "detailEvent": "イベントの詳細"
+    "detailEvent": "イベントの詳細",
+    "notOpenedYet": "登録はまだ始まっていません！",
+    "loading": "ページを読み込んでいます..."
   },
   "News": {
     "title": "注目のニュース",
