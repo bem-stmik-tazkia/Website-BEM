@@ -37,18 +37,12 @@ function simpleHash(str: string): string {
   return Math.abs(hash).toString(36);
 }
 
-/**
- * Panggil MyMemory API untuk menerjemahkan teks
- */
-async function callMyMemoryAPI(text: string, targetLang: string): Promise<string | null> {
+async function callGoogleTranslateAPI(text: string, targetLang: string): Promise<string | null> {
   if (!text || !text.trim()) return text;
   
-  const sourceLangCode = LANG_MAP["id"] || "id-ID";
-  const targetLangCode = LANG_MAP[targetLang] || targetLang;
-  const langPair = `${sourceLangCode}|${targetLangCode}`;
-  
+  // Kode bahasa Google Translate sama dengan kode targetLang ("en", "ar", "ja", dsb)
   try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=id&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
     const response = await fetch(url, {
       signal: AbortSignal.timeout(5000), // Timeout 5 detik
     });
@@ -57,14 +51,9 @@ async function callMyMemoryAPI(text: string, targetLang: string): Promise<string
     
     const data = await response.json();
     
-    if (data.responseStatus === 200 && data.responseData?.translatedText) {
-      // MyMemory kadang mengembalikan teks HTML-encoded
-      const translated = data.responseData.translatedText
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'");
+    if (data && data[0]) {
+      // Gabungkan semua kalimat yang diterjemahkan
+      const translated = data[0].map((item: any) => item[0]).join("");
       return translated;
     }
     
@@ -117,9 +106,9 @@ export async function translateContent(
     // Tabel belum ada atau error lain — lanjut ke API
   }
 
-  // 2. Terjemahkan via MyMemory API
+  // 2. Terjemahkan via Google API
   try {
-    const translated = await callMyMemoryAPI(originalText, targetLang);
+    const translated = await callGoogleTranslateAPI(originalText, targetLang);
     
     if (!translated || translated === originalText) {
       return originalText; // Fallback ke teks asli
