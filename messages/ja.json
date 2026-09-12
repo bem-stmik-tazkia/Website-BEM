@@ -291,7 +291,19 @@
     "noEventOnDate": "この日付に活動はありません。",
     "noDeadlineOnDate": "この日付に締切はありません。",
     "pickDateEventDesc": "ドットのある日付を選択して活動予定を表示します。",
-    "pickDateRecruitDesc": "ドットのある日付を選択して採用締切を表示します。"
+    "pickDateRecruitDesc": "ドットのある日付を選択して採用締切を表示します。",
+    "upcomingTitle": "今後の予定",
+    "upcomingDeadlineTitle": "今後の期限",
+    "pastTitle": "過去",
+    "pastDeadlineTitle": "過ぎた期限",
+    "emptyUpcomingEvent": "今後のイベントはありません",
+    "emptyUpcomingDeadline": "今後の期限はありません",
+    "emptyPastEvent": "過去のイベントはありません",
+    "emptyPastDeadline": "過ぎた期限はありません",
+    "todayLabel": "今日",
+    "daysLeft": "残り{days}日",
+    "otherEvents": "他{count}件のイベント",
+    "otherDocs": "他{count}件 · ドキュメントを見る"
   },
   "VisiMisi": {
     "title": "ビジョン＆ミッション",
@@ -719,7 +731,7 @@
     "studyProgram": "学習プログラム",
     "cohort": "コホート（入学年度）",
     "contactEmail": "連絡先メール（任意）",
-    "contactEmailDesc": "コラボレーションや採用のための公開メール。",
+    "contactEmailDesc": "プロフィールのコラボレーションボタンがクリックされた際に使用されるメールアドレスです。",
     "bio": "短い自己紹介",
     "bioPlaceholder": "あなたの興味や主な専門分野について少し教えてください...",
     "statusSkills": "ステータスとスキル",
@@ -761,8 +773,7 @@
     "angkatanOption": "{year}期",
     "fromGoogleBadge": "Googleアカウントから",
     "contactEmailHintBadge": "個人メール推奨",
-    "contactEmailPlaceholder": "例: namakamu@gmail.com",
-    "contactEmailDesc": "プロフィールのコラボレーションボタンがクリックされた際に使用されるメールアドレスです。"
+    "contactEmailPlaceholder": "例: namakamu@gmail.com"
   },
   "StatusBadge": {
     "openForCollab": "コラボ受付中",

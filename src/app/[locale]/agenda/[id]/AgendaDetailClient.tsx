@@ -82,6 +82,18 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
   const [selectedPhotos, setSelectedPhotos] = React.useState<Set<number>>(new Set());
   const [isDownloading, setIsDownloading] = React.useState(false);
 
+  const validGallery = React.useMemo(() => agenda.gallery ? agenda.gallery.filter(Boolean) : [], [agenda.gallery]);
+
+  const [currentBannerIndex, setCurrentBannerIndex] = React.useState(0);
+  
+  React.useEffect(() => {
+    if (validGallery.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % validGallery.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [validGallery]);
+
   const downloadImage = async (url: string, index: number) => {
     try {
       const response = await fetch(url);
@@ -170,11 +182,18 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
           className="relative w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/8] min-h-[260px] sm:min-h-0 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 flex flex-col justify-end bg-surface-variant"
         >
-          {/* Background Image */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url('${agenda.image_url || (agenda.gallery && agenda.gallery.length > 0 ? agenda.gallery[0] : "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80")}')` }}
-          ></div>
+          {/* Background Image Carousel */}
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={currentBannerIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }}
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url('${validGallery.length > 0 ? validGallery[currentBannerIndex] : (agenda.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80")}')` }}
+            />
+          </AnimatePresence>
           
           {/* Gradient Overlay for Text Readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/60 to-transparent pointer-events-none"></div>
@@ -415,36 +434,57 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
               </div>
               
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                {agenda.gallery.filter(Boolean).map((imgUrl, idx) => (
-                  <div 
-                    key={idx} 
-                    onClick={() => {
-                      if (isSelectionMode) toggleSelection(idx);
-                      else setLightboxIndex(idx);
-                    }}
-                    className={`relative rounded-xl overflow-hidden shadow-sm border aspect-square bg-surface-variant cursor-pointer group transition-all duration-200 ${isSelectionMode && selectedPhotos.has(idx) ? 'border-primary ring-2 ring-primary ring-offset-1 scale-[0.96]' : 'border-outline-variant/20 hover:scale-[1.02]'}`}
-                  >
-                    <img src={imgUrl} alt={`Dokumentasi ${idx + 1}`} className="w-full h-full object-cover" />
-                    
-                    {/* Selection overlay */}
-                    {isSelectionMode && (
-                      <div className="absolute inset-0 bg-black/10 flex items-start justify-end p-2">
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedPhotos.has(idx) ? 'bg-primary border-primary text-white' : 'bg-white/70 border-white text-transparent'}`}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                {validGallery.slice(0, 6).map((imgUrl, idx) => {
+                  const isLastItem = idx === 5;
+                  const remainingCount = validGallery.length - 6;
+                  const showOverlay = isLastItem && remainingCount > 0;
+                  
+                  return (
+                    <div 
+                      key={idx} 
+                      onClick={() => {
+                        if (isSelectionMode) toggleSelection(idx);
+                        else setLightboxIndex(idx);
+                      }}
+                      className={`relative rounded-xl overflow-hidden shadow-sm border aspect-square bg-surface-variant cursor-pointer group transition-all duration-200 ${isSelectionMode && selectedPhotos.has(idx) ? 'border-primary ring-2 ring-primary ring-offset-1 scale-[0.96]' : 'border-outline-variant/20 hover:scale-[1.02]'}`}
+                    >
+                      <img src={imgUrl} alt={`Dokumentasi ${idx + 1}`} className="w-full h-full object-cover" />
+                      
+                      {/* +X Overlay */}
+                      {showOverlay && !isSelectionMode && (
+                        <div 
+                          className="absolute inset-0 z-10 backdrop-blur-md flex items-center justify-center"
+                          style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}
+                        >
+                          <span 
+                            className="text-white text-4xl md:text-5xl font-black tracking-widest"
+                            style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8)' }}
+                          >
+                            +{remainingCount}
+                          </span>
                         </div>
-                      </div>
-                    )}
-                    
-                    {/* Hover overlay for preview (only if not selecting) */}
-                    {!isSelectionMode && (
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center">
-                        <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 group-hover:scale-100">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                      )}
+                      
+                      {/* Selection overlay */}
+                      {isSelectionMode && (
+                        <div className="absolute inset-0 bg-black/10 flex items-start justify-end p-2">
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedPhotos.has(idx) ? 'bg-primary border-primary text-white' : 'bg-white/70 border-white text-transparent'}`}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      )}
+                      
+                      {/* Hover overlay for preview (only if not selecting and not overlay) */}
+                      {!isSelectionMode && !showOverlay && (
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center">
+                          <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 group-hover:scale-100">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -480,44 +520,54 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
 
       {/* ── LIGHTBOX MODAL ────────────────────────────────────────── */}
       {lightboxIndex !== null && agenda.gallery && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm">
-          <button 
-            onClick={() => setLightboxIndex(null)}
-            className="absolute top-4 right-4 md:top-6 md:right-8 text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <FiX size={32} />
-          </button>
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/95 backdrop-blur-xl">
           
-          <button 
-            onClick={() => downloadImage(agenda.gallery!.filter(Boolean)[lightboxIndex], lightboxIndex)}
-            className="absolute top-4 right-16 md:top-6 md:right-24 flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl transition-colors font-semibold shadow-sm"
-          >
-            <FiDownload size={18} /> <span className="hidden sm:inline">{t("download")} {t("photos")}</span>
-          </button>
-          
-          <div className="absolute bottom-6 left-0 right-0 text-center text-white/80 font-bold tracking-widest text-sm bg-black/50 w-fit mx-auto px-4 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
-            {lightboxIndex + 1} / {agenda.gallery.filter(Boolean).length}
+          {/* Header Bar */}
+          <div className="w-full flex justify-between items-center px-4 md:px-8 py-4 z-20 shrink-0 bg-gradient-to-b from-black/80 to-transparent">
+            {/* Counter */}
+            <div className="text-white/90 font-medium text-sm md:text-base tracking-widest bg-white/10 px-4 py-1.5 rounded-full">
+              {lightboxIndex + 1} / {validGallery.length}
+            </div>
+            
+            {/* Actions */}
+            <div className="flex items-center gap-2 md:gap-4">
+              <button 
+                onClick={() => downloadImage(validGallery[lightboxIndex], lightboxIndex)}
+                className="flex items-center gap-2 hover:bg-white/20 text-white px-3 md:px-4 py-2 rounded-lg transition-colors font-semibold"
+                title={t("download")}
+              >
+                <FiDownload size={20} /> <span className="hidden sm:inline">{t("download")}</span>
+              </button>
+              <div className="w-px h-6 bg-white/20 hidden md:block"></div>
+              <button 
+                onClick={() => setLightboxIndex(null)}
+                className="text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/20 transition-colors"
+              >
+                <FiX size={28} />
+              </button>
+            </div>
           </div>
-
-          <button 
-            onClick={handlePrev}
-            className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4 hover:bg-white/10 rounded-full transition-colors hidden sm:block z-10"
-          >
-            <FiChevronLeft size={40} />
-          </button>
           
-          <button 
-            onClick={handleNext}
-            className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4 hover:bg-white/10 rounded-full transition-colors hidden sm:block z-10"
-          >
-            <FiChevronRight size={40} />
-          </button>
-          
+          {/* Main Image Area */}
           <div 
-            className="relative w-full max-w-6xl h-[85vh] px-4 md:px-24 flex items-center justify-center cursor-pointer"
+            className="relative w-full flex-grow flex items-center justify-center cursor-pointer overflow-hidden px-4 md:px-12"
             onClick={handleNext}
             style={{ perspective: "1200px" }}
           >
+            <button 
+              onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+              className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-3 hover:bg-white/10 rounded-full transition-colors hidden sm:block z-10"
+            >
+              <FiChevronLeft size={48} />
+            </button>
+            
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleNext(); }}
+              className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-3 hover:bg-white/10 rounded-full transition-colors hidden sm:block z-10"
+            >
+              <FiChevronRight size={48} />
+            </button>
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={lightboxIndex}
@@ -528,31 +578,42 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={1}
-                onDragEnd={(e, { offset, velocity }) => {
+                onDragEnd={(e, { offset }) => {
                   e.stopPropagation();
-                  const swipe = offset.x;
-                  
-                  if (swipe < -50) {
-                    // Swiped left -> show next
-                    handleNext();
-                  } else if (swipe > 50) {
-                    // Swiped right -> show prev
-                    handlePrev();
-                  }
+                  if (offset.x < -50) handleNext();
+                  else if (offset.x > 50) handlePrev();
                 }}
-                className="bg-white p-3 md:p-5 pb-12 md:pb-16 rounded-xl shadow-2xl flex flex-col items-center border border-white/20 cursor-grab active:cursor-grabbing"
+                className="flex items-center justify-center cursor-grab active:cursor-grabbing w-full h-full p-4"
                 style={{ transformStyle: "preserve-3d", backfaceVisibility: "hidden" }}
-                onClick={(e) => e.stopPropagation()} // Prevent triggering the wrapper's onClick
+                onClick={(e) => e.stopPropagation()} 
               >
                 <img 
-                  src={agenda.gallery.filter(Boolean)[lightboxIndex]} 
+                  src={validGallery[lightboxIndex]} 
                   alt={`Preview ${lightboxIndex + 1}`} 
-                  className="w-auto h-auto max-w-[100%] max-h-[70vh] object-contain shadow-inner rounded-sm pointer-events-none" 
+                  className="w-auto h-auto object-contain drop-shadow-2xl pointer-events-none rounded-xl border border-white/10 bg-black/20" 
+                  style={{ maxWidth: '80vw', maxHeight: '65vh' }}
                   draggable={false}
                 />
               </motion.div>
             </AnimatePresence>
           </div>
+
+          {/* Thumbnail Strip (Bottom) */}
+          <div className="w-full h-24 md:h-32 bg-black/60 border-t border-white/5 flex items-center overflow-x-auto shrink-0 z-20 px-2 md:px-6 hide-scrollbar py-3" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex gap-2 md:gap-3 mx-auto px-2">
+              {validGallery.map((imgUrl, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx); }}
+                  className={`relative shrink-0 h-16 md:h-20 snap-center rounded-lg overflow-hidden transition-all duration-300 ${idx === lightboxIndex ? 'border-2 border-primary ring-2 ring-primary ring-offset-2 ring-offset-black scale-105 z-10 brightness-110 shadow-lg shadow-primary/20' : 'border border-white/10 opacity-40 hover:opacity-100 hover:scale-100'}`}
+                  style={{ aspectRatio: '16/10' }}
+                >
+                  <img src={imgUrl} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover pointer-events-none" />
+                </button>
+              ))}
+            </div>
+          </div>
+          
         </div>
       )}
     </div>

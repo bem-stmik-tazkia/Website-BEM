@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { useTranslations, useLocale } from "next-intl";
 import { FiCalendar, FiMapPin, FiClock, FiArrowRight, FiZap, FiCheckCircle, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,6 +32,7 @@ export default function EventVolunteer({
 }: EventVolunteerProps) {
   const t = useTranslations("Event");
   const locale = useLocale();
+  const router = useRouter();
 
   // Auto-translate konten event dari database
   const { data: translatedLive } = useTranslatedList(liveEvents, "agenda_kegiatan", locale, ["title", "description", "category", "location"]);
@@ -45,6 +46,9 @@ export default function EventVolunteer({
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isDraggingUpcoming = useRef(false);
+  const isDraggingVol = useRef(false);
+  const isDraggingPast = useRef(false);
 
   const AUTOPLAY_INTERVAL = 5000;
 
@@ -473,18 +477,23 @@ export default function EventVolunteer({
                       animate="center"
                       exit="exit"
                       transition={{ type: "spring", stiffness: 300, damping: 32, mass: 0.9 }}
-                      className="absolute inset-0"
+                      className="absolute inset-0 cursor-pointer"
                       style={{ willChange: "transform" }}
                       drag="x"
                       dragConstraints={{ left: 0, right: 0 }}
                       dragElastic={0.08}
+                      onDragStart={() => { isDraggingUpcoming.current = true; }}
                       onDragEnd={(_, info) => {
                         if (info.offset.x < -40) next();
                         if (info.offset.x > 40) prev();
+                        setTimeout(() => { isDraggingUpcoming.current = false; }, 100);
+                      }}
+                      onClick={() => {
+                        if (!isDraggingUpcoming.current) {
+                          router.push(`/agenda/${upcomingEvents[active].id}`);
+                        }
                       }}
                     >
-                      {/* Full-cover link agar seluruh banner bisa diklik */}
-                      <Link href={`/agenda/${upcomingEvents[active].id}`} className="absolute inset-0 z-10" aria-label={upcomingEvents[active].title} />
                       <img src={upcomingEvents[active].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={upcomingEvents[active].title} className="w-full h-full object-cover select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                       <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-20">
@@ -587,18 +596,29 @@ export default function EventVolunteer({
                       animate="center"
                       exit="exit"
                       transition={{ type: "spring", stiffness: 300, damping: 32, mass: 0.9 }}
-                      className="absolute inset-0"
+                      className="absolute inset-0 cursor-pointer"
                       style={{ willChange: "transform" }}
                       drag="x"
                       dragConstraints={{ left: 0, right: 0 }}
                       dragElastic={0.08}
+                      onDragStart={() => { isDraggingVol.current = true; }}
                       onDragEnd={(_, info) => {
                         if (info.offset.x < -40) nextVol();
                         if (info.offset.x > 40) prevVol();
+                        setTimeout(() => { isDraggingVol.current = false; }, 100);
+                      }}
+                      onClick={() => {
+                        const vStart = volunteerOpportunities[activeVol].date ? new Date(volunteerOpportunities[activeVol].date) : new Date();
+                        vStart.setHours(0, 0, 0, 0);
+                        const vToday = new Date();
+                        vToday.setHours(0, 0, 0, 0);
+                        const vDaysLeftStart = Math.ceil((vStart.getTime() - vToday.getTime()) / (1000 * 60 * 60 * 24));
+                        
+                        if (!isDraggingVol.current && vDaysLeftStart <= 0) {
+                          router.push(`/agenda/${volunteerOpportunities[activeVol].id}`);
+                        }
                       }}
                     >
-                      {/* Full-cover link agar seluruh banner bisa diklik */}
-                      <Link href={`/agenda/${volunteerOpportunities[activeVol].id}`} className="absolute inset-0 z-10" aria-label={volunteerOpportunities[activeVol].title} />
                       <img src={volunteerOpportunities[activeVol].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={volunteerOpportunities[activeVol].title} className="w-full h-full object-cover select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
                       {volunteerOpportunities[activeVol].is_urgent && (
@@ -614,9 +634,26 @@ export default function EventVolunteer({
                           <FiClock size={11} className="text-secondary" />
                           <span>{t("deadline")}: <span className="font-semibold text-white">{formatDateToIndo(volunteerOpportunities[activeVol].deadline)}</span></span>
                         </div>
-                        <Link href={`/agenda/${volunteerOpportunities[activeVol].id}`} className="relative z-30 bg-primary text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-1.5">
-                          <FiCheckCircle size={12} /> {t("applyPos")}
-                        </Link>
+                        {(() => {
+                          const vStart = volunteerOpportunities[activeVol].date ? new Date(volunteerOpportunities[activeVol].date) : new Date();
+                          vStart.setHours(0, 0, 0, 0);
+                          const vToday = new Date();
+                          vToday.setHours(0, 0, 0, 0);
+                          const vDaysLeftStart = Math.ceil((vStart.getTime() - vToday.getTime()) / (1000 * 60 * 60 * 24));
+                          
+                          if (vDaysLeftStart > 0) {
+                            return (
+                              <span className="relative z-30 bg-surface-variant/50 text-white text-[10px] font-bold px-4 py-2 rounded-full inline-flex items-center gap-1.5 border border-white/20 backdrop-blur-sm cursor-not-allowed">
+                                Buka dlm {vDaysLeftStart} Hari
+                              </span>
+                            );
+                          }
+                          return (
+                            <Link href={`/agenda/${volunteerOpportunities[activeVol].id}`} className="relative z-30 bg-primary text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-1.5">
+                              <FiCheckCircle size={12} /> {t("applyPos")}
+                            </Link>
+                          );
+                        })()}
                       </div>
                     </motion.div>
                   </AnimatePresence>
@@ -704,18 +741,23 @@ export default function EventVolunteer({
                       animate="center"
                       exit="exit"
                       transition={{ type: "spring", stiffness: 300, damping: 32, mass: 0.9 }}
-                      className="absolute inset-0"
+                      className="absolute inset-0 cursor-pointer"
                       style={{ willChange: "transform" }}
                       drag="x"
                       dragConstraints={{ left: 0, right: 0 }}
                       dragElastic={0.08}
+                      onDragStart={() => { isDraggingPast.current = true; }}
                       onDragEnd={(_, info) => {
                         if (info.offset.x < -40) nextPast();
                         if (info.offset.x > 40) prevPast();
+                        setTimeout(() => { isDraggingPast.current = false; }, 100);
+                      }}
+                      onClick={() => {
+                        if (!isDraggingPast.current) {
+                          router.push(`/agenda/${pastEvents[activePast].id}`);
+                        }
                       }}
                     >
-                      {/* Full-cover link agar seluruh banner bisa diklik */}
-                      <Link href={`/agenda/${pastEvents[activePast].id}`} className="absolute inset-0 z-10" aria-label={pastEvents[activePast].title} />
                       <img src={pastEvents[activePast].image_url || pastEvents[activePast].gallery?.[0] || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={pastEvents[activePast].title} className="w-full h-full object-cover grayscale select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
                       <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-20">

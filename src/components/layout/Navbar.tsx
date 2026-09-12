@@ -250,7 +250,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
 
       {/* Top Loading Progress Line for Instant Page Route Feedback */}
       {pendingPath !== null && (
-        <div className="fixed top-0 left-0 right-0 z-[100] h-1.5 bg-gradient-to-r from-primary via-secondary to-primary animate-pulse shadow-md" />
+        <div className="fixed top-0 left-0 right-0 z-[100] h-1.5 bg-secondary shadow-md" />
       )}
 
       {/* Mobile & Tablet Bottom Navigation Bar */}

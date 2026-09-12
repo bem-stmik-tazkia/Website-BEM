@@ -6,6 +6,15 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  const pathname = request.nextUrl.pathname;
+
+  // Untuk halaman publik (bukan /admin dan /login), skip getUser() ke Supabase API.
+  // Ini mencegah error "fetch failed" saat koneksi lambat, dan mempercepat halaman publik.
+  const isProtectedRoute = pathname.startsWith('/admin') || pathname === '/login';
+  if (!isProtectedRoute) {
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

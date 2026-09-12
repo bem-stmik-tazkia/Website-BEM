@@ -291,7 +291,19 @@
     "noEventOnDate": "Tidak ada kegiatan pada tanggal ini.",
     "noDeadlineOnDate": "Tidak ada deadline pada tanggal ini.",
     "pickDateEventDesc": "Pilih tanggal dengan indikator titik untuk melihat jadwal kegiatan.",
-    "pickDateRecruitDesc": "Pilih tanggal dengan indikator titik untuk melihat deadline rekrutmen."
+    "pickDateRecruitDesc": "Pilih tanggal dengan indikator titik untuk melihat deadline rekrutmen.",
+    "upcomingTitle": "Yang Akan Datang",
+    "upcomingDeadlineTitle": "Deadline Mendatang",
+    "pastTitle": "Yang Sudah Lewat",
+    "pastDeadlineTitle": "Deadline Terlewat",
+    "emptyUpcomingEvent": "Belum ada agenda yang akan datang",
+    "emptyUpcomingDeadline": "Belum ada deadline mendatang",
+    "emptyPastEvent": "Belum ada agenda yang selesai",
+    "emptyPastDeadline": "Belum ada deadline yang terlewat",
+    "todayLabel": "Hari ini",
+    "daysLeft": "{days}h",
+    "otherEvents": "+{count} event lainnya",
+    "otherDocs": "+{count} lainnya · Lihat dokumentasi"
   },
   "VisiMisi": {
     "title": "Visi & Misi",
@@ -719,7 +731,7 @@
     "studyProgram": "Program Studi",
     "cohort": "Angkatan",
     "contactEmail": "Email Kontak (Opsional)",
-    "contactEmailDesc": "Email publik untuk kolaborasi atau rekrutmen.",
+    "contactEmailDesc": "Email ini yang akan dihubungi saat orang mengklik tombol kolaborasi di profilmu.",
     "bio": "Bio Singkat",
     "bioPlaceholder": "Ceritakan sedikit tentang minat dan fokus utamamu...",
     "statusSkills": "Status & Keahlian",
@@ -761,8 +773,7 @@
     "angkatanOption": "Angkatan {year}",
     "fromGoogleBadge": "Dari akun Google",
     "contactEmailHintBadge": "Disarankan email pribadi",
-    "contactEmailPlaceholder": "Misal: namakamu@gmail.com",
-    "contactEmailDesc": "Email ini yang akan dihubungi saat orang mengklik tombol kolaborasi di profilmu."
+    "contactEmailPlaceholder": "Misal: namakamu@gmail.com"
   },
   "StatusBadge": {
     "openForCollab": "Open for Collab",

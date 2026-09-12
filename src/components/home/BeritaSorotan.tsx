@@ -7,19 +7,30 @@ import { createClient } from "@/utils/supabase/server";
 import BeritaSorotanClient from "./BeritaSorotanClient";
 
 export default async function BeritaSorotan() {
-  const supabase = await createClient();
   const t = await getTranslations("News");
-  
-  // Fetch the latest news
-  const { data: featuredNews, error } = await supabase
-    .from('berita')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') {
-    console.error("Error fetching sorotan:", error);
+  let featuredNews = null;
+
+  try {
+    const supabase = await createClient();
+
+    // Fetch the latest published news
+    const { data, error } = await supabase
+      .from('berita')
+      .select('*')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') {
+      // Supabase error objects tidak bisa di-serialize langsung via console.error
+      console.error("Error fetching sorotan:", JSON.stringify(error, null, 2));
+    } else {
+      featuredNews = data;
+    }
+  } catch (err: any) {
+    console.error("Unexpected error in BeritaSorotan:", err?.message ?? err);
   }
 
   return (

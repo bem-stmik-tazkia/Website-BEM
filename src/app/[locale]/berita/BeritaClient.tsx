@@ -14,8 +14,9 @@ import {
 import { useTranslations } from "next-intl";
 import LikeButton from "@/components/ui/LikeButton";
 import { motion } from "framer-motion";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import SafeLottie from "@/components/ui/SafeLottie";
 import BeritaTourClient from "@/components/berita/BeritaTourClient";
+import { createClient } from "@/utils/supabase/client";
 
 interface NewsItem {
   id: string;
@@ -59,7 +60,6 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
     if (initialNews.length === 0) return;
     const fetchLatestStats = async () => {
       try {
-        const { createClient } = await import('@/utils/supabase/client');
         const supabase = createClient();
         const ids = initialNews.map(n => n.id);
         const { data } = await supabase
@@ -332,8 +332,8 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 const isUserSearching = searchQuery.trim() !== "" || debouncedSearchQuery.trim() !== "" || selectedCategory !== "Semua";
                 return (
                   <div className="bg-white border border-outline-variant/30 rounded-3xl p-8 text-center shadow-sm flex flex-col items-center justify-center gap-2">
-                    <div className="w-40 h-40 sm:w-48 sm:h-48 relative -my-3">
-                      <DotLottieReact
+                    <div className="w-40 h-40 sm:w-48 sm:h-48 relative -my-3 mx-auto">
+                      <SafeLottie
                         src="/animations/Social Media Marketing announcement.lottie"
                         loop
                         autoplay

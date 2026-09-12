@@ -50,8 +50,15 @@ export default async function RootLayout({
   // side is the easiest way to get started
   const messages = await getMessages();
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getSession();
+    user = data.session?.user || null;
+  } catch {
+    // Tangani error jaringan (walaupun getSession membaca cookie lokal)
+    user = null;
+  }
 
   return (
     <html lang={locale} className="light" suppressHydrationWarning>

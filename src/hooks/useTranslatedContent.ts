@@ -39,13 +39,15 @@ export function useTranslatedContent<T extends Record<string, any>>(
   const prevLangRef = useRef<string>(targetLang);
   const prevIdRef = useRef<string>("");
 
+  // Gunakan ID item sebagai dependency yang stabil, bukan object-nya
+  const contentId = item ? String(item[contentIdField] ?? "") : "";
+
   useEffect(() => {
     if (!item) {
       setTranslated(null);
       return;
     }
 
-    const contentId = String(item[contentIdField] ?? "");
     const isSameContent = contentId === prevIdRef.current;
     const isSameLang = targetLang === prevLangRef.current;
 
@@ -87,7 +89,8 @@ export function useTranslatedContent<T extends Record<string, any>>(
       .finally(() => {
         setIsTranslating(false);
       });
-  }, [item, targetLang]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentId, targetLang]);
 
   return { data: translated, isTranslating };
 }
@@ -105,23 +108,33 @@ export function useTranslatedList<T extends Record<string, any>>(
 ): TranslateResult<T[]> {
   const [translated, setTranslated] = useState<T[]>(items);
   const [isTranslating, setIsTranslating] = useState(false);
-  const prevLangRef = useRef<string>(targetLang);
+  // Track last processed signature to avoid re-running on same data
+  const prevSignatureRef = useRef<string>("");
+
+  // Buat signature stabil berupa string primitif dari ID-ID item
+  // Ini AMAN sebagai dependency karena string selalu dibandingkan by value
+  const itemsIdString = items.map(i => String(i[contentIdField] ?? "")).join(",");
 
   useEffect(() => {
+    const signature = targetLang + ":" + itemsIdString;
+
     if (!items || items.length === 0) {
       setTranslated([]);
+      prevSignatureRef.current = signature;
       return;
     }
 
+    // Skip jika tidak ada perubahan
+    if (signature === prevSignatureRef.current) return;
+    prevSignatureRef.current = signature;
+
     if (targetLang === "id") {
       setTranslated(items);
-      prevLangRef.current = targetLang;
       return;
     }
 
     setIsTranslating(true);
     setTranslated(items);
-    prevLangRef.current = targetLang;
 
     Promise.all(
       items.map(async (item) => {
@@ -148,7 +161,8 @@ export function useTranslatedList<T extends Record<string, any>>(
       .then((results) => setTranslated(results))
       .catch(() => setTranslated(items))
       .finally(() => setIsTranslating(false));
-  }, [items, targetLang]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsIdString, targetLang]);
 
   return { data: translated, isTranslating };
 }

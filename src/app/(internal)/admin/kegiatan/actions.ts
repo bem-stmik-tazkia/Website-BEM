@@ -12,7 +12,7 @@ export async function getKegiatans() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching kegiatans:", error);
+    console.error("Error fetching kegiatans:", error.message || error, JSON.stringify(error));
     return [];
   }
 

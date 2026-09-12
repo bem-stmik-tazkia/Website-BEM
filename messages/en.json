@@ -309,7 +309,19 @@
     "noEventOnDate": "No activities on this date.",
     "noDeadlineOnDate": "No deadlines on this date.",
     "pickDateEventDesc": "Select a date with a dot indicator to view the activity schedule.",
-    "pickDateRecruitDesc": "Select a date with a dot indicator to view recruitment deadlines."
+    "pickDateRecruitDesc": "Select a date with a dot indicator to view recruitment deadlines.",
+    "upcomingTitle": "Upcoming",
+    "upcomingDeadlineTitle": "Upcoming Deadlines",
+    "pastTitle": "Past",
+    "pastDeadlineTitle": "Past Deadlines",
+    "emptyUpcomingEvent": "No upcoming events",
+    "emptyUpcomingDeadline": "No upcoming deadlines",
+    "emptyPastEvent": "No past events",
+    "emptyPastDeadline": "No past deadlines",
+    "todayLabel": "Today",
+    "daysLeft": "{days}d",
+    "otherEvents": "+{count} other events",
+    "otherDocs": "+{count} others · View docs"
   },
   "VisiMisi": {
     "title": "Vision & Mission",
@@ -719,7 +731,7 @@
     "studyProgram": "Study Program",
     "cohort": "Cohort",
     "contactEmail": "Contact Email (Optional)",
-    "contactEmailDesc": "Public email for collaboration or recruitment.",
+    "contactEmailDesc": "This email will be used when someone clicks the collaborate button on your profile.",
     "bio": "Short Bio",
     "bioPlaceholder": "Tell us a bit about your interests and main focus...",
     "statusSkills": "Status & Skills",
@@ -761,8 +773,7 @@
     "angkatanOption": "Batch {year}",
     "fromGoogleBadge": "From Google account",
     "contactEmailHintBadge": "Personal email recommended",
-    "contactEmailPlaceholder": "e.g. yourname@gmail.com",
-    "contactEmailDesc": "This email will be used when someone clicks the collaborate button on your profile."
+    "contactEmailPlaceholder": "e.g. yourname@gmail.com"
   },
   "StatusBadge": {
     "openForCollab": "Open for Collab",

@@ -291,7 +291,19 @@
     "noEventOnDate": "لا توجد أنشطة في هذا التاريخ.",
     "noDeadlineOnDate": "لا توجد مواعيد نهائية في هذا التاريخ.",
     "pickDateEventDesc": "حدد تاريخاً بمؤشر نقطة لعرض جدول الأنشطة.",
-    "pickDateRecruitDesc": "حدد تاريخاً بمؤشر نقطة لعرض المواعيد النهائية للتوظيف."
+    "pickDateRecruitDesc": "حدد تاريخاً بمؤشر نقطة لعرض المواعيد النهائية للتوظيف.",
+    "upcomingTitle": "القادم",
+    "upcomingDeadlineTitle": "المواعيد النهائية القادمة",
+    "pastTitle": "السابق",
+    "pastDeadlineTitle": "المواعيد النهائية السابقة",
+    "emptyUpcomingEvent": "لا توجد أحداث قادمة",
+    "emptyUpcomingDeadline": "لا توجد مواعيد نهائية قادمة",
+    "emptyPastEvent": "لا توجد أحداث سابقة",
+    "emptyPastDeadline": "لا توجد مواعيد نهائية سابقة",
+    "todayLabel": "اليوم",
+    "daysLeft": "{days}يوم",
+    "otherEvents": "+{count} أحداث أخرى",
+    "otherDocs": "+{count} أخرى · عرض الوثائق"
   },
   "VisiMisi": {
     "title": "الرؤية والرسالة",
@@ -719,7 +731,7 @@
     "studyProgram": "البرنامج الدراسي",
     "cohort": "الدفعة",
     "contactEmail": "البريد الإلكتروني للاتصال (اختياري)",
-    "contactEmailDesc": "البريد الإلكتروني العام للتعاون أو التوظيف.",
+    "contactEmailDesc": "سيتم استخدام هذا البريد عندما ينقر شخص على زر التعاون في ملفك الشخصي.",
     "bio": "نبذة مختصرة",
     "bioPlaceholder": "أخبرنا قليلاً عن اهتماماتك وتركيزك الرئيسي...",
     "statusSkills": "الحالة والمهارات",
@@ -761,8 +773,7 @@
     "angkatanOption": "الدفعة {year}",
     "fromGoogleBadge": "من حساب Google",
     "contactEmailHintBadge": "يُفضل البريد الشخصي",
-    "contactEmailPlaceholder": "مثال: namakamu@gmail.com",
-    "contactEmailDesc": "سيتم استخدام هذا البريد عندما ينقر شخص على زر التعاون في ملفك الشخصي."
+    "contactEmailPlaceholder": "مثال: namakamu@gmail.com"
   },
   "StatusBadge": {
     "openForCollab": "متاح للتعاون",

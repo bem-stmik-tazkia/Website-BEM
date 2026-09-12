@@ -58,18 +58,41 @@ export default function KegiatanFormPage() {
 
   useEffect(() => {
     const draftKey = `kegiatan_draft_${id || 'new'}`;
-    const saved = localStorage.getItem(draftKey);
-    if (saved) {
-      try {
-        setFormData(JSON.parse(saved));
-        if (!toastShown.current) {
-          toast("Draft tersimpan dimuat ulang.", "success");
-          toastShown.current = true;
-        }
-      } catch(e) {}
-    }
 
-    if (id) {
+    if (!id) {
+      // Untuk form BARU: hanya muat draft jika user sedang refresh halaman
+      // (bukan navigasi baru). Ini dideteksi via sessionStorage flag.
+      const sessionFlag = sessionStorage.getItem(`kegiatan_form_session_${draftKey}`);
+      if (sessionFlag) {
+        // User sedang refresh → muat draft
+        const saved = localStorage.getItem(draftKey);
+        if (saved) {
+          try {
+            setFormData(JSON.parse(saved));
+            if (!toastShown.current) {
+              toast("Draft tersimpan dimuat ulang.", "success");
+              toastShown.current = true;
+            }
+          } catch(e) {}
+        }
+      } else {
+        // Navigasi baru → hapus draft lama, mulai bersih
+        localStorage.removeItem(draftKey);
+      }
+      setIsFetching(false);
+    } else {
+      // Untuk form EDIT: selalu coba muat draft tersimpan
+      const saved = localStorage.getItem(draftKey);
+      if (saved) {
+        try {
+          setFormData(JSON.parse(saved));
+          if (!toastShown.current) {
+            toast("Draft tersimpan dimuat ulang.", "success");
+            toastShown.current = true;
+          }
+        } catch(e) {}
+      }
+
       getKegiatanById(id).then((data) => {
         if (data) {
           if (data.date) data.date = data.date.split('T')[0];
@@ -83,15 +106,16 @@ export default function KegiatanFormPage() {
         }
         setIsFetching(false);
       });
-    } else {
-      setIsFetching(false);
     }
   }, [id, toast]);
 
+  // Simpan draft ke localStorage + set sessionStorage flag agar tau user sedang mid-session
   useEffect(() => {
     if (isFetching) return;
     const draftKey = `kegiatan_draft_${id || 'new'}`;
     localStorage.setItem(draftKey, JSON.stringify(formData));
+    // Tandai bahwa user sedang aktif mengisi form ini
+    sessionStorage.setItem(`kegiatan_form_session_${draftKey}`, "1");
   }, [formData, id, isFetching]);
 
   const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
@@ -285,6 +309,7 @@ export default function KegiatanFormPage() {
       
       const draftKey = `kegiatan_draft_${id || 'new'}`;
       localStorage.removeItem(draftKey);
+      sessionStorage.removeItem(`kegiatan_form_session_${draftKey}`);
 
       success("Data kegiatan berhasil disimpan!");
       

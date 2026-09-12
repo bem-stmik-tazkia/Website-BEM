@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import SafeLottie from "@/components/ui/SafeLottie";
 import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -248,11 +248,10 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
 
               {/* Lottie Animation */}
               <div className="w-56 h-56 sm:w-60 sm:h-60 relative select-none pointer-events-none -mt-2">
-                <DotLottieReact
+                <SafeLottie
                   src="/animations/Maintenance.lottie"
                   loop
                   autoplay
-                  renderConfig={{ devicePixelRatio: 2 }}
                 />
               </div>
 
@@ -343,7 +342,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
 
                   {/* Lottie Animation (Car.lottie) */}
                   <div className="w-48 h-36 sm:w-56 sm:h-40 mx-auto relative mt-1 mb-4 select-none pointer-events-none">
-                    <DotLottieReact
+                    <SafeLottie
                       src="/animations/car.lottie"
                       loop
                       autoplay

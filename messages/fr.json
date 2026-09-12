@@ -291,7 +291,19 @@
     "noEventOnDate": "Aucune activité à cette date.",
     "noDeadlineOnDate": "Aucune date limite à cette date.",
     "pickDateEventDesc": "Sélectionnez une date avec un point pour voir le programme.",
-    "pickDateRecruitDesc": "Sélectionnez une date avec un point pour voir les dates limites."
+    "pickDateRecruitDesc": "Sélectionnez une date avec un point pour voir les dates limites.",
+    "upcomingTitle": "À venir",
+    "upcomingDeadlineTitle": "Dates limites à venir",
+    "pastTitle": "Passé",
+    "pastDeadlineTitle": "Dates limites passées",
+    "emptyUpcomingEvent": "Aucun événement à venir",
+    "emptyUpcomingDeadline": "Aucune date limite à venir",
+    "emptyPastEvent": "Aucun événement passé",
+    "emptyPastDeadline": "Aucune date limite passée",
+    "todayLabel": "Aujourd'hui",
+    "daysLeft": "{days}j",
+    "otherEvents": "+{count} autres événements",
+    "otherDocs": "+{count} autres · Voir les docs"
   },
   "VisiMisi": {
     "title": "Vision & Mission",
@@ -719,7 +731,7 @@
     "studyProgram": "Programme d'Études",
     "cohort": "Cohorte",
     "contactEmail": "Email de Contact (Facultatif)",
-    "contactEmailDesc": "Email public pour la collaboration ou le recrutement.",
+    "contactEmailDesc": "Cet email sera utilisé lorsqu'une personne clique sur le bouton de collaboration sur votre profil.",
     "bio": "Courte Bio",
     "bioPlaceholder": "Parlez-nous un peu de vos intérêts et de votre domaine de concentration...",
     "statusSkills": "Statut et Compétences",
@@ -761,8 +773,7 @@
     "angkatanOption": "Promotion {year}",
     "fromGoogleBadge": "Depuis le compte Google",
     "contactEmailHintBadge": "Email personnel recommandé",
-    "contactEmailPlaceholder": "ex. votrenom@gmail.com",
-    "contactEmailDesc": "Cet email sera utilisé lorsqu'une personne clique sur le bouton de collaboration sur votre profil."
+    "contactEmailPlaceholder": "ex. votrenom@gmail.com"
   },
   "StatusBadge": {
     "openForCollab": "Ouvert à la collaboration",
