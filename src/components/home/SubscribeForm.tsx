@@ -11,7 +11,7 @@ export default function SubscribeForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [turnstileToken, setTurnstileToken] = useState("");
-  const turnstileRef = useRef<any>();
+  const turnstileRef = useRef<any>(null);
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
