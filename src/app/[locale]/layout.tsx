@@ -9,21 +9,31 @@ import SiteVisitorTracker from "@/components/SiteVisitorTracker";
 import "../globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://bem.stmik.tazkia.ac.id"),
   title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
   description: "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
   keywords: ["BEM STMIK Tazkia", "Badan Eksekutif Mahasiswa", "STMIK Tazkia", "Agenda", "Berita", "Dokumentasi", "Kabinet"],
   openGraph: {
     title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
     description: "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
-    url: "https://bem-stmik-tazkia.vercel.app",
+    url: "https://bem.stmik.tazkia.ac.id",
     siteName: "BEM STMIK Tazkia",
     locale: "id_ID",
     type: "website",
+    images: [
+      {
+        url: "/images/logo2.webp",
+        width: 1200,
+        height: 630,
+        alt: "Logo BEM STMIK Tazkia",
+      }
+    ]
   },
   twitter: {
     card: "summary_large_image",
     title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
     description: "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
+    images: ["/images/logo2.webp"],
   },
 };
 
