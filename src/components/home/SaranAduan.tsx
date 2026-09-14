@@ -51,7 +51,7 @@ export default function SaranAduan() {
   }, [isFormFocused]);
 
   const [turnstileToken, setTurnstileToken] = useState("");
-  const turnstileRef = React.useRef<any>();
+  const turnstileRef = React.useRef<any>(null);
   
   interface Bubble {
     id: number;

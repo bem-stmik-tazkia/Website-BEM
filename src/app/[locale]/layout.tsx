@@ -50,6 +50,9 @@ export const metadata: Metadata = {
     description: "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
     images: ["/images/logo2.webp"],
   },
+  verification: {
+    google: "NKdorF0xIjBVNflNzjeJir-GhYKYleLPm3C-OVY1gqM",
+  },
 };
 
 import { NextIntlClientProvider } from 'next-intl';
