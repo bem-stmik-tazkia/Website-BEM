@@ -29,10 +29,6 @@ export async function recordView(
       return false;
     }
 
-    if (counted) {
-      revalidatePath('/', 'layout');
-    }
-
     return counted ?? false;
   }
 
@@ -41,7 +37,6 @@ export async function recordView(
   const { data } = await supabase.from(table).select('views').eq('id', id).single();
   if (data) {
     await supabase.from(table).update({ views: (data.views || 0) + 1 }).eq('id', id);
-    revalidatePath('/', 'layout');
     return true;
   }
   return false;
