@@ -22,7 +22,6 @@ import { formatDateToIndo } from "@/utils/dateFormatter";
 import AgendaCalendarView from "@/components/agenda/AgendaCalendarView";
 import AgendaUpcomingPast from "@/components/agenda/AgendaUpcomingPast";
 import AgendaTourClient from "@/components/agenda/AgendaTourClient";
-import { useTranslations, useLocale } from "next-intl";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
