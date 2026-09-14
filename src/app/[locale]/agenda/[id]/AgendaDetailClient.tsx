@@ -387,7 +387,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
                 <FiInfo className="text-primary" size={20} /> {t("detailInfo")}
               </h3>
               
-              <div className="text-on-surface-variant text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+              <div className="text-on-surface-variant text-sm md:text-base leading-relaxed whitespace-pre-wrap break-words max-w-full overflow-hidden">
                 {agenda.description}
               </div>
             </div>

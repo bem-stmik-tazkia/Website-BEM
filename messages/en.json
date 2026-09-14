@@ -980,5 +980,18 @@
       "grid_title": "Album Collection",
       "grid_desc": "Click on one of these albums (cards) to see the full photo collection of that event. The number of photos is shown in the top right corner of the card."
     }
+  },
+  "Subscribe": {
+    "title": "Don't Miss Out!",
+    "desc": "Get the latest news, committee info, and volunteer opportunities from BEM STMIK Tazkia right to your inbox.",
+    "placeholder": "Enter campus email (@student.stmik.tazkia.ac.id)",
+    "errorEmpty": "Email cannot be empty",
+    "errorDomain": "Please use a valid campus email (@student.stmik.tazkia.ac.id or @stmik.tazkia.ac.id)",
+    "errorCaptcha": "Please complete the security verification",
+    "captchaError": "Captcha error. Please reload the page.",
+    "btnLoading": "Processing...",
+    "btnSubscribe": "Subscribe Now",
+    "successMsg": "Success! Please check your inbox for the verification link.",
+    "privacy": "We respect your privacy. You can unsubscribe at any time."
   }
 }

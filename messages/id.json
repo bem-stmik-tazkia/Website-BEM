@@ -980,5 +980,18 @@
       "grid_title": "Kumpulan Album",
       "grid_desc": "Klik pada salah satu album (kartu) ini untuk melihat koleksi foto lengkap dari event tersebut. Jumlah foto tertera di pojok kanan atas kartu."
     }
+  },
+  "Subscribe": {
+    "title": "Jangan Ketinggalan Info!",
+    "desc": "Dapatkan berita terbaru, info kepanitiaan, dan lowongan volunteer BEM STMIK Tazkia langsung ke emailmu.",
+    "placeholder": "Masukkan email kampus (@student.stmik.tazkia.ac.id)",
+    "errorEmpty": "Email tidak boleh kosong",
+    "errorDomain": "Gunakan email kampus yang valid (@student.stmik.tazkia.ac.id atau @stmik.tazkia.ac.id)",
+    "errorCaptcha": "Mohon selesaikan verifikasi keamanan",
+    "captchaError": "Captcha error. Silakan muat ulang halaman.",
+    "btnLoading": "Memproses...",
+    "btnSubscribe": "Berlangganan Sekarang",
+    "successMsg": "Sukses! Silakan periksa kotak masuk emailmu untuk link verifikasi.",
+    "privacy": "Kami menjaga privasimu. Kamu bisa berhenti berlangganan kapan saja."
   }
 }

@@ -103,16 +103,16 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           : "bg-transparent border-transparent"
           }`}
       >
-        <div className="flex justify-between items-center h-20 md:h-24 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto gap-4">
-          <Link href="/" className="flex items-center gap-2 md:gap-3 group shrink-0">
-            <div className="flex items-center gap-1.5 md:gap-2">
+        <div className="flex justify-between items-center h-20 md:h-24 px-3 sm:px-4 md:px-6 lg:px-8 max-w-7xl mx-auto gap-2 sm:gap-4">
+          <Link href="/" className="flex items-center gap-1.5 sm:gap-2 md:gap-3 group shrink-0 min-w-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
               <Image
                 alt="BEM STMIK Tazkia Logo 1"
                 src="/images/logo.webp"
                 width={64}
                 height={64}
                 priority
-                className="h-10 w-auto md:h-12 lg:h-14 object-contain group-hover:scale-105 transition-transform duration-300"
+                className="h-8 sm:h-10 w-auto md:h-12 lg:h-14 object-contain group-hover:scale-105 transition-transform duration-300"
               />
               <Image
                 alt="BEM STMIK Tazkia Logo 2"
@@ -120,18 +120,18 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 width={64}
                 height={64}
                 priority
-                className="h-10 w-auto md:h-12 lg:h-14 object-contain group-hover:scale-105 transition-transform duration-300"
+                className="h-8 sm:h-10 w-auto md:h-12 lg:h-14 object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </div>
-            <div className="flex flex-row items-center gap-1.5">
+            <div className="flex flex-row items-center gap-1 sm:gap-1.5 shrink min-w-0">
               <span
-                className={`font-bold leading-none text-lg md:text-xl transition-colors duration-300 ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"
+                className={`font-bold leading-none text-[15px] sm:text-lg md:text-xl transition-colors duration-300 ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"
                   }`}
               >
                 BEM STMIK
               </span>
               <span
-                className={`font-bold leading-none text-lg md:text-xl transition-colors duration-300 ${isScrolled ? "text-secondary" : isHome ? "text-white" : "text-secondary"
+                className={`font-bold leading-none text-[15px] sm:text-lg md:text-xl transition-colors duration-300 ${isScrolled ? "text-secondary" : isHome ? "text-white" : "text-secondary"
                   }`}
               >
                 Tazkia

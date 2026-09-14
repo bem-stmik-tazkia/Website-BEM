@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import LayoutClientWrapper from "@/components/layout/LayoutClientWrapper";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -7,6 +8,20 @@ import Script from "next/script";
 import NextTopLoader from 'nextjs-toploader';
 import SiteVisitorTracker from "@/components/SiteVisitorTracker";
 import "../globals.css";
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-outfit",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://bem.stmik.tazkia.ac.id"),
@@ -71,21 +86,15 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang={locale} className="light" suppressHydrationWarning>
+    <html lang={locale} className={`light ${plusJakartaSans.variable} ${outfit.variable}`} suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
           rel="stylesheet"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
       </head>
-      <body className="bg-background text-on-background font-sans antialiased transition-colors duration-300" suppressHydrationWarning>
+      <body className={`${plusJakartaSans.className} bg-background text-on-background antialiased transition-colors duration-300 overflow-x-hidden w-full`} suppressHydrationWarning>
         <NextTopLoader
           color="#f2791e"
           initialPosition={0.08}

@@ -7,6 +7,7 @@ import { FiCalendar, FiMapPin, FiClock, FiArrowRight, FiZap, FiCheckCircle, FiCh
 import { motion, AnimatePresence } from "framer-motion";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import SafeLottie from "@/components/ui/SafeLottie";
+import Image from "next/image";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 
@@ -497,7 +498,7 @@ export default function EventVolunteer({
                         }
                       }}
                     >
-                      <img src={upcomingEvents[active].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={upcomingEvents[active].title} className="w-full h-full object-cover select-none" draggable={false} />
+                      <Image src={upcomingEvents[active].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={upcomingEvents[active].title} fill sizes="(max-width: 768px) 100vw, 33vw" className="w-full h-full object-cover select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                       <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-20">
                         {(translatedUpcoming[active] ?? upcomingEvents[active]).category}
@@ -628,7 +629,7 @@ export default function EventVolunteer({
                         }
                       }}
                     >
-                      <img src={volunteerOpportunities[activeVol].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={volunteerOpportunities[activeVol].title} className="w-full h-full object-cover select-none" draggable={false} />
+                      <Image src={volunteerOpportunities[activeVol].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={volunteerOpportunities[activeVol].title} fill sizes="(max-width: 768px) 100vw, 33vw" className="w-full h-full object-cover select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
                       
                       {/* Loading Overlay */}
@@ -775,7 +776,7 @@ export default function EventVolunteer({
                         }
                       }}
                     >
-                      <img src={pastEvents[activePast].image_url || pastEvents[activePast].gallery?.[0] || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={pastEvents[activePast].title} className="w-full h-full object-cover grayscale select-none" draggable={false} />
+                      <Image src={pastEvents[activePast].image_url || pastEvents[activePast].gallery?.[0] || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={pastEvents[activePast].title} fill sizes="(max-width: 768px) 100vw, 33vw" className="w-full h-full object-cover grayscale select-none" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
                       <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-20">
                         {(translatedPast[activePast] ?? pastEvents[activePast]).category}

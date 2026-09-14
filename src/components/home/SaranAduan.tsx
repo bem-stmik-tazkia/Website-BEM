@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 
 
@@ -16,23 +17,7 @@ const CHAT_COLORS = [
   "bg-teal-100 text-teal-800 border-teal-200",
 ];
 
-const EMOJI_DB = [
-  { emoji: '🍎', name: 'Buah Apel' },
-  { emoji: '🍌', name: 'Buah Pisang' },
-  { emoji: '🍉', name: 'Buah Semangka' },
-  { emoji: '🍇', name: 'Buah Anggur' },
-  { emoji: '🍓', name: 'Buah Stroberi' },
-  { emoji: '🍔', name: 'Burger' },
-  { emoji: '🍕', name: 'Pizza' },
-  { emoji: '🚗', name: 'Mobil Merah' },
-  { emoji: '⚽', name: 'Bola Sepak' },
-  { emoji: '🎸', name: 'Gitar' },
-  { emoji: '🐶', name: 'Wajah Anjing' },
-  { emoji: '🐱', name: 'Wajah Kucing' },
-  { emoji: '🐼', name: 'Wajah Panda' },
-  { emoji: '🚀', name: 'Roket' },
-  { emoji: '🌻', name: 'Bunga Matahari' }
-];
+
 
 export default function SaranAduan() {
   const [isLoading, setIsLoading] = useState(false);
@@ -65,10 +50,8 @@ export default function SaranAduan() {
     isFormFocusedRef.current = isFormFocused;
   }, [isFormFocused]);
 
-  const [captchaOptions, setCaptchaOptions] = useState<typeof EMOJI_DB>([]);
-  const [captchaTarget, setCaptchaTarget] = useState<typeof EMOJI_DB[0] | null>(null);
-  const [isCaptchaSolved, setIsCaptchaSolved] = useState(false);
-  const [captchaError, setCaptchaError] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = React.useRef<any>();
   
   interface Bubble {
     id: number;
@@ -77,18 +60,7 @@ export default function SaranAduan() {
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const bubbleIdRef = React.useRef(0);
 
-  const generateCaptcha = () => {
-    setIsCaptchaSolved(false);
-    setCaptchaError(false);
-    const shuffled = [...EMOJI_DB].sort(() => 0.5 - Math.random());
-    const selectedOptions = shuffled.slice(0, 5);
-    setCaptchaOptions(selectedOptions);
-    const target = selectedOptions[Math.floor(Math.random() * selectedOptions.length)];
-    setCaptchaTarget(target);
-  };
-
   useEffect(() => {
-    generateCaptcha();
     
     // Initial bubbles
     setBubbles([
@@ -123,19 +95,7 @@ export default function SaranAduan() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleCaptchaClick = (item: typeof EMOJI_DB[0]) => {
-    if (isCaptchaSolved) return;
-    
-    if (item.emoji === captchaTarget?.emoji) {
-      setIsCaptchaSolved(true);
-      setCaptchaError(false);
-    } else {
-      setCaptchaError(true);
-      setTimeout(() => {
-        generateCaptcha();
-      }, 1500);
-    }
-  };
+
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -156,8 +116,8 @@ export default function SaranAduan() {
       hasError = true;
     }
 
-    if (!isCaptchaSolved) {
-      setErrorMsg(t("errorCaptcha"));
+    if (!turnstileToken) {
+      setErrorMsg(t("errorCaptcha")); // Please complete the security check
       return;
     }
 
@@ -184,54 +144,29 @@ export default function SaranAduan() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
-        .from("saran_aduan")
-        .insert([{ nama: finalNama, kategori, deskripsi }]);
+      const res = await fetch("/api/saran-aduan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nama: finalNama,
+          kategori,
+          deskripsi,
+          turnstileToken
+        })
+      });
 
-      if (error) {
-        throw error;
-      }
+      const data = await res.json();
 
-      // Try to forward to Google Sheets if Webhook URL is set
-      try {
-        const { data: settingData } = await supabase
-          .from('system_settings')
-          .select('value')
-          .eq('key', 'google_sheets_webhook_url')
-          .maybeSingle();
-        
-        if (settingData && settingData.value) {
-          await fetch('/api/saran-webhook', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              webhookUrl: settingData.value,
-              payload: {
-                nama: finalNama,
-                kategori,
-                deskripsi,
-                tanggal: new Date().toLocaleString('id-ID', { 
-                  day: 'numeric', 
-                  month: 'long', 
-                  year: 'numeric', 
-                  hour: '2-digit', 
-                  minute: '2-digit',
-                  second: '2-digit'
-                }) + ' WIB'
-              }
-            })
-          });
-        }
-      } catch (webhookErr) {
-        console.error("Gagal mengirim ke Excel Webhook:", webhookErr);
-        // Kita tidak menggagalkan proses form jika excel gagal
+      if (!res.ok) {
+        throw new Error(data.error || "Terjadi kesalahan sistem");
       }
 
       setSuccessMsg(t("successSent"));
       setNama("");
       setKategori("");
       setDeskripsi("");
-      generateCaptcha(); // Reset puzzle untuk pengiriman berikutnya
+      turnstileRef.current?.reset();
+      setTurnstileToken("");
       
       // Set cooldown di localStorage
       localStorage.setItem("last_saran_submit_time", Date.now().toString());
@@ -381,41 +316,16 @@ export default function SaranAduan() {
                 </div>
               )}
 
-            {/* Anti-Spam Puzzle */}
-            <div className={`p-4 rounded-xl border ${isCaptchaSolved ? 'bg-green-50/50 border-green-200' : captchaError ? 'bg-red-50/50 border-red-200' : 'bg-surface-variant/20 border-outline-variant/30'} transition-colors`}>
-              <div className="flex flex-col gap-2.5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className={`text-xs md:text-sm font-bold ${isCaptchaSolved ? 'text-green-700' : captchaError ? 'text-red-600' : 'text-on-surface'}`}>
-                      {isCaptchaSolved ? t("securitySuccess") : captchaError ? t("securityWrong") : t("securityTitle")}
-                    </h4>
-                    {!isCaptchaSolved && (
-                      <p className="text-xs text-on-surface-variant mt-0.5">
-                        {t("securityDesc")} <strong className="text-primary font-extrabold">{captchaTarget?.name}</strong>:
-                      </p>
-                    )}
-                  </div>
-                  {isCaptchaSolved && (
-                    <span className="text-[11px] font-bold text-green-600 bg-green-100 px-2.5 py-0.5 rounded-full border border-green-200">{t("verified")}</span>
-                  )}
-                </div>
-                
-                {!isCaptchaSolved && (
-                  <div className="grid grid-cols-5 gap-2 mt-1">
-                    {captchaOptions.map((item, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => handleCaptchaClick(item)}
-                        disabled={captchaError}
-                        className={`text-2xl sm:text-3xl p-2.5 sm:p-3 rounded-xl border-2 flex items-center justify-center transition-all hover:-translate-y-0.5 hover:shadow-sm active:scale-95 ${captchaError ? 'opacity-50 cursor-not-allowed border-red-200 bg-red-50' : 'bg-surface border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5'}`}
-                      >
-                        {item.emoji}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {/* Cloudflare Turnstile */}
+            <div className="flex justify-center w-full my-2 min-h-[65px]">
+              <Turnstile
+                ref={turnstileRef}
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
+                onSuccess={(token) => setTurnstileToken(token)}
+                onError={() => setErrorMsg(t("errorCaptcha"))}
+                onExpire={() => setTurnstileToken("")}
+                options={{ theme: 'light' }}
+              />
             </div>
 
             <button

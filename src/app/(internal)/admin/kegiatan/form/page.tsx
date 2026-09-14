@@ -55,6 +55,8 @@ export default function KegiatanFormPage() {
 
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+  const [sendBlast, setSendBlast] = useState(false);
+  const [isBlasting, setIsBlasting] = useState(false);
 
   useEffect(() => {
     const draftKey = `kegiatan_draft_${id || 'new'}`;
@@ -305,13 +307,41 @@ export default function KegiatanFormPage() {
     setIsLoading(true);
     
     try {
-      await saveKegiatan(dataToSave);
+      const savedData = await saveKegiatan(dataToSave);
       
       const draftKey = `kegiatan_draft_${id || 'new'}`;
       localStorage.removeItem(draftKey);
       sessionStorage.removeItem(`kegiatan_form_session_${draftKey}`);
 
       success("Data kegiatan berhasil disimpan!");
+      
+      // TRIGGER EMAIL BLAST
+      if (sendBlast && formData.is_published) {
+        setIsBlasting(true);
+        toast("Mengirim email massal ke subscriber...", "info");
+        try {
+          const res = await fetch('/api/admin/blast-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              title: dataToSave.title,
+              type: dataToSave.type,
+              date: dataToSave.date,
+              location: dataToSave.location,
+              description: dataToSave.description
+            })
+          });
+          const result = await res.json();
+          if (res.ok) {
+            toast(`Berhasil mengirim ${result.count || 0} email blast!`, "success");
+          } else {
+            showError("Gagal blast email: " + (result.error || "Unknown error"));
+          }
+        } catch (e: any) {
+          showError("Gagal blast email: " + e.message);
+        }
+        setIsBlasting(false);
+      }
       
       const dateStr = formData.date ? formData.date.split('T')[0] : "";
       const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
@@ -375,13 +405,20 @@ export default function KegiatanFormPage() {
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-on-surface">Publikasi</label>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex flex-col gap-3 mt-1">
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" name="is_published" checked={formData.is_published || false} onChange={handleChange} className="sr-only peer" />
                   <div className="w-11 h-6 bg-surface-variant/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   <span className="ml-3 text-sm font-bold text-on-surface">{formData.is_published ? "Live (Ditampilkan)" : "Draft (Disembunyikan)"}</span>
                 </label>
+                
+                {formData.is_published && (
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked={sendBlast} onChange={(e) => setSendBlast(e.target.checked)} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-surface-variant/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-secondary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+                    <span className="ml-3 text-sm font-bold text-on-surface">Kirim Email Massal ke Subscriber</span>
+                  </label>
+                )}
               </div>
             </div>
           </div>
@@ -768,15 +805,15 @@ export default function KegiatanFormPage() {
         <div className="bg-surface-container-lowest border-t border-outline-variant/30 p-6 flex justify-end">
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || isBlasting}
             className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all hover:shadow-md disabled:opacity-70"
           >
-            {isLoading ? (
+            {(isLoading || isBlasting) ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <FiSave size={18} />
             )}
-            {isLoading ? "Menyimpan..." : "Simpan Kegiatan"}
+            {isLoading ? "Menyimpan..." : isBlasting ? "Mengirim Email..." : "Simpan Kegiatan"}
           </button>
         </div>
       </form>

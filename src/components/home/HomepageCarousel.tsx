@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiArrowRight,
@@ -159,7 +160,7 @@ function VolunteerPanel() {
             className="group flex gap-3 items-center p-3 rounded-2xl bg-surface border border-outline-variant/20 hover:border-secondary/30 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 cursor-pointer"
           >
             <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-variant/30 relative">
-              <img src={vol.imgUrl} alt={vol.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              <Image src={vol.imgUrl} alt={vol.title} fill sizes="100px" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
               {vol.isUrgent && (
                 <div className="absolute top-1 left-1 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">SEGERA</div>
               )}
@@ -199,7 +200,7 @@ function EventPanel() {
             className="group flex gap-3 items-center p-3 rounded-2xl bg-surface border border-outline-variant/20 hover:border-tertiary/30 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
           >
             <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-variant/30 relative">
-              <img src={ev.imgUrl} alt={ev.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              <Image src={ev.imgUrl} alt={ev.title} fill sizes="100px" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
               {ev.isLive && (
                 <div className="absolute top-1 left-1 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 animate-pulse">
                   <FiZap size={7} /> LIVE
@@ -242,9 +243,11 @@ function DokumentasiPanel() {
             className={`group relative overflow-hidden rounded-2xl bg-surface-variant/30 ${i === 0 ? "row-span-2" : ""}`}
             style={{ minHeight: i === 0 ? "100%" : "80px" }}
           >
-            <img
+            <Image
               src={doc.imgUrl}
               alt={doc.title}
+              fill
+              sizes="(max-width: 768px) 50vw, 33vw"
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               style={{ position: "absolute", inset: 0 }}
             />

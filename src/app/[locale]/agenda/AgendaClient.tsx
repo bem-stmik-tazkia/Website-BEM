@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useMemo, Suspense } from "react";
-import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { useTranslations, useLocale } from "next-intl";
+import { Link, useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSearch,
   FiCalendar,
@@ -309,7 +311,7 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                       >
                         {/* Image */}
                         <div className="h-44 md:h-48 overflow-hidden bg-surface-variant relative shrink-0">
-                          <img src={agenda.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={agenda.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          <Image src={agenda.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={agenda.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                           <div className="absolute top-3.5 left-3.5 bg-surface/90 backdrop-blur-sm text-secondary text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider">
                             {agenda.category}
                           </div>
@@ -486,7 +488,7 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                   <div className="group bg-surface border border-outline-variant/30 rounded-2xl overflow-hidden hover:border-primary/30 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
                     {/* Image */}
                     <div className="relative aspect-[4/3] rounded-t-3xl overflow-hidden bg-surface-variant group-hover:shadow-inner">
-                      <img src={vol.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={vol.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" draggable={false} />
+                      <Image src={vol.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={vol.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" draggable={false} />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
                       {vol.is_urgent && (
                         <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
