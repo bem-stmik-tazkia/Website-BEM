@@ -40,6 +40,33 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
   const [translatedFeatures, setTranslatedFeatures] = useState<string[]>([]);
   const [translatedTitle, setTranslatedTitle] = useState("");
   const [translatedDate, setTranslatedDate] = useState("");
+  const [translatedCustomMessage, setTranslatedCustomMessage] = useState("");
+  const [translatedEstimatedTime, setTranslatedEstimatedTime] = useState("");
+
+  // Auto-translate maintenance message and estimated time
+  useEffect(() => {
+    if (!customMessage) {
+      setTranslatedCustomMessage("");
+    } else if (locale === "id") {
+      setTranslatedCustomMessage(customMessage);
+    } else {
+      translateContent("maint_msg", "system_settings", "message", customMessage, locale)
+        .then(setTranslatedCustomMessage)
+        .catch(() => setTranslatedCustomMessage(customMessage));
+    }
+  }, [customMessage, locale]);
+
+  useEffect(() => {
+    if (!estimatedTime) {
+      setTranslatedEstimatedTime("");
+    } else if (locale === "id") {
+      setTranslatedEstimatedTime(estimatedTime);
+    } else {
+      translateContent("maint_time", "system_settings", "time", estimatedTime, locale)
+        .then(setTranslatedEstimatedTime)
+        .catch(() => setTranslatedEstimatedTime(estimatedTime));
+    }
+  }, [estimatedTime, locale]);
 
   // Auto-translate feature points when locale or releaseNotes changes
   useEffect(() => {
@@ -262,7 +289,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
 
               {/* Custom / Default Description */}
               <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed mb-3">
-                {customMessage || t("defaultDesc")}
+                {translatedCustomMessage || t("defaultDesc")}
               </p>
 
               {/* Estimated Time Card */}
@@ -272,7 +299,9 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
                   <p className="text-[10px] uppercase font-extrabold tracking-wider text-on-surface-variant/70">
                     {t("estTimeLabel")}
                   </p>
-                  <p className="text-sm font-bold text-primary">{estimatedTime}</p>
+                  <p className="text-sm font-bold text-primary">
+                    {translatedEstimatedTime || <span className="animate-pulse">...</span>}
+                  </p>
                 </div>
               </div>
 
