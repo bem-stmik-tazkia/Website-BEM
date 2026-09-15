@@ -167,16 +167,16 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
               href="https://karya.bem.stmik.tazkia.ac.id"
               target="_blank"
               rel="noopener noreferrer"
-              className="relative overflow-hidden ml-2 px-5 py-2 rounded-full font-bold transition-all duration-300 flex items-center justify-center gap-1.5 hover:-translate-y-0.5 hover:shadow-lg text-white shadow-primary/30 bg-gradient-to-r from-[#F2791E] to-[#ff9b57] border border-white/20"
+              className="relative overflow-hidden ml-2 px-5 py-2 rounded-full font-bold transition-all duration-300 flex items-center justify-center gap-1.5 hover:-translate-y-0.5 hover:shadow-lg text-white shadow-primary/30 border border-white/20"
             >
-              {/* Lottie Animation Background (Selalu tampil) */}
-              <div className="absolute inset-0 w-full h-full pointer-events-none opacity-50 mix-blend-overlay flex items-center justify-center">
+              {/* Lottie Animation Background (Selalu tampil, tanpa warna dasar) */}
+              <div className="absolute inset-0 w-full h-full pointer-events-none flex items-center justify-center z-0">
                 <div className="w-[300%] h-[300%] scale-150">
                   <SafeLottie src="/animations/background.lottie" loop autoplay />
                 </div>
               </div>
               
-              <span className="relative z-10 flex items-center gap-1.5 drop-shadow-sm">
+              <span className="relative z-10 flex items-center gap-1.5 drop-shadow-md">
                 Portal Karya 
                 <span className="material-symbols-outlined text-[16px]">open_in_new</span>
               </span>
