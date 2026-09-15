@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
+import SafeLottie from "@/components/ui/SafeLottie";
 
 export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -166,16 +167,27 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
               href="https://karya.bem.stmik.tazkia.ac.id"
               target="_blank"
               rel="noopener noreferrer"
-              className={`ml-2 px-4 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-1.5 hover:-translate-y-0.5 hover:shadow-md ${
+              className={`relative overflow-hidden ml-2 px-5 py-2 rounded-full font-bold transition-all duration-300 flex items-center justify-center gap-1.5 hover:-translate-y-0.5 hover:shadow-md ${
                 isScrolled 
-                  ? "bg-gradient-to-r from-[#F2791E] to-[#ff9b57] text-white shadow-primary/20" 
+                  ? "text-white shadow-primary/20 bg-[#F2791E]" 
                   : isHome 
                     ? "bg-white text-[#F2791E] shadow-black/10 hover:bg-slate-50" 
-                    : "bg-gradient-to-r from-[#F2791E] to-[#ff9b57] text-white shadow-primary/20"
+                    : "text-white shadow-primary/20 bg-[#F2791E]"
               }`}
             >
-              Portal Karya 
-              <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+              {/* Lottie Animation Background (Only show when using orange background) */}
+              {(!isHome || isScrolled) && (
+                <div className="absolute inset-0 w-full h-full pointer-events-none opacity-40 mix-blend-overlay flex items-center justify-center">
+                  <div className="w-[300%] h-[300%] scale-150">
+                    <SafeLottie src="/animations/background.lottie" loop autoplay />
+                  </div>
+                </div>
+              )}
+              
+              <span className="relative z-10 flex items-center gap-1.5">
+                Portal Karya 
+                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+              </span>
             </a>
           </div>
 
