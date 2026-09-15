@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
+import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 
 export default function Hero() {
   const t = useTranslations("Hero");
   const containerRef = useRef<HTMLElement>(null);
-  const imageRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const hoverRef = useRef(false);
   const mouseXRef = useRef(0.5);
 
@@ -33,14 +34,14 @@ export default function Hero() {
       // Butter-smooth linear interpolation (lerp)
       currentPanX += (targetPanX - currentPanX) * 0.05;
 
-      // Apply background position directly to DOM
-      imageElement.style.backgroundPosition = `${currentPanX}% center`;
+      // Apply object position directly to DOM
+      imageElement.style.objectPosition = `${currentPanX}% center`;
 
       animationFrameId = requestAnimationFrame(update);
     };
 
     // Initial positioning
-    imageElement.style.backgroundPosition = "50% center";
+    imageElement.style.objectPosition = "50% center";
     animationFrameId = requestAnimationFrame(update);
 
     return () => {
@@ -65,11 +66,15 @@ export default function Hero() {
     >
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-black/40 z-10"></div>
-        <div
+        <Image
           ref={imageRef}
-          className="w-full h-full bg-cover bg-no-repeat origin-center will-change-[background-position]"
-          style={{ backgroundImage: "url('/images/image.webp')" }}
-        ></div>
+          src="/images/image.webp"
+          alt="BEM STMIK Tazkia Hero"
+          fill
+          priority
+          className="object-cover origin-center will-change-[object-position]"
+          style={{ objectPosition: '50% center' }}
+        />
       </div>
 
       {/* Decorative elements removed to match the clean background */}

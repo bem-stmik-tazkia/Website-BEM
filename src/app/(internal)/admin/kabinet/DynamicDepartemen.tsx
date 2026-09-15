@@ -154,7 +154,7 @@ export default function DynamicDepartemen({ departemen, onChange }: DynamicDepar
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${dept.warnaBg} ${dept.warna}`}>
-                      {dept.icon.startsWith('http') ? <img src={dept.icon} className="w-6 h-6 object-contain" alt="" /> : dept.icon || "🏢"}
+                      {dept.icon.startsWith('http') ? <img src={dept.icon} className="w-6 h-6 object-contain" alt="Icon Departemen" /> : dept.icon || "🏢"}
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-on-surface">{dept.nama || "Nama Departemen"}</h4>

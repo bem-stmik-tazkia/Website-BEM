@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { FiArrowRight, FiHeart, FiEye, FiCalendar } from "react-icons/fi";
@@ -31,10 +32,17 @@ export default function BeritaSorotanClient({ news }: BeritaSorotanClientProps) 
         className="group relative rounded-2xl md:rounded-3xl overflow-hidden shadow-md border border-outline-variant/20 bg-surface min-h-[420px] sm:min-h-[380px] md:min-h-[420px] flex flex-col justify-end transition-all duration-300 hover:shadow-xl block"
       >
         {/* Background Image with Zoom */}
-        <div
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-          style={{ backgroundImage: `url('${item.image_url}')` }}
-        ></div>
+        <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
+          {item.image_url && (
+            <Image
+              src={item.image_url}
+              alt={item.title}
+              fill
+              className="object-cover object-center"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
+            />
+          )}
+        </div>
         {/* Gradient Overlay for Text Visibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#1b4086]/95 via-[#1b4086]/70 to-[#1b4086]/30 md:to-transparent"></div>
 

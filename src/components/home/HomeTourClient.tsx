@@ -70,15 +70,6 @@ export default function HomeTourClient() {
           side: "top",
           align: "center"
         }
-      },
-      {
-        element: "#tour-login-btn",
-        popover: {
-          title: t("home.login_title"),
-          description: t("home.login_desc"),
-          side: "bottom",
-          align: "center"
-        }
       }
     ],
     autoStart: true,
