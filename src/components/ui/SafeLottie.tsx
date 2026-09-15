@@ -95,7 +95,7 @@ export default function SafeLottie({
       dotLottieRefCallback={handleRef}
       renderConfig={{
         autoResize: true,
-        devicePixelRatio: typeof window !== "undefined" ? window.devicePixelRatio : 2
+        devicePixelRatio: typeof window !== "undefined" ? Math.max(window.devicePixelRatio, 3) : 3
       }}
     />
   );
