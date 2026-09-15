@@ -7,7 +7,6 @@ import SafeLottie from "@/components/ui/SafeLottie";
 export default function LoadingScreen() {
   const [show, setShow] = useState(true);
   const [isFading, setIsFading] = useState(false);
-  const playerRef = useRef<any>(null);
 
   useEffect(() => {
     // Gunakan variabel global window untuk melacak soft navigation
