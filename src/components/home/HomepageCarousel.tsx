@@ -162,7 +162,7 @@ function VolunteerPanel() {
             <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-variant/30 relative">
               <Image src={vol.imgUrl} alt={vol.title} fill sizes="100px" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
               {vol.isUrgent && (
-                <div className="absolute top-1 left-1 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">SEGERA</div>
+                <div className="absolute top-1 left-1 bg-red-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">SEGERA</div>
               )}
             </div>
             <div className="flex-1 min-w-0">
@@ -202,7 +202,7 @@ function EventPanel() {
             <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-variant/30 relative">
               <Image src={ev.imgUrl} alt={ev.title} fill sizes="100px" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
               {ev.isLive && (
-                <div className="absolute top-1 left-1 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 animate-pulse">
+                <div className="absolute top-1 left-1 bg-red-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 animate-pulse">
                   <FiZap size={7} /> LIVE
                 </div>
               )}

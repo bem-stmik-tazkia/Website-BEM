@@ -248,7 +248,7 @@ export default function SaranAduan() {
                   <span className="material-symbols-outlined text-[20px] md:text-[24px]">lightbulb</span>
                 </div>
                 <div>
-                  <h4 className="font-headline-sm text-sm md:text-base font-bold text-on-background mb-1">{t("constructiveTitle")}</h4>
+                  <h3 className="font-headline-sm text-sm md:text-base font-bold text-on-background mb-1">{t("constructiveTitle")}</h3>
                   <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed">{t("constructiveDesc")}</p>
                 </div>
               </div>
@@ -258,7 +258,7 @@ export default function SaranAduan() {
                   <span className="material-symbols-outlined text-[20px] md:text-[24px]">report</span>
                 </div>
                 <div>
-                  <h4 className="font-headline-sm text-sm md:text-base font-bold text-on-background mb-1">{t("facilityTitle")}</h4>
+                  <h3 className="font-headline-sm text-sm md:text-base font-bold text-on-background mb-1">{t("facilityTitle")}</h3>
                   <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed">{t("facilityDesc")}</p>
                 </div>
               </div>

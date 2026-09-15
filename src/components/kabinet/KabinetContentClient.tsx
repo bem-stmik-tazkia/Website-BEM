@@ -8,6 +8,7 @@ import DepartemenCard from "@/components/kabinet/DepartemenCard";
 import ProkerIcon from "@/components/kabinet/ProkerIcon";
 import KabinetTourClient from "@/components/kabinet/KabinetTourClient";
 import { translateContentBatch } from "@/utils/translate";
+import Image from "next/image";
 
 // ─────────────────────────────────────────────
 // ICONS
@@ -239,7 +240,7 @@ export default function KabinetContentClient({ profile: rawProfile }: { profile:
       {/* ── VISI MISI & LOGO ── */}
       <section className="px-5 md:px-10 max-w-5xl mx-auto mb-20">
         <div id="tour-kabinet-visi" className="flex flex-col items-center text-center mb-16 animate-init-fade-up anim-delay-300">
-          <img src="/images/logo2.webp" alt="Logo BEM" className="w-32 h-32 object-contain mb-8 drop-shadow-md hover:scale-105 transition-transform duration-300" />
+          <Image src="/images/logo2.webp" alt="Logo BEM" width={128} height={128} className="w-32 h-32 object-contain mb-8 drop-shadow-md hover:scale-105 transition-transform duration-300" />
           <h2 className="text-3xl md:text-4xl font-extrabold text-on-background mb-4">{t("directionTitle")}</h2>
           <p className="text-on-surface-variant max-w-2xl mx-auto">
             {t("directionSubtitle")}

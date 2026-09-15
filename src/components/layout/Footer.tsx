@@ -121,7 +121,7 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="col-span-1 md:col-span-12 border-t border-white/10 mt-8 pt-8 text-center text-white/50 text-sm">
+          <div className="col-span-1 md:col-span-12 border-t border-white/10 mt-8 pt-8 text-center text-white/70 text-sm">
             © {new Date().getFullYear()} {t("copyright")}
           </div>
         </div>

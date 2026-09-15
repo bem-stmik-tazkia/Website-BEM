@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import LoadingIndicator from "./LoadingIndicator";
 import SafeLottie from "@/components/ui/SafeLottie";
+import Image from "next/image";
 
 export default function LoadingScreen() {
   const [show, setShow] = useState(true);
@@ -51,7 +52,7 @@ export default function LoadingScreen() {
             loop={false} 
             className="w-full h-full" 
             fallback={
-              <img src="/images/logo2.webp" alt="Loading" className="w-24 h-24 object-contain animate-pulse opacity-80" />
+              <Image src="/images/logo2.webp" alt="Loading" width={96} height={96} priority className="w-24 h-24 object-contain animate-pulse opacity-80" />
             }
           />
         </div>

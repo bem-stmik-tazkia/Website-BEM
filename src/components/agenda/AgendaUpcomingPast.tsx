@@ -164,7 +164,7 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                        <span
                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
                            isLive
-                               ? "bg-red-500 text-white"
+                               ? "bg-red-600 text-white"
                                : daysLeft <= 3
                                ? "bg-amber-500/20 text-amber-700"
                                : `${color.bg} ${color.text}`

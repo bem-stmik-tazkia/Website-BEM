@@ -277,7 +277,7 @@ export default function EventVolunteer({
         {/* Section Label */}
         <div className="flex items-center gap-3 mb-6">
           <h2 className="text-xl font-bold text-on-background">{t("liveEvent")}</h2>
-          <span className="flex items-center gap-1.5 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+          <span className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
             <FiZap size={11} /> {t("liveBadge")} ({liveEvents.length})
           </span>
         </div>
@@ -639,7 +639,7 @@ export default function EventVolunteer({
                         </div>
                       )}
                       {volunteerOpportunities[activeVol].is_urgent && (
-                        <div className="absolute top-4 left-4 bg-red-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm z-20">
+                        <div className="absolute top-4 left-4 bg-red-600 text-white text-[9px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm z-20">
                           <FiClock size={10} /> {t("urgent")}
                         </div>
                       )}
