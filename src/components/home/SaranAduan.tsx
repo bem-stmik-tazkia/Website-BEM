@@ -45,9 +45,11 @@ export default function SaranAduan() {
   const [deskripsi, setDeskripsi] = useState("");
   const [isFormFocused, setIsFormFocused] = useState(false);
   const isFormFocusedRef = React.useRef(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   React.useEffect(() => {
     isFormFocusedRef.current = isFormFocused;
+    if (isFormFocused) setHasInteracted(true);
   }, [isFormFocused]);
 
   const [turnstileToken, setTurnstileToken] = useState("");
@@ -316,16 +318,18 @@ export default function SaranAduan() {
                 </div>
               )}
 
-            {/* Cloudflare Turnstile */}
+            {/* Cloudflare Turnstile (Lazy Loaded) */}
             <div className="flex justify-center w-full my-2 min-h-[65px]">
-              <Turnstile
-                ref={turnstileRef}
-                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
-                onSuccess={(token) => setTurnstileToken(token)}
-                onError={() => setErrorMsg(t("errorCaptcha"))}
-                onExpire={() => setTurnstileToken("")}
-                options={{ theme: 'light' }}
-              />
+              {hasInteracted || nama || kategori || deskripsi ? (
+                <Turnstile
+                  ref={turnstileRef}
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onError={() => setErrorMsg(t("errorCaptcha"))}
+                  onExpire={() => setTurnstileToken("")}
+                  options={{ theme: 'light' }}
+                />
+              ) : null}
             </div>
 
             <button
