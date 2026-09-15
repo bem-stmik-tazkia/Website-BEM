@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import LayoutClientWrapper from "@/components/layout/LayoutClientWrapper";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { createClient } from "@/utils/supabase/server";
 import Script from "next/script";
@@ -54,11 +53,9 @@ export default async function RootLayout({
       </head>
       <body className="bg-background text-on-background font-sans antialiased transition-colors duration-300" suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
-          <ThemeProvider defaultTheme="system">
             <ToastProvider>
               <LayoutClientWrapper isLoggedIn={!!user}>{children}</LayoutClientWrapper>
             </ToastProvider>
-          </ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>
