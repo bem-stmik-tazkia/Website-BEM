@@ -75,6 +75,7 @@ export default function Hero() {
           alt="BEM STMIK Tazkia Hero"
           fill
           priority
+          fetchPriority="high"
           className="object-cover origin-center will-change-[object-position]"
           style={{ objectPosition: '50% center' }}
         />
