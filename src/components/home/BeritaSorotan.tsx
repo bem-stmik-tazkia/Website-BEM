@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
 import { FiArrowRight } from "react-icons/fi";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import SafeLottie from "@/components/ui/SafeLottie";
 import { createClient } from "@/utils/supabase/server";
 import BeritaSorotanClient from "./BeritaSorotanClient";
 
@@ -56,7 +56,7 @@ export default async function BeritaSorotan() {
       {!featuredNews ? (
         <div className="bg-white border border-outline-variant/30 rounded-3xl p-6 sm:p-10 text-center shadow-sm max-w-3xl mx-auto flex flex-col items-center justify-center gap-2">
           <div className="w-48 h-48 sm:w-60 sm:h-60 relative -my-4">
-            <DotLottieReact
+            <SafeLottie
               src="/animations/Social Media Marketing announcement.lottie"
               loop
               autoplay

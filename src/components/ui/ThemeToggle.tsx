@@ -14,7 +14,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <button className="w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center opacity-0">
+      <button aria-label="Toggle theme" className="w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center opacity-0">
         <FiSun size={20} />
       </button>
     );

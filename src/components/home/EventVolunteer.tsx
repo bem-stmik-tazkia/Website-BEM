@@ -5,7 +5,6 @@ import { Link, useRouter } from "@/i18n/routing";
 import { useTranslations, useLocale } from "next-intl";
 import { FiCalendar, FiMapPin, FiClock, FiArrowRight, FiZap, FiCheckCircle, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import SafeLottie from "@/components/ui/SafeLottie";
 import Image from "next/image";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
@@ -385,7 +384,7 @@ export default function EventVolunteer({
         ) : (
           <div className="bg-surface border border-outline-variant/30 rounded-3xl p-6 sm:p-8 text-center shadow-sm text-on-surface-variant flex flex-col items-center justify-center gap-2">
             <div className="w-40 h-40 md:w-52 md:h-52 relative -my-2">
-              <DotLottieReact
+              <SafeLottie
                 src="/animations/Panda sleeping waiting lottie animation.lottie"
                 loop
                 autoplay

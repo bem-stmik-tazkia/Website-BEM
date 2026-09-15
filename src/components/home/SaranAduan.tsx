@@ -269,18 +269,18 @@ export default function SaranAduan() {
               
               <div className="flex flex-col gap-1.5">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs md:text-sm font-bold text-on-background">{t("nameLabel")}</label>
+                    <label htmlFor="nama" className="text-xs md:text-sm font-bold text-on-background">{t("nameLabel")}</label>
                     <span className={`text-[10px] ${nama.length >= 50 ? 'text-red-500 font-bold' : 'text-on-surface-variant'}`}>{nama.length}/50</span>
                   </div>
-                  <input type="text" name="nama" value={nama} onChange={(e) => setNama(e.target.value)} onFocus={() => setIsFormFocused(true)} onBlur={() => setIsFormFocused(false)} maxLength={50} placeholder={t("namePlaceholder")} className={`w-full px-3.5 py-2.5 text-sm rounded-xl border bg-surface-variant/20 focus:bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-background ${nama.length >= 50 ? 'border-red-500' : 'border-outline-variant/30'}`} />
+                  <input id="nama" type="text" name="nama" value={nama} onChange={(e) => setNama(e.target.value)} onFocus={() => setIsFormFocused(true)} onBlur={() => setIsFormFocused(false)} maxLength={50} placeholder={t("namePlaceholder")} className={`w-full px-3.5 py-2.5 text-sm rounded-xl border bg-surface-variant/20 focus:bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-background ${nama.length >= 50 ? 'border-red-500' : 'border-outline-variant/30'}`} />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs md:text-sm font-bold text-on-surface">
+                <label htmlFor="kategori" className="text-xs md:text-sm font-bold text-on-surface">
                   {t("categoryLabel")} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <select name="kategori" value={kategori} onChange={(e) => setKategori(e.target.value)} onFocus={() => setIsFormFocused(true)} onBlur={() => setIsFormFocused(false)} className={`w-full bg-surface-variant/20 border rounded-xl px-4 py-3 outline-none transition-all duration-300 text-sm text-on-surface appearance-none cursor-pointer ${fieldErrors.kategori ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20" : "border-outline-variant/30 focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20"}`}>
+                  <select id="kategori" name="kategori" value={kategori} onChange={(e) => setKategori(e.target.value)} onFocus={() => setIsFormFocused(true)} onBlur={() => setIsFormFocused(false)} className={`w-full bg-surface-variant/20 border rounded-xl px-4 py-3 outline-none transition-all duration-300 text-sm text-on-surface appearance-none cursor-pointer ${fieldErrors.kategori ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20" : "border-outline-variant/30 focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20"}`}>
                     <option value="" disabled>{t("selectCategory")}</option>
                     <option value="saran">{t("catFeedback")}</option>
                     <option value="aduan">{t("catComplaint")}</option>
@@ -292,12 +292,12 @@ export default function SaranAduan() {
 
               <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs md:text-sm font-bold text-on-surface">
+                  <label htmlFor="deskripsi" className="text-xs md:text-sm font-bold text-on-surface">
                     {t("descLabel")} <span className="text-red-500">*</span>
                   </label>
                   <span className={`text-[10px] font-medium ${deskripsi.length >= 1000 ? 'text-red-500 font-bold' : 'text-on-surface-variant'}`}>{deskripsi.length}/1000</span>
                 </div>
-                <textarea name="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} onFocus={() => setIsFormFocused(true)} onBlur={() => setIsFormFocused(false)} maxLength={1000} rows={4} placeholder={t("descPlaceholder")} className={`w-full bg-surface-variant/20 border rounded-xl px-4 py-3 outline-none transition-all duration-300 text-sm text-on-surface resize-none ${fieldErrors.deskripsi || deskripsi.length >= 1000 ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20" : "border-outline-variant/30 focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20"}`}></textarea>
+                <textarea id="deskripsi" name="deskripsi" value={deskripsi} onChange={(e) => setDeskripsi(e.target.value)} onFocus={() => setIsFormFocused(true)} onBlur={() => setIsFormFocused(false)} maxLength={1000} rows={4} placeholder={t("descPlaceholder")} className={`w-full bg-surface-variant/20 border rounded-xl px-4 py-3 outline-none transition-all duration-300 text-sm text-on-surface resize-none ${fieldErrors.deskripsi || deskripsi.length >= 1000 ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20" : "border-outline-variant/30 focus:bg-surface focus:border-primary focus:ring-2 focus:ring-primary/20"}`}></textarea>
               </div>
 
               {/* Custom Error Message */}

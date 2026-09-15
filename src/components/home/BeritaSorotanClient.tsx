@@ -38,6 +38,7 @@ export default function BeritaSorotanClient({ news }: BeritaSorotanClientProps) 
               src={item.image_url}
               alt={item.title}
               fill
+              priority
               className="object-cover object-center"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
             />
