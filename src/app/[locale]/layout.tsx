@@ -87,8 +87,8 @@ export default async function RootLayout({
   let user = null;
   try {
     const supabase = await createClient();
-    const { data } = await supabase.auth.getSession();
-    user = data.session?.user || null;
+    const { data } = await supabase.auth.getUser();
+    user = data.user || null;
   } catch {
     // Tangani error jaringan (walaupun getSession membaca cookie lokal)
     user = null;

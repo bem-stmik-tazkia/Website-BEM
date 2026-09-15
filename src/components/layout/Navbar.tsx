@@ -162,44 +162,12 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
               );
             })}
             
-            {/* CTA Portal Karya (Desktop) */}
-            <a
-              href="https://karya.bem.stmik.tazkia.ac.id"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative overflow-hidden ml-2 px-5 py-2 rounded-full font-bold transition-all duration-300 flex items-center justify-center gap-1.5 hover:-translate-y-0.5 hover:shadow-lg text-white shadow-primary/30 border border-white/20"
-            >
-              {/* Lottie Animation Background (Selalu tampil, tanpa warna dasar) */}
-              <div className="absolute inset-0 w-full h-full pointer-events-none flex items-center justify-center z-0">
-                <div className="w-[300%] h-[300%] scale-150">
-                  <SafeLottie src="/animations/background.lottie" loop autoplay />
-                </div>
-              </div>
-              
-              <span className="relative z-10 flex items-center gap-1.5 drop-shadow-md">
-                Portal Karya 
-                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-              </span>
-            </a>
+            {/* CTA Portal Karya Removed in favor of FloatingKaryaPrompt */}
           </div>
 
           {/* Action Button (Mobile, Tablet, Desktop) */}
           <div id="tour-login-btn" className="flex items-center gap-2 md:gap-3 ml-auto lg:ml-0">
-            {/* CTA Portal Karya (Mobile) */}
-            <a
-              href="https://karya.bem.stmik.tazkia.ac.id"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`lg:hidden flex items-center gap-1 px-3 py-1.5 rounded-full font-bold text-xs transition-all duration-300 ${
-                 isScrolled
-                      ? "bg-gradient-to-r from-[#F2791E] to-[#ff9b57] text-white shadow-sm"
-                      : isHome
-                        ? "bg-white/20 backdrop-blur-sm border border-white/40 text-white"
-                        : "bg-gradient-to-r from-[#F2791E] to-[#ff9b57] text-white shadow-sm"
-              }`}
-            >
-              Karya <span className="material-symbols-outlined text-[12px]">open_in_new</span>
-            </a>
+            {/* CTA Portal Karya (Mobile) Removed in favor of FloatingKaryaPrompt */}
             
             <LanguageSwitcher />
             {userProfile && userProfile.role === 'admin' && (

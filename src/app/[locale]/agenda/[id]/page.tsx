@@ -11,9 +11,31 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title: "Kegiatan Tidak Ditemukan - BEM STMIK Tazkia",
     };
   }
+
+  const cleanDescription = (agenda.description || "").replace(/<[^>]*>?/gm, '');
+  const excerpt = cleanDescription.substring(0, 160) + (cleanDescription.length > 160 ? "..." : "");
+
   return {
     title: `${agenda.title} - BEM STMIK Tazkia`,
-    description: agenda.description?.substring(0, 160) || "Detail kegiatan BEM STMIK Tazkia.",
+    description: excerpt,
+    openGraph: {
+      title: agenda.title,
+      description: excerpt,
+      url: `https://bem.stmik.tazkia.ac.id/agenda/${agenda.slug || id}`,
+      images: [
+        {
+          url: agenda.image_url,
+          alt: agenda.title,
+        }
+      ],
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: agenda.title,
+      description: excerpt,
+      images: [agenda.image_url],
+    }
   };
 }
 

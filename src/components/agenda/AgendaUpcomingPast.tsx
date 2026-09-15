@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import { FiClock, FiMapPin, FiArrowRight, FiCheckCircle, FiBriefcase } from "react-icons/fi";
 import Link from "next/link";
+import Image from "next/image";
 import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo } from "@/utils/dateFormatter";
 import { useTranslations } from "next-intl";
@@ -131,13 +132,13 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                     className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-variant/40 transition-colors group"
                     >
                     <div
-                        className={`shrink-0 overflow-hidden flex items-center justify-center text-xs font-black ${
+                        className={`shrink-0 overflow-hidden flex items-center justify-center text-xs font-black relative ${
                           isVolunteer ? "w-10 h-10 rounded-xl border border-primary/20 bg-primary/5 text-primary shadow-sm" : "w-10 h-10 rounded-xl"
                         }`}
                         style={!isVolunteer && !agenda.image_url ? { backgroundColor: EVENT_COLORS[agenda.colorIdx].rangeBg, color: EVENT_COLORS[agenda.colorIdx].rangeText } : {}}
                     >
                         {agenda.image_url ? (
-                          <img src={agenda.image_url} alt={agenda.title} className="w-full h-full object-cover" />
+                          <Image src={agenda.image_url} alt={agenda.title} fill sizes="40px" className="object-cover" />
                         ) : (
                           isVolunteer ? <FiBriefcase size={18} /> : agenda.date ? new Date(agenda.date).getDate() : "?"
                         )}
@@ -215,9 +216,9 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                     key={agenda.id}
                     className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-variant/40 transition-colors group opacity-75 hover:opacity-100"
                 >
-                    <div className="w-10 h-10 rounded-xl shrink-0 overflow-hidden flex items-center justify-center text-xs font-black bg-surface-variant/60 text-on-surface-variant grayscale">
+                    <div className="w-10 h-10 rounded-xl shrink-0 overflow-hidden flex items-center justify-center text-xs font-black bg-surface-variant/60 text-on-surface-variant grayscale relative">
                     {agenda.image_url ? (
-                      <img src={agenda.image_url} alt={agenda.title} className="w-full h-full object-cover" />
+                      <Image src={agenda.image_url} alt={agenda.title} fill sizes="40px" className="object-cover" />
                     ) : (
                       isVolunteer ? <FiBriefcase size={18} /> : agenda.date ? new Date(agenda.date).getDate() : "?"
                     )}

@@ -26,34 +26,7 @@ export default function Footer() {
 
         <div className="px-5 md:px-10 max-w-7xl mx-auto flex flex-col gap-12 relative z-10">
           
-          {/* Karya BEM Banner */}
-          <div className="w-full mx-auto bg-gradient-to-br from-[#F2791E] to-[#ff9b57] rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full blur-2xl translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
-            
-            <div className="relative z-10 text-center md:text-left flex-1">
-              <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm mb-4 border border-white/30 shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> Platform Baru
-              </div>
-              <h3 className="text-2xl md:text-4xl font-extrabold text-white mb-3 drop-shadow-md">
-                Punya Karya Terbaik?
-              </h3>
-              <p className="text-white/95 text-sm md:text-base max-w-xl font-medium leading-relaxed drop-shadow-sm">
-                Tunjukkan hasil karyamu kepada dunia! Unggah portofolio dan project terbaikmu di platform resmi Karya Mahasiswa STMIK Tazkia.
-              </p>
-            </div>
-            
-            <a 
-              href="https://karya.bem.stmik.tazkia.ac.id" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="relative z-10 shrink-0 bg-white text-[#F2791E] hover:bg-slate-50 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all duration-300 font-extrabold py-4 px-8 rounded-full flex items-center gap-2 group"
-            >
-              Upload Karyamu Sekarang
-              <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            </a>
-          </div>
-
+          {/* Karya BEM Banner Removed in favor of FloatingKaryaPrompt */}
           <SubscribeForm />
 
         {/* Main Footer Grid */}
