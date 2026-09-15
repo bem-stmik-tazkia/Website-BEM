@@ -45,7 +45,15 @@ export default function LoadingScreen() {
     >
       <div className="flex flex-col items-center gap-6 animate-init-fade-up">
         <div className="relative flex items-center justify-center mb-4 w-[150px] h-[150px]">
-          <SafeLottie src="/animations/lottie-logo.json" autoplay loop={false} className="w-full h-full" />
+          <SafeLottie 
+            src="/animations/lottie-logo.json" 
+            autoplay 
+            loop={false} 
+            className="w-full h-full" 
+            fallback={
+              <img src="/images/logo2.webp" alt="Loading" className="w-24 h-24 object-contain animate-pulse opacity-80" />
+            }
+          />
         </div>
 
         <div className="mt-2">
