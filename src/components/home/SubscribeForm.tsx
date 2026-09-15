@@ -100,15 +100,15 @@ export default function SubscribeForm() {
               </span>
               
               <div className="z-10">
-                <h3 className="font-bold text-on-background text-sm mb-1">Fitur Sedang Dalam Tahap Pengembangan</h3>
+                <h3 className="font-bold text-on-background text-sm mb-1">{t("developmentTitle")}</h3>
                 <p className="text-xs text-on-surface-variant leading-relaxed">
-                  Fitur berlangganan belum tersedia untuk saat ini. Nantikan pembaruan selanjutnya!
+                  {t("developmentDesc")}
                 </p>
               </div>
 
               <button disabled className="mt-2 w-full bg-surface-variant/50 text-on-surface-variant/70 border border-outline-variant/30 px-5 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 cursor-not-allowed z-10 shadow-sm">
                 <span className="material-symbols-outlined text-[16px]">lock</span>
-                Coming Soon
+                {t("comingSoon")}
               </button>
             </div>
           </div>

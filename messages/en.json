@@ -992,6 +992,9 @@
     "btnLoading": "Processing...",
     "btnSubscribe": "Subscribe Now",
     "successMsg": "Success! Please check your inbox for the verification link.",
-    "privacy": "We respect your privacy. You can unsubscribe at any time."
+    "privacy": "We respect your privacy. You can unsubscribe at any time.",
+    "developmentTitle": "Feature in Development",
+    "developmentDesc": "The subscription feature is not available at the moment. Stay tuned for updates!",
+    "comingSoon": "Coming Soon"
   }
 }

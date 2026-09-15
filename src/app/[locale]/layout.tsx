@@ -96,6 +96,40 @@ export default async function RootLayout({
           rel="stylesheet"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "BEM STMIK Tazkia",
+              "alternateName": "Badan Eksekutif Mahasiswa STMIK Tazkia",
+              "url": "https://bem.stmik.tazkia.ac.id",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://bem.stmik.tazkia.ac.id/id/berita?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+              }
+            })
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "BEM STMIK Tazkia",
+              "url": "https://bem.stmik.tazkia.ac.id",
+              "logo": "https://bem.stmik.tazkia.ac.id/images/logo2.webp",
+              "description": "Badan Eksekutif Mahasiswa (BEM) STMIK Tazkia",
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer support"
+              }
+            })
+          }}
+        />
       </head>
       <body className={`${plusJakartaSans.className} bg-background text-on-background antialiased transition-colors duration-300 overflow-x-hidden w-full`} suppressHydrationWarning>
         <NextTopLoader

@@ -980,5 +980,21 @@
       "grid_title": "Collection d'Albums",
       "grid_desc": "Cliquez sur un album pour voir la collection complète de photos."
     }
+  },
+  "Subscribe": {
+    "title": "Ne manquez rien !",
+    "desc": "Recevez les dernières nouvelles, les informations du comité et les offres de bénévolat de BEM STMIK Tazkia directement dans votre boîte de réception.",
+    "placeholder": "Entrez votre e-mail du campus (@student.stmik.tazkia.ac.id)",
+    "errorEmpty": "L'e-mail ne peut pas être vide",
+    "errorDomain": "Veuillez utiliser un e-mail de campus valide (@student.stmik.tazkia.ac.id ou @stmik.tazkia.ac.id)",
+    "errorCaptcha": "Veuillez terminer la vérification de sécurité",
+    "captchaError": "Erreur de captcha. Veuillez recharger la page.",
+    "btnLoading": "Traitement en cours...",
+    "btnSubscribe": "S'abonner maintenant",
+    "successMsg": "Succès ! Veuillez vérifier votre boîte de réception pour le lien de vérification.",
+    "privacy": "Nous respectons votre vie privée. Vous pouvez vous désabonner à tout moment.",
+    "developmentTitle": "Fonctionnalité en développement",
+    "developmentDesc": "La fonctionnalité d'abonnement n'est pas disponible pour le moment. Restez à l'écoute pour les mises à jour !",
+    "comingSoon": "Bientôt disponible"
   }
 }

@@ -992,6 +992,9 @@
     "btnLoading": "Memproses...",
     "btnSubscribe": "Berlangganan Sekarang",
     "successMsg": "Sukses! Silakan periksa kotak masuk emailmu untuk link verifikasi.",
-    "privacy": "Kami menjaga privasimu. Kamu bisa berhenti berlangganan kapan saja."
+    "privacy": "Kami menjaga privasimu. Kamu bisa berhenti berlangganan kapan saja.",
+    "developmentTitle": "Fitur Sedang Dalam Tahap Pengembangan",
+    "developmentDesc": "Fitur berlangganan belum tersedia untuk saat ini. Nantikan pembaruan selanjutnya!",
+    "comingSoon": "Segera Hadir"
   }
 }

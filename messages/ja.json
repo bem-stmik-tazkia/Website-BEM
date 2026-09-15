@@ -980,5 +980,21 @@
       "grid_title": "アルバムコレクション",
       "grid_desc": "アルバムをクリックして写真コレクションを全部表示します。"
     }
+  },
+  "Subscribe": {
+    "title": "お見逃しなく！",
+    "desc": "BEM STMIK Tazkiaからの最新ニュース、委員会情報、ボランティアの機会を直接受信トレイにお届けします。",
+    "placeholder": "キャンパスのメールアドレスを入力してください (@student.stmik.tazkia.ac.id)",
+    "errorEmpty": "メールアドレスを空にすることはできません",
+    "errorDomain": "有効なキャンパスのメールアドレスを使用してください (@student.stmik.tazkia.ac.id または @stmik.tazkia.ac.id)",
+    "errorCaptcha": "セキュリティ検証を完了してください",
+    "captchaError": "キャプチャエラー。ページを再読み込みしてください。",
+    "btnLoading": "処理中...",
+    "btnSubscribe": "今すぐ購読する",
+    "successMsg": "成功しました！確認リンクについて受信トレイを確認してください。",
+    "privacy": "プライバシーを尊重します。いつでも購読を解除できます。",
+    "developmentTitle": "開発中の機能",
+    "developmentDesc": "サブスクリプション機能は現在利用できません。アップデートをお待ちください！",
+    "comingSoon": "近日公開"
   }
 }
