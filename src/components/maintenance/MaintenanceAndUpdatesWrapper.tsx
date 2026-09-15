@@ -354,9 +354,10 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
                   {/* Close X */}
                   <button
                     onClick={handleCloseWhatsNew}
+                    aria-label="Close changelog modal"
                     className="absolute top-5 right-5 p-2 rounded-full bg-surface-variant/50 text-on-surface-variant hover:text-primary transition-colors z-20"
                   >
-                    <FiX size={18} />
+                    <FiX size={18} aria-hidden="true" />
                   </button>
 
                   {/* Header Badge */}

@@ -89,7 +89,7 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 aria-label="Instagram BEM"
               >
-                <SiInstagram size={22} />
+                <SiInstagram size={22} aria-hidden="true" />
               </a>
               <a
                 className="hover:text-[#FF0000] hover:-translate-y-1 hover:scale-110 transition-all duration-300 p-2 bg-white/10 rounded-xl hover:bg-white"
@@ -98,7 +98,7 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 aria-label="YouTube BEM"
               >
-                <SiYoutube size={22} />
+                <SiYoutube size={22} aria-hidden="true" />
               </a>
               <a
                 className="hover:text-[#5865F2] hover:-translate-y-1 hover:scale-110 transition-all duration-300 p-2 bg-white/10 rounded-xl hover:bg-white"
@@ -107,7 +107,7 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 aria-label="Discord BEM"
               >
-                <SiDiscord size={22} />
+                <SiDiscord size={22} aria-hidden="true" />
               </a>
               <a
                 className="hover:text-black hover:-translate-y-1 hover:scale-110 transition-all duration-300 p-2 bg-white/10 rounded-xl hover:bg-white"
@@ -116,7 +116,7 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 aria-label="TikTok BEM"
               >
-                <SiTiktok size={22} />
+                <SiTiktok size={22} aria-hidden="true" />
               </a>
             </div>
           </div>

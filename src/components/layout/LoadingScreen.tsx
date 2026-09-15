@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import LoadingIndicator from "./LoadingIndicator";
+import SafeLottie from "@/components/ui/SafeLottie";
 
 export default function LoadingScreen() {
   const [show, setShow] = useState(true);
@@ -18,47 +19,20 @@ export default function LoadingScreen() {
     } else {
       globalWindow.hasSeenLoading = true;
       setShow(true);
-
-      // Load lottie-player script dynamically if not already loaded
-      if (!document.getElementById("lottie-player-script")) {
-        const script = document.createElement("script");
-        script.id = "lottie-player-script";
-        script.src = "https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js";
-        script.async = true;
-        document.body.appendChild(script);
-      }
     }
   }, []);
 
   useEffect(() => {
     if (!show) return;
 
-    const handleComplete = () => {
-      setIsFading(true);
-      setTimeout(() => {
-        setShow(false);
-      }, 700); // match transition duration
-    };
-
-    const player = playerRef.current;
-    if (player) {
-      player.addEventListener("complete", handleComplete);
-    }
-
-    // Safety fallback timeout if Lottie fails or takes too long
     const fallback = setTimeout(() => {
       setIsFading(true);
       setTimeout(() => {
         setShow(false);
       }, 700);
-    }, 2500);
+    }, 2000);
 
-    return () => {
-      if (player) {
-        player.removeEventListener("complete", handleComplete);
-      }
-      clearTimeout(fallback);
-    };
+    return () => clearTimeout(fallback);
   }, [show]);
 
   if (!show) return null;
@@ -71,16 +45,8 @@ export default function LoadingScreen() {
       }`}
     >
       <div className="flex flex-col items-center gap-6 animate-init-fade-up">
-        <div className="relative flex items-center justify-center mb-4">
-          {React.createElement("lottie-player", {
-            ref: playerRef,
-            id: "lottie-logo",
-            src: "/animations/lottie-logo.json",
-            background: "transparent",
-            speed: "1",
-            style: { width: "150px", height: "150px" },
-            autoplay: true,
-          })}
+        <div className="relative flex items-center justify-center mb-4 w-[150px] h-[150px]">
+          <SafeLottie src="/animations/lottie-logo.json" autoplay loop={false} className="w-full h-full" />
         </div>
 
         <div className="mt-2">
