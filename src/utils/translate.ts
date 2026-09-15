@@ -87,7 +87,8 @@ export async function translateContent(
   const supabase = createClient();
   const sourceHash = simpleHash(originalText);
   
-  // 1. Coba cek cache di Supabase
+  // 1. Coba cek cache di Supabase (DINONAKTIFKAN SEMENTARA agar console bersih)
+  /*
   try {
     const { data: cached, error: cacheErr } = await supabase
       .from("translations_cache")
@@ -105,6 +106,7 @@ export async function translateContent(
   } catch {
     // Tabel belum ada atau error lain — lanjut ke API
   }
+  */
 
   // 2. Terjemahkan via Google API
   try {
@@ -114,7 +116,8 @@ export async function translateContent(
       return originalText; // Fallback ke teks asli
     }
     
-    // 3. Simpan ke cache (upsert) — abaikan error jika tabel belum ada
+    // 3. Simpan ke cache (DINONAKTIFKAN SEMENTARA)
+    /*
     try {
       await supabase.from("translations_cache").upsert(
         {
@@ -134,6 +137,7 @@ export async function translateContent(
     } catch {
       // Abaikan error cache — terjemahan tetap dikembalikan
     }
+    */
     
     return translated;
   } catch {
