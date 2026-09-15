@@ -93,6 +93,10 @@ export default function SafeLottie({
       className={className}
       style={style}
       dotLottieRefCallback={handleRef}
+      renderConfig={{
+        autoResize: true,
+        devicePixelRatio: typeof window !== "undefined" ? window.devicePixelRatio : 2
+      }}
     />
   );
 }
