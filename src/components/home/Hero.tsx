@@ -14,38 +14,41 @@ export default function Hero() {
 
   useEffect(() => {
     const imageElement = imageRef.current;
-    if (!imageElement) return;
+    const container = containerRef.current;
+    if (!imageElement || !container) return;
 
     let animationFrameId: number;
-    let currentPanX = 50; // Start at center (50%)
+    let currentPanX = 50;
+    let isVisible = true;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+      },
+      { threshold: 0 }
+    );
+    observer.observe(container);
 
     const update = () => {
-      let targetPanX = 50;
-
-      if (hoverRef.current) {
-        // Map mouseX (0..1) to background position (0%..100%)
-        targetPanX = mouseXRef.current * 100;
-      } else {
-        // Subtle auto-pan oscillation when idle (period ~40 seconds)
-        // Sweeps fully from 0% to 100%
-        targetPanX = 50 + Math.sin(Date.now() / 6500) * 50;
+      if (isVisible) {
+        let targetPanX = 50;
+        if (hoverRef.current) {
+          targetPanX = mouseXRef.current * 100;
+        } else {
+          targetPanX = 50 + Math.sin(Date.now() / 6500) * 50;
+        }
+        currentPanX += (targetPanX - currentPanX) * 0.05;
+        imageElement.style.objectPosition = `${currentPanX}% center`;
       }
-
-      // Butter-smooth linear interpolation (lerp)
-      currentPanX += (targetPanX - currentPanX) * 0.05;
-
-      // Apply object position directly to DOM
-      imageElement.style.objectPosition = `${currentPanX}% center`;
-
       animationFrameId = requestAnimationFrame(update);
     };
 
-    // Initial positioning
     imageElement.style.objectPosition = "50% center";
     animationFrameId = requestAnimationFrame(update);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
+      observer.disconnect();
     };
   }, []);
 

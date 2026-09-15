@@ -83,6 +83,9 @@ export function useTour({ tourId, steps, autoStart = true }: UseTourOptions) {
     });
 
     const hasSeenTour = localStorage.getItem(`tour_completed_${tourId}`);
+    let observer: MutationObserver | null = null;
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+    let initTimer: ReturnType<typeof setTimeout> | null = null;
     
     if (autoStart && !hasSeenTour) {
       // Wait for the changelog/What's New modal to be closed before starting tour
@@ -90,31 +93,35 @@ export function useTour({ tourId, steps, autoStart = true }: UseTourOptions) {
         const changelogModal = document.getElementById('changelog-modal');
         if (changelogModal) {
           // Changelog is open — observe until it's gone
-          const observer = new MutationObserver(() => {
+          observer = new MutationObserver(() => {
             if (!document.getElementById('changelog-modal')) {
-              observer.disconnect();
-              setTimeout(() => {
+              observer?.disconnect();
+              fallbackTimer = setTimeout(() => {
                 driverObj.current?.drive();
                 localStorage.setItem(`tour_completed_${tourId}`, 'true');
               }, 600); // small buffer after modal closes
             }
           });
           observer.observe(document.body, { childList: true, subtree: true });
-          return () => observer.disconnect();
         } else {
           // No changelog modal — start tour normally
-          const timer = setTimeout(() => {
+          fallbackTimer = setTimeout(() => {
             driverObj.current?.drive();
             localStorage.setItem(`tour_completed_${tourId}`, 'true');
           }, 1000);
-          return () => clearTimeout(timer);
         }
       };
 
       // Give elements time to render first
-      const initTimer = setTimeout(startWhenReady, 800);
-      return () => clearTimeout(initTimer);
+      initTimer = setTimeout(startWhenReady, 800);
     }
+    
+    return () => {
+      if (initTimer) clearTimeout(initTimer);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      if (observer) observer.disconnect();
+      driverObj.current?.destroy();
+    };
   }, [isClient, steps, tourId, autoStart]);
 
   const startTour = () => {
