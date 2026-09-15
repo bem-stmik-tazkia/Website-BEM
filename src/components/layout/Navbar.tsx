@@ -160,10 +160,43 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 </Link>
               );
             })}
+            
+            {/* CTA Portal Karya (Desktop) */}
+            <a
+              href="https://karya.bem.stmik.tazkia.ac.id"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`ml-2 px-4 py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-1.5 hover:-translate-y-0.5 hover:shadow-md ${
+                isScrolled 
+                  ? "bg-gradient-to-r from-[#F2791E] to-[#ff9b57] text-white shadow-primary/20" 
+                  : isHome 
+                    ? "bg-white text-[#F2791E] shadow-black/10 hover:bg-slate-50" 
+                    : "bg-gradient-to-r from-[#F2791E] to-[#ff9b57] text-white shadow-primary/20"
+              }`}
+            >
+              Portal Karya 
+              <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+            </a>
           </div>
 
           {/* Action Button (Mobile, Tablet, Desktop) */}
           <div id="tour-login-btn" className="flex items-center gap-2 md:gap-3 ml-auto lg:ml-0">
+            {/* CTA Portal Karya (Mobile) */}
+            <a
+              href="https://karya.bem.stmik.tazkia.ac.id"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`lg:hidden flex items-center gap-1 px-3 py-1.5 rounded-full font-bold text-xs transition-all duration-300 ${
+                 isScrolled
+                      ? "bg-gradient-to-r from-[#F2791E] to-[#ff9b57] text-white shadow-sm"
+                      : isHome
+                        ? "bg-white/20 backdrop-blur-sm border border-white/40 text-white"
+                        : "bg-gradient-to-r from-[#F2791E] to-[#ff9b57] text-white shadow-sm"
+              }`}
+            >
+              Karya <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+            </a>
+            
             <LanguageSwitcher />
             {userProfile && userProfile.role === 'admin' && (
               <AdminNotificationBell isScrolled={isScrolled} isHome={isHome} />
