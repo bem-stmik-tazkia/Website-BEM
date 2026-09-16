@@ -17,7 +17,7 @@ export default function FloatingSpinner() {
         exit={{ opacity: 0, scale: 0.5, y: 20 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-24 right-4 md:right-8 z-50 cursor-pointer drop-shadow-lg group flex items-center justify-end gap-3"
+        className="fixed bottom-40 md:bottom-32 right-4 md:right-8 z-50 cursor-pointer drop-shadow-lg group flex items-center justify-end gap-3"
         onClick={() => router.push("/tools/acak-nama")}
       >
         {/* Tooltip Label */}
