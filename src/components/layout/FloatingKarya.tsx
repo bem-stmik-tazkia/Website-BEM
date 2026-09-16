@@ -13,7 +13,7 @@ export default function FloatingKaryaPrompt() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed top-24 left-4 right-4 md:top-auto md:bottom-8 md:left-8 z-[60] flex flex-col items-start pointer-events-none">
+    <div className="fixed bottom-24 left-4 right-4 md:bottom-8 md:left-8 z-[60] flex flex-col items-start pointer-events-none">
       <motion.div
         initial={{ y: 80, opacity: 0, scale: 0.8 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
