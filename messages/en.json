@@ -996,5 +996,20 @@
     "developmentTitle": "Feature in Development",
     "developmentDesc": "The subscription feature is not available at the moment. Stay tuned for updates!",
     "comingSoon": "Coming Soon"
+  },
+  "Spinner": {
+    "title": "Randomizer Tool",
+    "desc": "Use this tool to draw names or divide groups fairly and fun.",
+    "participantList": "Participant List",
+    "wheel": "Spin Wheel",
+    "group": "Group Generator",
+    "inputPlaceholder": "Enter names here, separated by new lines...",
+    "spinButton": "Spin the Wheel!",
+    "divideButton": "Generate Groups",
+    "groupCount": "Number of Groups",
+    "winner": "Winner: ",
+    "groupPrefix": "Group ",
+    "close": "Close",
+    "emptyError": "Please enter at least one name."
   }
 }

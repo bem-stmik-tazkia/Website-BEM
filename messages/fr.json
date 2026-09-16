@@ -996,5 +996,18 @@
     "developmentTitle": "Fonctionnalité en développement",
     "developmentDesc": "La fonctionnalité d'abonnement n'est pas disponible pour le moment. Restez à l'écoute pour les mises à jour !",
     "comingSoon": "Bientôt disponible"
+  },
+  "Spinner": {
+    "title": "Outil de Randomisation",
+    "wheel": "Faire Tourner",
+    "group": "Générateur de Groupes",
+    "inputPlaceholder": "Entrez les noms ici, séparés par des sauts de ligne...",
+    "spinButton": "Faire Tourner !",
+    "divideButton": "Générer",
+    "groupCount": "Nombre de groupes",
+    "winner": "Gagnant : ",
+    "groupPrefix": "Groupe ",
+    "close": "Fermer",
+    "emptyError": "Veuillez entrer au moins un nom."
   }
 }

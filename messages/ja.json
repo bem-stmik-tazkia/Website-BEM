@@ -996,5 +996,18 @@
     "developmentTitle": "開発中の機能",
     "developmentDesc": "サブスクリプション機能は現在利用できません。アップデートをお待ちください！",
     "comingSoon": "近日公開"
+  },
+  "Spinner": {
+    "title": "ランダムツール",
+    "wheel": "ルーレット",
+    "group": "グループ分け",
+    "inputPlaceholder": "名前をここに入力し、改行で区切ってください...",
+    "spinButton": "回す！",
+    "divideButton": "グループを作成",
+    "groupCount": "グループ数",
+    "winner": "当選者: ",
+    "groupPrefix": "グループ ",
+    "close": "閉じる",
+    "emptyError": "少なくとも1つの名前を入力してください。"
   }
 }

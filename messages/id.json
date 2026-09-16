@@ -996,5 +996,20 @@
     "developmentTitle": "Fitur Sedang Dalam Tahap Pengembangan",
     "developmentDesc": "Fitur berlangganan belum tersedia untuk saat ini. Nantikan pembaruan selanjutnya!",
     "comingSoon": "Segera Hadir"
+  },
+  "Spinner": {
+    "title": "Alat Acak",
+    "desc": "Gunakan alat ini untuk mengundi nama atau membagi kelompok secara adil dan menyenangkan.",
+    "participantList": "Daftar Peserta",
+    "wheel": "Putar Roda",
+    "group": "Bagi Kelompok",
+    "inputPlaceholder": "Masukkan nama-nama di sini, pisahkan dengan enter (baris baru)...",
+    "spinButton": "Putar Roda!",
+    "divideButton": "Bagi Kelompok",
+    "groupCount": "Jumlah Kelompok",
+    "winner": "Terpilih: ",
+    "groupPrefix": "Kelompok ",
+    "close": "Tutup",
+    "emptyError": "Mohon masukkan setidaknya satu nama."
   }
 }

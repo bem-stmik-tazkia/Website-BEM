@@ -26,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/agenda',
     '/publikasi/dokumentasi',
     '/publikasi/saran',
+    '/tools/acak-nama',
   ];
 
   const sitemapEntries: MetadataRoute.Sitemap = [];

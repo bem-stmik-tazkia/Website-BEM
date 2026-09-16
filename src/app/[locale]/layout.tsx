@@ -104,23 +104,22 @@ export default async function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
           as="style"
         />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              var l = document.createElement('link');
-              l.rel = 'stylesheet';
-              l.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap';
-              document.head.appendChild(l);
-            `
-          }}
-        />
+        <Script id="load-material-symbols" strategy="afterInteractive">
+          {`
+            var l = document.createElement('link');
+            l.rel = 'stylesheet';
+            l.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap';
+            document.head.appendChild(l);
+          `}
+        </Script>
         <noscript>
           <link
             rel="stylesheet"
             href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
           />
         </noscript>
-        <script
+        <Script
+          id="ld-json-website"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
@@ -137,7 +136,8 @@ export default async function RootLayout({
             })
           }}
         />
-        <script
+        <Script
+          id="ld-json-org"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
