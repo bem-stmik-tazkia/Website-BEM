@@ -1,13 +1,38 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/routing";
+import { useRouter, usePathname } from "@/i18n/routing";
 
 export default function FloatingSpinner() {
   const t = useTranslations("Spinner");
   const router = useRouter();
+  const pathname = usePathname();
+  const [hasTour, setHasTour] = useState(false);
+
+  useEffect(() => {
+    const checkTourBtn = () => {
+      const btn = document.querySelector('[data-tour-btn="true"]');
+      setHasTour(!!btn);
+    };
+
+    checkTourBtn();
+    const interval = setInterval(checkTourBtn, 300);
+    const observer = new MutationObserver(checkTourBtn);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+
+    return () => {
+      clearInterval(interval);
+      observer.disconnect();
+    };
+  }, [pathname]);
+
+  if (pathname.includes("/tools/acak-nama")) {
+    return null;
+  }
+
+  const bottomClass = hasTour ? "bottom-40 md:bottom-32" : "bottom-24 md:bottom-24";
 
   return (
     <AnimatePresence>
@@ -17,7 +42,7 @@ export default function FloatingSpinner() {
         exit={{ opacity: 0, scale: 0.5, y: 20 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-40 md:bottom-32 right-4 md:right-8 z-50 cursor-pointer drop-shadow-lg group flex items-center justify-end gap-3"
+        className={`fixed ${bottomClass} right-4 md:right-8 z-50 cursor-pointer drop-shadow-lg group flex items-center justify-end gap-3 transition-all duration-500`}
         onClick={() => router.push("/tools/acak-nama")}
       >
         {/* Tooltip Label */}
