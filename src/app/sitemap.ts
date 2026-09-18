@@ -20,12 +20,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Define static routes
   const staticRoutes = [
     '',
-    '/tentang',
     '/kabinet',
     '/berita',
     '/agenda',
     '/publikasi/dokumentasi',
-    '/publikasi/saran',
     '/tools/acak-nama',
   ];
 
@@ -35,22 +33,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   routing.locales.forEach((locale) => {
     // 1. Static Routes
     staticRoutes.forEach((route) => {
+      const languages: Record<string, string> = {};
+      routing.locales.forEach((altLocale) => {
+        languages[altLocale] = `${baseUrl}/${altLocale}${route}`;
+      });
+      // x-default for users with languages not in our list
+      languages['x-default'] = `${baseUrl}/${routing.defaultLocale}${route}`;
+
       sitemapEntries.push({
         url: `${baseUrl}/${locale}${route}`,
         lastModified: new Date(),
         changeFrequency: 'daily',
         priority: route === '' ? 1 : 0.8,
+        alternates: {
+          languages,
+        },
       });
     });
 
     // 2. Dynamic Routes: Berita
     if (berita) {
       berita.forEach((item) => {
+        const languages: Record<string, string> = {};
+        routing.locales.forEach((altLocale) => {
+          languages[altLocale] = `${baseUrl}/${altLocale}/berita/${item.slug}`;
+        });
+        languages['x-default'] = `${baseUrl}/${routing.defaultLocale}/berita/${item.slug}`;
+
         sitemapEntries.push({
           url: `${baseUrl}/${locale}/berita/${item.slug}`,
           lastModified: item.created_at ? new Date(item.created_at) : new Date(),
           changeFrequency: 'weekly',
           priority: 0.7,
+          alternates: {
+            languages,
+          },
         });
       });
     }
@@ -58,11 +75,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 3. Dynamic Routes: Agenda
     if (agendas) {
       agendas.forEach((item) => {
+        const slugOrId = item.slug || item.id;
+        const languages: Record<string, string> = {};
+        routing.locales.forEach((altLocale) => {
+          languages[altLocale] = `${baseUrl}/${altLocale}/agenda/${slugOrId}`;
+        });
+        languages['x-default'] = `${baseUrl}/${routing.defaultLocale}/agenda/${slugOrId}`;
+
         sitemapEntries.push({
-          url: `${baseUrl}/${locale}/agenda/${item.slug || item.id}`,
+          url: `${baseUrl}/${locale}/agenda/${slugOrId}`,
           lastModified: item.created_at ? new Date(item.created_at) : new Date(),
           changeFrequency: 'weekly',
           priority: 0.7,
+          alternates: {
+            languages,
+          },
         });
       });
     }
