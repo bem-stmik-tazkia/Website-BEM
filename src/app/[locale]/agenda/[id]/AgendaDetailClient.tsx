@@ -107,23 +107,38 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
   const [isSelectionMode, setIsSelectionMode] = React.useState(false);
   const [selectedPhotos, setSelectedPhotos] = React.useState<Set<number>>(new Set());
   const [isDownloading, setIsDownloading] = React.useState(false);
+  const { drivePhotoUrls, actualVideoUrls } = React.useMemo(() => {
+    if (!agenda.video_url) return { drivePhotoUrls: [], actualVideoUrls: [] };
+    const urls = agenda.video_url.split(/[\s,]+/).filter(Boolean);
+    const drivePhotos: string[] = [];
+    const videos: string[] = [];
+    
+    urls.forEach(url => {
+      const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
+      // We assume Google Drive links pasted here are photos as requested by user
+      if (driveMatch && driveMatch[1]) {
+        drivePhotos.push(`https://drive.google.com/uc?id=${driveMatch[1]}`);
+      } else {
+        videos.push(url);
+      }
+    });
+    
+    return { drivePhotoUrls: drivePhotos, actualVideoUrls: videos };
+  }, [agenda.video_url]);
 
   const validGallery = React.useMemo(() => {
-    if (!agenda.gallery) return [];
-    return agenda.gallery.filter(Boolean).map(url => {
-      // Convert Google Drive view links to direct image links for the gallery
+    const baseGallery = agenda.gallery ? agenda.gallery.filter(Boolean).map(url => {
       const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
       if (driveMatch && driveMatch[1]) {
         return `https://drive.google.com/uc?id=${driveMatch[1]}`;
       }
       return url;
-    });
-  }, [agenda.gallery]);
+    }) : [];
+    
+    return [...baseGallery, ...drivePhotoUrls];
+  }, [agenda.gallery, drivePhotoUrls]);
 
-  const videoUrls = React.useMemo(() => {
-    if (!agenda.video_url) return [];
-    return agenda.video_url.split(/[\s,]+/).filter(Boolean);
-  }, [agenda.video_url]);
+  const videoUrls = actualVideoUrls;
 
   const [currentBannerIndex, setCurrentBannerIndex] = React.useState(0);
   
