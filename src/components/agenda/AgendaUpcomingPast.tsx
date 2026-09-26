@@ -51,25 +51,44 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
   const upcomingAgendas = useMemo(
     () => agendasWithColor.filter((a) => {
       const end = a.end_date ? parseDateLocal(a.end_date) : (a.date ? parseDateLocal(a.date) : null);
-      return end && end >= today;
+      if (!end || end < today) return false;
+      // Jika event berakhir hari ini, cek apakah sudah lewat jam selesainya
+      if (end.getTime() === today.getTime() && a.date && a.time_range) {
+        const tm = a.time_range.match(/(\d{1,2})[:.](\d{2})\s*(?:-|s\/d|to)\s*(\d{1,2})[:.](\d{2})/i);
+        if (tm) {
+          const evEnd = new Date(today); evEnd.setHours(parseInt(tm[3], 10), parseInt(tm[4], 10), 0, 0);
+          if (now > evEnd) return false; // Sudah selesai → pindah ke Past
+        }
+      }
+      return true;
     }).sort((a, b) => {
       const da = a.date ? parseDateLocal(a.date).getTime() : 0;
       const db = b.date ? parseDateLocal(b.date).getTime() : 0;
       return da - db;
     }),
-    [agendasWithColor, today]
+    [agendasWithColor, today, now]
   );
 
   const pastAgendas = useMemo(
     () => agendasWithColor.filter((a) => {
       const end = a.end_date ? parseDateLocal(a.end_date) : (a.date ? parseDateLocal(a.date) : null);
-      return end && end < today;
+      if (!end) return false;
+      if (end < today) return true; // Tanggal sudah lewat
+      // Hari ini tapi sudah lewat jam selesai
+      if (end.getTime() === today.getTime() && a.date && a.time_range) {
+        const tm = a.time_range.match(/(\d{1,2})[:.](\d{2})\s*(?:-|s\/d|to)\s*(\d{1,2})[:.](\d{2})/i);
+        if (tm) {
+          const evEnd = new Date(today); evEnd.setHours(parseInt(tm[3], 10), parseInt(tm[4], 10), 0, 0);
+          return now > evEnd;
+        }
+      }
+      return false;
     }).sort((a, b) => {
       const da = a.date ? parseDateLocal(a.date).getTime() : 0;
       const db = b.date ? parseDateLocal(b.date).getTime() : 0;
-      return db - da; 
+      return db - da;
     }),
-    [agendasWithColor, today]
+    [agendasWithColor, today, now]
   );
 
   const formatDateRange = (agenda: AgendaKegiatan) => {

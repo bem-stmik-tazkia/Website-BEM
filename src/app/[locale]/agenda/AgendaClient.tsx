@@ -24,6 +24,15 @@ import AgendaUpcomingPast from "@/components/agenda/AgendaUpcomingPast";
 import AgendaTourClient from "@/components/agenda/AgendaTourClient";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
+// Helper: parse tanggal sebagai local date agar tidak terkena UTC timezone shift
+// new Date("2026-09-26") → UTC midnight, di WIB jadi Sep 25 malam → salah!
+function parseDateLocal(dateStr: string): Date {
+  const [y, m, d] = dateStr.split("T")[0].split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setHours(0, 0, 0, 0);
+  return dt;
+}
+
 function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
   const t = useTranslations("AgendaPage");
   const locale = useLocale();
@@ -108,9 +117,8 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
     // Sembunyikan event yang sudah selesai (cek end_date jika ada, baru cek date)
     const finishDateStr = item.end_date || item.date;
     if (finishDateStr) {
-      const finishDate = new Date(finishDateStr);
+      const finishDate = parseDateLocal(finishDateStr); // Fixed: local date parsing
       const today = new Date();
-      finishDate.setHours(0, 0, 0, 0);
       today.setHours(0, 0, 0, 0);
       if (finishDate < today) return false;
     }
@@ -121,9 +129,8 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
   const volunteerOpportunities = translatedData.filter(item => {
     if (item.type !== 'volunteer' || !item.is_published) return false;
     if (!item.deadline) return true;
-    const deadlineDate = new Date(item.deadline);
+    const deadlineDate = parseDateLocal(item.deadline); // Fixed: local date parsing
     const today = new Date();
-    deadlineDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
     return deadlineDate >= today;
   });
@@ -131,14 +138,10 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
   const getEventStatus = (dateStr?: string | null, endDateStr?: string | null, timeRange?: string | null) => {
     if (!dateStr) return t("statusUpcoming");
     const now = new Date();
-    const eventDate = new Date(dateStr);
-    const endDate = endDateStr ? new Date(endDateStr) : new Date(dateStr);
-    const today = new Date(now);
-    const eventDateNorm = new Date(eventDate);
-    const endDateNorm = new Date(endDate);
-    eventDateNorm.setHours(0, 0, 0, 0);
-    endDateNorm.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
+    const today = new Date(now); today.setHours(0, 0, 0, 0);
+    // Fixed: gunakan parseDateLocal agar tidak terkena UTC timezone shift
+    const eventDateNorm = parseDateLocal(dateStr);
+    const endDateNorm = endDateStr ? parseDateLocal(endDateStr) : parseDateLocal(dateStr);
 
     // Sudah lewat tanggal terakhir
     if (endDateNorm < today) return t("statusDone");

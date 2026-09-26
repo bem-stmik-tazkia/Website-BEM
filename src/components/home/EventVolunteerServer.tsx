@@ -8,7 +8,9 @@ export default async function EventVolunteerServer() {
   const agendas = await getKegiatans();
   const publishedAgendas = agendas.filter((a) => a.is_published);
 
-  const now = new Date();
+  // Server Vercel berjalan di UTC — gunakan waktu WIB (UTC+7) agar
+  // perbandingan time_range konsisten dengan zona waktu Indonesia
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
 
