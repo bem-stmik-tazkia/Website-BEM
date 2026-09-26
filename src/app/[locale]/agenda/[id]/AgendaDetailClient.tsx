@@ -188,6 +188,78 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
     setLightboxIndex(prev => prev! < agenda.gallery!.filter(Boolean).length - 1 ? prev! + 1 : 0);
   };
 
+  const renderVideo = (url: string) => {
+    // YouTube
+    const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+    if (ytMatch && ytMatch[1]) {
+      return (
+        <div className="aspect-video w-full rounded-xl overflow-hidden border border-outline-variant/30 bg-black">
+          <iframe 
+            className="w-full h-full"
+            src={`https://www.youtube.com/embed/${ytMatch[1]}`} 
+            title="YouTube video player" 
+            frameBorder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowFullScreen
+          ></iframe>
+        </div>
+      );
+    }
+    
+    // Google Drive
+    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
+    if (driveMatch && driveMatch[1]) {
+      return (
+        <div className="aspect-video w-full rounded-xl overflow-hidden border border-outline-variant/30 bg-black">
+          <iframe 
+            className="w-full h-full"
+            src={`https://drive.google.com/file/d/${driveMatch[1]}/preview`} 
+            title="Google Drive player" 
+            frameBorder="0" 
+            allow="autoplay; fullscreen"
+          ></iframe>
+        </div>
+      );
+    }
+
+    // Instagram
+    const igMatch = url.match(/instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)/i);
+    if (igMatch && igMatch[1]) {
+      return (
+        <div className="w-full sm:max-w-md mx-auto rounded-xl overflow-hidden border border-outline-variant/30 bg-white">
+          <iframe 
+            className="w-full h-[600px]"
+            src={`https://www.instagram.com/p/${igMatch[1]}/embed`} 
+            title="Instagram embed" 
+            frameBorder="0" 
+            scrolling="no" 
+            allow="encrypted-media"
+          ></iframe>
+        </div>
+      );
+    }
+    
+    if (url.match(/\.(mp4|webm|ogg)$/i)) {
+      return (
+        <div className="aspect-video w-full rounded-xl overflow-hidden border border-outline-variant/30 bg-black">
+          <video src={url} controls className="w-full h-full object-contain" />
+        </div>
+      );
+    }
+    
+    return (
+      <div className="p-4 rounded-xl border border-outline-variant/30 bg-surface-variant/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 overflow-hidden w-full">
+          <FiVideo className="text-primary shrink-0" size={24} />
+          <span className="truncate text-sm font-medium">{url}</span>
+        </div>
+        <a href={url} target="_blank" rel="noreferrer" className="shrink-0 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors w-full sm:w-auto text-center">
+          Buka Link Video
+        </a>
+      </div>
+    );
+  };
+
   return (
     <div className="bg-[#f8f9fc] min-h-screen pt-32 pb-20 font-sans">
       
@@ -416,6 +488,16 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
               <div className="text-on-surface-variant text-sm md:text-base leading-relaxed whitespace-pre-wrap break-words max-w-full overflow-hidden">
                 {agenda.description}
               </div>
+            </div>
+          )}
+
+          {/* Video Dokumentasi */}
+          {agenda.video_url && (
+            <div className="bg-surface rounded-2xl md:rounded-3xl p-5 md:p-8 border border-outline-variant/30 shadow-sm">
+              <h3 className="text-lg md:text-xl font-bold text-on-background mb-4 md:mb-6 flex items-center gap-2">
+                <FiVideo className="text-primary" size={20} /> Video Dokumentasi
+              </h3>
+              {renderVideo(agenda.video_url)}
             </div>
           )}
 
