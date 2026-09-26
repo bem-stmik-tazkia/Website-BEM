@@ -11,6 +11,9 @@ import {
   EventVolunteerSkeleton,
 } from "@/components/home/HomeSkeleton";
 
+// Selalu render ulang setiap request agar status acara sesuai waktu nyata
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'LandingPage' });

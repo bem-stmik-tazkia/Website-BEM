@@ -434,7 +434,7 @@
     "eventOngoing": "L'événement est en cours !",
     "descTicket": "Cet événement est très attendu ! Réservez votre place maintenant avant que le quota ne soit épuisé.",
     "descOnline": "Cet événement se déroule en ligne via le lien fourni.",
-    "descPublic": "Cet événement est ouvert au public, veuillez vous rendre directement sur le lieu de l'événement !",
+    "descPublic": "Cet événement est ouvert aux étudiants, veuillez vous rendre directement sur le lieu de l'événement !",
     "quotaFull": "Quota Complet",
     "remainingQuota": "Quota Restant",
     "of": "sur",

@@ -1,8 +1,10 @@
 import { getKegiatans } from "@/app/(internal)/admin/kegiatan/actions";
 import { AgendaKegiatan } from "@/types/agenda";
 import EventVolunteer from "./EventVolunteer";
+import { unstable_noStore as noStore } from "next/cache";
 
 export default async function EventVolunteerServer() {
+  noStore(); // Pastikan selalu di-render ulang, tidak pakai cache
   const agendas = await getKegiatans();
   const publishedAgendas = agendas.filter((a) => a.is_published);
 
