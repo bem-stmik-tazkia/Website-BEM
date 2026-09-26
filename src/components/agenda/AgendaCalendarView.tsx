@@ -256,9 +256,34 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
             <div className="flex flex-col gap-2.5">
               {selectedAgendas.map((agenda) => {
                 const color = EVENT_COLORS[agenda.colorIdx];
+                const now = new Date();
                 const end = agenda.end_date ? parseDateLocal(agenda.end_date) : (agenda.date ? parseDateLocal(agenda.date) : today);
                 const isPast = end < today;
-                const isLive = !isPast && agenda.date ? parseDateLocal(agenda.date) <= today : false;
+
+                // Hitung isLive: hanya saat jam acara berlangsung
+                let isLive = false;
+                if (!isPast && agenda.date) {
+                  const eventDayStart = parseDateLocal(agenda.date);
+                  const isMultiDay = agenda.end_date && agenda.end_date !== agenda.date;
+                  if (isMultiDay) {
+                    // Multi-hari: live jika hari ini di antara start & end (inklusif)
+                    isLive = eventDayStart <= today && today <= end;
+                  } else if (eventDayStart.getTime() === today.getTime()) {
+                    // 1 hari: cek jam jika ada time_range
+                    if (agenda.time_range) {
+                      const tm = agenda.time_range.match(/(\d{1,2})[:.](\d{2})\s*(?:-|s\/d|to)\s*(\d{1,2})[:.](\d{2})/i);
+                      if (tm) {
+                        const evStart = new Date(today); evStart.setHours(parseInt(tm[1], 10), parseInt(tm[2], 10), 0, 0);
+                        const evEnd   = new Date(today); evEnd.setHours(parseInt(tm[3], 10), parseInt(tm[4], 10), 0, 0);
+                        isLive = now >= evStart && now <= evEnd;
+                      } else {
+                        isLive = true; // tidak ada time_range → seharian live
+                      }
+                    } else {
+                      isLive = true; // tidak ada time_range → seharian live
+                    }
+                  }
+                }
                 return (
                   <Link
                     href={`/agenda/${agenda.id}?from=${isVolunteer ? "agenda-volunteer" : "agenda-event"}`}

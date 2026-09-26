@@ -41,6 +41,8 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
     return d;
   }, []);
 
+  const now = useMemo(() => new Date(), []);
+
   const agendasWithColor = useMemo(
     () => agendas.map((a, i) => ({ ...a, colorIdx: i % EVENT_COLORS.length })),
     [agendas]
@@ -101,7 +103,24 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                 const color = EVENT_COLORS[agenda.colorIdx];
                 const start = agenda.date ? parseDateLocal(agenda.date) : today;
                 const daysLeft = Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                const isLive = daysLeft <= 0;
+
+                // Hitung status LIVE dengan mempertimbangkan jam acara
+                let isLive = false;
+                if (daysLeft <= 0) {
+                  // Hari ini atau sudah lewat tanggal mulai
+                  if (agenda.time_range) {
+                    const timeMatch = agenda.time_range.match(/(\d{1,2})[:.](\d{2})\s*(?:-|s\/d|to)\s*(\d{1,2})[:.](\d{2})/i);
+                    if (timeMatch) {
+                      const eventStart = new Date(today); eventStart.setHours(parseInt(timeMatch[1], 10), parseInt(timeMatch[2], 10), 0, 0);
+                      const eventEnd   = new Date(today); eventEnd.setHours(parseInt(timeMatch[3], 10), parseInt(timeMatch[4], 10), 0, 0);
+                      isLive = now >= eventStart && now <= eventEnd;
+                    } else {
+                      isLive = daysLeft === 0; // tidak ada time_range → seharian live jika hari ini
+                    }
+                  } else {
+                    isLive = daysLeft === 0; // tidak ada time_range → seharian live jika hari ini
+                  }
+                }
                 
                 // Logika khusus Volunteer
                 let volunteerBadgeText = "";

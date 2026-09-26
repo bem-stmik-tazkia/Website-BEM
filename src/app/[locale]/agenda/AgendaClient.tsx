@@ -128,17 +128,45 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
     return deadlineDate >= today;
   });
 
-  const getEventStatus = (dateStr?: string | null, endDateStr?: string | null) => {
+  const getEventStatus = (dateStr?: string | null, endDateStr?: string | null, timeRange?: string | null) => {
     if (!dateStr) return t("statusUpcoming");
+    const now = new Date();
     const eventDate = new Date(dateStr);
-    const endDate = endDateStr ? new Date(endDateStr) : eventDate;
-    const today = new Date();
-    eventDate.setHours(0, 0, 0, 0);
-    endDate.setHours(0, 0, 0, 0);
+    const endDate = endDateStr ? new Date(endDateStr) : new Date(dateStr);
+    const today = new Date(now);
+    const eventDateNorm = new Date(eventDate);
+    const endDateNorm = new Date(endDate);
+    eventDateNorm.setHours(0, 0, 0, 0);
+    endDateNorm.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
 
-    if (endDate < today) return t("statusDone");
-    if (eventDate <= today && today <= endDate) return t("statusLive");
+    // Sudah lewat tanggal terakhir
+    if (endDateNorm < today) return t("statusDone");
+
+    // Event multi-hari yang sedang berlangsung (hari ini di antara start & end)
+    const isMultiDay = endDateStr && endDateStr !== dateStr;
+    if (isMultiDay && eventDateNorm < today && today <= endDateNorm) return t("statusLive");
+
+    // Event 1 hari: cek jam jika ada time_range
+    if (eventDateNorm.getTime() === today.getTime()) {
+      if (timeRange) {
+        const timeMatch = timeRange.match(/(\d{1,2})[:.](\d{2})\s*(?:-|s\/d|to)\s*(\d{1,2})[:.](\d{2})/i);
+        if (timeMatch) {
+          const startHour = parseInt(timeMatch[1], 10);
+          const startMin  = parseInt(timeMatch[2], 10);
+          const endHour   = parseInt(timeMatch[3], 10);
+          const endMin    = parseInt(timeMatch[4], 10);
+          const eventStart = new Date(today); eventStart.setHours(startHour, startMin, 0, 0);
+          const eventEnd   = new Date(today); eventEnd.setHours(endHour, endMin, 0, 0);
+          if (now < eventStart) return t("statusUpcoming");
+          if (now > eventEnd)   return t("statusDone");
+          return t("statusLive");
+        }
+      }
+      // Tidak ada time_range → anggap seharian live
+      return t("statusLive");
+    }
+
     return t("statusUpcoming");
   };
 
@@ -296,7 +324,7 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
             ) : filteredAgendas.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {paginatedAgendas.map((agenda, index) => {
-                  const eventStatus = getEventStatus(agenda.date, agenda.end_date);
+                  const eventStatus = getEventStatus(agenda.date, agenda.end_date, agenda.time_range);
                   return (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
