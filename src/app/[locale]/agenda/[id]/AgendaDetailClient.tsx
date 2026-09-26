@@ -169,7 +169,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
 
   const handleDownloadSelected = async () => {
     setIsDownloading(true);
-    const urlsToDownload = Array.from(selectedPhotos).map(idx => agenda.gallery!.filter(Boolean)[idx]);
+    const urlsToDownload = Array.from(selectedPhotos).map(idx => validGallery[idx]);
     
     for (let i = 0; i < urlsToDownload.length; i++) {
       const url = urlsToDownload[i];
@@ -187,7 +187,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
 
   const handleDownloadAll = async () => {
     setIsDownloading(true);
-    const gallery = agenda.gallery!.filter(Boolean);
+    const gallery = validGallery;
     
     for (let i = 0; i < gallery.length; i++) {
       await downloadImage(gallery[i], i);
@@ -209,13 +209,13 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
   const handlePrev = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setFlipDirection(-1);
-    setLightboxIndex(prev => prev! > 0 ? prev! - 1 : agenda.gallery!.filter(Boolean).length - 1);
+    setLightboxIndex(prev => prev! > 0 ? prev! - 1 : validGallery.length - 1);
   };
 
   const handleNext = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setFlipDirection(1);
-    setLightboxIndex(prev => prev! < agenda.gallery!.filter(Boolean).length - 1 ? prev! + 1 : 0);
+    setLightboxIndex(prev => prev! < validGallery.length - 1 ? prev! + 1 : 0);
   };
 
   const renderVideo = (url: string) => {
@@ -536,12 +536,12 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
           )}
 
           {/* Galeri / Dokumentasi */}
-          {agenda.gallery && agenda.gallery.length > 0 && (
+          {validGallery.length > 0 && (
             <div className="bg-surface rounded-2xl md:rounded-3xl p-5 md:p-8 border border-outline-variant/30 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 md:mb-6">
                 <h3 className="text-lg md:text-xl font-bold text-on-background flex items-center gap-2">
                   <FiImage className="text-primary" size={20} /> {t("activityDocumentation")}
-                  <span className="text-sm font-normal text-on-surface-variant ml-2">{agenda.gallery.filter(Boolean).length} {t("photos")}</span>
+                  <span className="text-sm font-normal text-on-surface-variant ml-2">{validGallery.length} {t("photos")}</span>
                 </h3>
 
                 <div className="flex items-center gap-2">
@@ -661,7 +661,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
       </section>
 
       {/* ── LIGHTBOX MODAL ────────────────────────────────────────── */}
-      {lightboxIndex !== null && agenda.gallery && (
+      {lightboxIndex !== null && validGallery.length > 0 && (
         <div className="fixed inset-0 z-[100] flex flex-col bg-black/95 backdrop-blur-xl">
           
           {/* Header Bar */}
