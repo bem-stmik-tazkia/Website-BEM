@@ -21,7 +21,9 @@ import {
   FiX,
   FiChevronLeft,
   FiChevronRight,
-  FiClipboard
+  FiClipboard,
+  FiFolder,
+  FiLink
 } from "react-icons/fi";
 import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo } from "@/utils/dateFormatter";
@@ -277,14 +279,29 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
       );
     }
     
+    const isDriveFolder = url.match(/drive\.google\.com\/drive\/folders\/([a-zA-Z0-9_-]+)/i);
+    if (isDriveFolder) {
+      return (
+        <div className="p-4 rounded-xl border border-outline-variant/30 bg-surface-variant/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 overflow-hidden w-full">
+            <FiFolder className="text-primary shrink-0" size={24} />
+            <span className="truncate text-sm font-medium">{url}</span>
+          </div>
+          <a href={url} target="_blank" rel="noreferrer" className="shrink-0 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors w-full sm:w-auto text-center">
+            Buka Folder Drive
+          </a>
+        </div>
+      );
+    }
+    
     return (
       <div className="p-4 rounded-xl border border-outline-variant/30 bg-surface-variant/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3 overflow-hidden w-full">
-          <FiVideo className="text-primary shrink-0" size={24} />
+          <FiLink className="text-primary shrink-0" size={24} />
           <span className="truncate text-sm font-medium">{url}</span>
         </div>
         <a href={url} target="_blank" rel="noreferrer" className="shrink-0 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors w-full sm:w-auto text-center">
-          Buka Link Video
+          Buka Link Dokumentasi
         </a>
       </div>
     );
