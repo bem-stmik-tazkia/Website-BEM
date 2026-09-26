@@ -280,16 +280,26 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
     }
     
     const isDriveFolder = url.match(/drive\.google\.com\/drive\/folders\/([a-zA-Z0-9_-]+)/i);
-    if (isDriveFolder) {
+    if (isDriveFolder && isDriveFolder[1]) {
       return (
-        <div className="p-4 rounded-xl border border-outline-variant/30 bg-surface-variant/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 overflow-hidden w-full">
-            <FiFolder className="text-primary shrink-0" size={24} />
-            <span className="truncate text-sm font-medium">{url}</span>
+        <div className="flex flex-col gap-4">
+          <div className="p-4 rounded-xl border border-outline-variant/30 bg-surface-variant/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 overflow-hidden w-full">
+              <FiFolder className="text-primary shrink-0" size={24} />
+              <span className="truncate text-sm font-medium">Folder Google Drive</span>
+            </div>
+            <a href={url} target="_blank" rel="noreferrer" className="shrink-0 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors w-full sm:w-auto text-center">
+              Buka Folder Drive
+            </a>
           </div>
-          <a href={url} target="_blank" rel="noreferrer" className="shrink-0 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors w-full sm:w-auto text-center">
-            Buka Folder Drive
-          </a>
+          <div className="w-full h-[500px] md:h-[600px] rounded-xl overflow-hidden border border-outline-variant/30 bg-white shadow-sm">
+            <iframe 
+              className="w-full h-full"
+              src={`https://drive.google.com/embeddedfolderview?id=${isDriveFolder[1]}#grid`}
+              title="Google Drive Folder View"
+              frameBorder="0"
+            ></iframe>
+          </div>
         </div>
       );
     }
