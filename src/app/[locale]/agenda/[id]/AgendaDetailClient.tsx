@@ -51,22 +51,48 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
     }
   };
 
-  const getEventStatus = (dateStr?: string | null, endDateStr?: string | null) => {
+  // Helper: parse tanggal sebagai local date (hindari UTC timezone shift)
+  const parseDateLocal = (dateStr: string) => {
+    const [y, m, d] = dateStr.split("T")[0].split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setHours(0, 0, 0, 0);
+    return dt;
+  };
+
+  const getEventStatus = (dateStr?: string | null, endDateStr?: string | null, timeRange?: string | null) => {
     if (!dateStr) return t("statusUpcoming");
-    const eventDate = new Date(dateStr);
-    const endDate = endDateStr ? new Date(endDateStr) : eventDate;
-    const today = new Date();
-    
-    eventDate.setHours(0,0,0,0);
-    endDate.setHours(0,0,0,0);
-    today.setHours(0,0,0,0);
-    
-    if (endDate < today) return t("statusDone");
-    if (eventDate <= today && today <= endDate) return t("statusLive");
+    const now = new Date();
+    const today = new Date(now); today.setHours(0, 0, 0, 0);
+    const eventDateNorm = parseDateLocal(dateStr);
+    const endDateNorm = endDateStr ? parseDateLocal(endDateStr) : parseDateLocal(dateStr);
+
+    // Sudah lewat tanggal terakhir
+    if (endDateNorm < today) return t("statusDone");
+
+    // Event multi-hari yang sedang berlangsung
+    const isMultiDay = endDateStr && endDateStr !== dateStr;
+    if (isMultiDay && eventDateNorm < today && today <= endDateNorm) return t("statusLive");
+
+    // Event 1 hari: cek jam jika ada time_range
+    if (eventDateNorm.getTime() === today.getTime()) {
+      if (timeRange) {
+        const tm = timeRange.match(/(\d{1,2})[:.](\d{2})\s*(?:-|s\/d|to)\s*(\d{1,2})[:.](\d{2})/i);
+        if (tm) {
+          const evStart = new Date(today); evStart.setHours(parseInt(tm[1], 10), parseInt(tm[2], 10), 0, 0);
+          const evEnd   = new Date(today); evEnd.setHours(parseInt(tm[3], 10), parseInt(tm[4], 10), 0, 0);
+          if (now < evStart) return t("statusUpcoming");
+          if (now > evEnd)   return t("statusDone");
+          return t("statusLive");
+        }
+      }
+      // Tidak ada time_range → seharian live
+      return t("statusLive");
+    }
+
     return t("statusUpcoming");
   };
 
-  const eventStatus = getEventStatus(agenda.date, agenda.end_date);
+  const eventStatus = getEventStatus(agenda.date, agenda.end_date, agenda.time_range);
   const isLive = eventStatus === t("statusLive");
   const isFinished = eventStatus === t("statusDone");
   const isManualDokumentasi = agenda.type === 'dokumentasi';
