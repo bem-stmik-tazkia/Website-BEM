@@ -108,7 +108,22 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
   const [selectedPhotos, setSelectedPhotos] = React.useState<Set<number>>(new Set());
   const [isDownloading, setIsDownloading] = React.useState(false);
 
-  const validGallery = React.useMemo(() => agenda.gallery ? agenda.gallery.filter(Boolean) : [], [agenda.gallery]);
+  const validGallery = React.useMemo(() => {
+    if (!agenda.gallery) return [];
+    return agenda.gallery.filter(Boolean).map(url => {
+      // Convert Google Drive view links to direct image links for the gallery
+      const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
+      if (driveMatch && driveMatch[1]) {
+        return `https://drive.google.com/uc?id=${driveMatch[1]}`;
+      }
+      return url;
+    });
+  }, [agenda.gallery]);
+
+  const videoUrls = React.useMemo(() => {
+    if (!agenda.video_url) return [];
+    return agenda.video_url.split(/[\s,]+/).filter(Boolean);
+  }, [agenda.video_url]);
 
   const [currentBannerIndex, setCurrentBannerIndex] = React.useState(0);
   
@@ -492,12 +507,16 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
           )}
 
           {/* Video Dokumentasi */}
-          {agenda.video_url && (
+          {videoUrls.length > 0 && (
             <div className="bg-surface rounded-2xl md:rounded-3xl p-5 md:p-8 border border-outline-variant/30 shadow-sm">
               <h3 className="text-lg md:text-xl font-bold text-on-background mb-4 md:mb-6 flex items-center gap-2">
-                <FiVideo className="text-primary" size={20} /> Video Dokumentasi
+                <FiVideo className="text-primary" size={20} /> Dokumentasi
               </h3>
-              {renderVideo(agenda.video_url)}
+              <div className="flex flex-col gap-6">
+                {videoUrls.map((vUrl, idx) => (
+                  <div key={idx}>{renderVideo(vUrl)}</div>
+                ))}
+              </div>
             </div>
           )}
 
