@@ -10,12 +10,27 @@ import { formatDateToIndo } from "@/utils/dateFormatter";
 const getEventStatus = (item: any) => {
   if (!item.date) return "Akan Datang";
   const eventDate = new Date(item.date);
-  const today = new Date();
+  const now = new Date();
+  const today = new Date(now);
   eventDate.setHours(0,0,0,0);
   today.setHours(0,0,0,0);
   
   if (eventDate < today) return "Selesai";
-  if (eventDate.getTime() === today.getTime()) return "Live";
+  if (eventDate.getTime() === today.getTime()) {
+    if (item.time_range) {
+      const timeMatch = item.time_range.match(/(\d{1,2})[:.](\d{2})\s*(?:-|s\/d|to)\s*(\d{1,2})[:.](\d{2})/i);
+      if (timeMatch) {
+        const endHour = parseInt(timeMatch[3], 10);
+        const endMin = parseInt(timeMatch[4], 10);
+        const eventEnd = new Date(today);
+        eventEnd.setHours(endHour, endMin, 0, 0);
+        if (now.getTime() > eventEnd.getTime()) {
+          return "Selesai";
+        }
+      }
+    }
+    return "Live";
+  }
   return "Akan Datang";
 };
 
