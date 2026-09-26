@@ -117,7 +117,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
       const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
       // We assume Google Drive links pasted here are photos as requested by user
       if (driveMatch && driveMatch[1]) {
-        drivePhotos.push(`https://drive.google.com/uc?id=${driveMatch[1]}`);
+        drivePhotos.push(`https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1000`);
       } else {
         videos.push(url);
       }
@@ -130,7 +130,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
     const baseGallery = agenda.gallery ? agenda.gallery.filter(Boolean).map(url => {
       const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
       if (driveMatch && driveMatch[1]) {
-        return `https://drive.google.com/uc?id=${driveMatch[1]}`;
+        return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1000`;
       }
       return url;
     }) : [];
