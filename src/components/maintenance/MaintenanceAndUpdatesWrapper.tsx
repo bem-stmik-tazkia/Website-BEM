@@ -133,13 +133,15 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
     }
   }, [releaseNotes, locale]);
 
-  // Konami Code secret access: ↑ ↑ ↓ ↓ ← → Enter
+  // Konami Code: ↑↑↓↓←→ Enter
   const KONAMI = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"];
   const konamiProgress = useRef(0);
-  // Read sessionStorage gate (set only when Konami is entered)
   const [konamiUnlocked, setKonamiUnlocked] = useState(false);
   useEffect(() => {
-    setKonamiUnlocked(sessionStorage.getItem("_bk") === "1");
+    setKonamiUnlocked(
+      sessionStorage.getItem("_bk") === "1" ||
+      document.cookie.includes("maintenance_bypass=")
+    );
   }, [pathname]);
 
   // Exclude admin dashboard from being blocked by maintenance
@@ -216,15 +218,19 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
       .subscribe();
 
     // Konami Code listener for hidden admin access
-    const handleKonami = (e: KeyboardEvent) => {
+    const handleKonami = async (e: KeyboardEvent) => {
       if (e.key === KONAMI[konamiProgress.current]) {
         konamiProgress.current += 1;
         if (konamiProgress.current === KONAMI.length) {
           konamiProgress.current = 0;
-          // Set session gate then navigate
-          sessionStorage.setItem("_bk", "1");
-          setKonamiUnlocked(true);
-          router.push("/login");
+          // Panggil API untuk set bypass cookie (secret hanya ada di server)
+          const res = await fetch("/api/maintenance/bypass", { method: "POST" });
+          if (res.ok) {
+            // Set session gate then navigate
+            sessionStorage.setItem("_bk", "1");
+            setKonamiUnlocked(true);
+            router.push("/login");
+          }
         }
       } else {
         konamiProgress.current = e.key === KONAMI[0] ? 1 : 0;
