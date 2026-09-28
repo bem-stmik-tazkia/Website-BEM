@@ -18,9 +18,10 @@ async function getBeritaBySlug(slug: string) {
   return data;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function generateMetadata({ params }: { params: Promise<{ id: string; locale: string }> }) {
+  const { id, locale } = await params;
   const berita = await getBeritaBySlug(id);
+  const { getAlternates } = await import('@/utils/seo');
   
   if (!berita) {
     return {
@@ -35,10 +36,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${berita.title} - BEM STMIK Tazkia`,
     description: excerpt,
+    alternates: getAlternates(`/berita/${berita.slug}`, locale),
     openGraph: {
       title: berita.title,
       description: excerpt,
-      url: `https://bem.stmik.tazkia.ac.id/berita/${berita.slug}`,
+      url: `https://bem.stmik.tazkia.ac.id/${locale}/berita/${berita.slug}`,
       images: [
         {
           url: berita.image_url,

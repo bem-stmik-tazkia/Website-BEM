@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { getKegiatanById, getVolunteerApplications } from "@/app/(internal)/admin/kegiatan/actions";
 import ApplyClientForm from "./ApplyClientForm";
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function generateMetadata({ params }: { params: Promise<{ id: string; locale: string }> }) {
+  const { id, locale } = await params;
   const agenda = await getKegiatanById(id);
+  const { getAlternates } = await import('@/utils/seo');
   const hasRegistration = agenda?.form_schema && agenda.form_schema.length > 0;
   
   if (!agenda || (agenda.type !== 'volunteer' && !(agenda.type === 'event' && hasRegistration))) {
@@ -14,6 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `Daftar ${agenda.title} - BEM STMIK Tazkia`,
     description: `Formulir pendaftaran untuk ${agenda.title}`,
+    alternates: getAlternates(`/agenda/${id}/apply`, locale),
   };
 }
 

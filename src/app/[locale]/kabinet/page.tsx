@@ -3,7 +3,17 @@ import { createClient } from "@/utils/supabase/server";
 import { KabinetProfile } from "@/types/kabinet";
 import KabinetContentClient from "@/components/kabinet/KabinetContentClient";
 import { getTranslations } from "next-intl/server";
+import { Metadata } from "next";
 
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'KabinetPage' });
+  const { getAlternates } = await import('@/utils/seo');
+  return {
+    title: `${t("pageTitle") || "Kabinet"} - BEM STMIK Tazkia`,
+    alternates: getAlternates('/kabinet', locale),
+  };
+}
 export default async function KabinetPage() {
   const supabase = await createClient();
   const t = await getTranslations("KabinetPage");

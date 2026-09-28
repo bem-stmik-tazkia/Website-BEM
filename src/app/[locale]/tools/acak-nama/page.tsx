@@ -28,7 +28,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       ],
       locale: locale === 'id' ? 'id_ID' : 'en_US',
       type: "website",
-    }
+    },
+    alternates: (await import('@/utils/seo')).getAlternates('/tools/acak-nama', locale),
   };
 }
 
