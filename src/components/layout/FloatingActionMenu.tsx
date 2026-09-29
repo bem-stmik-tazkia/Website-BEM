@@ -163,7 +163,7 @@ export default function FloatingActionMenu() {
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-14 h-14 bg-surface text-on-surface rounded-full flex items-center justify-center shadow-lg hover:shadow-xl border border-outline-variant/30 transition-all relative overflow-hidden"
+        className="w-14 h-14 bg-white/70 dark:bg-slate-900/70 backdrop-blur-lg text-on-surface rounded-full flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-xl border border-white/50 dark:border-white/10 transition-all relative overflow-hidden"
         aria-label="Menu Aksi"
       >
         <AnimatePresence mode="wait">
