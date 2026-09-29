@@ -19,7 +19,7 @@ export default function FloatingWhatsApp() {
           .from("system_settings")
           .select("value")
           .eq("key", "admin_whatsapp")
-          .single();
+          .maybeSingle();
           
         if (!error && data?.value) {
           setPhone(data.value);
