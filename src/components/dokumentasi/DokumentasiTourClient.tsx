@@ -49,7 +49,7 @@ export default function DokumentasiTourClient() {
       animate={{ opacity: 1, scale: 1, x: 0 }}
       transition={{ delay: 1, type: "spring", stiffness: 200 }}
       onClick={startTour}
-      className="hidden" data-tour-btn="true"
+      className="hidden"
       aria-label={t("startBtn")}
     >
       <FiHelpCircle size={24} />
