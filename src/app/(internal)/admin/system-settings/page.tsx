@@ -272,8 +272,8 @@ export default function SystemSettingsPage() {
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
-        <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6 space-y-6">
-
+        <div className="flex flex-col gap-6">
+          <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6 space-y-6">
           {/* Header Switcher */}
           <div className="flex items-center justify-between gap-4 pb-6 border-b border-outline-variant/20">
             <div className="flex items-center gap-3">
