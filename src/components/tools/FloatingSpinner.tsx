@@ -31,8 +31,9 @@ export default function FloatingSpinner() {
   if (pathname.includes("/tools/acak-nama")) {
     return null;
   }
-  // Adjusted to stack above FloatingWhatsApp
-  const bottomClass = hasTour ? "bottom-[15.5rem] md:bottom-48" : "bottom-[15.5rem] md:bottom-[9.5rem]";
+
+  // Adjusted to stack neatly above FloatingWhatsApp
+  const bottomClass = "bottom-[15rem] md:bottom-[10.5rem]";
 
   return (
     <AnimatePresence>

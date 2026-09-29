@@ -43,7 +43,7 @@ export default function FloatingWhatsApp() {
   const waLink = `https://wa.me/${formattedPhone}`;
 
   return (
-    <div className="fixed bottom-[11.5rem] right-4 md:bottom-20 md:right-6 z-[60] flex flex-col items-end">
+    <div className="fixed bottom-[10.5rem] right-4 md:bottom-24 md:right-6 z-[60] flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
