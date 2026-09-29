@@ -7,8 +7,7 @@ import Footer from "./Footer";
 import LoadingScreen from "./LoadingScreen";
 import MaintenanceAndUpdatesWrapper from "@/components/maintenance/MaintenanceAndUpdatesWrapper";
 import FloatingKaryaPrompt from "./FloatingKarya";
-import FloatingWhatsApp from "./FloatingWhatsApp";
-import FloatingSpinner from "@/components/tools/FloatingSpinner";
+import FloatingActionMenu from "./FloatingActionMenu";
 
 export default function LayoutClientWrapper({
   children,
@@ -71,9 +70,8 @@ export default function LayoutClientWrapper({
       </main>
       {!hideLayout && (
         <>
-          <FloatingSpinner />
           <FloatingKaryaPrompt />
-          <FloatingWhatsApp />
+          <FloatingActionMenu />
           <Footer />
         </>
       )}
