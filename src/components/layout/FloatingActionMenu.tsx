@@ -163,17 +163,58 @@ export default function FloatingActionMenu() {
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all relative"
+        className="w-14 h-14 bg-surface text-on-surface rounded-full flex items-center justify-center shadow-lg hover:shadow-xl border border-outline-variant/30 transition-all relative overflow-hidden"
         aria-label="Menu Aksi"
       >
-        <motion.div
-          animate={{ rotate: isOpen ? 45 : 0 }}
-          transition={{ type: "spring", stiffness: 200, damping: 15 }}
-        >
-          <FiPlus size={28} />
-        </motion.div>
+        <AnimatePresence mode="wait">
+          {isOpen ? (
+            <motion.div
+              key="close"
+              initial={{ rotate: -90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: 90, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FiX size={28} className="text-secondary" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="cluster"
+              initial={{ rotate: 90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: -90, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-8 h-8 flex items-center justify-center"
+            >
+              {/* Tour Icon (Top Right) */}
+              {hasTour && (
+                <div className="absolute top-0 right-0 w-[18px] h-[18px] bg-white text-secondary rounded-full flex items-center justify-center shadow-sm z-10 border border-secondary/20">
+                  <FiHelpCircle size={11} />
+                </div>
+              )}
+              {/* Spinner Icon (Bottom Center) */}
+              {showSpinner && (
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[20px] h-[20px] bg-white rounded-full flex items-center justify-center shadow-sm z-20 border border-secondary/30 overflow-hidden">
+                   <div className="w-full h-full bg-[conic-gradient(#1b4086_0deg_60deg,#f2791e_60deg_120deg,#1b4086_120deg_180deg,#f2791e_180deg_240deg,#1b4086_240deg_300deg,#f2791e_300deg_360deg)] animate-[spin_3s_linear_infinite]" />
+                </div>
+              )}
+              {/* WhatsApp Icon (Top Left) */}
+              {phone && (
+                <div className="absolute top-0 left-0 w-[20px] h-[20px] bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-sm z-30 ring-[1.5px] ring-white">
+                  <SiWhatsapp size={11} />
+                </div>
+              )}
+              
+              {/* Fallback */}
+              {!hasTour && !showSpinner && !phone && (
+                <FiPlus size={24} className="text-secondary" />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {!isOpen && (
-          <span className="absolute w-full h-full rounded-full bg-primary opacity-30 animate-ping" style={{ animationDuration: '3s' }}></span>
+          <span className="absolute w-full h-full rounded-full border-2 border-secondary/20 opacity-30 animate-ping" style={{ animationDuration: '3s' }}></span>
         )}
       </motion.button>
     </div>
