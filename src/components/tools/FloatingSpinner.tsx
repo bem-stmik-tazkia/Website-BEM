@@ -31,8 +31,8 @@ export default function FloatingSpinner() {
   if (pathname.includes("/tools/acak-nama")) {
     return null;
   }
-
-  const bottomClass = hasTour ? "bottom-40 md:bottom-32" : "bottom-24 md:bottom-24";
+  // Adjusted to stack above FloatingWhatsApp
+  const bottomClass = hasTour ? "bottom-[15.5rem] md:bottom-48" : "bottom-[15.5rem] md:bottom-[9.5rem]";
 
   return (
     <AnimatePresence>
@@ -42,7 +42,7 @@ export default function FloatingSpinner() {
         exit={{ opacity: 0, scale: 0.5, y: 20 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className={`fixed ${bottomClass} right-4 md:right-8 z-50 cursor-pointer drop-shadow-lg group flex items-center justify-end gap-3 transition-all duration-500`}
+        className={`fixed ${bottomClass} right-4 md:right-6 z-50 cursor-pointer drop-shadow-lg group flex items-center justify-end gap-3 transition-all duration-500`}
         onClick={() => router.push("/tools/acak-nama")}
       >
         {/* Tooltip Label */}

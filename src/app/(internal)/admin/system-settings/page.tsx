@@ -348,36 +348,6 @@ export default function SystemSettingsPage() {
             </div>
           </div>
 
-          {/* Admin Contact Section */}
-          <div className="pt-5 border-t border-outline-variant/20">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="bg-primary/10 text-primary p-2 rounded-lg">
-                <span className="material-symbols-outlined text-[18px]">support_agent</span>
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-on-surface">
-                  Kontak Admin (WhatsApp)
-                </h3>
-                <p className="text-xs text-on-surface-variant">
-                  Nomor ini akan digunakan sebagai kontak default jika pengguna butuh bantuan (misalnya saat error).
-                </p>
-              </div>
-            </div>
-            
-            <div className="max-w-md">
-              <label className="block text-xs font-bold text-on-surface uppercase tracking-wider mb-2">
-                Nomor WhatsApp
-              </label>
-              <input
-                type="text"
-                value={adminPhone}
-                onChange={(e) => setAdminPhone(e.target.value)}
-                placeholder="Contoh: 085199562719"
-                className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-4 py-2.5 outline-none focus:border-primary text-sm"
-              />
-            </div>
-          </div>
-
           {/* Release Notes Section */}
           <div className="pt-5 border-t border-outline-variant/20">
             <div className="flex items-center justify-between gap-4 mb-4">
@@ -487,33 +457,64 @@ export default function SystemSettingsPage() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Action Footer */}
-          <div className="flex justify-end pt-4 border-t border-outline-variant/20">
-            <button
-              type="button"
-              onClick={handleSaveMaintenance}
-              disabled={savingMaintenance}
-              className={`px-6 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md disabled:opacity-50 ${
-                isDirty
-                  ? "bg-amber-500 hover:bg-amber-600 text-white ring-2 ring-amber-400/50 ring-offset-2"
-                  : "bg-primary hover:bg-primary/90 text-white"
-              }`}
-            >
-              {savingMaintenance ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Menyimpan...
-                </>
-              ) : (
-                <>
-                  <FiSave size={18} />
-                  {isDirty ? "Simpan Perubahan ●" : "Simpan Pengaturan Sistem"}
-                </>
-              )}
-            </button>
+        {/* Admin Contact Card */}
+        <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6 mt-6">
+          <div className="flex items-center gap-3 mb-6 pb-6 border-b border-outline-variant/20">
+            <div className="bg-primary/10 text-primary p-3 rounded-2xl">
+              <span className="material-symbols-outlined text-[24px]">support_agent</span>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-on-surface">
+                Kontak Admin (WhatsApp)
+              </h3>
+              <p className="text-xs text-on-surface-variant">
+                Nomor ini akan digunakan sebagai kontak default jika pengguna butuh bantuan (misalnya saat error).
+              </p>
+            </div>
+          </div>
+          
+          <div className="max-w-md">
+            <label className="block text-xs font-bold text-on-surface uppercase tracking-wider mb-2">
+              Nomor WhatsApp
+            </label>
+            <input
+              type="text"
+              value={adminPhone}
+              onChange={(e) => setAdminPhone(e.target.value)}
+              placeholder="Contoh: 085199562719"
+              className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm shadow-sm"
+            />
           </div>
         </div>
+
+        {/* Action Footer */}
+        <div className="flex justify-end mt-6">
+          <button
+            type="button"
+            onClick={handleSaveMaintenance}
+            disabled={savingMaintenance}
+            className={`px-8 py-3.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md disabled:opacity-50 ${
+              isDirty
+                ? "bg-amber-500 hover:bg-amber-600 text-white ring-4 ring-amber-400/30"
+                : "bg-primary hover:bg-primary/90 text-white"
+            }`}
+          >
+            {savingMaintenance ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Menyimpan...
+              </>
+            ) : (
+              <>
+                <FiSave size={20} />
+                {isDirty ? "Simpan Perubahan ●" : "Simpan Pengaturan Sistem"}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
       )}
     </div>
   );
