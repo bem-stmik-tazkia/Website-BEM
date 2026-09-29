@@ -35,6 +35,7 @@ export default function SystemSettingsPage() {
       "Perbaikan stabilitas sistem secara keseluruhan",
     ],
     rPublished: true,
+    adminPhone: "",
   });
 
   const [mMode, setMMode] = useState(false);
@@ -48,33 +49,28 @@ export default function SystemSettingsPage() {
       "Perbaikan stabilitas sistem secara keseluruhan",
   ]);
   const [rPublished, setRPublished] = useState(true);
+  const [adminPhone, setAdminPhone] = useState("");
   const [newFeatureInput, setNewFeatureInput] = useState("");
   const [savingMaintenance, setSavingMaintenance] = useState(false);
 
-  // Check dirty against saved ref
-  const checkDirty = useCallback(
-    (
-      _mMode: boolean,
-      _mTime: string,
-      _mMsg: string,
-      _rVersion: string,
-      _rTitle: string,
-      _rFeatures: string[],
-      _rPublished: boolean
-    ) => {
-      const s = savedRef.current;
-      const dirty =
-        _mMode !== s.mMode ||
-        _mTime !== s.mTime ||
-        _mMsg !== s.mMsg ||
-        _rVersion !== s.rVersion ||
-        _rTitle !== s.rTitle ||
-        _rPublished !== s.rPublished ||
-        JSON.stringify(_rFeatures) !== JSON.stringify(s.rFeatures);
-      setIsDirty(dirty);
-    },
-    []
-  );
+  // Check dirty against saved ref using useEffect
+  useEffect(() => {
+    if (loading) return;
+    const s = savedRef.current;
+    const dirty =
+      mMode !== s.mMode ||
+      mTime !== s.mTime ||
+      mMsg !== s.mMsg ||
+      rVersion !== s.rVersion ||
+      rTitle !== s.rTitle ||
+      rPublished !== s.rPublished ||
+      adminPhone !== s.adminPhone ||
+      JSON.stringify(rFeatures) !== JSON.stringify(s.rFeatures);
+    setIsDirty(dirty);
+  }, [mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone, loading]);
+
+  // Dummy function to prevent errors from existing checkDirty calls
+  const checkDirty = (...args: any[]) => {};
 
   const fetchData = async () => {
     setLoading(true);
@@ -86,6 +82,7 @@ export default function SystemSettingsPage() {
         "maintenance_estimated_time",
         "maintenance_message",
         "release_notes",
+        "admin_whatsapp",
       ]);
 
     if (error) {
@@ -95,10 +92,12 @@ export default function SystemSettingsPage() {
       const mTimeItem = data.find((d) => d.key === "maintenance_estimated_time");
       const mMsgItem = data.find((d) => d.key === "maintenance_message");
       const rNotesItem = data.find((d) => d.key === "release_notes");
+      const adminPhoneItem = data.find((d) => d.key === "admin_whatsapp");
 
       const newMMode = mModeItem?.value === "true";
       const newMTime = mTimeItem?.value || "1-2 Jam";
       const newMMsg = mMsgItem?.value || "";
+      const newAdminPhone = adminPhoneItem?.value || "";
       let newRVersion = "v1.2.0";
       let newRTitle = "Pembaruan Sistem Portal BEM";
       let newRFeatures = savedRef.current.rFeatures;
@@ -125,6 +124,7 @@ export default function SystemSettingsPage() {
         rTitle: newRTitle,
         rFeatures: newRFeatures,
         rPublished: newRPublished,
+        adminPhone: newAdminPhone,
       };
 
       setMMode(newMMode);
@@ -134,6 +134,7 @@ export default function SystemSettingsPage() {
       setRTitle(newRTitle);
       setRFeatures(newRFeatures);
       setRPublished(newRPublished);
+      setAdminPhone(newAdminPhone);
       setIsDirty(false);
     }
     setLoading(false);
@@ -203,6 +204,7 @@ export default function SystemSettingsPage() {
       { key: "maintenance_estimated_time", value: mTime.trim() || "1-2 Jam" },
       { key: "maintenance_message", value: mMsg.trim() },
       { key: "release_notes", value: JSON.stringify(releaseNotesObj) },
+      { key: "admin_whatsapp", value: adminPhone.trim() },
     ];
 
     const { error } = await supabase
@@ -213,7 +215,7 @@ export default function SystemSettingsPage() {
       toast("Gagal menyimpan pengaturan sistem.", "error");
     } else {
       // Mark new values as clean
-      savedRef.current = { mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished };
+      savedRef.current = { mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone };
       setIsDirty(false);
       toast(
         mMode
@@ -341,6 +343,36 @@ export default function SystemSettingsPage() {
                   checkDirty(mMode, mTime, e.target.value, rVersion, rTitle, rFeatures, rPublished);
                 }}
                 placeholder="Contoh: Kami sedang meningkatkan kecepatan sistem & keamanan."
+                className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-4 py-2.5 outline-none focus:border-primary text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Admin Contact Section */}
+          <div className="pt-5 border-t border-outline-variant/20">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="bg-primary/10 text-primary p-2 rounded-lg">
+                <span className="material-symbols-outlined text-[18px]">support_agent</span>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-on-surface">
+                  Kontak Admin (WhatsApp)
+                </h3>
+                <p className="text-xs text-on-surface-variant">
+                  Nomor ini akan digunakan sebagai kontak default jika pengguna butuh bantuan (misalnya saat error).
+                </p>
+              </div>
+            </div>
+            
+            <div className="max-w-md">
+              <label className="block text-xs font-bold text-on-surface uppercase tracking-wider mb-2">
+                Nomor WhatsApp
+              </label>
+              <input
+                type="text"
+                value={adminPhone}
+                onChange={(e) => setAdminPhone(e.target.value)}
+                placeholder="Contoh: 085199562719"
                 className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-4 py-2.5 outline-none focus:border-primary text-sm"
               />
             </div>
