@@ -25,6 +25,25 @@ interface AdminMonitoringSectionProps {
   mode?: "all" | "server-only" | "logs-only";
 }
 
+
+function formatTimeAgo(dateStr?: string) {
+  if (!dateStr) return "Baru saja";
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInMins = Math.floor(diffInMs / 60000);
+  const diffInHours = Math.floor(diffInMins / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInMins < 1) return "Baru saja";
+  if (diffInMins < 60) return `${diffInMins} menit lalu`;
+  if (diffInHours < 24) return `${diffInHours} jam lalu`;
+  if (diffInDays === 1) return "Kemarin";
+  if (diffInDays < 7) return `${diffInDays} hari lalu`;
+  
+  return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoringSectionProps) {
   const supabase = createClient();
   const [filterType, setFilterType] = useState<string>("all");
