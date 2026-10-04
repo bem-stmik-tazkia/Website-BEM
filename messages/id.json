@@ -336,6 +336,7 @@
     "item2Btn": "Daftar Sekarang"
   },
   "KabinetPage": {
+    "pageTitle": "Profil Kabinet",
     "notAvailableTitle": "Profil Kabinet Belum Tersedia",
     "notAvailableDesc": "Data kabinet aktif belum diatur di database.",
     "cabinetBadge": "KABINET",

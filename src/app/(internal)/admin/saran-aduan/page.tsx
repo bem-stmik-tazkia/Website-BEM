@@ -37,6 +37,10 @@ export default function SaranAduanAdminPage() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState("");
+  const [tBotToken, setTBotToken] = useState("");
+  const [tChatId, setTChatId] = useState("");
+  const [excelViewUrl, setExcelViewUrl] = useState("");
+
   const [isSavingWebhook, setIsSavingWebhook] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
@@ -63,14 +67,25 @@ export default function SaranAduanAdminPage() {
     setLoading(false);
   };
 
-  const fetchWebhookUrl = async () => {
-    const { data } = await supabase.from('system_settings').select('value').eq('key', 'google_sheets_webhook_url').maybeSingle();
-    if (data) setWebhookUrl(data.value);
+  const fetchIntegrationSettings = async () => {
+    const { data } = await supabase.from('system_settings').select('key, value').in('key', [
+      'google_sheets_webhook_url', 
+      'telegram_bot_token', 
+      'telegram_chat_id', 
+      'excel_view_url'
+    ]);
+    if (data) {
+      const settings = data.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {} as Record<string, string>);
+      setWebhookUrl(settings['google_sheets_webhook_url'] || "");
+      setTBotToken(settings['telegram_bot_token'] || "");
+      setTChatId(settings['telegram_chat_id'] || "");
+      setExcelViewUrl(settings['excel_view_url'] || "");
+    }
   };
 
   useEffect(() => {
     fetchData();
-    fetchWebhookUrl();
+    fetchIntegrationSettings();
 
     // Supabase Realtime subscription for incoming saran/aduan
     const channel = supabase
@@ -122,9 +137,15 @@ export default function SaranAduanAdminPage() {
   const handleSaveWebhook = async () => {
     setIsSavingWebhook(true);
     try {
-      const { error } = await supabase.from('system_settings').upsert({ key: 'google_sheets_webhook_url', value: webhookUrl });
+      const updates = [
+        { key: 'google_sheets_webhook_url', value: webhookUrl.trim() },
+        { key: 'telegram_bot_token', value: tBotToken.trim() },
+        { key: 'telegram_chat_id', value: tChatId.trim() },
+        { key: 'excel_view_url', value: excelViewUrl.trim() },
+      ];
+      const { error } = await supabase.from('system_settings').upsert(updates, { onConflict: 'key' });
       if (error) throw error;
-      toast("Link Integrasi Excel berhasil disimpan.", "success");
+      toast("Pengaturan Integrasi berhasil disimpan.", "success");
       setIsSettingsOpen(false);
     } catch (e: any) {
       toast("Gagal menyimpan: " + e.message, "error");
@@ -155,7 +176,7 @@ export default function SaranAduanAdminPage() {
       }),
       item.nama || "Anonim",
       item.kategori ? item.kategori.toUpperCase() : "-",
-      item.deskripsi || "-",
+      item.pesan || "-",
     ]);
 
     const escapeCsv = (val: string) => {
@@ -269,8 +290,8 @@ export default function SaranAduanAdminPage() {
                         </span>
                       </td>
                       <td className="py-4 px-6 text-sm text-on-surface align-top">
-                        <div className="max-w-sm line-clamp-2 break-words break-all" title={item.deskripsi}>
-                          {item.deskripsi}
+                        <div className="max-w-sm line-clamp-2 break-words break-all" title={item.pesan}>
+                          {item.pesan}
                         </div>
                       </td>
                       <td className="py-4 px-6 align-top">
@@ -326,7 +347,7 @@ export default function SaranAduanAdminPage() {
               <div>
                 <div className="text-xs text-on-surface-variant font-bold uppercase tracking-wider mb-2">Isi Laporan</div>
                 <div className="p-4 bg-surface-variant/20 rounded-xl text-sm text-on-surface whitespace-pre-wrap leading-relaxed border border-outline-variant/20 break-words break-all">
-                  {detailItem.deskripsi}
+                  {detailItem.pesan}
                 </div>
               </div>
             </div>
@@ -345,29 +366,82 @@ export default function SaranAduanAdminPage() {
       {/* Integrasi Excel Settings Modal */}
       {isSettingsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-surface rounded-2xl shadow-xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-surface rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="px-6 py-5 border-b border-outline-variant/20 flex justify-between items-center bg-surface-variant/10">
               <h3 className="text-lg font-bold text-on-surface flex items-center gap-2">
                 <FiLink className="text-primary" />
-                Integrasi Excel Online
+                Integrasi Excel & Telegram
               </h3>
               <button onClick={() => setIsSettingsOpen(false)} className="text-on-surface-variant hover:text-on-surface p-1 rounded-full hover:bg-surface-variant/50 transition-colors">
                 <FiX size={20} />
               </button>
             </div>
-            <div className="px-6 py-5 overflow-y-auto flex-1">
-              <p className="text-sm text-on-surface-variant mb-4 leading-relaxed">
-                Masukkan <strong>Web App URL</strong> dari Google Apps Script untuk menghubungkan data kotak saran secara otomatis (real-time) ke Google Sheets.
-              </p>
-              <div className="flex flex-col gap-2 mb-6">
-                <label className="text-xs font-bold text-on-surface uppercase tracking-wider">URL Webhook Google Sheets</label>
-                <input
-                  type="text"
-                  value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
-                  placeholder="https://script.google.com/macros/s/.../exec"
-                  className="w-full px-4 py-3 text-sm rounded-xl border border-outline-variant/50 bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-surface"
-                />
+            <div className="px-6 py-5 overflow-y-auto flex-1 space-y-6">
+              
+              {/* Telegram Section */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant/20 pb-2">
+                  <span className="material-symbols-outlined text-blue-500 text-[20px]">send</span>
+                  Notifikasi Telegram
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-on-surface uppercase tracking-wider">Telegram Bot Token</label>
+                    <input
+                      type="text"
+                      value={tBotToken}
+                      onChange={(e) => setTBotToken(e.target.value)}
+                      placeholder="Contoh: 876543210:AAH_..."
+                      className="w-full px-3 py-2 text-sm rounded-xl border border-outline-variant/50 bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-surface"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-bold text-on-surface uppercase tracking-wider">Telegram Chat ID</label>
+                    <input
+                      type="text"
+                      value={tChatId}
+                      onChange={(e) => setTChatId(e.target.value)}
+                      placeholder="Contoh: -100xxxxxxxxx"
+                      className="w-full px-3 py-2 text-sm rounded-xl border border-outline-variant/50 bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-surface"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Google Sheets Section */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant/20 pb-2">
+                  <FiLink className="text-emerald-500" />
+                  Google Sheets (Excel)
+                </h4>
+                
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-on-surface uppercase tracking-wider">URL Webhook (Make.com / Apps Script)</label>
+                  <p className="text-[10px] text-on-surface-variant leading-tight mb-1">
+                    Digunakan sistem untuk mengirim data saran (POST) setiap ada yang mengisi kotak saran.
+                  </p>
+                  <input
+                    type="text"
+                    value={webhookUrl}
+                    onChange={(e) => setWebhookUrl(e.target.value)}
+                    placeholder="https://hook.eu1.make.com/... atau script.google.com..."
+                    className="w-full px-3 py-2 text-sm rounded-xl border border-outline-variant/50 bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-surface"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold text-on-surface uppercase tracking-wider">Link Tampilan Excel (View URL)</label>
+                  <p className="text-[10px] text-on-surface-variant leading-tight mb-1">
+                    Akan muncul sebagai tombol "Lihat Rekap Spreadsheet" di chat Telegram.
+                  </p>
+                  <input
+                    type="text"
+                    value={excelViewUrl}
+                    onChange={(e) => setExcelViewUrl(e.target.value)}
+                    placeholder="https://docs.google.com/spreadsheets/d/..."
+                    className="w-full px-3 py-2 text-sm rounded-xl border border-outline-variant/50 bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-surface"
+                  />
+                </div>
               </div>
 
               {/* Accordion Panduan */}

@@ -354,6 +354,7 @@
     "item2Btn": "Register Now"
   },
   "KabinetPage": {
+    "pageTitle": "Cabinet Profile",
     "notAvailableTitle": "Cabinet Profile Not Yet Available",
     "notAvailableDesc": "Active cabinet data has not been set up in the database.",
     "cabinetBadge": "CABINET",

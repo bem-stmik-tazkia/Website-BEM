@@ -336,6 +336,7 @@
     "item2Btn": "S'inscrire Maintenant"
   },
   "KabinetPage": {
+    "pageTitle": "Profil du Cabinet",
     "notAvailableTitle": "Profil du Cabinet Pas Encore Disponible",
     "notAvailableDesc": "Les données du cabinet actif n'ont pas encore été configurées dans la base de données.",
     "cabinetBadge": "CABINET",

@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { 
-  FiActivity, FiHardDrive, FiServer, FiCheckCircle, 
+  FiActivity, FiServer, FiCheckCircle, 
   FiClock, FiFileText, FiBriefcase, FiCalendar, FiUsers, 
-  FiMessageSquare, FiSettings, FiRefreshCw, FiTrash2, FiLock, FiCpu
+  FiMessageSquare, FiSettings, FiRefreshCw, FiTrash2, FiCpu
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
@@ -174,17 +174,7 @@ export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoring
     fetchRealtimeLogs();
   }, [timeFilter]);
 
-  function formatTimeAgo(dateStr?: string) {
-    if (!dateStr) return "Baru saja";
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffSec < 60) return `${diffSec} dtk lalu`;
-    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} mnt lalu`;
-    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} jam lalu`;
-    return `${Math.floor(diffSec / 86400)} hari lalu`;
-  }
 
   const filteredLogs = logs.filter(log => {
     // Check type filter
@@ -231,7 +221,7 @@ export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoring
           </div>
 
           {/* Status Metrics Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
             {/* Card 1: Server Latency & Health */}
             <div className="bg-surface-variant/20 border border-outline-variant/20 rounded-2xl p-5 flex flex-col justify-between">
@@ -248,62 +238,6 @@ export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoring
               <div className="mt-4 pt-3 border-t border-outline-variant/20 flex justify-between text-xs text-on-surface-variant">
                 <span>Status HTTP: 200 OK</span>
                 <span className="font-bold text-emerald-600">99.98% Uptime</span>
-              </div>
-            </div>
-
-            {/* Card 2: Supabase Storage Usage */}
-            <div className="bg-surface-variant/20 border border-outline-variant/20 rounded-2xl p-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Kapasitas Storage</span>
-                  <FiHardDrive className="text-secondary" size={18} />
-                </div>
-                <div className="flex items-baseline justify-between mb-1">
-                  <span className="text-2xl font-black text-on-surface">1.4 GB</span>
-                  <span className="text-xs font-bold text-on-surface-variant">dari 5.0 GB</span>
-                </div>
-                
-                {/* Progress Bar */}
-                <div className="w-full bg-outline-variant/30 h-2.5 rounded-full overflow-hidden mt-2">
-                  <div className="bg-gradient-to-r from-primary to-secondary h-full rounded-full w-[28%] transition-all duration-500"></div>
-                </div>
-              </div>
-              <div className="mt-4 pt-3 border-t border-outline-variant/20 flex justify-between text-xs text-on-surface-variant">
-                <span>Batas Kuota: 28% Terpakai</span>
-                <span className="font-bold text-primary">Sisa 3.6 GB</span>
-              </div>
-            </div>
-
-            {/* Card 3: Key Services Health Grid */}
-            <div className="bg-surface-variant/20 border border-outline-variant/20 rounded-2xl p-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Layanan Utama</span>
-                  <FiLock className="text-emerald-500" size={18} />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1.5 rounded-lg border border-outline-variant/20">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span className="font-semibold text-on-surface">PostgreSQL DB</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1.5 rounded-lg border border-outline-variant/20">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span className="font-semibold text-on-surface">CDN Storage</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1.5 rounded-lg border border-outline-variant/20">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span className="font-semibold text-on-surface">Auth OAuth</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1.5 rounded-lg border border-outline-variant/20">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span className="font-semibold text-on-surface">i18n Engine</span>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 pt-3 border-t border-outline-variant/20 flex justify-between text-xs text-on-surface-variant">
-                <span>Supabase Cloud</span>
-                <span className="font-bold text-emerald-600">Semua Normal</span>
               </div>
             </div>
 

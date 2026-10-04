@@ -36,6 +36,10 @@ export default function SystemSettingsPage() {
     ],
     rPublished: true,
     adminPhone: "",
+    tBotToken: "",
+    tChatId: "",
+    excelViewUrl: "",
+    webhookUrl: "",
   });
 
   const [mMode, setMMode] = useState(false);
@@ -50,6 +54,10 @@ export default function SystemSettingsPage() {
   ]);
   const [rPublished, setRPublished] = useState(true);
   const [adminPhone, setAdminPhone] = useState("");
+  const [tBotToken, setTBotToken] = useState("");
+  const [tChatId, setTChatId] = useState("");
+  const [excelViewUrl, setExcelViewUrl] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState("");
   const [newFeatureInput, setNewFeatureInput] = useState("");
   const [savingMaintenance, setSavingMaintenance] = useState(false);
 
@@ -65,9 +73,13 @@ export default function SystemSettingsPage() {
       rTitle !== s.rTitle ||
       rPublished !== s.rPublished ||
       adminPhone !== s.adminPhone ||
+      tBotToken !== s.tBotToken ||
+      tChatId !== s.tChatId ||
+      excelViewUrl !== s.excelViewUrl ||
+      webhookUrl !== s.webhookUrl ||
       JSON.stringify(rFeatures) !== JSON.stringify(s.rFeatures);
     setIsDirty(dirty);
-  }, [mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone, loading]);
+  }, [mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone, tBotToken, tChatId, excelViewUrl, webhookUrl, loading]);
 
   // Dummy function to prevent errors from existing checkDirty calls
   const checkDirty = (...args: any[]) => {};
@@ -83,6 +95,10 @@ export default function SystemSettingsPage() {
         "maintenance_message",
         "release_notes",
         "admin_whatsapp",
+        "telegram_bot_token",
+        "telegram_chat_id",
+        "excel_view_url",
+        "google_sheets_webhook_url"
       ]);
 
     if (error) {
@@ -93,11 +109,20 @@ export default function SystemSettingsPage() {
       const mMsgItem = data.find((d) => d.key === "maintenance_message");
       const rNotesItem = data.find((d) => d.key === "release_notes");
       const adminPhoneItem = data.find((d) => d.key === "admin_whatsapp");
+      const tBotTokenItem = data.find((d) => d.key === "telegram_bot_token");
+      const tChatIdItem = data.find((d) => d.key === "telegram_chat_id");
+      const excelViewUrlItem = data.find((d) => d.key === "excel_view_url");
+      const webhookUrlItem = data.find((d) => d.key === "google_sheets_webhook_url");
 
       const newMMode = mModeItem?.value === "true";
       const newMTime = mTimeItem?.value || "1-2 Jam";
       const newMMsg = mMsgItem?.value || "";
       const newAdminPhone = adminPhoneItem?.value || "";
+      const newTBotToken = tBotTokenItem?.value || "";
+      const newTChatId = tChatIdItem?.value || "";
+      const newExcelViewUrl = excelViewUrlItem?.value || "";
+      const newWebhookUrl = webhookUrlItem?.value || "";
+      
       let newRVersion = "v1.2.0";
       let newRTitle = "Pembaruan Sistem Portal BEM";
       let newRFeatures = savedRef.current.rFeatures;
@@ -125,6 +150,10 @@ export default function SystemSettingsPage() {
         rFeatures: newRFeatures,
         rPublished: newRPublished,
         adminPhone: newAdminPhone,
+        tBotToken: newTBotToken,
+        tChatId: newTChatId,
+        excelViewUrl: newExcelViewUrl,
+        webhookUrl: newWebhookUrl,
       };
 
       setMMode(newMMode);
@@ -135,6 +164,11 @@ export default function SystemSettingsPage() {
       setRFeatures(newRFeatures);
       setRPublished(newRPublished);
       setAdminPhone(newAdminPhone);
+      setTBotToken(newTBotToken);
+      setTChatId(newTChatId);
+      setExcelViewUrl(newExcelViewUrl);
+      setWebhookUrl(newWebhookUrl);
+      
       setIsDirty(false);
     }
     setLoading(false);
@@ -215,14 +249,12 @@ export default function SystemSettingsPage() {
       toast("Gagal menyimpan pengaturan sistem.", "error");
     } else {
       // Mark new values as clean
-      savedRef.current = { mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone };
+      savedRef.current = { 
+        mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone,
+        tBotToken, tChatId, excelViewUrl, webhookUrl
+      };
       setIsDirty(false);
-      toast(
-        mMode
-          ? "Mode Pemeliharaan BERHASIL DIAKTIFKAN!"
-          : "Pengaturan Sistem & Release Notes berhasil disimpan!",
-        "success"
-      );
+      toast("Pengaturan Sistem berhasil disimpan!", "success");
     }
     setSavingMaintenance(false);
   };
@@ -488,6 +520,8 @@ export default function SystemSettingsPage() {
             />
           </div>
         </div>
+
+
 
         {/* Action Footer */}
         <div className="flex justify-end mt-6">

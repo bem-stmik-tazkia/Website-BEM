@@ -9,6 +9,7 @@ import ProkerIcon from "@/components/kabinet/ProkerIcon";
 import KabinetTourClient from "@/components/kabinet/KabinetTourClient";
 import { translateContentBatch } from "@/utils/translate";
 import Image from "next/image";
+import { getCoreTheme, getCoreTier, getLeadOrder } from "@/lib/kabinetColors";
 
 // ─────────────────────────────────────────────
 // ICONS
@@ -93,55 +94,84 @@ function PengurusCard({ person }: { person: KabinetPengurusInti }) {
     return role;
   };
 
+  const role = person.role && person.role.trim() !== "-" ? getRole(person.role) : "";
+  const theme = getCoreTheme(person.role);
+  const accent = theme.color;
+  const isLead = getCoreTier(person.role) === "lead";
+
   return (
-    <div className="group bg-surface rounded-2xl border border-outline-variant/20 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center gap-4 p-4">
-      {/* Avatar */}
+    <div className="group relative aspect-[3/4] w-full rounded-3xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-500 ring-1 ring-outline-variant/20 bg-surface">
+      {/* Cover photo / fallback */}
+      {person.foto ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={person.foto}
+          alt={person.name}
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
+        />
+      ) : (
+        <div
+          className="absolute inset-0 flex items-center justify-center transition-transform duration-700 group-hover:scale-110"
+          style={{ background: `linear-gradient(145deg, ${theme.bg} 0%, ${accent}55 100%)` }}
+        >
+          <span className={`${isLead ? "text-7xl md:text-8xl" : "text-5xl md:text-6xl"} font-black select-none opacity-80`} style={{ color: accent }}>
+            {person.initials}
+          </span>
+        </div>
+      )}
+
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
       <div
-        className="w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center text-lg font-black select-none overflow-hidden"
-        style={{ backgroundColor: person.bg, color: person.color }}
-      >
-        {person.foto ? (
-          <img src={person.foto} alt={person.name} className="w-full h-full object-cover" />
-        ) : (
-          person.initials
-        )}
-      </div>
+        className="absolute inset-x-0 bottom-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ backgroundColor: accent }}
+      />
 
       {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-extrabold uppercase tracking-widest mb-0.5" style={{ color: person.color }}>
-          {getRole(person.role)}
-        </p>
-        <h3 className="font-bold text-on-background text-base leading-tight truncate">{person.name}</h3>
-      </div>
-
-      {/* Social buttons */}
-      <div className="flex gap-2 shrink-0">
-        {person.wa && (() => {
-          const sanitizedWa = person.wa.replace(/\D/g, '');
-          const waNumber = sanitizedWa.startsWith('0') ? '62' + sanitizedWa.slice(1) : sanitizedWa;
-          return (
-            <a
-              href={person.wa.startsWith('http') ? person.wa : `https://wa.me/${waNumber}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-8 h-8 rounded-xl border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-all duration-300"
-              aria-label={`WhatsApp ${person.name}`}
-            >
-              <WaIcon />
-            </a>
-          );
-        })()}
-        {person.ig && (
-          <a
-            href={person.ig.startsWith('http') ? person.ig : `https://instagram.com/${person.ig.replace("@", "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-8 h-8 rounded-xl border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] hover:text-white hover:border-transparent transition-all duration-200"
-            aria-label={`Instagram ${person.name}`}
+      <div className={`absolute inset-x-0 bottom-0 ${isLead ? "p-4 md:p-6" : "p-3 md:p-4"} flex flex-col gap-2`}>
+        {role && (
+          <span
+            className="self-start max-w-full truncate text-[10px] md:text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full text-white shadow-sm"
+            style={{ backgroundColor: accent }}
           >
-            <IgIcon />
-          </a>
+            {role}
+          </span>
+        )}
+        <h3 className={`font-extrabold text-white ${isLead ? "text-lg md:text-2xl" : "text-sm md:text-base"} leading-tight line-clamp-2 drop-shadow`}>
+          {person.name}
+        </h3>
+
+        {/* Social buttons */}
+        {(person.wa || person.ig) && (
+          <div className="flex gap-2 pt-1">
+            {person.wa && (() => {
+              const sanitizedWa = person.wa.replace(/\D/g, '');
+              const waNumber = sanitizedWa.startsWith('0') ? '62' + sanitizedWa.slice(1) : sanitizedWa;
+              return (
+                <a
+                  href={person.wa.startsWith('http') ? person.wa : `https://wa.me/${waNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-[#25D366] hover:border-[#25D366] transition-all duration-300"
+                  aria-label={`WhatsApp ${person.name}`}
+                >
+                  <WaIcon />
+                </a>
+              );
+            })()}
+            {person.ig && (
+              <a
+                href={person.ig.startsWith('http') ? person.ig : `https://instagram.com/${person.ig.replace("@", "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] hover:border-transparent transition-all duration-300"
+                aria-label={`Instagram ${person.name}`}
+              >
+                <IgIcon />
+              </a>
+            )}
+          </div>
         )}
       </div>
     </div>
@@ -284,13 +314,34 @@ export default function KabinetContentClient({ profile: rawProfile }: { profile:
             <div className="flex-1 h-px bg-outline-variant/30" />
           </div>
 
-          <div className="flex flex-row overflow-x-auto gap-4 pb-3 scrollbar-hide sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 flex-nowrap sm:flex-wrap">
-            {profile.pengurus_inti.map((p, i) => (
-              <div key={i} className="w-[80vw] sm:w-auto shrink-0 sm:shrink">
-                <PengurusCard person={p} />
+          {(() => {
+            const leads = profile.pengurus_inti
+              .filter((p) => getCoreTier(p.role) === "lead")
+              .sort((a, b) => getLeadOrder(a.role) - getLeadOrder(b.role));
+            const staff = profile.pengurus_inti.filter((p) => getCoreTier(p.role) === "staff");
+            return (
+              <div className="flex flex-col gap-4 md:gap-6">
+                {leads.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+                    {leads.map((p, i) => (
+                      <div key={`lead-${i}`} className="w-[calc(50%-0.5rem)] md:w-[calc(50%-0.75rem)] max-w-[300px]">
+                        <PengurusCard person={p} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {staff.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-4 md:gap-5">
+                    {staff.map((p, i) => (
+                      <div key={`staff-${i}`} className="w-[calc(50%-0.5rem)] md:w-[calc(25%-0.9375rem)]">
+                        <PengurusCard person={p} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })()}
         </section>
 
         {/* ── PROKER UTAMA BEM ── */}
@@ -341,8 +392,8 @@ export default function KabinetContentClient({ profile: rawProfile }: { profile:
           </div>
 
           <div className="flex flex-col gap-5">
-            {profile.departemen.map((dept) => (
-              <DepartemenCard key={dept.id} dept={dept} />
+            {profile.departemen.map((dept, idx) => (
+              <DepartemenCard key={dept.id} dept={dept} index={idx} />
             ))}
           </div>
         </section>

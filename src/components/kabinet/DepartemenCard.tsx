@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { KabinetDepartemen } from "@/types/kabinet";
 import LottieIcon from "@/components/ui/LottieIcon";
 import { useTranslations } from "next-intl";
+import { getDeptTheme } from "@/lib/kabinetColors";
 
 // Icons
 function UsersIcon() {
@@ -102,50 +103,78 @@ function AnggotaCard({
     return role;
   };
 
+  const role = member.role && member.role.trim() !== "-" ? getRole(member.role) : "";
+
   return (
-    <div className="group bg-surface rounded-2xl border border-outline-variant/20 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center gap-4 p-4">
+    <div className="group relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 ring-1 ring-outline-variant/20 bg-surface">
+      {/* Cover photo / fallback */}
+      {member.foto ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={member.foto}
+          alt={member.name}
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
+        />
+      ) : (
+        <div
+          className="absolute inset-0 flex items-center justify-center transition-transform duration-700 group-hover:scale-110"
+          style={{ background: `linear-gradient(145deg, ${warnaBg} 0%, ${warna}55 100%)` }}
+        >
+          <span className="text-4xl md:text-5xl font-black select-none opacity-80" style={{ color: warna }}>
+            {member.initials}
+          </span>
+        </div>
+      )}
+
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
       <div
-        className="w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center text-lg font-black select-none overflow-hidden"
-        style={{ backgroundColor: warnaBg, color: warna }}
-      >
-        {member.foto ? (
-          <img src={member.foto} alt={member.name} className="w-full h-full object-cover" />
-        ) : (
-          member.initials
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-extrabold uppercase tracking-widest mb-0.5" style={{ color: warna }}>
-          {getRole(member.role)}
-        </p>
-        <h3 className="font-bold text-on-background text-base leading-tight truncate">{member.name}</h3>
-      </div>
-      <div className="flex gap-2 shrink-0">
-        {member.wa && (() => {
-          const sanitizedWa = member.wa.replace(/\D/g, '');
-          const waNumber = sanitizedWa.startsWith('0') ? '62' + sanitizedWa.slice(1) : sanitizedWa;
-          return (
-            <a
-              href={member.wa.startsWith('http') ? member.wa : `https://wa.me/${waNumber}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-8 h-8 rounded-xl border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition-all duration-300"
-              aria-label={`WhatsApp ${member.name}`}
-            >
-              <WaIcon />
-            </a>
-          );
-        })()}
-        {member.ig && (
-          <a
-            href={member.ig.startsWith('http') ? member.ig : `https://instagram.com/${member.ig.replace("@", "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-8 h-8 rounded-xl border border-outline-variant/30 flex items-center justify-center text-on-surface-variant hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] hover:text-white hover:border-transparent transition-all duration-300"
-            aria-label={`Instagram ${member.name}`}
+        className="absolute inset-x-0 bottom-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ backgroundColor: warna }}
+      />
+
+      {/* Info */}
+      <div className="absolute inset-x-0 bottom-0 p-3 flex flex-col gap-1.5">
+        {role && (
+          <span
+            className="self-start max-w-full truncate text-[9px] md:text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full text-white"
+            style={{ backgroundColor: warna }}
           >
-            <IgIcon />
-          </a>
+            {role}
+          </span>
+        )}
+        <h3 className="font-bold text-white text-sm leading-tight line-clamp-2 drop-shadow">{member.name}</h3>
+
+        {(member.wa || member.ig) && (
+          <div className="flex gap-1.5 pt-0.5">
+            {member.wa && (() => {
+              const sanitizedWa = member.wa.replace(/\D/g, '');
+              const waNumber = sanitizedWa.startsWith('0') ? '62' + sanitizedWa.slice(1) : sanitizedWa;
+              return (
+                <a
+                  href={member.wa.startsWith('http') ? member.wa : `https://wa.me/${waNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-[#25D366] hover:border-[#25D366] transition-all duration-300"
+                  aria-label={`WhatsApp ${member.name}`}
+                >
+                  <WaIcon />
+                </a>
+              );
+            })()}
+            {member.ig && (
+              <a
+                href={member.ig.startsWith('http') ? member.ig : `https://instagram.com/${member.ig.replace("@", "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] hover:border-transparent transition-all duration-300"
+                aria-label={`Instagram ${member.name}`}
+              >
+                <IgIcon />
+              </a>
+            )}
+          </div>
         )}
       </div>
     </div>
@@ -189,10 +218,11 @@ function DeptIcon({ icon }: { icon: string }) {
   return <span className="text-2xl">{icon}</span>;
 }
 
-export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
+export default function DepartemenCard({ dept, index = 0 }: { dept: KabinetDepartemen; index?: number }) {
   const t = useTranslations("KabinetPage");
   const tRoles = useTranslations("Roles");
   const tTags = useTranslations("Tags");
+  const { color: deptColor, bg: deptBg } = getDeptTheme(index);
   const [tab, setTab] = useState<"anggota" | "proker">("anggota");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -215,10 +245,10 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
   return (
     <div className="bg-surface rounded-2xl border border-outline-variant/20 shadow-sm overflow-hidden">
       {/* ── Header ── */}
-      <div className="flex items-center gap-4 p-5" style={{ borderLeft: `4px solid ${dept.warna}` }}>
+      <div className="flex items-center gap-4 p-5" style={{ borderLeft: `4px solid ${deptColor}` }}>
         <div
           className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center"
-          style={{ backgroundColor: dept.warnaBg }}
+          style={{ backgroundColor: deptBg }}
         >
           <DeptIcon icon={dept.icon} />
         </div>
@@ -227,7 +257,7 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
             <h3 className="font-extrabold text-lg text-on-background leading-tight">{dept.nama}</h3>
             <span
               className="text-[11px] font-black px-2.5 py-0.5 rounded-full tracking-wide"
-              style={{ backgroundColor: dept.warnaBg, color: dept.warna }}
+              style={{ backgroundColor: deptBg, color: deptColor }}
             >
               {dept.singkatan}
             </span>
@@ -253,7 +283,7 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
                 ? "text-on-background"
                 : "text-on-surface-variant hover:text-on-background border-transparent"
                 }`}
-              style={isActive ? { borderBottomColor: dept.warna } : {}}
+              style={isActive ? { borderBottomColor: deptColor } : {}}
             >
               <span className="opacity-80">
                 {tabKey === "anggota" ? <UsersIcon /> : <CheckIcon />}
@@ -263,7 +293,7 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
                 className="text-xs font-black w-5 h-5 rounded-full flex items-center justify-center"
                 style={
                   isActive
-                    ? { backgroundColor: dept.warnaBg, color: dept.warna }
+                    ? { backgroundColor: deptBg, color: deptColor }
                     : { backgroundColor: "#ededf4", color: "#44474f" }
                 }
               >
@@ -278,9 +308,9 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
       <div className="p-5">
         {tab === "anggota" ? (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               {paginatedAnggota.map((member, i) => (
-                <AnggotaCard key={i} member={member} warna={dept.warna} warnaBg={dept.warnaBg} tRoles={tRoles} />
+                <AnggotaCard key={i} member={member} warna={deptColor} warnaBg={deptBg} tRoles={tRoles} />
               ))}
             </div>
 
@@ -302,7 +332,7 @@ export default function DepartemenCard({ dept }: { dept: KabinetDepartemen }) {
                       ? "text-white shadow-sm"
                       : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary hover:text-primary"
                       }`}
-                    style={currentPage === page ? { backgroundColor: dept.warna } : {}}
+                    style={currentPage === page ? { backgroundColor: deptColor } : {}}
                   >
                     {page}
                   </button>

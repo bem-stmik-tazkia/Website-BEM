@@ -336,6 +336,7 @@
     "item2Btn": "سجل الآن"
   },
   "KabinetPage": {
+    "pageTitle": "ملف الحكومة",
     "notAvailableTitle": "ملف الخزانة غير متاح بعد",
     "notAvailableDesc": "لم يتم إعداد بيانات الخزانة النشطة في قاعدة البيانات.",
     "cabinetBadge": "الخزانة",

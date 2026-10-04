@@ -5,6 +5,8 @@ import { FiPlus, FiTrash2, FiBriefcase, FiChevronDown, FiChevronUp, FiUsers, FiT
 import { KabinetDepartemen, KabinetDepartemenAnggota, KabinetDepartemenProker } from "@/types/kabinet";
 import ImageUpload from "@/components/ui/ImageUpload";
 import LottieUpload from "@/components/ui/LottieUpload";
+import { getDeptTheme } from "@/lib/kabinetColors";
+import LottieIcon from "@/components/ui/LottieIcon";
 
 interface DynamicDepartemenProps {
   departemen: KabinetDepartemen[];
@@ -153,8 +155,20 @@ export default function DynamicDepartemen({ departemen, onChange }: DynamicDepar
                   onClick={() => setExpandedIndex(isExpanded ? null : deptIndex)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${dept.warnaBg} ${dept.warna}`}>
-                      {dept.icon.startsWith('http') ? <img src={dept.icon} className="w-6 h-6 object-contain" alt="Icon Departemen" /> : dept.icon || "🏢"}
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                      style={{ backgroundColor: getDeptTheme(deptIndex).bg, color: getDeptTheme(deptIndex).color }}
+                    >
+                      {(() => {
+                        const icon = dept.icon || "🏢";
+                        if (icon.endsWith('.json') || icon.endsWith('.lottie') || icon.includes('lottiefiles.com')) {
+                          return <LottieIcon src={icon} className="w-8 h-8" />;
+                        }
+                        if (icon.startsWith('http') || icon.startsWith('/')) {
+                          return <img src={icon} className="w-6 h-6 object-contain" alt="Icon Departemen" />;
+                        }
+                        return icon;
+                      })()}
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-on-surface">{dept.nama || "Nama Departemen"}</h4>

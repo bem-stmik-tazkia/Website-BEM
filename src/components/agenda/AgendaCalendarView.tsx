@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiArrowRight, FiCalendar, FiCheckCircle } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -44,12 +44,14 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
   const monthNames: string[] = t.raw("monthNames");
 
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [holidays, setHolidays] = useState<Map<string, string>>(new Map());
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d;
   });
 
+  
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
@@ -57,6 +59,25 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
   const currentMonth = currentDate.getMonth();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+
+  useEffect(() => {
+    async function fetchHolidays() {
+      try {
+        const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/ID`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const map = new Map<string, string>();
+        data.forEach((holiday: any) => {
+           map.set(holiday.date, holiday.localName);
+        });
+        setHolidays(map);
+      } catch (err) {
+        console.error("Failed to fetch holidays", err);
+      }
+    }
+    fetchHolidays();
+  }, [currentYear]);
+
 
   const today = useMemo(() => {
     const d = new Date();
@@ -107,6 +128,8 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
       const isToday = today.getTime() === dateObj.getTime();
       const isSelected = selectedDate?.getTime() === dateObj.getTime();
       const hasEvents = dayAgendas.length > 0;
+      const holidayName = holidays.get(dateKey);
+      const isTanggalMerah = dateObj.getDay() === 0 || !!holidayName;
 
       // Tentukan apakah hari ini adalah start/middle/end dari sebuah event range
       // untuk menentukan sudut mana yang di-round
@@ -126,6 +149,7 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
         <button
           key={`day-${day}`}
           onClick={() => setSelectedDate(dateObj)}
+          title={holidayName || undefined}
           className={`relative h-10 sm:h-11 flex flex-col items-center justify-center sm:justify-start sm:pt-1.5 rounded-lg transition-all border ${
             isSelected
               ? "border-primary bg-primary/10 shadow-sm"
@@ -145,7 +169,7 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
                 ? "bg-primary text-white w-7 h-7 flex items-center justify-center rounded-full"
                 : isSelected
                 ? "text-primary font-bold"
-                : dateObj.getDay() === 0
+                : isTanggalMerah
                 ? "text-red-500"
                 : hasEvents
                 ? ""
@@ -179,11 +203,12 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
       );
     }
     return cells;
-  }, [currentYear, currentMonth, daysInMonth, firstDayOfMonth, agendaByDate, today, selectedDate]);
+  }, [currentYear, currentMonth, daysInMonth, firstDayOfMonth, agendaByDate, today, selectedDate, holidays]);
 
   // Selected date's agendas
   const selectedDateKey = selectedDate ? toLocalDateKey(selectedDate) : null;
   const selectedAgendas = selectedDateKey ? (agendaByDate.get(selectedDateKey) || []) : [];
+  const selectedHoliday = selectedDateKey ? holidays.get(selectedDateKey) : null;
 
   const formatDateRange = (agenda: AgendaKegiatan) => {
     if (!agenda.date) return "-";
@@ -238,6 +263,14 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
           transition={{ duration: 0.25 }}
           className="bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-sm"
         >
+
+          {selectedHoliday && (
+            <div className="mb-4 bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm font-bold border border-red-100 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+              {selectedHoliday}
+            </div>
+          )}
+
           <div className="flex items-center gap-3 mb-4 border-b border-outline-variant/20 pb-3">
             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
               <FiCalendar size={18} />

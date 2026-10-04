@@ -29,8 +29,9 @@ export default function AdminDashboardClient({
   const [activeTab, setActiveTab] = useState<"overview" | "monitoring" | "logs">("overview");
 
   const stats = [
-    { label: "Total Berita", value: bCount, icon: <FiFileText size={22} />, color: "from-blue-500 to-blue-600 text-white", shadow: "shadow-blue-500/20" },
-    { label: "Total Agenda", value: aCount, icon: <FiCalendar size={22} />, color: "from-emerald-500 to-emerald-600 text-white", shadow: "shadow-emerald-500/20" },
+    { label: "Total Berita", value: bCount, icon: <FiFileText size={24} />, color: "from-blue-500 to-blue-600 text-white", shadow: "shadow-blue-500/30" },
+    { label: "Total Agenda", value: aCount, icon: <FiCalendar size={24} />, color: "from-emerald-500 to-emerald-600 text-white", shadow: "shadow-emerald-500/30" },
+    { label: "Total Pengunjung", value: visitorData?.reduce((acc, curr) => acc + curr.Pengunjung, 0) || 0, icon: <FiUsers size={24} />, color: "from-orange-500 to-orange-600 text-white", shadow: "shadow-orange-500/30" },
   ];
 
   return (
@@ -94,19 +95,20 @@ export default function AdminDashboardClient({
             transition={{ duration: 0.2 }}
             className="space-y-8"
           >
-            {/* Top Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               {stats.map((stat, i) => (
-                <div key={i} className="bg-surface p-5 rounded-2xl border border-outline-variant/20 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                  <div className={`absolute top-0 right-0 p-8 -mr-6 -mt-6 bg-gradient-to-br ${stat.color} rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500 ease-in-out`}></div>
-                  <div className="flex items-center gap-4 relative z-10">
-                    <div className={`w-12 h-12 flex items-center justify-center rounded-2xl bg-gradient-to-br ${stat.color} shadow-lg ${stat.shadow}`}>
+                <div key={i} className="bg-surface p-6 rounded-[24px] border border-outline-variant/30 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                  <div className={`absolute top-0 right-0 p-8 -mr-6 -mt-6 bg-gradient-to-br ${stat.color} rounded-full opacity-[0.08] group-hover:scale-[2] group-hover:opacity-10 transition-all duration-700 ease-out`}></div>
+                  
+                  <div className="flex items-center justify-between relative z-10 mb-4">
+                    <div className={`w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-br ${stat.color} shadow-lg ${stat.shadow} group-hover:scale-110 transition-transform duration-300`}>
                       {stat.icon}
                     </div>
-                    <div>
-                      <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider mb-0.5">{stat.label}</p>
-                      <h3 className="text-2xl font-black text-on-surface">{stat.value}</h3>
-                    </div>
+                  </div>
+                  
+                  <div className="relative z-10">
+                    <p className="text-sm text-on-surface-variant font-bold tracking-wide mb-1">{stat.label}</p>
+                    <h3 className="text-4xl font-black text-on-surface tracking-tight">{stat.value}</h3>
                   </div>
                 </div>
               ))}

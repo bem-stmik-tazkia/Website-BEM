@@ -336,6 +336,7 @@
     "item2Btn": "今すぐ登録"
   },
   "KabinetPage": {
+    "pageTitle": "キャビネットプロフィール",
     "notAvailableTitle": "キャビネットプロフィールはまだ利用できません",
     "notAvailableDesc": "アクティブなキャビネットデータがデータベースに設定されていません。",
     "cabinetBadge": "キャビネット",

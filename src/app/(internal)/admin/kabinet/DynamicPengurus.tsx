@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { FiPlus, FiTrash2, FiUsers, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { KabinetPengurusInti } from "@/types/kabinet";
 import ImageUpload from "@/components/ui/ImageUpload";
+import { getCoreTheme } from "@/lib/kabinetColors";
 
 interface DynamicPengurusProps {
   pengurus: KabinetPengurusInti[];
@@ -102,7 +103,10 @@ export default function DynamicPengurus({ pengurus, onChange }: DynamicPengurusP
                   onClick={() => setExpandedIndex(isExpanded ? null : index)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 border ${item.bg} ${item.color}`}>
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden"
+                      style={{ backgroundColor: getCoreTheme(item.role).bg, color: getCoreTheme(item.role).color, boxShadow: `inset 0 0 0 1.5px ${getCoreTheme(item.role).color}33` }}
+                    >
                       {item.foto ? (
                         <img src={item.foto} alt="Avatar" className="w-full h-full rounded-full object-cover" />
                       ) : (
