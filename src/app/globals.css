@@ -334,3 +334,18 @@ body {
 .driver-popover-arrow-side-right { border-right-color: rgba(27, 64, 134, 0.95) !important; }
 .driver-popover-arrow-side-top { border-top-color: rgba(27, 64, 134, 0.95) !important; }
 .driver-popover-arrow-side-bottom { border-bottom-color: rgba(27, 64, 134, 0.95) !important; }
+
+/* === 3D CARD FLIP UTILITIES === */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}

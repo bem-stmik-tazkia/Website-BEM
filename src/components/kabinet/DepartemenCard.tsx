@@ -5,6 +5,7 @@ import { KabinetDepartemen } from "@/types/kabinet";
 import LottieIcon from "@/components/ui/LottieIcon";
 import { useTranslations } from "next-intl";
 import { getDeptTheme } from "@/lib/kabinetColors";
+import Member3DCard from "@/components/kabinet/Member3DCard";
 
 // Icons
 function UsersIcon() {
@@ -82,11 +83,13 @@ function AnggotaCard({
   warna,
   warnaBg,
   tRoles,
+  departmentName,
 }: {
   member: KabinetDepartemen["anggota"][0];
   warna: string;
   warnaBg: string;
   tRoles?: any;
+  departmentName?: string;
 }) {
   const getRole = (role: string) => {
     if (!tRoles || !role) return role;
@@ -106,78 +109,18 @@ function AnggotaCard({
   const role = member.role && member.role.trim() !== "-" ? getRole(member.role) : "";
 
   return (
-    <div className="group relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 ring-1 ring-outline-variant/20 bg-surface">
-      {/* Cover photo / fallback */}
-      {member.foto ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={member.foto}
-          alt={member.name}
-          loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
-        />
-      ) : (
-        <div
-          className="absolute inset-0 flex items-center justify-center transition-transform duration-700 group-hover:scale-110"
-          style={{ background: `linear-gradient(145deg, ${warnaBg} 0%, ${warna}55 100%)` }}
-        >
-          <span className="text-4xl md:text-5xl font-black select-none opacity-80" style={{ color: warna }}>
-            {member.initials}
-          </span>
-        </div>
-      )}
-
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-      <div
-        className="absolute inset-x-0 bottom-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{ backgroundColor: warna }}
-      />
-
-      {/* Info */}
-      <div className="absolute inset-x-0 bottom-0 p-3 flex flex-col gap-1.5">
-        {role && (
-          <span
-            className="self-start max-w-full truncate text-[9px] md:text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full text-white"
-            style={{ backgroundColor: warna }}
-          >
-            {role}
-          </span>
-        )}
-        <h3 className="font-bold text-white text-sm leading-tight line-clamp-2 drop-shadow">{member.name}</h3>
-
-        {(member.wa || member.ig) && (
-          <div className="flex gap-1.5 pt-0.5">
-            {member.wa && (() => {
-              const sanitizedWa = member.wa.replace(/\D/g, '');
-              const waNumber = sanitizedWa.startsWith('0') ? '62' + sanitizedWa.slice(1) : sanitizedWa;
-              return (
-                <a
-                  href={member.wa.startsWith('http') ? member.wa : `https://wa.me/${waNumber}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-[#25D366] hover:border-[#25D366] transition-all duration-300"
-                  aria-label={`WhatsApp ${member.name}`}
-                >
-                  <WaIcon />
-                </a>
-              );
-            })()}
-            {member.ig && (
-              <a
-                href={member.ig.startsWith('http') ? member.ig : `https://instagram.com/${member.ig.replace("@", "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] hover:border-transparent transition-all duration-300"
-                aria-label={`Instagram ${member.name}`}
-              >
-                <IgIcon />
-              </a>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+    <Member3DCard
+      name={member.name}
+      role={role}
+      foto={member.foto}
+      initials={member.initials}
+      wa={member.wa}
+      ig={member.ig}
+      accentColor={warna}
+      bgColor={warnaBg}
+      isLead={false}
+      departmentName={departmentName}
+    />
   );
 }
 
@@ -310,7 +253,7 @@ export default function DepartemenCard({ dept, index = 0 }: { dept: KabinetDepar
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               {paginatedAnggota.map((member, i) => (
-                <AnggotaCard key={i} member={member} warna={deptColor} warnaBg={deptBg} tRoles={tRoles} />
+                <AnggotaCard key={i} member={member} warna={deptColor} warnaBg={deptBg} tRoles={tRoles} departmentName={dept.nama} />
               ))}
             </div>
 

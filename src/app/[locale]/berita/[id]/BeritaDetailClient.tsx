@@ -79,7 +79,15 @@ export default function BeritaDetailPage() {
 
   // Konversi class Quill alignment ke inline style agar 100% tampil di semua browser
   function processQuillHtml(html: string): string {
+    if (!html) return "";
     return html
+      // 1. Ganti semua non-breaking space (&nbsp; dan \u00A0) menjadi spasi normal
+      // agar kata tidak terpotong acak di tengah kata
+      .replace(/&nbsp;/g, " ")
+      .replace(/\u00A0/g, " ")
+      // 2. Normalisasi paragraf kosong
+      .replace(/<p>\s*(<br\s*\/?>)?\s*<\/p>/gi, "<p><br /></p>")
+      // 3. Konversi class alignment Quill ke inline style
       .replace(/class="ql-align-center"/g, 'style="text-align:center"')
       .replace(/class="ql-align-right"/g, 'style="text-align:right"')
       .replace(/class="ql-align-justify"/g, 'style="text-align:justify"')
@@ -213,7 +221,7 @@ export default function BeritaDetailPage() {
   }
 
   return (
-    <div className="bg-[#f8f9fc] min-h-screen pt-36 pb-20">
+    <div className="bg-[#f8f9fc] min-h-screen pt-28 md:pt-36 pb-20">
 
       {/* ── BACK BUTTON & HEADER INFO ───────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-5 md:px-10 mb-6">
@@ -260,13 +268,13 @@ export default function BeritaDetailPage() {
           </div>
         </div>
 
-        <h1 className="text-3xl md:text-5xl font-extrabold text-on-background leading-tight max-w-4xl mb-6">
+        <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-on-background leading-tight max-w-4xl mb-6">
           {newsDetail.title}
         </h1>
 
         <div className="flex flex-wrap items-center gap-6 mb-10 mt-2">
           <div className="flex items-center gap-3 bg-surface p-2 pr-6 rounded-full border border-outline-variant/30 shadow-sm">
-            <div className="w-11 h-11 rounded-full overflow-hidden bg-white border border-outline-variant/20 flex items-center justify-center p-1 shrink-0">
+            <div className="relative w-11 h-11 rounded-full overflow-hidden bg-white border border-outline-variant/20 flex items-center justify-center p-1 shrink-0">
               <Image src="/images/logo2.webp" alt="BEM Logo" fill sizes="50px" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
@@ -280,14 +288,17 @@ export default function BeritaDetailPage() {
       {/* ── HERO IMAGE ─────────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-5 md:px-10 mb-12">
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-          className="w-full aspect-[21/9] md:aspect-[21/8] rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-2xl md:rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 bg-surface-variant/20"
         >
           <Image
             src={newsDetail.image_url}
             alt={newsDetail.title}
             fill
-            sizes="100vw"
+            priority
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
             className="w-full h-full object-cover"
           />
         </motion.div>
@@ -297,22 +308,53 @@ export default function BeritaDetailPage() {
       <section className="max-w-7xl mx-auto px-5 md:px-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
 
         {/* Article Body */}
-        <article className="lg:col-span-8 bg-surface rounded-3xl p-8 md:p-12 border border-outline-variant/20 shadow-sm">
+        <article className="lg:col-span-8 bg-surface rounded-2xl md:rounded-3xl p-5 sm:p-8 md:p-12 border border-outline-variant/20 shadow-sm">
           {/* Inject CSS langsung ke DOM agar pasti bisa override Tailwind */}
           <style href="berita-detail-style" precedence="default">{`
-            .ql-content ul { list-style-type: disc !important; padding-left: 1.8em !important; margin: 0.5em 0 !important; }
-            .ql-content ol { list-style-type: decimal !important; padding-left: 1.8em !important; margin: 0.5em 0 !important; }
-            .ql-content li { display: list-item !important; }
-            .ql-content h1 { font-size: 1.8em; font-weight: 700; margin: 0.5em 0; }
-            .ql-content h2 { font-size: 1.4em; font-weight: 700; margin: 0.5em 0; }
-            .ql-content h3 { font-size: 1.2em; font-weight: 700; margin: 0.5em 0; }
-            .ql-content a { color: #1b4086; text-decoration: underline; word-break: break-all; }
-            .ql-content p { margin-bottom: 0.6em; word-break: break-word; overflow-wrap: break-word; }
-            .ql-content { word-break: break-word; overflow-wrap: break-word; max-width: 100%; }
+            .ql-content {
+              font-size: 1.0625rem;
+              line-height: 1.85;
+              color: #334155;
+              word-break: normal;
+              overflow-wrap: break-word;
+              max-width: 100%;
+            }
+            .ql-content p {
+              margin-bottom: 1.2em;
+              word-break: normal;
+              overflow-wrap: break-word;
+              line-height: 1.85;
+            }
+            .ql-content p:empty, .ql-content p:has(> br:only-child) {
+              margin-bottom: 0.6em;
+            }
+            .ql-content ul { list-style-type: disc !important; padding-left: 1.8em !important; margin: 0.8em 0 !important; }
+            .ql-content ol { list-style-type: decimal !important; padding-left: 1.8em !important; margin: 0.8em 0 !important; }
+            .ql-content li { display: list-item !important; margin-bottom: 0.4em !important; line-height: 1.8; }
+            .ql-content h1 { font-size: 1.85em; font-weight: 800; margin: 1.2em 0 0.5em; color: var(--color-on-background); line-height: 1.3; }
+            .ql-content h2 { font-size: 1.45em; font-weight: 800; margin: 1em 0 0.4em; color: var(--color-on-background); line-height: 1.35; }
+            .ql-content h3 { font-size: 1.25em; font-weight: 700; margin: 0.9em 0 0.3em; color: var(--color-on-background); line-height: 1.4; }
+            .ql-content strong, .ql-content b { font-weight: 700; color: var(--color-on-background); }
+            .ql-content a { color: #1b4086; text-decoration: underline; word-break: break-all; font-weight: 600; }
+            .ql-content a:hover { color: #f2791e; }
+            .ql-content blockquote {
+              border-left: 4px solid var(--color-primary);
+              padding: 0.75em 1.25em;
+              margin: 1.25em 0;
+              background: #f1f5f9;
+              border-radius: 0 0.75rem 0.75rem 0;
+              font-style: italic;
+            }
+            .ql-content img {
+              max-width: 100%;
+              height: auto;
+              border-radius: 1rem;
+              margin: 1.25em 0;
+            }
           `}</style>
           <div
-            className="ql-content break-words"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(newsDetail.content) }}
+            className="ql-content"
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processQuillHtml(newsDetail.content)) }}
           />
 
           {/* Tags */}
@@ -359,7 +401,7 @@ export default function BeritaDetailPage() {
             <div className="flex flex-col gap-5">
               {relatedNews.map((item) => (
                 <Link key={item.id} href={`/berita/${item.slug}`} className="group flex gap-4 items-start">
-                  <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-outline-variant/20">
+                  <div className="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-outline-variant/20 bg-surface-variant/20">
                     <Image
                       src={item.image_url}
                       alt={item.title}

@@ -74,7 +74,7 @@ export default function FloatingActionMenu() {
   };
 
   return (
-    <div className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-[60] flex flex-col items-end" ref={menuRef}>
+    <div data-floating-action-menu="true" className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-[60] flex flex-col items-end" ref={menuRef}>
       <AnimatePresence>
         {isOpen && (
           <motion.div

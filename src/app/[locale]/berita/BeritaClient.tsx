@@ -251,7 +251,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
           {/* Left Column: News Grid (8/12) */}
-          <div id="tour-berita-grid" className="lg:col-span-8 flex flex-col gap-6 md:gap-8 order-2 lg:order-1">
+          <div id="tour-berita-grid" className="lg:col-span-8 flex flex-col gap-6 md:gap-8 order-1 lg:order-1">
             <h3 className="text-base md:text-lg font-bold text-primary pb-2.5 border-b border-outline-variant/30 flex items-center gap-2 uppercase tracking-wide">
               <span className="w-2.5 h-4 bg-primary rounded-full inline-block"></span>
               {t("categoryNews")}
@@ -392,7 +392,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
           </div>
 
           {/* Right Column: Sidebar (4/12) */}
-          <aside id="tour-berita-popular" className="lg:col-span-4 flex flex-col gap-6 w-full order-1 lg:order-2">
+          <aside id="tour-berita-popular" className="lg:col-span-4 flex flex-col gap-6 w-full order-2 lg:order-2">
 
             {/* Sidebar Title */}
             <h3 className="text-base md:text-lg font-bold text-primary pb-2.5 border-b border-outline-variant/30 flex items-center gap-2 uppercase tracking-wide">

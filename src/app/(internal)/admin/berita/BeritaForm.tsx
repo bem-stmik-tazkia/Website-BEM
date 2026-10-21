@@ -181,8 +181,10 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
     }
 
     try {
+      const cleanedContent = formData.content.replace(/&nbsp;/g, " ").replace(/\u00A0/g, " ");
       const payload = {
         ...formData,
+        content: cleanedContent,
         tags: finalTags.split(",").map((t: string) => t.trim()).filter(Boolean),
       };
 
