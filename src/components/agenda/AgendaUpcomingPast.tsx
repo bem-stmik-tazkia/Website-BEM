@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { FiClock, FiMapPin, FiArrowRight, FiCheckCircle, FiBriefcase } from "react-icons/fi";
+import { FiClock, FiMapPin, FiArrowRight, FiCheckCircle, FiBriefcase, FiImage } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
 import { AgendaKegiatan } from "@/types/agenda";
@@ -86,7 +86,7 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
     }).sort((a, b) => {
       const da = a.date ? parseDateLocal(a.date).getTime() : 0;
       const db = b.date ? parseDateLocal(b.date).getTime() : 0;
-      return db - da;
+      return db - da; // Yang terbaru selesai di paling atas
     }),
     [agendasWithColor, today, now]
   );
@@ -102,15 +102,15 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
   if (agendas.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
       {/* ── UPCOMING EVENTS ──────────────────────────────────── */}
-      <div className="bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-sm h-full flex flex-col">
+      <div className="bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-sm h-full flex flex-col hover:border-primary/30 transition-all duration-300">
         <div className="flex items-center gap-2 mb-4 border-b border-outline-variant/20 pb-3">
           <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
           <h3 className="text-sm font-bold text-on-background">
             {isVolunteer ? t("upcomingDeadlineTitle") : t("upcomingTitle")}
           </h3>
-          <span className="ml-auto text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+          <span className="ml-auto text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full">
             {upcomingAgendas.length}
           </span>
         </div>
@@ -134,10 +134,10 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                       const eventEnd   = new Date(today); eventEnd.setHours(parseInt(timeMatch[3], 10), parseInt(timeMatch[4], 10), 0, 0);
                       isLive = now >= eventStart && now <= eventEnd;
                     } else {
-                      isLive = daysLeft === 0; // tidak ada time_range → seharian live jika hari ini
+                      isLive = daysLeft === 0;
                     }
                   } else {
-                    isLive = daysLeft === 0; // tidak ada time_range → seharian live jika hari ini
+                    isLive = daysLeft === 0;
                   }
                 }
                 
@@ -158,7 +158,7 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                      } else if (volunteerDaysLeft === 0) {
                         volunteerBadgeText = t("todayLabel");
                      } else {
-                        volunteerBadgeText = "Ditutup";
+                        volunteerBadgeText = t("closedPosition");
                      }
                   }
                 }
@@ -171,12 +171,12 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                     >
                     <div
                         className={`shrink-0 overflow-hidden flex items-center justify-center text-xs font-black relative ${
-                          isVolunteer ? "w-10 h-10 rounded-xl border border-primary/20 bg-primary/5 text-primary shadow-sm" : "w-10 h-10 rounded-xl"
+                          isVolunteer ? "w-10 h-10 rounded-xl border border-primary/20 bg-primary/5 text-primary shadow-sm" : "w-10 h-10 rounded-xl border border-outline-variant/30"
                         }`}
                         style={!isVolunteer && !agenda.image_url ? { backgroundColor: EVENT_COLORS[agenda.colorIdx].rangeBg, color: EVENT_COLORS[agenda.colorIdx].rangeText } : {}}
                     >
                         {agenda.image_url ? (
-                          <Image src={agenda.image_url} alt={agenda.title} fill sizes="40px" className="object-cover" />
+                          <Image src={agenda.image_url} alt={agenda.title} fill sizes="40px" className="object-cover group-hover:scale-105 transition-transform duration-300" />
                         ) : (
                           isVolunteer ? <FiBriefcase size={18} /> : agenda.date ? new Date(agenda.date).getDate() : "?"
                         )}
@@ -191,7 +191,7 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                     </div>
                     
                     {isVolunteer ? (
-                       <span className={`text-[10px] font-bold px-3 py-1 rounded-md whitespace-nowrap transition-colors border ${
+                       <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md whitespace-nowrap transition-colors border ${
                            isVolunteerWaiting 
                              ? "bg-surface-variant/50 text-on-surface-variant border-outline-variant/30 group-hover:bg-surface-variant group-hover:text-on-background" 
                              : "bg-secondary/10 text-secondary border-secondary/20 group-hover:bg-secondary group-hover:text-white"
@@ -200,12 +200,12 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                        </span>
                     ) : (
                        <span
-                           className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                           className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0 ${
                            isLive
-                               ? "bg-red-600 text-white"
-                               : daysLeft <= 3
-                               ? "bg-amber-500/20 text-amber-700"
-                               : `${color.bg} ${color.text}`
+                                ? "bg-red-600 text-white animate-pulse"
+                                : daysLeft <= 3
+                                ? "bg-amber-500/20 text-amber-700 border border-amber-500/30"
+                                : `${color.bg} ${color.text} border ${color.border}`
                            }`}
                        >
                            {isLive ? "LIVE" : daysLeft === 0 ? t("todayLabel") : t("daysLeft", { days: daysLeft })}
@@ -234,13 +234,13 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
       </div>
 
       {/* ── PAST EVENTS ──────────────────────────────────────── */}
-      <div className="bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-sm h-full flex flex-col">
+      <div className="bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-sm h-full flex flex-col hover:border-primary/30 transition-all duration-300">
         <div className="flex items-center gap-2 mb-4 border-b border-outline-variant/20 pb-3">
-          <FiCheckCircle size={14} className="text-on-surface-variant" />
+          <FiCheckCircle size={14} className="text-emerald-500" />
           <h3 className="text-sm font-bold text-on-background">
             {isVolunteer ? t("pastDeadlineTitle") : t("pastTitle")}
           </h3>
-          <span className="ml-auto text-[10px] font-bold bg-surface-variant/60 text-on-surface-variant px-2 py-0.5 rounded-full">
+          <span className="ml-auto text-[10px] font-bold bg-surface-variant/60 text-on-surface-variant border border-outline-variant/30 px-2 py-0.5 rounded-full">
             {pastAgendas.length}
           </span>
         </div>
@@ -248,32 +248,46 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
         <div className="flex-grow flex flex-col justify-center">
             {pastAgendas.length > 0 ? (
             <div className="flex flex-col gap-2">
-                {pastAgendas.slice(0, 5).map((agenda) => (
-                <Link
-                    href={`/agenda/${agenda.id}?from=${isVolunteer ? "agenda-volunteer" : "agenda-event"}`}
-                    key={agenda.id}
-                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-variant/40 transition-colors group opacity-75 hover:opacity-100"
-                >
-                    <div className="w-10 h-10 rounded-xl shrink-0 overflow-hidden flex items-center justify-center text-xs font-black bg-surface-variant/60 text-on-surface-variant grayscale relative">
-                    {agenda.image_url ? (
-                      <Image src={agenda.image_url} alt={agenda.title} fill sizes="40px" className="object-cover" />
-                    ) : (
-                      isVolunteer ? <FiBriefcase size={18} /> : agenda.date ? new Date(agenda.date).getDate() : "?"
-                    )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-on-background group-hover:text-primary transition-colors line-clamp-1">
-                        {agenda.title}
-                    </p>
-                    <p className="text-[10px] text-on-surface-variant leading-tight mt-0.5">
-                        {isVolunteer && agenda.end_date ? `Batas: ${formatDateToIndo(agenda.end_date)}` : formatDateRange(agenda)}
-                    </p>
-                    </div>
-                    <span className="text-[10px] font-bold bg-surface-variant/60 text-on-surface-variant px-2 py-0.5 rounded-full shrink-0">
-                    {t("statusDone")}
-                    </span>
-                </Link>
-                ))}
+                {pastAgendas.slice(0, 5).map((agenda) => {
+                  const hasGallery = !isVolunteer && agenda.gallery && agenda.gallery.length > 0;
+                  return (
+                    <Link
+                      href={`/agenda/${agenda.id}?from=${isVolunteer ? "agenda-volunteer" : "agenda-event"}`}
+                      key={agenda.id}
+                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-variant/40 transition-colors group opacity-85 hover:opacity-100"
+                    >
+                      <div className="w-10 h-10 rounded-xl shrink-0 overflow-hidden flex items-center justify-center text-xs font-black bg-surface-variant/60 text-on-surface-variant relative border border-outline-variant/30">
+                        {agenda.image_url ? (
+                          <Image src={agenda.image_url} alt={agenda.title} fill sizes="40px" className="object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-300" />
+                        ) : (
+                          isVolunteer ? <FiBriefcase size={18} /> : agenda.date ? new Date(agenda.date).getDate() : "?"
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-on-background group-hover:text-primary transition-colors line-clamp-1">
+                          {agenda.title}
+                        </p>
+                        <p className="text-[10px] text-on-surface-variant leading-tight mt-0.5">
+                          {isVolunteer && agenda.end_date ? `Batas: ${formatDateToIndo(agenda.end_date)}` : formatDateRange(agenda)}
+                        </p>
+                      </div>
+
+                      {isVolunteer ? (
+                        <span className="text-[10px] font-bold bg-surface-variant/60 text-on-surface-variant border border-outline-variant/30 px-2.5 py-0.5 rounded-full shrink-0">
+                          {t("closedPosition")}
+                        </span>
+                      ) : hasGallery ? (
+                        <span className="text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 rounded-full shrink-0 group-hover:bg-primary group-hover:text-white transition-colors flex items-center gap-1">
+                          <FiImage size={10} /> {t("viewDocs")}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold bg-surface-variant/60 text-on-surface-variant border border-outline-variant/30 px-2.5 py-0.5 rounded-full shrink-0 flex items-center gap-1">
+                          <FiCheckCircle size={10} className="text-emerald-500" /> {t("statusDone")}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
                 {pastAgendas.length > 5 && (
                 <Link
                     href="/dokumentasi"

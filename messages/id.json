@@ -305,7 +305,15 @@
     "todayLabel": "Hari ini",
     "daysLeft": "{days}h",
     "otherEvents": "+{count} event lainnya",
-    "otherDocs": "+{count} lainnya · Lihat dokumentasi"
+    "otherDocs": "+{count} lainnya · Lihat dokumentasi",
+    "statusFilterAll": "Semua",
+    "statusFilterUpcoming": "Akan Datang",
+    "statusFilterPast": "Sudah Selesai",
+    "statusFilterOpen": "Dibuka",
+    "statusFilterClosed": "Ditutup",
+    "closedPosition": "Pendaftaran Ditutup",
+    "overviewTitle": "Ringkasan Agenda & Arsip",
+    "overviewVolunteerTitle": "Ringkasan Rekrutmen & Relawan"
   },
   "VisiMisi": {
     "title": "Visi & Misi",

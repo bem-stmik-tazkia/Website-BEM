@@ -305,7 +305,15 @@
     "todayLabel": "Aujourd'hui",
     "daysLeft": "{days}j",
     "otherEvents": "+{count} autres événements",
-    "otherDocs": "+{count} autres · Voir les docs"
+    "otherDocs": "+{count} autres · Voir les docs",
+    "statusFilterAll": "Tous",
+    "statusFilterUpcoming": "À venir",
+    "statusFilterPast": "Terminé",
+    "statusFilterOpen": "Ouvert",
+    "statusFilterClosed": "Fermé",
+    "closedPosition": "Inscriptions closes",
+    "overviewTitle": "Aperçu de l'agenda et des archives",
+    "overviewVolunteerTitle": "Aperçu du recrutement et des bénévoles"
   },
   "VisiMisi": {
     "title": "Vision & Mission",

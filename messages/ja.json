@@ -305,7 +305,15 @@
     "todayLabel": "今日",
     "daysLeft": "残り{days}日",
     "otherEvents": "他{count}件のイベント",
-    "otherDocs": "他{count}件 · ドキュメントを見る"
+    "otherDocs": "他{count}件 · ドキュメントを見る",
+    "statusFilterAll": "すべて",
+    "statusFilterUpcoming": "近日開催",
+    "statusFilterPast": "終了",
+    "statusFilterOpen": "募集中",
+    "statusFilterClosed": "終了",
+    "closedPosition": "募集終了",
+    "overviewTitle": "予定とアーカイブの概要",
+    "overviewVolunteerTitle": "採用とボランティアの概要"
   },
   "VisiMisi": {
     "title": "ビジョン＆ミッション",

@@ -305,7 +305,15 @@
     "todayLabel": "اليوم",
     "daysLeft": "{days}يوم",
     "otherEvents": "+{count} أحداث أخرى",
-    "otherDocs": "+{count} أخرى · عرض الوثائق"
+    "otherDocs": "+{count} أخرى · عرض الوثائق",
+    "statusFilterAll": "الكل",
+    "statusFilterUpcoming": "قادم",
+    "statusFilterPast": "منتهي",
+    "statusFilterOpen": "مفتوح",
+    "statusFilterClosed": "مغلق",
+    "closedPosition": "التسجيل مغلق",
+    "overviewTitle": "نظرة عامة على جدول الأعمال والأرشيف",
+    "overviewVolunteerTitle": "نظرة عامة على التوظيف والتطوع"
   },
   "VisiMisi": {
     "title": "الرؤية والرسالة",

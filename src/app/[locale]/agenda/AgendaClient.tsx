@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   FiSearch,
   FiCalendar,
@@ -13,9 +13,8 @@ import {
   FiArrowRight,
   FiClock,
   FiCheckCircle,
-  FiGrid
+  FiBriefcase
 } from "react-icons/fi";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import SafeLottie from "@/components/ui/SafeLottie";
 import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo } from "@/utils/dateFormatter";
@@ -25,7 +24,6 @@ import AgendaTourClient from "@/components/agenda/AgendaTourClient";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 // Helper: parse tanggal sebagai local date agar tidak terkena UTC timezone shift
-// new Date("2026-09-26") → UTC midnight, di WIB jadi Sep 25 malam → salah!
 function parseDateLocal(dateStr: string): Date {
   const [y, m, d] = dateStr.split("T")[0].split("-").map(Number);
   const dt = new Date(y, m - 1, d);
@@ -55,7 +53,7 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
   );
 
   // Gabungkan kembali
-  const translatedData = [...translatedAgendas, ...translatedVolunteers];
+  const translatedData = useMemo(() => [...translatedAgendas, ...translatedVolunteers], [translatedAgendas, translatedVolunteers]);
 
   React.useEffect(() => {
     setActiveTabState(tabParam === "volunteer" ? "volunteer" : "event");
@@ -63,10 +61,10 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
 
   const setActiveTab = (tab: "event" | "volunteer") => {
     setActiveTabState(tab);
+    setSelectedCategory("ALL");
+    setCurrentPage(1);
     window.history.replaceState(null, '', `/agenda?tab=${tab}`);
   };
-
-  const [viewMode, setViewMode] = useState<"grid" | "calendar">("grid");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -76,13 +74,16 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
   const [debouncedVolunteerQuery, setDebouncedVolunteerQuery] = useState("");
   const [isSearchingVol, setIsSearchingVol] = useState(false);
 
-  const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState<"all" | "upcoming" | "past">("all");
+  const [volunteerStatusFilter, setVolunteerStatusFilter] = useState<"all" | "open" | "closed">("all");
   const [currentPage, setCurrentPage] = useState(1);
 
   const EVENT_CATEGORIES = [t("catAll"), t("catCadre"), t("catTech"), t("catSocial"), t("catAcademic"), t("catSport"), t("catArt"), t("catReligion"), t("catEntrepreneur"), t("catOther")];
   const VOLUNTEER_CATEGORIES = [t("catAll"), t("catCommittee"), t("catBoard"), t("catVolunteer"), t("catIntern"), t("catDelegation"), t("catOther")];
   
   const categories = activeTab === 'event' ? EVENT_CATEGORIES : VOLUNTEER_CATEGORIES;
+
   React.useEffect(() => {
     if (!searchQuery) {
       setDebouncedSearchQuery("");
@@ -111,44 +112,19 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
     return () => clearTimeout(timer);
   }, [volunteerSearchQuery]);
 
-  const agendas = translatedData.filter(item => {
-    if (item.type !== 'event' || !item.is_published) return false;
-
-    // Sembunyikan event yang sudah selesai (cek end_date jika ada, baru cek date)
-    const finishDateStr = item.end_date || item.date;
-    if (finishDateStr) {
-      const finishDate = parseDateLocal(finishDateStr); // Fixed: local date parsing
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (finishDate < today) return false;
-    }
-
-    return true;
-  });
-
-  const volunteerOpportunities = translatedData.filter(item => {
-    if (item.type !== 'volunteer' || !item.is_published) return false;
-    if (!item.deadline) return true;
-    const deadlineDate = parseDateLocal(item.deadline); // Fixed: local date parsing
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return deadlineDate >= today;
-  });
-
-  const getEventStatus = (dateStr?: string | null, endDateStr?: string | null, timeRange?: string | null) => {
-    if (!dateStr) return t("statusUpcoming");
+  const getEventStatusType = (dateStr?: string | null, endDateStr?: string | null, timeRange?: string | null): "done" | "live" | "upcoming" => {
+    if (!dateStr) return "upcoming";
     const now = new Date();
     const today = new Date(now); today.setHours(0, 0, 0, 0);
-    // Fixed: gunakan parseDateLocal agar tidak terkena UTC timezone shift
     const eventDateNorm = parseDateLocal(dateStr);
     const endDateNorm = endDateStr ? parseDateLocal(endDateStr) : parseDateLocal(dateStr);
 
     // Sudah lewat tanggal terakhir
-    if (endDateNorm < today) return t("statusDone");
+    if (endDateNorm < today) return "done";
 
     // Event multi-hari yang sedang berlangsung (hari ini di antara start & end)
     const isMultiDay = endDateStr && endDateStr !== dateStr;
-    if (isMultiDay && eventDateNorm < today && today <= endDateNorm) return t("statusLive");
+    if (isMultiDay && eventDateNorm < today && today <= endDateNorm) return "live";
 
     // Event 1 hari: cek jam jika ada time_range
     if (eventDateNorm.getTime() === today.getTime()) {
@@ -161,49 +137,155 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
           const endMin    = parseInt(timeMatch[4], 10);
           const eventStart = new Date(today); eventStart.setHours(startHour, startMin, 0, 0);
           const eventEnd   = new Date(today); eventEnd.setHours(endHour, endMin, 0, 0);
-          if (now < eventStart) return t("statusUpcoming");
-          if (now > eventEnd)   return t("statusDone");
-          return t("statusLive");
+          if (now < eventStart) return "upcoming";
+          if (now > eventEnd)   return "done";
+          return "live";
         }
       }
-      // Tidak ada time_range → anggap seharian live
-      return t("statusLive");
+      return "live";
     }
 
+    return "upcoming";
+  };
+
+  const getEventStatus = (dateStr?: string | null, endDateStr?: string | null, timeRange?: string | null) => {
+    const st = getEventStatusType(dateStr, endDateStr, timeRange);
+    if (st === "done") return t("statusDone");
+    if (st === "live") return t("statusLive");
     return t("statusUpcoming");
   };
 
-  // Filter Logic untuk Agenda
+  const getVolunteerStatusType = (deadlineStr?: string | null): "open" | "closed" => {
+    if (!deadlineStr) return "open";
+    const deadlineDate = parseDateLocal(deadlineStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return deadlineDate >= today ? "open" : "closed";
+  };
+
+  // Kumpulan semua agenda & volunteer yang dipublikasikan (termasuk yang sudah lewat)
+  const allPublishedAgendas = useMemo(() => {
+    return translatedData.filter(item => item.type === 'event' && item.is_published);
+  }, [translatedData]);
+
+  const allPublishedVolunteers = useMemo(() => {
+    return translatedData.filter(item => item.type === 'volunteer' && item.is_published);
+  }, [translatedData]);
+
+  // Statistik Event
+  const { upcomingCount, pastCount, totalEventCount } = useMemo(() => {
+    let up = 0;
+    let past = 0;
+    allPublishedAgendas.forEach((item) => {
+      const st = getEventStatusType(item.date, item.end_date, item.time_range);
+      if (st === "done") past++;
+      else up++;
+    });
+    return { upcomingCount: up, pastCount: past, totalEventCount: allPublishedAgendas.length };
+  }, [allPublishedAgendas]);
+
+  // Statistik Volunteer
+  const { openVolCount, closedVolCount, totalVolCount } = useMemo(() => {
+    let open = 0;
+    let closed = 0;
+    allPublishedVolunteers.forEach((v) => {
+      const st = getVolunteerStatusType(v.deadline);
+      if (st === "closed") closed++;
+      else open++;
+    });
+    return { openVolCount: open, closedVolCount: closed, totalVolCount: allPublishedVolunteers.length };
+  }, [allPublishedVolunteers]);
+
+  // Filter & Sort Logic untuk Agenda
   const filteredAgendas = useMemo(() => {
-    return agendas.filter((item) => {
-      const matchesSearch =
-        (item.title || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        (item.description || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase());
-      
-      const matchesCategory = selectedCategory === t("catAll") || item.category === selectedCategory;
+    return allPublishedAgendas
+      .filter((item) => {
+        const matchesSearch =
+          (item.title || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          (item.description || "").toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+        
+        const isAllCat = selectedCategory === "ALL" || selectedCategory === t("catAll") || selectedCategory === "Semua";
+        const matchesCategory = isAllCat || item.category === selectedCategory;
 
-      return matchesSearch && matchesCategory;
-    });
-  }, [debouncedSearchQuery, agendas, selectedCategory]);
+        const st = getEventStatusType(item.date, item.end_date, item.time_range);
+        let matchesStatus = true;
+        if (statusFilter === "upcoming") {
+          matchesStatus = st === "upcoming" || st === "live";
+        } else if (statusFilter === "past") {
+          matchesStatus = st === "done";
+        }
 
-  // Filter Logic untuk Volunteer
+        return matchesSearch && matchesCategory && matchesStatus;
+      })
+      .sort((a, b) => {
+        const stA = getEventStatusType(a.date, a.end_date, a.time_range);
+        const stB = getEventStatusType(b.date, b.end_date, b.time_range);
+        const isDoneA = stA === "done";
+        const isDoneB = stB === "done";
+
+        const timeA = a.date ? parseDateLocal(a.date).getTime() : 0;
+        const timeB = b.date ? parseDateLocal(b.date).getTime() : 0;
+
+        if (statusFilter === "past") {
+          return timeB - timeA; // Selesai: terbaru lebih dulu
+        }
+        if (statusFilter === "upcoming") {
+          return timeA - timeB; // Mendatang: paling dekat lebih dulu
+        }
+
+        // Default "all": Live/Upcoming dulu (date asc), baru Past (date desc)
+        if (!isDoneA && isDoneB) return -1;
+        if (isDoneA && !isDoneB) return 1;
+        if (!isDoneA && !isDoneB) return timeA - timeB;
+        return timeB - timeA;
+      });
+  }, [debouncedSearchQuery, allPublishedAgendas, selectedCategory, statusFilter, t]);
+
+  // Filter & Sort Logic untuk Volunteer
   const filteredVolunteers = useMemo(() => {
-    return volunteerOpportunities.filter((vol) => {
-      const matchesSearch =
-        (vol.title || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase()) ||
-        (vol.category || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase()) ||
-        (vol.description || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase());
-      
-      const matchesCategory = selectedCategory === t("catAll") || vol.category === selectedCategory;
-      
-      return matchesSearch && matchesCategory;
-    });
-  }, [debouncedVolunteerQuery, volunteerOpportunities, selectedCategory]);
+    return allPublishedVolunteers
+      .filter((vol) => {
+        const matchesSearch =
+          (vol.title || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase()) ||
+          (vol.category || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase()) ||
+          (vol.description || "").toLowerCase().includes(debouncedVolunteerQuery.toLowerCase());
+        
+        const isAllCat = selectedCategory === "ALL" || selectedCategory === t("catAll") || selectedCategory === "Semua";
+        const matchesCategory = isAllCat || vol.category === selectedCategory;
 
-  const volunteerOpportunitiesWithDate = volunteerOpportunities.map(vol => ({
-    ...vol,
-    date: vol.deadline
-  }));
+        const st = getVolunteerStatusType(vol.deadline);
+        let matchesStatus = true;
+        if (volunteerStatusFilter === "open") matchesStatus = st === "open";
+        else if (volunteerStatusFilter === "closed") matchesStatus = st === "closed";
+
+        return matchesSearch && matchesCategory && matchesStatus;
+      })
+      .sort((a, b) => {
+        const stA = getVolunteerStatusType(a.deadline);
+        const stB = getVolunteerStatusType(b.deadline);
+        const isClosedA = stA === "closed";
+        const isClosedB = stB === "closed";
+
+        const timeA = a.deadline ? parseDateLocal(a.deadline).getTime() : 0;
+        const timeB = b.deadline ? parseDateLocal(b.deadline).getTime() : 0;
+
+        if (volunteerStatusFilter === "closed") return timeB - timeA;
+        if (volunteerStatusFilter === "open") return timeA - timeB;
+
+        if (!isClosedA && isClosedB) return -1;
+        if (isClosedA && !isClosedB) return 1;
+        if (!isClosedA && !isClosedB) return timeA - timeB;
+        return timeB - timeA;
+      });
+  }, [debouncedVolunteerQuery, allPublishedVolunteers, selectedCategory, volunteerStatusFilter, t]);
+
+  const volunteerOpportunitiesWithDate = useMemo(() => {
+    return allPublishedVolunteers.map(vol => ({
+      ...vol,
+      date: vol.deadline,
+      end_date: vol.deadline || undefined
+    })) as AgendaKegiatan[];
+  }, [allPublishedVolunteers]);
 
   // Pagination Logic
   const ITEMS_PER_PAGE = 6;
@@ -257,8 +339,8 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
           </button>
         </div>
 
-        {/* Search Bar & View Toggle */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-3">
+        {/* Search Bar */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <div id="tour-agenda-search" className="flex-1 bg-surface border border-outline-variant/30 rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3 relative">
             <FiSearch size={17} className={`shrink-0 transition-colors ${isSearching || isSearchingVol ? "text-primary" : "text-on-surface-variant"}`} />
             {activeTab === "event" ? (
@@ -285,29 +367,141 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
               </div>
             )}
           </div>
-          {/* View Mode Toggle Removed */}
         </div>
+
+        {/* Status Filter Tabs (Semua / Akan Datang / Selesai) */}
+        {activeTab === "event" && (
+          <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-hide pb-1">
+            <button
+              onClick={() => { setStatusFilter("all"); setCurrentPage(1); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                statusFilter === "all"
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary/40 hover:text-primary"
+              }`}
+            >
+              <span>{t("statusFilterAll")}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                statusFilter === "all" ? "bg-white/20 text-white" : "bg-surface-variant/60 text-on-surface-variant"
+              }`}>
+                {totalEventCount}
+              </span>
+            </button>
+
+            <button
+              onClick={() => { setStatusFilter("upcoming"); setCurrentPage(1); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                statusFilter === "upcoming"
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary/40 hover:text-primary"
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{t("statusFilterUpcoming")}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                statusFilter === "upcoming" ? "bg-white/20 text-white" : "bg-surface-variant/60 text-on-surface-variant"
+              }`}>
+                {upcomingCount}
+              </span>
+            </button>
+
+            <button
+              onClick={() => { setStatusFilter("past"); setCurrentPage(1); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                statusFilter === "past"
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary/40 hover:text-primary"
+              }`}
+            >
+              <FiCheckCircle size={13} className={statusFilter === "past" ? "text-white" : "text-emerald-600"} />
+              <span>{t("statusFilterPast")}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                statusFilter === "past" ? "bg-white/20 text-white" : "bg-surface-variant/60 text-on-surface-variant"
+              }`}>
+                {pastCount}
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* Status Filter Tabs untuk Volunteer (Semua / Dibuka / Ditutup) */}
+        {activeTab === "volunteer" && (
+          <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-hide pb-1">
+            <button
+              onClick={() => { setVolunteerStatusFilter("all"); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                volunteerStatusFilter === "all"
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary/40 hover:text-primary"
+              }`}
+            >
+              <span>{t("statusFilterAll")}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                volunteerStatusFilter === "all" ? "bg-white/20 text-white" : "bg-surface-variant/60 text-on-surface-variant"
+              }`}>
+                {totalVolCount}
+              </span>
+            </button>
+
+            <button
+              onClick={() => { setVolunteerStatusFilter("open"); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                volunteerStatusFilter === "open"
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary/40 hover:text-primary"
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{t("statusFilterOpen")}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                volunteerStatusFilter === "open" ? "bg-white/20 text-white" : "bg-surface-variant/60 text-on-surface-variant"
+              }`}>
+                {openVolCount}
+              </span>
+            </button>
+
+            <button
+              onClick={() => { setVolunteerStatusFilter("closed"); }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                volunteerStatusFilter === "closed"
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-primary/40 hover:text-primary"
+              }`}
+            >
+              <FiCheckCircle size={13} className={volunteerStatusFilter === "closed" ? "text-white" : "text-on-surface-variant"} />
+              <span>{t("statusFilterClosed")}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                volunteerStatusFilter === "closed" ? "bg-white/20 text-white" : "bg-surface-variant/60 text-on-surface-variant"
+              }`}>
+                {closedVolCount}
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* Category Filter */}
         <div id="tour-agenda-filters" className="flex items-center gap-2 mb-8 overflow-x-auto scrollbar-hide pb-2">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => { setSelectedCategory(cat); setCurrentPage(1); }}
-              className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
-                selectedCategory === cat
-                  ? "bg-secondary text-white shadow-md"
-                  : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-secondary hover:text-secondary"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+          {categories.map((cat, idx) => {
+            const isAllCat = selectedCategory === "ALL" || selectedCategory === t("catAll") || selectedCategory === "Semua";
+            const isSelected = idx === 0 ? isAllCat : selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => { setSelectedCategory(idx === 0 ? "ALL" : cat); setCurrentPage(1); }}
+                className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
+                  isSelected
+                    ? "bg-secondary text-white shadow-md"
+                    : "bg-surface text-on-surface-variant border border-outline-variant/30 hover:border-secondary hover:text-secondary"
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
 
-
         {/* Spacer for volunteer tab */}
-        {activeTab === "volunteer" && <div className="mb-6" />}
+        {activeTab === "volunteer" && <div className="mb-2" />}
 
         {activeTab === "event" && (
           <div className="flex flex-col lg:flex-row gap-8 mt-4 mb-16 items-start">
@@ -328,6 +522,7 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {paginatedAgendas.map((agenda, index) => {
                   const eventStatus = getEventStatus(agenda.date, agenda.end_date, agenda.time_range);
+                  const statusType = getEventStatusType(agenda.date, agenda.end_date, agenda.time_range);
                   return (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -337,22 +532,37 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                     >
                       <Link
                         href={`/agenda/${agenda.id}?from=agenda-event`}
-                        className="group bg-surface border border-outline-variant/30 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col h-full"
+                        className={`group bg-surface border border-outline-variant/30 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col h-full ${
+                          statusType === "done" ? "opacity-90 hover:opacity-100" : ""
+                        }`}
                       >
                         {/* Image */}
                         <div className="h-44 md:h-48 overflow-hidden bg-surface-variant relative shrink-0">
-                          <Image src={agenda.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={agenda.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          <Image
+                            src={agenda.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"}
+                            alt={agenda.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
+                              statusType === "done" ? "grayscale-[25%] group-hover:grayscale-0" : ""
+                            }`}
+                          />
                           <div className="absolute top-3.5 left-3.5 bg-surface/90 backdrop-blur-sm text-secondary text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider">
                             {agenda.category}
                           </div>
-                          {eventStatus === t("statusLive") && (
-                            <div className="absolute top-3.5 right-3.5 bg-red-500 text-white text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                          {statusType === "live" && (
+                            <div className="absolute top-3.5 right-3.5 bg-red-500 text-white text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-md">
                               <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" /> {t("statusLive").toUpperCase()}
                             </div>
                           )}
-                          {eventStatus === t("statusDone") && (
-                            <div className="absolute top-3.5 right-3.5 bg-surface-variant/90 text-on-surface-variant text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider">
-                              {t("statusDone")}
+                          {statusType === "done" && (
+                            <div className="absolute top-3.5 right-3.5 bg-surface/90 backdrop-blur-md text-on-surface-variant border border-outline-variant/30 text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                              <FiCheckCircle size={12} className="text-emerald-500" /> {t("statusDone")}
+                            </div>
+                          )}
+                          {statusType === "upcoming" && (
+                            <div className="absolute top-3.5 right-3.5 bg-primary/90 backdrop-blur-md text-white text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                              <FiClock size={12} /> {t("statusUpcoming")}
                             </div>
                           )}
                         </div>
@@ -378,9 +588,15 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                             </span>
                           </div>
 
-                          <div className="flex items-center justify-end pt-3 border-t border-outline-variant/20 mt-auto">
+                          <div className="flex items-center justify-between pt-3 border-t border-outline-variant/20 mt-auto">
+                            <span className="text-[11px] font-medium text-on-surface-variant flex items-center gap-1">
+                              {statusType === "done" && <FiCheckCircle size={11} className="text-emerald-500" />}
+                              {statusType === "live" && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
+                              {statusType === "upcoming" && <FiClock size={11} className="text-primary" />}
+                              {eventStatus}
+                            </span>
                             <span className="text-primary text-xs md:text-sm font-bold group-hover:text-secondary transition-colors flex items-center gap-1.5">
-                              {eventStatus === t("statusDone") && agenda.gallery && agenda.gallery.length > 0
+                              {statusType === "done" && agenda.gallery && agenda.gallery.length > 0
                                 ? t("viewDocs")
                                 : t("detailEvent")
                               }
@@ -394,8 +610,8 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                 })}
               </div>
             ) : (
-              searchQuery ? (
-                <div className="bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2">
+              debouncedSearchQuery ? (
+                <div className="bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2 w-full">
                   <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
                     <SafeLottie src="/animations/Calendar.lottie" loop autoplay />
                   </div>
@@ -403,27 +619,27 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                     {t("noEventSearchTitle")}
                   </h3>
                   <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
-                    {`${t("noEventSearchDesc")} "${searchQuery}".`}
+                    {`${t("noEventSearchDesc")} "${debouncedSearchQuery}".`}
                   </p>
                 </div>
               ) : (
-                <Link href="/agenda" className="group block bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2 hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer">
+                <div className="bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2 w-full">
                   <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
                     <SafeLottie src="/animations/Calendar.lottie" loop autoplay />
                   </div>
-                  <h3 className="text-lg md:text-xl font-bold text-on-background group-hover:text-primary transition-colors">
-                    {t("noEventEmptyTitle")}
+                  <h3 className="text-lg md:text-xl font-bold text-on-background">
+                    {statusFilter === "upcoming" ? t("emptyUpcomingEvent") : statusFilter === "past" ? t("emptyPastEvent") : t("noEventEmptyTitle")}
                   </h3>
                   <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
-                    {t("noEventEmptyDesc")}
+                    {statusFilter === "upcoming" ? t("noUpcomingDesc") : statusFilter === "past" ? t("noPastDesc") : t("noEventEmptyDesc")}
                   </p>
-                </Link>
+                </div>
               )
             )}
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-10">
+              <div className="flex justify-center items-center gap-2 mt-4">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
@@ -454,12 +670,25 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
             )}
             
             {/* Upcoming and Past Events Overview */}
-            <AgendaUpcomingPast agendas={agendas} />
+            <div className="mt-8 pt-6 border-t border-outline-variant/20">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-on-background flex items-center gap-2">
+                    <FiCalendar className="text-primary" />
+                    {t("overviewTitle")}
+                  </h3>
+                  <p className="text-xs text-on-surface-variant mt-0.5">
+                    {t("upcomingTitle")} &bull; {t("pastTitle")}
+                  </p>
+                </div>
+              </div>
+              <AgendaUpcomingPast agendas={allPublishedAgendas} />
+            </div>
             </div>
 
             {/* Right Column: Calendar */}
             <div className="w-full lg:w-1/3 sticky top-24">
-              <AgendaCalendarView agendas={agendas} />
+              <AgendaCalendarView agendas={allPublishedAgendas} />
             </div>
           </div>
         )}
@@ -482,7 +711,7 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                 </div>
               ))
             ) : filteredVolunteers.length === 0 ? (
-              volunteerSearchQuery ? (
+              debouncedVolunteerQuery ? (
                 <div className="col-span-1 md:col-span-2 bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2 w-full">
                   <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
                     <SafeLottie src="/animations/Calendar.lottie" loop autoplay />
@@ -491,66 +720,104 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                     {t("noVolSearchTitle")}
                   </h3>
                   <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
-                    {`${t("noVolSearchDesc")} "${volunteerSearchQuery}".`}
+                    {`${t("noVolSearchDesc")} "${debouncedVolunteerQuery}".`}
                   </p>
                 </div>
               ) : (
-                <Link href="/agenda?tab=volunteer" className="group col-span-1 md:col-span-2 block bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2 w-full hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer">
+                <div className="col-span-1 md:col-span-2 bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-2xl mx-auto flex flex-col items-center justify-center gap-2 w-full">
                   <div className="w-36 h-36 sm:w-44 sm:h-44 relative -my-3">
                     <SafeLottie src="/animations/Calendar.lottie" loop autoplay />
                   </div>
-                  <h3 className="text-lg md:text-xl font-bold text-on-background group-hover:text-primary transition-colors">
-                    {t("noVolEmptyTitle")}
+                  <h3 className="text-lg md:text-xl font-bold text-on-background">
+                    {volunteerStatusFilter === "closed" ? t("emptyPastDeadline") : t("noVolEmptyTitle")}
                   </h3>
                   <p className="text-xs sm:text-sm text-on-surface-variant max-w-md leading-relaxed">
                     {t("noVolEmptyDesc")}
                   </p>
-                </Link>
+                </div>
               )
             ) : (
-              filteredVolunteers.map((vol, index) => (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  key={vol.id}
-                >
-                  <div className="group bg-surface border border-outline-variant/30 rounded-2xl overflow-hidden hover:border-primary/30 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-                    {/* Image */}
-                    <div className="relative aspect-[4/3] rounded-t-3xl overflow-hidden bg-surface-variant group-hover:shadow-inner">
-                      <Image src={vol.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={vol.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" draggable={false} />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                      {vol.is_urgent && (
-                        <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                          <FiClock size={10} /> {t("urgent")}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="p-4 md:p-6 flex flex-col flex-grow">
-                      <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block mb-1 md:mb-2">{vol.category}</span>
-                      <h4 className="font-bold text-base md:text-lg text-on-background group-hover:text-primary transition-colors mb-1 md:mb-2">{vol.title}</h4>
-                      <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed mb-4 md:mb-6 flex-grow line-clamp-3">{vol.description}</p>
-
-                      <div className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-4 md:mb-5">
-                        <FiClock size={13} className="text-primary" />
-                        <span>{t("deadline")} <span className="font-semibold text-on-background">{vol.deadline}</span></span>
+              filteredVolunteers.map((vol, index) => {
+                const isClosed = getVolunteerStatusType(vol.deadline) === "closed";
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    key={vol.id}
+                  >
+                    <div className={`group bg-surface border border-outline-variant/30 rounded-2xl overflow-hidden hover:border-primary/30 hover:shadow-lg transition-all duration-300 h-full flex flex-col ${
+                      isClosed ? "opacity-85 hover:opacity-100" : ""
+                    }`}>
+                      {/* Image */}
+                      <div className="relative aspect-[4/3] rounded-t-3xl overflow-hidden bg-surface-variant group-hover:shadow-inner">
+                        <Image
+                          src={vol.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"}
+                          alt={vol.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
+                            isClosed ? "grayscale-[25%] group-hover:grayscale-0" : ""
+                          }`}
+                          draggable={false}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                        {vol.is_urgent && !isClosed && (
+                          <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                            <FiClock size={10} /> {t("urgent")}
+                          </span>
+                        )}
+                        {isClosed && (
+                          <span className="absolute top-3 right-3 bg-surface/90 backdrop-blur-md text-on-surface-variant border border-outline-variant/30 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                            <FiCheckCircle size={10} className="text-emerald-500" /> {t("closedPosition")}
+                          </span>
+                        )}
                       </div>
 
-                      <Link href={`/agenda/${vol.id}?from=agenda-volunteer`}
-                        className="w-full flex items-center justify-center gap-2 bg-primary text-white text-xs md:text-sm font-bold py-2.5 md:py-3 rounded-xl hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 mt-auto"
-                      >
-                        <FiCheckCircle size={15} /> {t("applyPosition")}
-                      </Link>
+                      <div className="p-4 md:p-6 flex flex-col flex-grow">
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block mb-1 md:mb-2">{vol.category}</span>
+                        <h4 className="font-bold text-base md:text-lg text-on-background group-hover:text-primary transition-colors mb-1 md:mb-2">{vol.title}</h4>
+                        <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed mb-4 md:mb-6 flex-grow line-clamp-3">{vol.description}</p>
+
+                        <div className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-4 md:mb-5">
+                          <FiClock size={13} className={isClosed ? "text-on-surface-variant" : "text-primary"} />
+                          <span>{t("deadline")} <span className="font-semibold text-on-background">{vol.deadline}</span></span>
+                        </div>
+
+                        <Link
+                          href={`/agenda/${vol.id}?from=agenda-volunteer`}
+                          className={`w-full flex items-center justify-center gap-2 text-xs md:text-sm font-bold py-2.5 md:py-3 rounded-xl transition-all duration-300 mt-auto ${
+                            isClosed
+                              ? "bg-surface-variant/60 text-on-surface-variant border border-outline-variant/30 hover:bg-surface-variant"
+                              : "bg-primary text-white hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-md"
+                          }`}
+                        >
+                          <FiCheckCircle size={15} className={isClosed ? "text-on-surface-variant" : "text-white"} />
+                          {isClosed ? t("closedPosition") : t("applyPosition")}
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))
+                  </motion.div>
+                );
+              })
             )}
               </div>
               
               {/* Upcoming and Past Deadlines Overview */}
-              <AgendaUpcomingPast agendas={volunteerOpportunitiesWithDate} isVolunteer />
+              <div className="mt-8 pt-6 border-t border-outline-variant/20">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-on-background flex items-center gap-2">
+                      <FiBriefcase className="text-primary" />
+                      {t("overviewVolunteerTitle")}
+                    </h3>
+                    <p className="text-xs text-on-surface-variant mt-0.5">
+                      {t("upcomingDeadlineTitle")} &bull; {t("pastDeadlineTitle")}
+                    </p>
+                  </div>
+                </div>
+                <AgendaUpcomingPast agendas={volunteerOpportunitiesWithDate} isVolunteer />
+              </div>
             </div>
 
             {/* Right Column: Calendar */}
