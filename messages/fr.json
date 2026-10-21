@@ -843,7 +843,7 @@
     "errFixFields": "Veuillez corriger {count} champs invalides!"
   },
   "NewsDetail": {
-    "shareText": "Lisez les nouvelles intéressantes '{title}' sur le portail BEM STMIK Tazkia!",
+    "shareText": "Lisez les nouvelles intéressantes \"{title}\" sur le portail BEM STMIK Tazkia!",
     "copied": "Lien copié dans le presse-papiers!",
     "copyFail": "Échec de la copie du lien",
     "notFound": "Actualité non trouvée",

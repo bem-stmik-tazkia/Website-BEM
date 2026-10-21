@@ -843,7 +843,7 @@
     "errFixFields": "يرجى إصلاح {count} حقول غير صالحة!"
   },
   "NewsDetail": {
-    "shareText": "اقرأ الأخبار المثيرة '{title}' على بوابة BEM STMIK Tazkia!",
+    "shareText": "اقرأ الأخبار المثيرة \"{title}\" على بوابة BEM STMIK Tazkia!",
     "copied": "تم نسخ الرابط إلى الحافظة!",
     "copyFail": "فشل في نسخ الرابط",
     "notFound": "الخبر غير موجود",

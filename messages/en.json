@@ -843,7 +843,7 @@
     "errFixFields": "Please fix {count} invalid fields!"
   },
   "NewsDetail": {
-    "shareText": "Read the interesting news '{title}' on BEM STMIK Tazkia Portal!",
+    "shareText": "Read the interesting news \"{title}\" on BEM STMIK Tazkia Portal!",
     "copied": "Link copied to clipboard!",
     "copyFail": "Failed to copy link",
     "notFound": "News not found",

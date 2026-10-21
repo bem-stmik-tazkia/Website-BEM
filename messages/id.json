@@ -843,7 +843,7 @@
     "errFixFields": "Mohon perbaiki {count} isian yang belum valid!"
   },
   "NewsDetail": {
-    "shareText": "Baca berita menarik '{title}' di Portal BEM STMIK Tazkia!",
+    "shareText": "Baca berita menarik \"{title}\" di Portal BEM STMIK Tazkia!",
     "copied": "Tautan disalin ke clipboard!",
     "copyFail": "Gagal menyalin tautan",
     "notFound": "Berita tidak ditemukan",

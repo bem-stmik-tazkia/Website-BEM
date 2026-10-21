@@ -55,9 +55,10 @@ export default function BeritaDetailPage() {
 
   const handleShare = async () => {
     if (!newsDetail) return;
+    const shareText = t("shareText", { title: newsDetail.title });
     const shareData = {
       title: newsDetail.title,
-      text: t("shareText", { title: newsDetail.title }),
+      text: shareText,
       url: window.location.href,
     };
 
@@ -69,7 +70,7 @@ export default function BeritaDetailPage() {
       }
     } else {
       try {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(`${shareText}\n${window.location.href}`);
         toast(t("copied"), "success");
       } catch (err) {
         toast(t("copyFail"), "error");
