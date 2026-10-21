@@ -24,7 +24,7 @@ import { recordView } from "@/actions/view";
 import { createClient } from "@/utils/supabase/client";
 import { getDeviceId } from "@/utils/identity";
 import { useToast } from "@/components/ui/Toast";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import DOMPurify from "isomorphic-dompurify";
 
 interface NewsDetail {
@@ -45,6 +45,21 @@ export default function BeritaDetailPage() {
   const params = useParams();
   const { toast } = useToast();
   const t = useTranslations("NewsDetail");
+  const locale = useLocale();
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "";
+    try {
+      const d = new Date(dateString);
+      if (isNaN(d.getTime())) return "";
+      return d.toLocaleDateString(
+        locale === "en" ? "en-GB" : locale === "ar" ? "ar-SA" : locale === "ja" ? "ja-JP" : locale === "fr" ? "fr-FR" : "id-ID",
+        { day: "numeric", month: "short", year: "numeric" }
+      );
+    } catch {
+      return dateString;
+    }
+  };
   const [liked, setLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [viewCount, setViewCount] = useState(0);
@@ -236,7 +251,7 @@ export default function BeritaDetailPage() {
               {newsDetail.category}
             </span>
             <span className="flex items-center gap-1.5 text-sm text-on-surface-variant font-medium">
-              <FiCalendar className="text-[var(--color-primary)]" /> {new Date(newsDetail.created_at).toLocaleDateString('id-ID')}
+              <FiCalendar className="text-[var(--color-primary)]" /> {formatDate(newsDetail.created_at)}
             </span>
           </div>
 
@@ -419,7 +434,7 @@ export default function BeritaDetailPage() {
                       {item.title}
                     </h4>
                     <span className="text-[10px] text-on-surface-variant font-medium flex items-center gap-1">
-                      <FiCalendar size={10} /> {item.date}
+                      <FiCalendar size={11} className="text-[var(--color-primary)] shrink-0" /> {formatDate(item.created_at)}
                     </span>
                   </div>
                 </Link>
