@@ -11,15 +11,26 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function DokumentasiPage() {
   const data = await getCachedAgenda();
 
-  // Filter the data on the server exactly like it was done on the client
+  // Filter the data on the server:
+  // - Must be published
+  // - Must have documentation (gallery photos or video/drive link)
+  // - Type "dokumentasi" entries are always included
   const filteredData = (data as any[]).filter((item: any) => {
     if (!item.is_published) return false;
-    const isFinished = item.date && (new Date(item.date).setHours(0, 0, 0, 0) <= new Date().setHours(0, 0, 0, 0));
-    if (!isFinished) return false;
-    return Array.isArray(item.gallery) && item.gallery.length > 0;
+
+    // Manual documentation entries are always shown
+    if (item.type === "dokumentasi") return true;
+
+    // Events that have documentation (gallery photos or video/drive link)
+    const hasGallery = Array.isArray(item.gallery) && item.gallery.filter(Boolean).length > 0;
+    const hasVideo = typeof item.video_url === 'string' && item.video_url.trim().length > 0;
+
+    return hasGallery || hasVideo;
   });
 
   return <DokumentasiClient initialData={filteredData} />;

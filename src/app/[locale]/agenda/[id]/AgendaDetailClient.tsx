@@ -26,7 +26,64 @@ import {
   FiLink
 } from "react-icons/fi";
 import { AgendaKegiatan } from "@/types/agenda";
-import { formatDateToIndo } from "@/utils/dateFormatter";
+import { formatDateToIndo, formatDateLocalized } from "@/utils/dateFormatter";
+import { translateContent } from "@/utils/translate";
+
+function GoogleDriveFolderCard({ url, folderId }: { url: string; folderId: string }) {
+  const t = useTranslations("AgendaDetail");
+  const [showPreview, setShowPreview] = React.useState(false);
+
+  return (
+    <div className="rounded-2xl border border-outline-variant/30 bg-surface p-5 md:p-6 transition-all shadow-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0 border border-amber-500/20 shadow-sm">
+            <FiFolder size={24} />
+          </div>
+          <div>
+            <h4 className="font-bold text-base text-on-surface">
+              {t("driveFolderTitle")}
+            </h4>
+            <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed">
+              {t("driveFolderDesc")}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowPreview((prev) => !prev)}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-outline-variant/40 hover:bg-surface-variant/40 text-xs font-bold text-on-surface transition-colors cursor-pointer"
+          >
+            {showPreview ? t("hidePreview") : t("togglePreview")}
+          </button>
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition-all shadow-sm hover:shadow-md hover:scale-[1.02]"
+          >
+            <FiExternalLink size={14} /> {t("openDriveFolder")}
+          </a>
+        </div>
+      </div>
+
+      {showPreview && (
+        <div className="mt-5 pt-5 border-t border-outline-variant/20">
+          <div className="w-full h-[450px] md:h-[520px] rounded-xl overflow-hidden border border-outline-variant/30 bg-white shadow-inner">
+            <iframe
+              className="w-full h-full"
+              src={`https://drive.google.com/embeddedfolderview?id=${folderId}#grid`}
+              title={t("driveFolderTitle")}
+              frameBorder="0"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { agenda: AgendaKegiatan, participantCount: number }) {
   const t = useTranslations("AgendaDetail");
@@ -37,6 +94,38 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
 
   const { data: translatedArr } = useTranslatedList([rawAgenda], "agenda_kegiatan", locale, ["title", "description", "location", "category"]);
   const agenda = translatedArr[0] || rawAgenda;
+
+  const [translatedSpeakers, setTranslatedSpeakers] = React.useState(rawAgenda.speakers || []);
+
+  React.useEffect(() => {
+    if (!rawAgenda.speakers || rawAgenda.speakers.length === 0 || locale === "id") {
+      setTranslatedSpeakers(rawAgenda.speakers || []);
+      return;
+    }
+
+    let isMounted = true;
+    Promise.all(
+      rawAgenda.speakers.map(async (sp) => {
+        if (!sp.role) return sp;
+        try {
+          const transRole = await translateContent(
+            `${rawAgenda.id}_sp_${sp.name}`,
+            "speakers",
+            "role",
+            sp.role,
+            locale
+          );
+          return { ...sp, role: transRole || sp.role };
+        } catch {
+          return sp;
+        }
+      })
+    ).then((res) => {
+      if (isMounted) setTranslatedSpeakers(res);
+    });
+
+    return () => { isMounted = false; };
+  }, [rawAgenda.speakers, rawAgenda.id, locale]);
 
   const handleBack = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -282,25 +371,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
     const isDriveFolder = url.match(/drive\.google\.com\/drive\/folders\/([a-zA-Z0-9_-]+)/i);
     if (isDriveFolder && isDriveFolder[1]) {
       return (
-        <div className="flex flex-col gap-4">
-          <div className="p-4 rounded-xl border border-outline-variant/30 bg-surface-variant/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3 overflow-hidden w-full">
-              <FiFolder className="text-primary shrink-0" size={24} />
-              <span className="truncate text-sm font-medium">Folder Google Drive</span>
-            </div>
-            <a href={url} target="_blank" rel="noreferrer" className="shrink-0 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors w-full sm:w-auto text-center">
-              Buka Folder Drive
-            </a>
-          </div>
-          <div className="w-full h-[500px] md:h-[600px] rounded-xl overflow-hidden border border-outline-variant/30 bg-white shadow-sm">
-            <iframe 
-              className="w-full h-full"
-              src={`https://drive.google.com/embeddedfolderview?id=${isDriveFolder[1]}#grid`}
-              title="Google Drive Folder View"
-              frameBorder="0"
-            ></iframe>
-          </div>
-        </div>
+        <GoogleDriveFolderCard key={url} url={url} folderId={isDriveFolder[1]} />
       );
     }
     
@@ -310,8 +381,8 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
           <FiLink className="text-primary shrink-0" size={24} />
           <span className="truncate text-sm font-medium">{url}</span>
         </div>
-        <a href={url} target="_blank" rel="noreferrer" className="shrink-0 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors w-full sm:w-auto text-center">
-          Buka Link Dokumentasi
+        <a href={url} target="_blank" rel="noreferrer" className="shrink-0 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors w-full sm:w-auto text-center inline-flex items-center justify-center gap-1.5">
+          <FiExternalLink size={14} /> {t("openDocumentationLink")}
         </a>
       </div>
     );
@@ -377,20 +448,21 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
                   const startOpt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
                   const endOpt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
                   
-                  const startStr = new Date(startDate).toLocaleDateString(locale === 'en' ? 'en-GB' : 'id-ID', startOpt);
+                  const localeCode = locale === 'en' ? 'en-GB' : locale === 'ar' ? 'ar-SA' : locale === 'fr' ? 'fr-FR' : locale === 'ja' ? 'ja-JP' : 'id-ID';
+                  const startStr = new Date(startDate).toLocaleDateString(localeCode, startOpt);
                   
                   if (agenda.end_date && agenda.end_date !== agenda.date) {
                     const dStart = new Date(startDate);
                     const dEnd = new Date(agenda.end_date);
                     if (dStart.getMonth() === dEnd.getMonth() && dStart.getFullYear() === dEnd.getFullYear()) {
                        // Same month and year: "12 - 14 September 2026"
-                       return `${dStart.getDate()} - ${dEnd.toLocaleDateString(locale === 'en' ? 'en-GB' : 'id-ID', endOpt)}`;
+                       return `${dStart.getDate()} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
                     } else if (dStart.getFullYear() === dEnd.getFullYear()) {
                        // Same year, diff month: "12 Aug - 14 Sep 2026"
-                       return `${dStart.getDate()} ${dStart.toLocaleDateString(locale === 'en' ? 'en-GB' : 'id-ID', { month: 'short' })} - ${dEnd.toLocaleDateString(locale === 'en' ? 'en-GB' : 'id-ID', endOpt)}`;
+                       return `${dStart.getDate()} ${dStart.toLocaleDateString(localeCode, { month: 'short' })} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
                     } else {
                        // Diff year
-                       return `${startStr} - ${dEnd.toLocaleDateString(locale === 'en' ? 'en-GB' : 'id-ID', endOpt)}`;
+                       return `${startStr} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
                     }
                   }
                   
@@ -399,7 +471,10 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
               </span>
               {agenda.time_range && agenda.time_range !== "-" && (
                 <span className="flex items-center gap-2">
-                  <FiClock className="text-[var(--color-secondary)] shrink-0" size={16} /> {agenda.time_range}
+                  <FiClock className="text-[var(--color-secondary)] shrink-0" size={16} /> 
+                  {locale === 'en'
+                    ? agenda.time_range.replace(/selesai/gi, "End").replace(/s\/d/gi, "to")
+                    : agenda.time_range}
                 </span>
               )}
               {agenda.location && agenda.location !== "-" && (
@@ -510,10 +585,10 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
         {/* Deskripsi & Dokumentasi */}
         <div className="flex flex-col gap-6 md:gap-8 lg:col-span-2">
           
-          {agenda.speakers && agenda.speakers.length > 0 && (
+          {translatedSpeakers && translatedSpeakers.length > 0 && (
             <div className="lg:hidden flex flex-col gap-4 mb-2">
               <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block bg-secondary/10 w-fit px-3 py-1.5 rounded-full">{t("featuringSpeakers")}</span>
-              {agenda.speakers.map((speaker, idx) => (
+              {translatedSpeakers.map((speaker, idx) => (
                 <div key={idx} className="bg-surface rounded-2xl md:rounded-3xl p-5 md:p-6 border border-outline-variant/30 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-6">
                   <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0 border-2 border-primary/20">
                     {speaker.photo ? (
@@ -552,7 +627,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
           {videoUrls.length > 0 && (
             <div className="bg-surface rounded-2xl md:rounded-3xl p-5 md:p-8 border border-outline-variant/30 shadow-sm">
               <h3 className="text-lg md:text-xl font-bold text-on-background mb-4 md:mb-6 flex items-center gap-2">
-                <FiVideo className="text-primary" size={20} /> Dokumentasi
+                <FiVideo className="text-primary" size={20} /> {t("documentation")}
               </h3>
               <div className="flex flex-col gap-6">
                 {videoUrls.map((vUrl, idx) => (
@@ -662,23 +737,23 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
 
         {/* Sidebar / Speaker Card (Desktop) */}
         <div className="hidden lg:flex flex-col gap-6 lg:col-span-1">
-          {agenda.speakers && agenda.speakers.length > 0 && (
+          {translatedSpeakers && translatedSpeakers.length > 0 && (
             <div className="flex flex-col gap-4">
               <span className="text-[10px] font-bold text-secondary uppercase tracking-wider bg-secondary/10 px-3 py-1.5 rounded-full w-fit">{t("featuringSpeakers")}</span>
-              {agenda.speakers.map((speaker, idx) => (
-                <div key={idx} className="bg-surface rounded-3xl p-8 border border-outline-variant/30 shadow-sm flex flex-col items-center text-center">
-                  <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden mb-4 border-4 border-white shadow-md">
+              {translatedSpeakers.map((speaker, idx) => (
+                <div key={idx} className="bg-surface rounded-2xl p-6 border border-outline-variant/30 shadow-sm flex flex-col items-center text-center transition-all hover:border-primary/30">
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden mb-3 border-2 border-primary/20 shadow-sm">
                     {speaker.photo ? (
                       <img src={speaker.photo} alt={speaker.name} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-4xl font-black text-primary">
+                      <span className="text-2xl font-black text-primary">
                         {speaker.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                       </span>
                     )}
                   </div>
-                  <h3 className="text-xl font-bold text-on-background mb-1">{speaker.name}</h3>
+                  <h3 className="text-base font-bold text-on-background mb-1">{speaker.name}</h3>
                   {speaker.role && (
-                    <p className="text-sm text-on-surface-variant font-medium leading-relaxed">{speaker.role}</p>
+                    <p className="text-xs text-on-surface-variant font-medium leading-relaxed">{speaker.role}</p>
                   )}
                 </div>
               ))}

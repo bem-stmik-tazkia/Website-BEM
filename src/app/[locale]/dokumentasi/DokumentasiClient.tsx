@@ -18,16 +18,36 @@ const ITEMS_PER_PAGE = 6;
 // COMPONENTS
 // ============================================================
 
-function MediaBadge({ count }: { count: number | string }) {
+function MediaBadge({ count, videoUrl }: { count: number | string; videoUrl?: string | null }) {
   const t = useTranslations("DokumentasiPage");
+  const numCount = typeof count === "number" ? count : parseInt(count, 10) || 0;
+
+  if (numCount > 0) {
+    return (
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white text-xs font-bold">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+        {numCount} {t("photoCount")}
+      </div>
+    );
+  }
+
+  const isDrive = videoUrl && videoUrl.includes("drive.google.com");
   return (
     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white text-xs font-bold">
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-        <circle cx="8.5" cy="8.5" r="1.5" />
-        <polyline points="21 15 16 10 5 21" />
-      </svg>
-      {count} {t("photoCount")}
+      {isDrive ? (
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="5 3 19 12 5 21 5 3" />
+        </svg>
+      )}
+      {isDrive ? "Google Drive" : "Video"}
     </div>
   );
 }
@@ -83,7 +103,7 @@ function DocCard({ item }: { item: any }) {
 
         {/* Media badge top-right */}
         <div className="absolute top-3 right-3 z-10">
-          <MediaBadge count={item.mediaCount} />
+          <MediaBadge count={item.mediaCount} videoUrl={item.video_url} />
         </div>
 
         {/* Category badge top-left */}
@@ -217,25 +237,34 @@ export default function DokumentasiClient({ initialData }: { initialData: any[] 
 
   const [rawFilteredData, setRawFilteredData] = useState<any[]>(initialData);
 
+  // Sync rawFilteredData when initialData prop changes (e.g. after revalidation)
+  React.useEffect(() => {
+    setRawFilteredData(initialData);
+  }, [initialData]);
+
   const { data: translatedRawData, isTranslating } = useTranslatedList(
     rawFilteredData, "agenda_kegiatan", locale, ["title", "category"]
   );
 
   React.useEffect(() => {
-    if (translatedRawData.length > 0 || (rawFilteredData.length === 0 && !isLoading)) {
-      const mapped = translatedRawData.map((item: any) => ({
+    // Always map & display data — whether empty or not
+    const mapped = translatedRawData.map((item: any) => {
+      const photosCount = Array.isArray(item.gallery) ? item.gallery.filter(Boolean).length : 0;
+      return {
         id: item.id,
         kategori: item.category || "Event",
         subKategori: item.category || "General",
         judul: item.title,
         tanggal: item.date ? new Date(item.date).toLocaleDateString(locale === 'en' ? 'en-GB' : locale === 'ar' ? 'ar-SA' : locale === 'fr' ? 'fr-FR' : locale === 'ja' ? 'ja-JP' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "",
-        mediaCount: item.gallery?.length || 0,
+        mediaCount: photosCount,
+        video_url: item.video_url || null,
+        hasVideo: typeof item.video_url === 'string' && item.video_url.trim().length > 0,
         image: item.image_url || ((item.gallery && item.gallery.length > 0) ? item.gallery[0] : "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"),
         tags: [(item.category || "event").toLowerCase(), "semua"]
-      }));
-      setDokumentasiData(mapped);
-    }
-  }, [translatedRawData, locale, isLoading, rawFilteredData.length]);
+      };
+    });
+    setDokumentasiData(mapped);
+  }, [translatedRawData, locale]);
 
   const dynamicFilterTabs = useMemo(() => {
     const uniqueCategories = new Set<string>();
@@ -294,7 +323,10 @@ export default function DokumentasiClient({ initialData }: { initialData: any[] 
   };
 
   const totalPhotos = useMemo(() => {
-    return dokumentasiData.reduce((acc, item) => acc + (typeof item.mediaCount === 'number' ? item.mediaCount : 0), 0);
+    return dokumentasiData.reduce((acc, item) => {
+      const count = typeof item.mediaCount === 'number' ? item.mediaCount : 0;
+      return acc + (count > 0 ? count : (item.hasVideo ? 1 : 0));
+    }, 0);
   }, [dokumentasiData]);
 
   return (
@@ -315,18 +347,6 @@ export default function DokumentasiClient({ initialData }: { initialData: any[] 
         <p className="text-on-surface-variant max-w-2xl mx-auto leading-relaxed text-base md:text-lg animate-init-fade-up anim-delay-200">
           {t("heroSubtitle")}
         </p>
-
-        {/* Stats */}
-        <div className="flex items-center justify-center gap-6 mt-8 animate-init-fade-up anim-delay-300">
-          <div className="flex items-center gap-2 text-on-surface-variant text-sm font-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
-            </svg>
-            {totalPhotos} {t("photoCount")}
-          </div>
-        </div>
       </section>
 
       {/* ── DIVIDER ── */}

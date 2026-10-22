@@ -76,7 +76,7 @@ export default function KabinetForm({ initialData }: { initialData: KabinetProfi
                 value={formData.periode}
                 onChange={(e) => setFormData({...formData, periode: e.target.value})}
                 className="w-full bg-background border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                placeholder="Contoh: 2024/2025"
+                placeholder="Contoh: 2026/2027"
               />
             </div>
             <div className="space-y-2">

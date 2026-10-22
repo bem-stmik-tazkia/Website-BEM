@@ -311,7 +311,16 @@ export default function EventVolunteer({
               }
             }}
           >
-            <Link href={`/agenda/${liveEvents[activeLive].id}`} className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-lg group cursor-pointer h-[280px] sm:h-[300px] md:h-[350px] block">
+            <div
+              className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-lg group cursor-pointer h-[280px] sm:h-[300px] md:h-[350px] block"
+              onClick={(e) => {
+                // Only navigate if not clicking the inner button/link
+                const target = e.target as HTMLElement;
+                if (!target.closest('a') && !target.closest('button')) {
+                  router.push(`/agenda/${liveEvents[activeLive].id}`);
+                }
+              }}
+            >
               {liveEvents.length > 1 && (
                 <div
                   className="absolute top-0 left-0 h-1.5 z-20 transition-none rounded-full"
@@ -358,14 +367,20 @@ export default function EventVolunteer({
                     </div>
 
                     <div>
-                      <Link href={`/agenda/${liveEvents[activeLive].id}`} className="bg-secondary text-white text-sm font-bold px-6 py-3 rounded-full hover:bg-secondary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/agenda/${liveEvents[activeLive].id}`);
+                        }}
+                        className="bg-secondary text-white text-sm font-bold px-6 py-3 rounded-full hover:bg-secondary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-2"
+                      >
                         {t("enterLive")} <FiArrowRight size={16} />
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </motion.div>
               </AnimatePresence>
-            </Link>
+            </div>
 
             {liveEvents.length > 1 && (
               <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 z-20 flex gap-3">

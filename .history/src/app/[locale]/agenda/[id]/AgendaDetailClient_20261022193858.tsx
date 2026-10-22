@@ -1,0 +1,873 @@
+"use client";
+
+import React, { Suspense } from "react";
+import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiArrowLeft,
+  FiCalendar,
+  FiClock,
+  FiMapPin,
+  FiInfo,
+  FiVideo,
+  FiExternalLink,
+  FiImage,
+  FiMic,
+  FiDownload,
+  FiCheckSquare,
+  FiX,
+  FiChevronLeft,
+  FiChevronRight,
+  FiClipboard,
+  FiFolder,
+  FiLink
+} from "react-icons/fi";
+import { AgendaKegiatan } from "@/types/agenda";
+import { formatDateToIndo, formatDateLocalized } from "@/utils/dateFormatter";
+import { translateContent } from "@/utils/translate";
+
+function GoogleDriveFolderCard({ url, folderId }: { url: string; folderId: string }) {
+  const t = useTranslations("AgendaDetail");
+  const [showPreview, setShowPreview] = React.useState(false);
+
+  return (
+    <div className="rounded-2xl border border-outline-variant/30 bg-surface p-5 md:p-6 transition-all shadow-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0 border border-amber-500/20 shadow-sm">
+            <FiFolder size={24} />
+          </div>
+          <div>
+            <h4 className="font-bold text-base text-on-surface">
+              {t("driveFolderTitle")}
+            </h4>
+            <p className="text-xs text-on-surface-variant mt-0.5 leading-relaxed">
+              {t("driveFolderDesc")}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowPreview((prev) => !prev)}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-outline-variant/40 hover:bg-surface-variant/40 text-xs font-bold text-on-surface transition-colors cursor-pointer"
+          >
+            {showPreview ? t("hidePreview") : t("togglePreview")}
+          </button>
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition-all shadow-sm hover:shadow-md hover:scale-[1.02]"
+          >
+            <FiExternalLink size={14} /> {t("openDriveFolder")}
+          </a>
+        </div>
+      </div>
+
+      {showPreview && (
+        <div className="mt-5 pt-5 border-t border-outline-variant/20">
+          <div className="w-full h-[450px] md:h-[520px] rounded-xl overflow-hidden border border-outline-variant/30 bg-white shadow-inner">
+            <iframe
+              className="w-full h-full"
+              src={`https://drive.google.com/embeddedfolderview?id=${folderId}#grid`}
+              title={t("driveFolderTitle")}
+              frameBorder="0"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { agenda: AgendaKegiatan, participantCount: number }) {
+  const t = useTranslations("AgendaDetail");
+  const locale = useLocale();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const from = searchParams.get("from");
+
+  const { data: translatedArr } = useTranslatedList([rawAgenda], "agenda_kegiatan", locale, ["title", "description", "location", "category"]);
+  const agenda = translatedArr[0] || rawAgenda;
+
+  const [translatedSpeakers, setTranslatedSpeakers] = React.useState(rawAgenda.speakers || []);
+
+  React.useEffect(() => {
+    if (!rawAgenda.speakers || rawAgenda.speakers.length === 0 || locale === "id") {
+      setTranslatedSpeakers(rawAgenda.speakers || []);
+      return;
+    }
+
+    let isMounted = true;
+    Promise.all(
+      rawAgenda.speakers.map(async (sp) => {
+        if (!sp.role) return sp;
+        try {
+          const transRole = await translateContent(
+            `${rawAgenda.id}_sp_${sp.name}`,
+            "speakers",
+            "role",
+            sp.role,
+            locale
+          );
+          return { ...sp, role: transRole || sp.role };
+        } catch {
+          return sp;
+        }
+      })
+    ).then((res) => {
+      if (isMounted) setTranslatedSpeakers(res);
+    });
+
+    return () => { isMounted = false; };
+  }, [rawAgenda.speakers, rawAgenda.id, locale]);
+
+  const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (from === "home") {
+      router.push("/");
+    } else if (from === "agenda-event") {
+      router.push("/agenda?tab=event");
+    } else if (from === "agenda-volunteer") {
+      router.push("/agenda?tab=volunteer");
+    } else if (from === "dokumentasi") {
+      router.push("/dokumentasi");
+    } else {
+      router.push("/agenda");
+    }
+  };
+
+  // Helper: parse tanggal sebagai local date (hindari UTC timezone shift)
+  const parseDateLocal = (dateStr: string) => {
+    const [y, m, d] = dateStr.split("T")[0].split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setHours(0, 0, 0, 0);
+    return dt;
+  };
+
+  const getEventStatus = (dateStr?: string | null, endDateStr?: string | null, timeRange?: string | null) => {
+    if (!dateStr) return t("statusUpcoming");
+    const now = new Date();
+    const today = new Date(now); today.setHours(0, 0, 0, 0);
+    const eventDateNorm = parseDateLocal(dateStr);
+    const endDateNorm = endDateStr ? parseDateLocal(endDateStr) : parseDateLocal(dateStr);
+
+    // Sudah lewat tanggal terakhir
+    if (endDateNorm < today) return t("statusDone");
+
+    // Event multi-hari yang sedang berlangsung
+    const isMultiDay = endDateStr && endDateStr !== dateStr;
+    if (isMultiDay && eventDateNorm < today && today <= endDateNorm) return t("statusLive");
+
+    // Event 1 hari: cek jam jika ada time_range
+    if (eventDateNorm.getTime() === today.getTime()) {
+      if (timeRange) {
+        const tm = timeRange.match(/(\d{1,2})[:.](\d{2})\s*(?:-|s\/d|to)\s*(\d{1,2})[:.](\d{2})/i);
+        if (tm) {
+          const evStart = new Date(today); evStart.setHours(parseInt(tm[1], 10), parseInt(tm[2], 10), 0, 0);
+          const evEnd   = new Date(today); evEnd.setHours(parseInt(tm[3], 10), parseInt(tm[4], 10), 0, 0);
+          if (now < evStart) return t("statusUpcoming");
+          if (now > evEnd)   return t("statusDone");
+          return t("statusLive");
+        }
+      }
+      // Tidak ada time_range → seharian live
+      return t("statusLive");
+    }
+
+    return t("statusUpcoming");
+  };
+
+  const eventStatus = getEventStatus(agenda.date, agenda.end_date, agenda.time_range);
+  const isLive = eventStatus === t("statusLive");
+  const isFinished = eventStatus === t("statusDone");
+  const isManualDokumentasi = agenda.type === 'dokumentasi';
+  
+  const hasRegistration = agenda.form_schema && agenda.form_schema.length > 0;
+  const maxQuota = agenda.max_participants;
+  const isQuotaFull = maxQuota !== null && maxQuota !== undefined && participantCount >= maxQuota;
+  const remainingQuota = maxQuota !== null && maxQuota !== undefined ? maxQuota - participantCount : null;
+
+  const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
+  const [flipDirection, setFlipDirection] = React.useState<number>(1);
+  const [isSelectionMode, setIsSelectionMode] = React.useState(false);
+  const [selectedPhotos, setSelectedPhotos] = React.useState<Set<number>>(new Set());
+  const [isDownloading, setIsDownloading] = React.useState(false);
+  const { drivePhotoUrls, actualVideoUrls } = React.useMemo(() => {
+    if (!agenda.video_url) return { drivePhotoUrls: [], actualVideoUrls: [] };
+    const urls = agenda.video_url.split(/[\s,]+/).filter(Boolean);
+    const drivePhotos: string[] = [];
+    const videos: string[] = [];
+    
+    urls.forEach(url => {
+      const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
+      // We assume Google Drive links pasted here are photos as requested by user
+      if (driveMatch && driveMatch[1]) {
+        drivePhotos.push(`https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1000`);
+      } else {
+        videos.push(url);
+      }
+    });
+    
+    return { drivePhotoUrls: drivePhotos, actualVideoUrls: videos };
+  }, [agenda.video_url]);
+
+  const validGallery = React.useMemo(() => {
+    const baseGallery = agenda.gallery ? agenda.gallery.filter(Boolean).map(url => {
+      const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
+      if (driveMatch && driveMatch[1]) {
+        return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1000`;
+      }
+      return url;
+    }) : [];
+    
+    return [...baseGallery, ...drivePhotoUrls];
+  }, [agenda.gallery, drivePhotoUrls]);
+
+  const videoUrls = actualVideoUrls;
+
+  const [currentBannerIndex, setCurrentBannerIndex] = React.useState(0);
+  
+  React.useEffect(() => {
+    if (validGallery.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % validGallery.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [validGallery]);
+
+  const downloadImage = async (url: string, index: number) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `Dokumentasi-${agenda.title.replace(/\s+/g, '-')}-${index + 1}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download failed', err);
+    }
+  };
+
+  const handleDownloadSelected = async () => {
+    setIsDownloading(true);
+    const urlsToDownload = Array.from(selectedPhotos).map(idx => validGallery[idx]);
+    
+    for (let i = 0; i < urlsToDownload.length; i++) {
+      const url = urlsToDownload[i];
+      const originalIndex = Array.from(selectedPhotos)[i];
+      await downloadImage(url, originalIndex);
+      if (i < urlsToDownload.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    setIsDownloading(false);
+    setIsSelectionMode(false);
+    setSelectedPhotos(new Set());
+  };
+
+  const handleDownloadAll = async () => {
+    setIsDownloading(true);
+    const gallery = validGallery;
+    
+    for (let i = 0; i < gallery.length; i++) {
+      await downloadImage(gallery[i], i);
+      if (i < gallery.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    setIsDownloading(false);
+  };
+
+  const toggleSelection = (idx: number) => {
+    const newSet = new Set(selectedPhotos);
+    if (newSet.has(idx)) newSet.delete(idx);
+    else newSet.add(idx);
+    setSelectedPhotos(newSet);
+  };
+
+  const handlePrev = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setFlipDirection(-1);
+    setLightboxIndex(prev => prev! > 0 ? prev! - 1 : validGallery.length - 1);
+  };
+
+  const handleNext = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setFlipDirection(1);
+    setLightboxIndex(prev => prev! < validGallery.length - 1 ? prev! + 1 : 0);
+  };
+
+  const renderVideo = (url: string) => {
+    // YouTube
+    const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+    if (ytMatch && ytMatch[1]) {
+      return (
+        <div className="aspect-video w-full rounded-xl overflow-hidden border border-outline-variant/30 bg-black">
+          <iframe 
+            className="w-full h-full"
+            src={`https://www.youtube.com/embed/${ytMatch[1]}`} 
+            title="YouTube video player" 
+            frameBorder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowFullScreen
+          ></iframe>
+        </div>
+      );
+    }
+    
+    // Google Drive
+    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
+    if (driveMatch && driveMatch[1]) {
+      return (
+        <div className="aspect-video w-full rounded-xl overflow-hidden border border-outline-variant/30 bg-black">
+          <iframe 
+            className="w-full h-full"
+            src={`https://drive.google.com/file/d/${driveMatch[1]}/preview`} 
+            title="Google Drive player" 
+            frameBorder="0" 
+            allow="autoplay; fullscreen"
+          ></iframe>
+        </div>
+      );
+    }
+
+    // Instagram
+    const igMatch = url.match(/instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)/i);
+    if (igMatch && igMatch[1]) {
+      return (
+        <div className="w-full sm:max-w-md mx-auto rounded-xl overflow-hidden border border-outline-variant/30 bg-white">
+          <iframe 
+            className="w-full h-[600px]"
+            src={`https://www.instagram.com/p/${igMatch[1]}/embed`} 
+            title="Instagram embed" 
+            frameBorder="0" 
+            scrolling="no" 
+            allow="encrypted-media"
+          ></iframe>
+        </div>
+      );
+    }
+    
+    if (url.match(/\.(mp4|webm|ogg)$/i)) {
+      return (
+        <div className="aspect-video w-full rounded-xl overflow-hidden border border-outline-variant/30 bg-black">
+          <video src={url} controls className="w-full h-full object-contain" />
+        </div>
+      );
+    }
+    
+    const isDriveFolder = url.match(/drive\.google\.com\/drive\/folders\/([a-zA-Z0-9_-]+)/i);
+    if (isDriveFolder && isDriveFolder[1]) {
+      return (
+        <GoogleDriveFolderCard key={url} url={url} folderId={isDriveFolder[1]} />
+      );
+    }
+    
+    return (
+      <div className="p-4 rounded-xl border border-outline-variant/30 bg-surface-variant/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 overflow-hidden w-full">
+          <FiLink className="text-primary shrink-0" size={24} />
+          <span className="truncate text-sm font-medium">{url}</span>
+        </div>
+        <a href={url} target="_blank" rel="noreferrer" className="shrink-0 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-colors w-full sm:w-auto text-center inline-flex items-center justify-center gap-1.5">
+          <FiExternalLink size={14} /> {t("openDocumentationLink")}
+        </a>
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-[#f8f9fc] min-h-screen pt-32 pb-20 font-sans">
+      
+      {/* ── BACK BUTTON ────────────────────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-5 md:px-8 mb-4 md:mb-6">
+        <Link 
+          href="/agenda" 
+          onClick={handleBack}
+          className="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-medium text-sm"
+        >
+          <FiArrowLeft /> {t("back")}
+        </Link>
+      </section>
+
+      {/* ── HERO SECTION ───────────────────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-5 md:px-8 mb-6 md:mb-10">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+          className="relative w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/8] min-h-[260px] sm:min-h-0 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 flex flex-col justify-end bg-surface-variant"
+        >
+          {/* Background Image Carousel */}
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={currentBannerIndex}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }}
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url('${validGallery.length > 0 ? validGallery[currentBannerIndex] : (agenda.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80")}')` }}
+            />
+          </AnimatePresence>
+          
+          {/* Gradient Overlay for Text Readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/60 to-transparent pointer-events-none"></div>
+
+          {/* Hero Content */}
+          <div className="relative z-10 p-4 md:p-8 text-white w-full">
+            <span className="inline-block bg-surface/20 backdrop-blur-sm border border-white/30 text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-wider mb-2 md:mb-4 shadow-sm">
+              {agenda.category}
+            </span>
+            {(isFinished || isManualDokumentasi) && (
+              <span className="inline-block ml-2 bg-gray-500 text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-wider mb-2 md:mb-4 shadow-sm">
+                {t("statusDone")}
+              </span>
+            )}
+            
+            <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-extrabold mb-2 md:mb-4 leading-tight">
+              {agenda.title}
+            </h1>
+            
+            <div className="flex flex-col md:flex-row md:items-center gap-x-6 gap-y-1.5 md:gap-y-3 text-xs md:text-base text-white/90 font-medium">
+              <span className="flex items-center gap-2">
+                <FiCalendar className="text-[var(--color-secondary)] shrink-0" size={16} /> 
+                {(() => {
+                  const startDate = agenda.date || agenda.deadline;
+                  if (!startDate) return "-";
+                  const startOpt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+                  const endOpt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+                  
+                  const localeCode = locale === 'en' ? 'en-GB' : locale === 'ar' ? 'ar-SA' : locale === 'fr' ? 'fr-FR' : locale === 'ja' ? 'ja-JP' : 'id-ID';
+                  const startStr = new Date(startDate).toLocaleDateString(localeCode, startOpt);
+                  
+                  if (agenda.end_date && agenda.end_date !== agenda.date) {
+                    const dStart = new Date(startDate);
+                    const dEnd = new Date(agenda.end_date);
+                    if (dStart.getMonth() === dEnd.getMonth() && dStart.getFullYear() === dEnd.getFullYear()) {
+                       // Same month and year: "12 - 14 September 2026"
+                       return `${dStart.getDate()} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
+                    } else if (dStart.getFullYear() === dEnd.getFullYear()) {
+                       // Same year, diff month: "12 Aug - 14 Sep 2026"
+                       return `${dStart.getDate()} ${dStart.toLocaleDateString(localeCode, { month: 'short' })} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
+                    } else {
+                       // Diff year
+                       return `${startStr} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
+                    }
+                  }
+                  
+                  return startStr;
+                })()}
+              </span>
+              {agenda.time_range && agenda.time_range !== "-" && (
+                <span className="flex items-center gap-2">
+                  <FiClock className="text-[var(--color-secondary)] shrink-0" size={16} /> 
+                  {locale === 'en'
+                    ? agenda.time_range.replace(/selesai/gi, "End").replace(/s\/d/gi, "to")
+                    : agenda.time_range}
+                </span>
+              )}
+              {agenda.location && agenda.location !== "-" && (
+                <span className="flex items-center gap-2">
+                  <FiMapPin className="text-[var(--color-secondary)] shrink-0" size={16} /> {agenda.location}
+                </span>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── LIVE BUTTON & ONLINE LINK (For Events) ───────────────────── */}
+        {agenda.type === 'event' && !isFinished && !isManualDokumentasi && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
+            className={`mt-4 md:mt-6 p-4 md:p-6 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 border ${isLive ? 'bg-gradient-to-r from-red-500 to-red-600 border-red-400' : 'bg-surface border-outline-variant/30'}`}
+          >
+            <div className={`flex items-center gap-3 md:gap-4 w-full sm:w-auto ${isLive ? 'text-white' : 'text-on-surface'}`}>
+              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0 ${isLive ? 'bg-surface/20 animate-pulse' : 'bg-primary/10 text-primary'}`}>
+                {isLive || (!hasRegistration && agenda.online_link) ? <FiVideo size={20} /> : <FiClipboard size={20} />}
+              </div>
+              <div>
+                <h3 className="font-bold text-base md:text-lg">
+                  {isLive ? t("eventOngoing") : hasRegistration ? t("ticketRegistration") : t("attendanceInfo")}
+                </h3>
+                <p className={`text-xs md:text-sm ${isLive ? 'text-red-100' : 'text-on-surface-variant'}`}>
+                  {hasRegistration 
+                    ? t("descTicket")
+                    : agenda.online_link 
+                      ? t("descOnline") 
+                      : t("descPublic")}
+                </p>
+                {hasRegistration && (
+                   <p className={`text-xs mt-1 font-bold ${isQuotaFull ? 'text-red-500' : isLive ? 'text-white' : 'text-primary'}`}>
+                     {maxQuota !== null && maxQuota !== undefined 
+                       ? (isQuotaFull ? t("quotaFull") : `${t("remainingQuota")}: ${remainingQuota} ${t("of")} ${maxQuota}`)
+                       : t("unlimitedQuota")}
+                     {` (${t("totalRegistrants")}: ${participantCount})`}
+                   </p>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
+              {agenda.online_link && (
+                <a 
+                  href={agenda.online_link} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className={`w-full sm:w-auto px-6 py-3 font-extrabold rounded-xl shadow-md transition-all text-center flex items-center justify-center gap-2 text-sm ${isLive ? 'bg-surface text-red-600 hover:bg-red-50 hover:scale-105' : 'bg-secondary text-white hover:bg-secondary/90'}`}
+                >
+                  {isLive ? t("enterLive") : t("onlineLink")} <FiExternalLink size={16} />
+                </a>
+              )}
+              {hasRegistration && (
+                <Link 
+                  href={isQuotaFull ? '#' : `/agenda/${agenda.id}/apply`}
+                  className={`w-full sm:w-auto px-6 py-3 font-extrabold rounded-xl shadow-md transition-all text-center flex items-center justify-center gap-2 text-sm ${isQuotaFull ? 'bg-surface-variant text-on-surface-variant cursor-not-allowed' : 'bg-primary text-white hover:bg-primary/90 hover:scale-105'}`}
+                  onClick={(e) => isQuotaFull && e.preventDefault()}
+                >
+                  {isQuotaFull ? t("quotaFull") : t("registerNow")}
+                </Link>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── APPLY BUTTON (For Volunteers) ───────────────────── */}
+        {agenda.type === 'volunteer' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
+            className={`mt-4 md:mt-6 p-4 md:p-6 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 border bg-gradient-to-r from-emerald-500 to-emerald-600 border-emerald-400 text-white`}
+          >
+            <div className={`flex items-center gap-3 md:gap-4 w-full sm:w-auto`}>
+              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shrink-0 bg-surface/20 animate-pulse`}>
+                <FiExternalLink size={20} />
+              </div>
+              <div>
+                <h3 className="font-bold text-base md:text-lg">
+                  {t("oprecOpen")}
+                </h3>
+                <p className={`text-xs md:text-sm text-emerald-100`}>
+                  {t("oprecDesc")}
+                </p>
+                <p className="text-xs mt-1 font-bold text-emerald-100">
+                  {maxQuota !== null && maxQuota !== undefined 
+                    ? (isQuotaFull ? t("quotaFull") : `${t("remainingQuota")}: ${remainingQuota} ${t("of")} ${maxQuota}`)
+                    : t("unlimitedQuota")}
+                  {` (${t("totalRegistrants")}: ${participantCount})`}
+                </p>
+              </div>
+            </div>
+            
+            <Link 
+              href={isQuotaFull ? '#' : `/agenda/${agenda.id}/apply`}
+              className={`w-full sm:w-auto px-6 py-3 font-extrabold rounded-xl shadow-md transition-all text-center flex items-center justify-center gap-2 text-sm ${isQuotaFull ? 'bg-white/30 text-white cursor-not-allowed' : 'bg-surface text-emerald-700 hover:bg-emerald-50 hover:scale-105'}`}
+              onClick={(e) => isQuotaFull && e.preventDefault()}
+            >
+              {isQuotaFull ? t("quotaFull") : t("registerNow")}
+            </Link>
+          </motion.div>
+        )}
+      </section>
+
+      {/* ── MAIN CONTENT ────────────────────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-5 md:px-8 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-start">
+        
+        {/* Deskripsi & Dokumentasi */}
+        <div className="flex flex-col gap-6 md:gap-8 lg:col-span-2">
+          
+          {translatedSpeakers && translatedSpeakers.length > 0 && (
+            <div className="lg:hidden flex flex-col gap-4 mb-2">
+              <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block bg-secondary/10 w-fit px-3 py-1.5 rounded-full">{t("featuringSpeakers")}</span>
+              {translatedSpeakers.map((speaker, idx) => (
+                <div key={idx} className="bg-surface rounded-2xl md:rounded-3xl p-5 md:p-6 border border-outline-variant/30 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-6">
+                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0 border-2 border-primary/20">
+                    {speaker.photo ? (
+                      <img src={speaker.photo} alt={speaker.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-2xl md:text-3xl font-black text-primary">
+                        {speaker.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-center sm:text-left flex-grow flex flex-col justify-center">
+                    <h3 className="text-lg md:text-xl font-bold text-on-background mb-1">{speaker.name}</h3>
+                    {speaker.role && (
+                      <p className="text-sm text-on-surface-variant font-medium">{speaker.role}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Only show description box if it has meaningful content */}
+          {agenda.description && agenda.description !== "-" && agenda.description !== "" && !agenda.description?.startsWith("Dokumentasi ") && (
+            <div className="bg-surface rounded-2xl md:rounded-3xl p-5 md:p-8 border border-outline-variant/30 shadow-sm">
+              <h3 className="text-lg md:text-xl font-bold text-on-background mb-4 md:mb-6 flex items-center gap-2">
+                <FiInfo className="text-primary" size={20} /> {t("detailInfo")}
+              </h3>
+              
+              <div className="text-on-surface-variant text-sm md:text-base leading-relaxed whitespace-pre-wrap break-words max-w-full overflow-hidden">
+                {agenda.description}
+              </div>
+            </div>
+          )}
+
+          {/* Video Dokumentasi */}
+          {videoUrls.length > 0 && (
+            <div className="bg-surface rounded-2xl md:rounded-3xl p-5 md:p-8 border border-outline-variant/30 shadow-sm">
+              <h3 className="text-lg md:text-xl font-bold text-on-background mb-4 md:mb-6 flex items-center gap-2">
+                <FiVideo className="text-primary" size={20} /> {t("documentation")}
+              </h3>
+              <div className="flex flex-col gap-6">
+                {videoUrls.map((vUrl, idx) => (
+                  <div key={idx}>{renderVideo(vUrl)}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Galeri / Dokumentasi */}
+          {validGallery.length > 0 && (
+            <div className="bg-surface rounded-2xl md:rounded-3xl p-5 md:p-8 border border-outline-variant/30 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 md:mb-6">
+                <h3 className="text-lg md:text-xl font-bold text-on-background flex items-center gap-2">
+                  <FiImage className="text-primary" size={20} /> {t("activityDocumentation")}
+                  <span className="text-sm font-normal text-on-surface-variant ml-2">{validGallery.length} {t("photos")}</span>
+                </h3>
+
+                <div className="flex items-center gap-2">
+                  {isSelectionMode ? (
+                    <>
+                      <button onClick={() => { setIsSelectionMode(false); setSelectedPhotos(new Set()); }} className="text-xs md:text-sm font-semibold px-3 py-1.5 rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors">
+                        {t("cancel")}
+                      </button>
+                      <button 
+                        onClick={handleDownloadSelected}
+                        disabled={selectedPhotos.size === 0 || isDownloading}
+                        className="text-xs md:text-sm font-bold bg-primary text-white px-4 py-1.5 rounded-lg disabled:opacity-50 hover:bg-primary/90 transition-colors flex items-center gap-1.5"
+                      >
+                        {isDownloading ? (
+                          <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> {t("downloading")}</>
+                        ) : (
+                          <><FiDownload size={14} /> {t("download")} ({selectedPhotos.size})</>
+                        )}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={handleDownloadAll} disabled={isDownloading} className="text-xs md:text-sm font-semibold px-3 py-1.5 rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors flex items-center gap-1.5 disabled:opacity-50">
+                        {isDownloading ? <div className="w-3 h-3 border-2 border-primary/40 border-t-primary rounded-full animate-spin"></div> : <FiDownload size={14} />} {t("all")}
+                      </button>
+                      <button onClick={() => setIsSelectionMode(true)} disabled={isDownloading} className="text-xs md:text-sm font-bold bg-secondary-container text-secondary px-3 py-1.5 rounded-lg hover:bg-secondary/20 transition-colors flex items-center gap-1.5 disabled:opacity-50">
+                        <FiCheckSquare size={14} /> {t("select")}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                {validGallery.slice(0, 6).map((imgUrl, idx) => {
+                  const isLastItem = idx === 5;
+                  const remainingCount = validGallery.length - 6;
+                  const showOverlay = isLastItem && remainingCount > 0;
+                  
+                  return (
+                    <div 
+                      key={idx} 
+                      onClick={() => {
+                        if (isSelectionMode) toggleSelection(idx);
+                        else setLightboxIndex(idx);
+                      }}
+                      className={`relative rounded-xl overflow-hidden shadow-sm border aspect-square bg-surface-variant cursor-pointer group transition-all duration-200 ${isSelectionMode && selectedPhotos.has(idx) ? 'border-primary ring-2 ring-primary ring-offset-1 scale-[0.96]' : 'border-outline-variant/20 hover:scale-[1.02]'}`}
+                    >
+                      <img src={imgUrl} alt={`Dokumentasi ${idx + 1}`} className="w-full h-full object-cover" />
+                      
+                      {/* +X Overlay */}
+                      {showOverlay && !isSelectionMode && (
+                        <div 
+                          className="absolute inset-0 z-10 backdrop-blur-md flex items-center justify-center"
+                          style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}
+                        >
+                          <span 
+                            className="text-white text-4xl md:text-5xl font-black tracking-widest"
+                            style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8)' }}
+                          >
+                            +{remainingCount}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Selection overlay */}
+                      {isSelectionMode && (
+                        <div className="absolute inset-0 bg-black/10 flex items-start justify-end p-2">
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedPhotos.has(idx) ? 'bg-primary border-primary text-white' : 'bg-white/70 border-white text-transparent'}`}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Hover overlay for preview (only if not selecting and not overlay) */}
+                      {!isSelectionMode && !showOverlay && (
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center">
+                          <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 group-hover:scale-100">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* Sidebar / Speaker Card (Desktop) */}
+        <div className="hidden lg:flex flex-col gap-6 lg:col-span-1">
+          {translatedSpeakers && translatedSpeakers.length > 0 && (
+            <div className="flex flex-col gap-4">
+              <span className="text-[10px] font-bold text-secondary uppercase tracking-wider bg-secondary/10 px-3 py-1.5 rounded-full w-fit">{t("featuringSpeakers")}</span>
+              {translatedSpeakers.map((speaker, idx) => (
+                <div key={idx} className="bg-surface rounded-2xl p-6 border border-outline-variant/30 shadow-sm flex flex-col items-center text-center transition-all hover:border-primary/30">
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden mb-3 border-2 border-primary/20 shadow-sm">
+                    {speaker.photo ? (
+                      <img src={speaker.photo} alt={speaker.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-2xl font-black text-primary">
+                        {speaker.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-base font-bold text-on-background mb-1">{speaker.name}</h3>
+                  {speaker.role && (
+                    <p className="text-xs text-on-surface-variant font-medium leading-relaxed">{speaker.role}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── LIGHTBOX MODAL ────────────────────────────────────────── */}
+      {lightboxIndex !== null && validGallery.length > 0 && (
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/95 backdrop-blur-xl">
+          
+          {/* Header Bar */}
+          <div className="w-full flex justify-between items-center px-4 md:px-8 py-4 z-20 shrink-0 bg-gradient-to-b from-black/80 to-transparent">
+            {/* Counter */}
+            <div className="text-white/90 font-medium text-sm md:text-base tracking-widest bg-white/10 px-4 py-1.5 rounded-full">
+              {lightboxIndex + 1} / {validGallery.length}
+            </div>
+            
+            {/* Actions */}
+            <div className="flex items-center gap-2 md:gap-4">
+              <button 
+                onClick={() => downloadImage(validGallery[lightboxIndex], lightboxIndex)}
+                className="flex items-center gap-2 hover:bg-white/20 text-white px-3 md:px-4 py-2 rounded-lg transition-colors font-semibold"
+                title={t("download")}
+              >
+                <FiDownload size={20} /> <span className="hidden sm:inline">{t("download")}</span>
+              </button>
+              <div className="w-px h-6 bg-white/20 hidden md:block"></div>
+              <button 
+                onClick={() => setLightboxIndex(null)}
+                className="text-white/70 hover:text-white p-2 rounded-lg hover:bg-white/20 transition-colors"
+              >
+                <FiX size={28} />
+              </button>
+            </div>
+          </div>
+          
+          {/* Main Image Area */}
+          <div 
+            className="relative w-full flex-grow flex items-center justify-center cursor-pointer overflow-hidden px-4 md:px-12"
+            onClick={handleNext}
+            style={{ perspective: "1200px" }}
+          >
+            <button 
+              onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+              className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-3 hover:bg-white/10 rounded-full transition-colors hidden sm:block z-10"
+            >
+              <FiChevronLeft size={48} />
+            </button>
+            
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleNext(); }}
+              className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-3 hover:bg-white/10 rounded-full transition-colors hidden sm:block z-10"
+            >
+              <FiChevronRight size={48} />
+            </button>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={lightboxIndex}
+                initial={{ rotateY: 90 * flipDirection, opacity: 0, scale: 0.8 }}
+                animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+                exit={{ rotateY: -90 * flipDirection, opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={1}
+                onDragEnd={(e, { offset }) => {
+                  e.stopPropagation();
+                  if (offset.x < -50) handleNext();
+                  else if (offset.x > 50) handlePrev();
+                }}
+                className="flex items-center justify-center cursor-grab active:cursor-grabbing w-full h-full p-4"
+                style={{ transformStyle: "preserve-3d", backfaceVisibility: "hidden" }}
+                onClick={(e) => e.stopPropagation()} 
+              >
+                <img 
+                  src={validGallery[lightboxIndex]} 
+                  alt={`Preview ${lightboxIndex + 1}`} 
+                  className="w-auto h-auto object-contain drop-shadow-2xl pointer-events-none rounded-xl border border-white/10 bg-black/20" 
+                  style={{ maxWidth: '80vw', maxHeight: '65vh' }}
+                  draggable={false}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Thumbnail Strip (Bottom) */}
+          <div className="w-full h-24 md:h-32 bg-black/60 border-t border-white/5 flex items-center overflow-x-auto shrink-0 z-20 px-2 md:px-6 hide-scrollbar py-3" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex gap-2 md:gap-3 mx-auto px-2">
+              {validGallery.map((imgUrl, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx); }}
+                  className={`relative shrink-0 h-16 md:h-20 snap-center rounded-lg overflow-hidden transition-all duration-300 ${idx === lightboxIndex ? 'border-2 border-primary ring-2 ring-primary ring-offset-2 ring-offset-black scale-105 z-10 brightness-110 shadow-lg shadow-primary/20' : 'border border-white/10 opacity-40 hover:opacity-100 hover:scale-100'}`}
+                  style={{ aspectRatio: '16/10' }}
+                >
+                  <img src={imgUrl} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover pointer-events-none" />
+                </button>
+              ))}
+            </div>
+          </div>
+          
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function AgendaDetailClient({ agenda, participantCount = 0 }: { agenda: AgendaKegiatan, participantCount?: number }) {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background text-primary font-bold">Memuat...</div>}>
+      <AgendaDetailClientContent agenda={agenda} participantCount={participantCount} />
+    </Suspense>
+  );
+}

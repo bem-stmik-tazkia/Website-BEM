@@ -89,7 +89,7 @@ export default async function DokumentasiAdminPage() {
                 </tr>
               ) : (
                 dokumentasiList.map((item) => {
-                  const hasGallery = item.gallery && item.gallery.length > 0;
+                  const hasGallery = (Array.isArray(item.gallery) && item.gallery.filter(Boolean).length > 0) || (typeof item.video_url === 'string' && item.video_url.trim().length > 0);
 
                   return (
                   <tr key={item.id} className="hover:bg-surface-variant/10 transition-colors">

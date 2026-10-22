@@ -26,7 +26,7 @@ export const getCachedAgenda = async () => {
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from('agendas')
-    .select('id, title, slug, description, category, date, end_date, time_range, location, type, is_urgent, is_published, created_at, image_url, deadline, gallery')
+    .select('id, title, slug, description, category, date, end_date, time_range, location, type, is_urgent, is_published, created_at, image_url, deadline, gallery, video_url')
     .order('created_at', { ascending: false });
 
   if (error) {

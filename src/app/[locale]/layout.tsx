@@ -90,8 +90,11 @@ export default async function RootLayout({
   let user = null;
   try {
     const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
-    user = data.user || null;
+    const { data, error } = await supabase.auth.getUser();
+    // Ignore stale/expired refresh token — treat as guest
+    if (!error || (error as any).code === 'refresh_token_not_found') {
+      user = data.user || null;
+    }
   } catch {
     // Tangani error jaringan (walaupun getSession membaca cookie lokal)
     user = null;

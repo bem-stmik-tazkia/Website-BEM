@@ -14,6 +14,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function DokumentasiPage() {
   const kegiatans = await getKegiatans();
 

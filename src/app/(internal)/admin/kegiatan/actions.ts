@@ -109,9 +109,14 @@ export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
   }
 
   revalidatePath("/admin/kegiatan");
-  revalidatePath("/agenda");
   revalidatePath("/admin/dokumentasi");
+  revalidatePath("/agenda");
   revalidatePath("/dokumentasi");
+  revalidatePath("/publikasi/dokumentasi");
+  revalidatePath("/[locale]/agenda", "page");
+  revalidatePath("/[locale]/dokumentasi", "page");
+  revalidatePath("/[locale]/publikasi/dokumentasi", "page");
+  revalidatePath("/", "layout");
 }
 
 export async function deleteKegiatan(id: string) {
@@ -124,10 +129,14 @@ export async function deleteKegiatan(id: string) {
   if (error) throw new Error(error.message);
   
   revalidatePath("/admin/kegiatan");
-  revalidatePath("/agenda");
   revalidatePath("/admin/dokumentasi");
-  revalidatePath("/publikasi/dokumentasi");
+  revalidatePath("/agenda");
   revalidatePath("/dokumentasi");
+  revalidatePath("/publikasi/dokumentasi");
+  revalidatePath("/[locale]/agenda", "page");
+  revalidatePath("/[locale]/dokumentasi", "page");
+  revalidatePath("/[locale]/publikasi/dokumentasi", "page");
+  revalidatePath("/", "layout");
   
   const { revalidateTag } = require("next/cache");
   revalidateTag("agenda");

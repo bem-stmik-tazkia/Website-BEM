@@ -31,11 +31,21 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
-        setUserProfile({ ...user, ...profile });
-      } else {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        // Ignore stale/invalid refresh token errors — user is simply not logged in
+        if (error && (error as any).code === 'refresh_token_not_found') {
+          await supabase.auth.signOut({ scope: 'local' });
+          setUserProfile(null);
+          return;
+        }
+        if (user) {
+          const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+          setUserProfile({ ...user, ...profile });
+        } else {
+          setUserProfile(null);
+        }
+      } catch {
         setUserProfile(null);
       }
     };

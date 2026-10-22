@@ -3,23 +3,23 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FiCalendar, FiImage } from "react-icons/fi";
+import { FiCalendar, FiImage, FiFolder, FiVideo } from "react-icons/fi";
 import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo } from "@/utils/dateFormatter";
 
 export default function DokumentasiClient({ data }: { data: AgendaKegiatan[] }) {
-  // Filter for finished events that have at least one gallery photo
+  // Filter for published items with documentation (photos or video/drive):
+  // - type "dokumentasi": manual documentation
+  // - type "event" or others: must have documentation
   const dokumentasiList = useMemo(() => {
     return data.filter(item => {
       if (!item.is_published) return false;
-      
-      const isFinished = item.date && (new Date(item.date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0));
-      // Manual dokumentasi can just be marked as finished by setting past date
-      if (!isFinished) return false;
 
-      // Must have gallery photos to be published as documentation
-      const hasGallery = Array.isArray(item.gallery) && item.gallery.length > 0;
-      if (!hasGallery) return false;
+      // Must have gallery photos or video/drive to be published as documentation
+      const hasGallery = Array.isArray(item.gallery) && item.gallery.filter(Boolean).length > 0;
+      const hasVideo = typeof item.video_url === 'string' && item.video_url.trim().length > 0;
+      const hasDocumentation = hasGallery || hasVideo;
+      if (!hasDocumentation) return false;
 
       return true;
     });
@@ -50,7 +50,8 @@ export default function DokumentasiClient({ data }: { data: AgendaKegiatan[] }) 
             {dokumentasiList.map((item, index) => {
               // Use the first gallery image as the cover, or fallback to main image
               const coverImage = (item.gallery && item.gallery.length > 0) ? item.gallery[0] : item.image_url;
-              const photoCount = item.gallery ? item.gallery.length : 0;
+              const photoCount = Array.isArray(item.gallery) ? item.gallery.filter(Boolean).length : 0;
+              const isDrive = item.video_url && item.video_url.includes("drive.google.com");
 
               return (
                 <motion.div
@@ -76,9 +77,21 @@ export default function DokumentasiClient({ data }: { data: AgendaKegiatan[] }) 
                       {/* Gradient Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
                       
-                      {/* Floating Badge (Photo Count) */}
+                      {/* Floating Badge (Photo Count or Drive/Video) */}
                       <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1.5 border border-white/20">
-                        <FiImage size={12} /> {photoCount} Foto
+                        {photoCount > 0 ? (
+                          <>
+                            <FiImage size={12} /> {photoCount} Foto
+                          </>
+                        ) : isDrive ? (
+                          <>
+                            <FiFolder size={12} /> Google Drive
+                          </>
+                        ) : (
+                          <>
+                            <FiVideo size={12} /> Video
+                          </>
+                        )}
                       </div>
 
                       {/* Content Overlay */}

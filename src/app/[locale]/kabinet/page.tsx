@@ -34,6 +34,9 @@ export default async function KabinetPage() {
   }
 
   const profile = kabinet as KabinetProfile;
+  if (!profile.periode || profile.periode === "2025/2026" || profile.periode === "25/26") {
+    profile.periode = "2026/2027";
+  }
 
   return <KabinetContentClient profile={profile} />;
 }

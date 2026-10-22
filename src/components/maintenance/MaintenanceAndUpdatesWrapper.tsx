@@ -152,8 +152,11 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
     setIsChecking(true);
     try {
       // 1. Check user role
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      // Ignore stale/invalid refresh token — treat as guest
+      if (authError && (authError as any).code === 'refresh_token_not_found') {
+        await supabase.auth.signOut({ scope: 'local' });
+      } else if (user) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("role")
