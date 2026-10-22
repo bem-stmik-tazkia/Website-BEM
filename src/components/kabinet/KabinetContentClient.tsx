@@ -10,7 +10,9 @@ import KabinetTourClient from "@/components/kabinet/KabinetTourClient";
 import { translateContentBatch } from "@/utils/translate";
 import Image from "next/image";
 import { getCoreTheme, getCoreTier, getLeadOrder } from "@/lib/kabinetColors";
-import Member3DCard from "@/components/kabinet/Member3DCard";
+import MemberIdCardModal, { KabinetMemberModalData } from "@/components/kabinet/MemberIdCardModal";
+import { ProkerTag } from "@/components/kabinet/tagUtils";
+import { getLocalizedRole } from "@/components/kabinet/roleUtils";
 
 // ─────────────────────────────────────────────
 // ICONS
@@ -44,75 +46,101 @@ function UsersIcon() {
   );
 }
 
-const TAG_COLORS: Record<string, string> = {
-  Rutin: "bg-emerald-100 text-emerald-700",
-  Bulanan: "bg-blue-100 text-blue-700",
-  Triwulan: "bg-violet-100 text-violet-700",
-  Semester: "bg-amber-100 text-amber-700",
-  Semesteran: "bg-amber-100 text-amber-700",
-  Tahunan: "bg-rose-100 text-rose-700",
-};
-
-function ProkerTag({ tag }: { tag: string }) {
-  const tTags = useTranslations("Tags");
-  const getTag = (t: string) => {
-    if (!tTags) return t;
-    const key = t.replace(/[\s\(\)-]/g, '');
-    try {
-      const tr = tTags(key);
-      if (tr && !tr.includes("Tags.")) return tr;
-    } catch {
-      // ignore
-    }
-    return t;
-  };
-
-  return (
-    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${TAG_COLORS[tag] ?? "bg-surface-variant/30 text-on-surface-variant"}`}>
-      {getTag(tag)}
-    </span>
-  );
-}
-
 // ─────────────────────────────────────────────
 // PENGURUS CARD
 // ─────────────────────────────────────────────
-function PengurusCard({ person, cabinetName }: { person: KabinetPengurusInti; cabinetName?: string }) {
-  const tRoles = useTranslations("Roles");
-  // Try to safely get translated role
-  const getRole = (role: string) => {
-    if (!role) return role;
-    const key = role.replace(/[\s\(\)-]/g, '');
-    if (!key) return role;
-    try {
-      if (tRoles(key)) {
-        const tr = tRoles(key);
-        if (tr && !tr.includes("Roles.")) return tr;
-      }
-    } catch {
-      // ignore
-    }
-    return role;
-  };
-
-  const role = person.role && person.role.trim() !== "-" ? getRole(person.role) : "";
+function PengurusCard({
+  person,
+  onOpenFull,
+}: {
+  person: KabinetPengurusInti;
+  onOpenFull?: (person: KabinetPengurusInti) => void;
+}) {
+  const locale = useLocale();
+  const role = person.role && person.role.trim() !== "-" ? getLocalizedRole(person.role, locale) : "";
   const theme = getCoreTheme(person.role);
   const accent = theme.color;
   const isLead = getCoreTier(person.role) === "lead";
 
   return (
-    <Member3DCard
-      name={person.name}
-      role={role}
-      foto={person.foto}
-      initials={person.initials}
-      wa={person.wa}
-      ig={person.ig}
-      accentColor={accent}
-      bgColor={theme.bg}
-      isLead={isLead}
-      cabinetName={cabinetName}
-    />
+    <div
+      onClick={() => onOpenFull && onOpenFull(person)}
+      className="group relative aspect-[3/4] w-full rounded-3xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-500 ring-1 ring-outline-variant/20 bg-surface cursor-pointer"
+    >
+      {/* Cover photo / fallback */}
+      {person.foto ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={person.foto}
+          alt={person.name}
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
+        />
+      ) : (
+        <div
+          className="absolute inset-0 flex items-center justify-center transition-transform duration-700 group-hover:scale-110"
+          style={{ background: `linear-gradient(145deg, ${theme.bg} 0%, ${accent}55 100%)` }}
+        >
+          <span className={`${isLead ? "text-7xl md:text-8xl" : "text-5xl md:text-6xl"} font-black select-none opacity-80`} style={{ color: accent }}>
+            {person.initials}
+          </span>
+        </div>
+      )}
+
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+      <div
+        className="absolute inset-x-0 bottom-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ backgroundColor: accent }}
+      />
+
+      {/* Info */}
+      <div className={`absolute inset-x-0 bottom-0 ${isLead ? "p-4 md:p-6" : "p-3 md:p-4"} flex flex-col gap-2`}>
+        {role && (
+          <span
+            className="self-start max-w-full truncate text-[10px] md:text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full text-white shadow-sm"
+            style={{ backgroundColor: accent }}
+          >
+            {role}
+          </span>
+        )}
+        <h3 className={`font-extrabold text-white ${isLead ? "text-lg md:text-2xl" : "text-sm md:text-base"} leading-tight line-clamp-2 drop-shadow`}>
+          {person.name}
+        </h3>
+
+        {/* Social buttons */}
+        {(person.wa || person.ig) && (
+          <div className="flex gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
+            {person.wa && (() => {
+              const sanitizedWa = person.wa.replace(/\D/g, '');
+              const waNumber = sanitizedWa.startsWith('0') ? '62' + sanitizedWa.slice(1) : sanitizedWa;
+              return (
+                <a
+                  href={person.wa.startsWith('http') ? person.wa : `https://wa.me/${waNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-[#25D366] hover:border-[#25D366] transition-all duration-300"
+                  aria-label={`WhatsApp ${person.name}`}
+                >
+                  <WaIcon />
+                </a>
+              );
+            })()}
+            {person.ig && (
+              <a
+                href={person.ig.startsWith('http') ? person.ig : `https://instagram.com/${person.ig.replace("@", "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] hover:border-transparent transition-all duration-300"
+                aria-label={`Instagram ${person.name}`}
+              >
+                <IgIcon />
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -123,6 +151,7 @@ export default function KabinetContentClient({ profile: rawProfile }: { profile:
   const t = useTranslations("KabinetPage");
   const locale = useLocale();
   const [profile, setProfile] = useState<KabinetProfile>(rawProfile);
+  const [selectedMemberModal, setSelectedMemberModal] = useState<KabinetMemberModalData | null>(null);
 
   useEffect(() => {
     if (locale === "id") {
@@ -263,7 +292,24 @@ export default function KabinetContentClient({ profile: rawProfile }: { profile:
                   <div className="flex flex-wrap justify-center gap-4 md:gap-6">
                     {leads.map((p, i) => (
                       <div key={`lead-${i}`} className="w-[calc(50%-0.5rem)] md:w-[calc(50%-0.75rem)] max-w-[300px]">
-                        <PengurusCard person={p} cabinetName={profile.nama_kabinet} />
+                        <PengurusCard
+                          person={p}
+                          onOpenFull={(person) => {
+                            setSelectedMemberModal({
+                              name: person.name,
+                              role: person.role,
+                              foto: person.foto,
+                              wa: person.wa,
+                              ig: person.ig,
+                              initials: person.initials,
+                              departmentName: t("coreBoardTitle"),
+                              color: getCoreTheme(person.role).color,
+                              bg: getCoreTheme(person.role).bg,
+                              periode: profile.periode,
+                              namaKabinet: profile.nama_kabinet,
+                            });
+                          }}
+                        />
                       </div>
                     ))}
                   </div>
@@ -272,7 +318,24 @@ export default function KabinetContentClient({ profile: rawProfile }: { profile:
                   <div className="flex flex-wrap justify-center gap-4 md:gap-5">
                     {staff.map((p, i) => (
                       <div key={`staff-${i}`} className="w-[calc(50%-0.5rem)] md:w-[calc(25%-0.9375rem)]">
-                        <PengurusCard person={p} cabinetName={profile.nama_kabinet} />
+                        <PengurusCard
+                          person={p}
+                          onOpenFull={(person) => {
+                            setSelectedMemberModal({
+                              name: person.name,
+                              role: person.role,
+                              foto: person.foto,
+                              wa: person.wa,
+                              ig: person.ig,
+                              initials: person.initials,
+                              departmentName: t("coreBoardTitle"),
+                              color: getCoreTheme(person.role).color,
+                              bg: getCoreTheme(person.role).bg,
+                              periode: profile.periode,
+                              namaKabinet: profile.nama_kabinet,
+                            });
+                          }}
+                        />
                       </div>
                     ))}
                   </div>
@@ -331,11 +394,24 @@ export default function KabinetContentClient({ profile: rawProfile }: { profile:
 
           <div className="flex flex-col gap-5">
             {profile.departemen.map((dept, idx) => (
-              <DepartemenCard key={dept.id} dept={dept} index={idx} />
+              <DepartemenCard
+                key={dept.id}
+                dept={dept}
+                index={idx}
+                periode={profile.periode}
+                namaKabinet={profile.nama_kabinet}
+                onOpenMemberModal={(m) => setSelectedMemberModal(m)}
+              />
             ))}
           </div>
         </section>
       </div>
+
+      <MemberIdCardModal
+        member={selectedMemberModal}
+        isOpen={!!selectedMemberModal}
+        onClose={() => setSelectedMemberModal(null)}
+      />
 
       <KabinetTourClient />
     </div>

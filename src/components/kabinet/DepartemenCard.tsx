@@ -3,9 +3,12 @@
 import React, { useState } from "react";
 import { KabinetDepartemen } from "@/types/kabinet";
 import LottieIcon from "@/components/ui/LottieIcon";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { getDeptTheme } from "@/lib/kabinetColors";
-import Member3DCard from "@/components/kabinet/Member3DCard";
+import { KabinetMemberModalData } from "./MemberIdCardModal";
+import ProkerIcon from "@/components/kabinet/ProkerIcon";
+import { ProkerTag } from "./tagUtils";
+import { getLocalizedRole } from "./roleUtils";
 
 // Icons
 function UsersIcon() {
@@ -46,87 +49,100 @@ function IgIcon() {
   );
 }
 
-const TAG_COLORS: Record<string, string> = {
-  Rutin: "bg-emerald-100 text-emerald-700",
-  Bulanan: "bg-blue-100 text-blue-700",
-  Triwulan: "bg-violet-100 text-violet-700",
-  Semester: "bg-amber-100 text-amber-700",
-  Semesteran: "bg-amber-100 text-amber-700",
-  Tahunan: "bg-rose-100 text-rose-700",
-};
-
-function ProkerTag({ tag, tTags }: { tag: string, tTags?: any }) {
-  const getTag = (t: string) => {
-    if (!tTags || !t) return t;
-    const key = t.replace(/[\s\(\)-]/g, '');
-    if (!key) return t;
-    try {
-      if (tTags.has(key)) {
-        const tr = tTags(key);
-        if (tr && !tr.includes("Tags.")) return tr;
-      }
-    } catch {
-      // ignore
-    }
-    return t;
-  };
-
-  return (
-    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${TAG_COLORS[tag] ?? "bg-surface-variant/30 text-on-surface-variant"}`}>
-      {getTag(tag)}
-    </span>
-  );
-}
-
 function AnggotaCard({
   member,
   warna,
   warnaBg,
-  tRoles,
-  departmentName,
+  onOpenFull,
 }: {
   member: KabinetDepartemen["anggota"][0];
   warna: string;
   warnaBg: string;
-  tRoles?: any;
-  departmentName?: string;
+  onOpenFull?: () => void;
 }) {
-  const getRole = (role: string) => {
-    if (!tRoles || !role) return role;
-    const key = role.replace(/[\s\(\)-]/g, '');
-    if (!key) return role;
-    try {
-      if (tRoles.has(key)) {
-        const tr = tRoles(key);
-        if (tr && !tr.includes("Roles.")) return tr;
-      }
-    } catch {
-      // ignore
-    }
-    return role;
-  };
-
-  const role = member.role && member.role.trim() !== "-" ? getRole(member.role) : "";
+  const locale = useLocale();
+  const role = member.role && member.role.trim() !== "-" ? getLocalizedRole(member.role, locale) : "";
 
   return (
-    <Member3DCard
-      name={member.name}
-      role={role}
-      foto={member.foto}
-      initials={member.initials}
-      wa={member.wa}
-      ig={member.ig}
-      accentColor={warna}
-      bgColor={warnaBg}
-      isLead={false}
-      departmentName={departmentName}
-    />
+    <div
+      onClick={() => onOpenFull && onOpenFull()}
+      className="group relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 ring-1 ring-outline-variant/20 bg-surface cursor-pointer"
+    >
+      {/* Cover photo / fallback */}
+      {member.foto ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={member.foto}
+          alt={member.name}
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
+        />
+      ) : (
+        <div
+          className="absolute inset-0 flex items-center justify-center transition-transform duration-700 group-hover:scale-110"
+          style={{ background: `linear-gradient(145deg, ${warnaBg} 0%, ${warna}55 100%)` }}
+        >
+          <span className="text-4xl md:text-5xl font-black select-none opacity-80" style={{ color: warna }}>
+            {member.initials}
+          </span>
+        </div>
+      )}
+
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+      <div
+        className="absolute inset-x-0 bottom-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{ backgroundColor: warna }}
+      />
+
+      {/* Info */}
+      <div className="absolute inset-x-0 bottom-0 p-3 flex flex-col gap-1.5">
+        {role && (
+          <span
+            className="self-start max-w-full truncate text-[9px] md:text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full text-white"
+            style={{ backgroundColor: warna }}
+          >
+            {role}
+          </span>
+        )}
+        <h3 className="font-bold text-white text-sm leading-tight line-clamp-2 drop-shadow">{member.name}</h3>
+
+        {(member.wa || member.ig) && (
+          <div className="flex gap-1.5 pt-0.5" onClick={(e) => e.stopPropagation()}>
+            {member.wa && (() => {
+              const sanitizedWa = member.wa.replace(/\D/g, "");
+              const waNumber = sanitizedWa.startsWith("0") ? "62" + sanitizedWa.slice(1) : sanitizedWa;
+              return (
+                <a
+                  href={member.wa.startsWith("http") ? member.wa : `https://wa.me/${waNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-[#25D366] hover:border-[#25D366] transition-all duration-300"
+                  aria-label={`WhatsApp ${member.name}`}
+                >
+                  <WaIcon />
+                </a>
+              );
+            })()}
+            {member.ig && (
+              <a
+                href={member.ig.startsWith("http") ? member.ig : `https://instagram.com/${member.ig.replace("@", "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-md border border-white/25 flex items-center justify-center text-white hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] hover:border-transparent transition-all duration-300"
+                aria-label={`Instagram ${member.name}`}
+              >
+                <IgIcon />
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
-import ProkerIcon from "@/components/kabinet/ProkerIcon";
-
-function ProkerRow({ proker, tTags }: { proker: { nama: string; deskripsi: string; tag: string; icon?: string }, tTags?: any }) {
+function ProkerRow({ proker }: { proker: { nama: string; deskripsi: string; tag: string; icon?: string } }) {
   return (
     <div className="flex items-start gap-3 p-3.5 rounded-xl bg-surface-container-low/60 border border-outline-variant/10 hover:border-outline-variant/30 hover:bg-surface transition-all duration-200">
       {proker.icon ? (
@@ -143,7 +159,7 @@ function ProkerRow({ proker, tTags }: { proker: { nama: string; deskripsi: strin
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-0.5">
           <span className="font-bold text-sm text-on-background">{proker.nama}</span>
-          <ProkerTag tag={proker.tag} tTags={tTags} />
+          <ProkerTag tag={proker.tag} />
         </div>
         <p className="text-xs text-on-surface-variant leading-relaxed">{proker.deskripsi}</p>
       </div>
@@ -161,10 +177,20 @@ function DeptIcon({ icon }: { icon: string }) {
   return <span className="text-2xl">{icon}</span>;
 }
 
-export default function DepartemenCard({ dept, index = 0 }: { dept: KabinetDepartemen; index?: number }) {
+export default function DepartemenCard({
+  dept,
+  index = 0,
+  periode,
+  namaKabinet,
+  onOpenMemberModal,
+}: {
+  dept: KabinetDepartemen;
+  index?: number;
+  periode?: string;
+  namaKabinet?: string;
+  onOpenMemberModal?: (member: KabinetMemberModalData) => void;
+}) {
   const t = useTranslations("KabinetPage");
-  const tRoles = useTranslations("Roles");
-  const tTags = useTranslations("Tags");
   const { color: deptColor, bg: deptBg } = getDeptTheme(index);
   const [tab, setTab] = useState<"anggota" | "proker">("anggota");
   const [currentPage, setCurrentPage] = useState(1);
@@ -253,7 +279,29 @@ export default function DepartemenCard({ dept, index = 0 }: { dept: KabinetDepar
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               {paginatedAnggota.map((member, i) => (
-                <AnggotaCard key={i} member={member} warna={deptColor} warnaBg={deptBg} tRoles={tRoles} departmentName={dept.nama} />
+                <AnggotaCard
+                  key={i}
+                  member={member}
+                  warna={deptColor}
+                  warnaBg={deptBg}
+                  onOpenFull={() =>
+                    onOpenMemberModal &&
+                    onOpenMemberModal({
+                      name: member.name,
+                      role: member.role,
+                      foto: member.foto,
+                      wa: member.wa,
+                      ig: member.ig,
+                      initials: member.initials,
+                      departmentName: dept.nama,
+                      departmentSingkatan: dept.singkatan,
+                      color: deptColor,
+                      bg: deptBg,
+                      periode,
+                      namaKabinet,
+                    })
+                  }
+                />
               ))}
             </div>
 
@@ -293,7 +341,7 @@ export default function DepartemenCard({ dept, index = 0 }: { dept: KabinetDepar
         ) : (
           <div className="flex flex-col gap-2">
             {dept.proker.map((p, i) => (
-              <ProkerRow key={i} proker={p} tTags={tTags} />
+              <ProkerRow key={i} proker={p} />
             ))}
           </div>
         )}

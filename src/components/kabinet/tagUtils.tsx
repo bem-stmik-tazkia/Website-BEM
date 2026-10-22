@@ -14,6 +14,8 @@ export const TAG_COLORS: Record<string, string> = {
   Kondisional: "bg-orange-100 text-orange-700",
   Mingguan: "bg-teal-100 text-teal-700",
   Harian: "bg-cyan-100 text-cyan-700",
+  "10 Bulan": "bg-indigo-100 text-indigo-700",
+  "Bulanan & Triwulan": "bg-blue-100 text-blue-700",
 };
 
 export const TAG_TRANSLATIONS: Record<string, Record<string, string>> = {
@@ -27,6 +29,9 @@ export const TAG_TRANSLATIONS: Record<string, Record<string, string>> = {
   Kondisional: { id: "Kondisional", en: "Conditional", ar: "مشروط", fr: "Conditionnel", ja: "条件付き" },
   Mingguan: { id: "Mingguan", en: "Weekly", ar: "أسبوعي", fr: "Hebdomadaire", ja: "毎週" },
   Harian: { id: "Harian", en: "Daily", ar: "يومي", fr: "Quotidien", ja: "毎日" },
+  "10Bulan": { id: "10 Bulan", en: "10 Months", ar: "10 أشهر", fr: "10 Mois", ja: "10ヶ月" },
+  "Bulanan&Triwulan": { id: "Bulanan & Triwulan", en: "Monthly & Quarterly", ar: "شهري وفصلي", fr: "Mensuel & Trimestriel", ja: "月次 & 四半期" },
+  "BulananTriwulan": { id: "Bulanan & Triwulan", en: "Monthly & Quarterly", ar: "شهري وفصلي", fr: "Mensuel & Trimestriel", ja: "月次 & 四半期" },
 };
 
 export function getLocalizedTag(tag?: string, locale = "id"): string {

@@ -55,15 +55,15 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
 
     const { data: saranData } = await supabase
       .from("saran_aduan")
-      .select("id, nama, kategori, deskripsi, created_at")
+      .select("id, nama, kategori, pesan, subjek, created_at")
       .gt("created_at", lastViewedSaran)
       .order("created_at", { ascending: false })
       .limit(20);
 
-    const mappedSaran: Notification[] = (saranData || []).map((s) => ({
+    const mappedSaran: Notification[] = (saranData || []).map((s: any) => ({
       id: s.id,
       type: "saran",
-      title: `${s.kategori === 'aduan' ? 'Aduan' : 'Saran'}: ${s.deskripsi}`,
+      title: `${s.kategori === 'aduan' ? 'Aduan' : 'Saran'}: ${s.pesan || s.subjek || ''}`,
       author: s.nama || "Anonim",
       created_at: s.created_at,
       href: "/admin/saran-aduan",
