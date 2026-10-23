@@ -3,6 +3,18 @@ import { notFound } from "next/navigation";
 import { getKegiatanById, getVolunteerApplications } from "@/app/(internal)/admin/kegiatan/actions";
 import AgendaDetailClient from "./AgendaDetailClient";
 
+function getValidOgImage(url?: string | null): string {
+  if (!url) return "https://bem.stmik.tazkia.ac.id/images/logo2.webp";
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
+  if (driveMatch && driveMatch[1]) {
+    return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1200`;
+  }
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  return `https://bem.stmik.tazkia.ac.id${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string; locale: string }> }) {
   const { id, locale } = await params;
   const agenda = await getKegiatanById(id);
@@ -14,8 +26,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     };
   }
 
-  const cleanDescription = (agenda.description || "").replace(/<[^>]*>?/gm, '');
-  const excerpt = cleanDescription.substring(0, 160) + (cleanDescription.length > 160 ? "..." : "");
+  const cleanDescription = (agenda.description || "").replace(/<[^>]*>?/gm, '').trim();
+  const excerpt = cleanDescription.length > 160
+    ? cleanDescription.substring(0, 160) + "..."
+    : (cleanDescription || "Lihat detail agenda kegiatan di website BEM STMIK Tazkia.");
+  const imageUrl = getValidOgImage(agenda.image_url);
+  const targetUrl = `https://bem.stmik.tazkia.ac.id/${locale}/agenda/${agenda.slug || id}`;
 
   return {
     title: `${agenda.title} - BEM STMIK Tazkia`,
@@ -24,20 +40,24 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     openGraph: {
       title: agenda.title,
       description: excerpt,
-      url: `https://bem.stmik.tazkia.ac.id/${locale}/agenda/${agenda.slug || id}`,
+      url: targetUrl,
+      siteName: "BEM STMIK Tazkia",
+      locale: locale,
+      type: "article",
       images: [
         {
-          url: agenda.image_url,
+          url: imageUrl,
+          width: 1200,
+          height: 630,
           alt: agenda.title,
         }
       ],
-      type: "article",
     },
     twitter: {
       card: "summary_large_image",
       title: agenda.title,
       description: excerpt,
-      images: [agenda.image_url],
+      images: [imageUrl],
     }
   };
 }

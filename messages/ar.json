@@ -482,7 +482,14 @@
     "download": "تنزيل",
     "all": "الكل",
     "select": "تحديد",
-    "downloading": "جار التنزيل..."
+    "downloading": "جار التنزيل...",
+    "share": "مشاركة",
+    "shareText": "انضم إلى هذه الفعالية المميزة \"{title}\" على بوابة BEM STMIK Tazkia!",
+    "copied": "تم نسخ الرابط إلى الحافظة!",
+    "copyFail": "فشل في نسخ الرابط",
+    "shareTitle": "شارك هذه الفعالية",
+    "shareDesc": "انشر معلومات هذه الفعالية الرائعة لأصدقائك!",
+    "shareNow": "شارك الآن"
   },
   "UserNotification": {
     "title": "إشعارات الأعمال",
@@ -871,6 +878,7 @@
     "errFixFields": "يرجى إصلاح {count} حقول غير صالحة!"
   },
   "NewsDetail": {
+    "share": "مشاركة",
     "shareText": "اقرأ الأخبار المثيرة \"{title}\" على بوابة BEM STMIK Tazkia!",
     "copied": "تم نسخ الرابط إلى الحافظة!",
     "copyFail": "فشل في نسخ الرابط",

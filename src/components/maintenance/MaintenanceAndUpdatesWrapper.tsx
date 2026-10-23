@@ -222,21 +222,33 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
 
     // Konami Code listener for hidden admin access
     const handleKonami = async (e: KeyboardEvent) => {
+      // Abaikan jika sedang mengetik di dalam input atau textarea
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+
       if (e.key === KONAMI[konamiProgress.current]) {
         konamiProgress.current += 1;
         if (konamiProgress.current === KONAMI.length) {
           konamiProgress.current = 0;
-          // Panggil API untuk set bypass cookie (secret hanya ada di server)
-          const res = await fetch("/api/maintenance/bypass", { method: "POST" });
-          if (res.ok) {
-            // Set session gate then navigate
-            sessionStorage.setItem("_bk", "1");
-            setKonamiUnlocked(true);
-            router.push("/login");
+          try {
+            // Panggil API untuk set bypass cookie (secret hanya ada di server)
+            await fetch("/api/maintenance/bypass", { method: "POST" });
+          } catch (err) {
+            console.error("Failed to set bypass cookie:", err);
           }
+          // Set session gate then navigate
+          sessionStorage.setItem("_bk", "1");
+          setKonamiUnlocked(true);
+          window.location.href = "/login";
         }
       } else {
-        konamiProgress.current = e.key === KONAMI[0] ? 1 : 0;
+        if (e.key === KONAMI[0]) {
+          konamiProgress.current = konamiProgress.current === 1 ? 2 : 1;
+        } else {
+          konamiProgress.current = 0;
+        }
       }
     };
     window.addEventListener("keydown", handleKonami);
@@ -254,10 +266,9 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
     setShowWhatsNew(false);
   };
 
-  // Block visitors: maintenance ON + not admin + not admin path + not konami-unlocked login path + not in development
+  // Block visitors: maintenance ON + not admin + not admin path + not konami-unlocked login path
   const isLoginPath = pathname?.includes("/login");
-  const isDevelopment = process.env.NODE_ENV === "development";
-  const shouldBlockVisitor = maintenanceMode && !isAdmin && !isAdminPath && !(isLoginPath && konamiUnlocked) && !isDevelopment;
+  const shouldBlockVisitor = maintenanceMode && !isAdmin && !isAdminPath && !(isLoginPath && konamiUnlocked);
 
   return (
     <>

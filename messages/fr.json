@@ -482,7 +482,14 @@
     "download": "Télécharger",
     "all": "Tout",
     "select": "Sélectionner",
-    "downloading": "Téléchargement..."
+    "downloading": "Téléchargement...",
+    "share": "Partager",
+    "shareText": "Découvrez cet événement captivant \"{title}\" sur le portail BEM STMIK Tazkia !",
+    "copied": "Lien copié dans le presse-papiers !",
+    "copyFail": "Échec de la copie du lien",
+    "shareTitle": "Partager cet événement",
+    "shareDesc": "Partagez cette information intéressante avec vos amis !",
+    "shareNow": "Partager maintenant"
   },
   "UserNotification": {
     "title": "Notifications d'Oeuvre",
@@ -871,6 +878,7 @@
     "errFixFields": "Veuillez corriger {count} champs invalides!"
   },
   "NewsDetail": {
+    "share": "Partager",
     "shareText": "Lisez les nouvelles intéressantes \"{title}\" sur le portail BEM STMIK Tazkia!",
     "copied": "Lien copié dans le presse-papiers!",
     "copyFail": "Échec de la copie du lien",

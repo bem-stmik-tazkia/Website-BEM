@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { FiTool, FiX, FiStar, FiCheckCircle, FiSave, FiPlus, FiAlertTriangle } from "react-icons/fi";
+import { FiTool, FiX, FiStar, FiCheckCircle, FiSave, FiPlus, FiAlertTriangle, FiSend } from "react-icons/fi";
 import { useToast } from "@/components/ui/Toast";
 import { useRouter } from "next/navigation";
 
@@ -38,6 +38,8 @@ export default function SystemSettingsPage() {
     adminPhone: "",
     tBotToken: "",
     tChatId: "",
+    tNotifEnabled: true,
+    tReminderEnabled: true,
     excelViewUrl: "",
     webhookUrl: "",
   });
@@ -56,6 +58,9 @@ export default function SystemSettingsPage() {
   const [adminPhone, setAdminPhone] = useState("");
   const [tBotToken, setTBotToken] = useState("");
   const [tChatId, setTChatId] = useState("");
+  const [tNotifEnabled, setTNotifEnabled] = useState(true);
+  const [tReminderEnabled, setTReminderEnabled] = useState(true);
+  const [testingPing, setTestingPing] = useState(false);
   const [excelViewUrl, setExcelViewUrl] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [newFeatureInput, setNewFeatureInput] = useState("");
@@ -75,11 +80,13 @@ export default function SystemSettingsPage() {
       adminPhone !== s.adminPhone ||
       tBotToken !== s.tBotToken ||
       tChatId !== s.tChatId ||
+      tNotifEnabled !== s.tNotifEnabled ||
+      tReminderEnabled !== s.tReminderEnabled ||
       excelViewUrl !== s.excelViewUrl ||
       webhookUrl !== s.webhookUrl ||
       JSON.stringify(rFeatures) !== JSON.stringify(s.rFeatures);
     setIsDirty(dirty);
-  }, [mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone, tBotToken, tChatId, excelViewUrl, webhookUrl, loading]);
+  }, [mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone, tBotToken, tChatId, tNotifEnabled, tReminderEnabled, excelViewUrl, webhookUrl, loading]);
 
   // Dummy function to prevent errors from existing checkDirty calls
   const checkDirty = (...args: any[]) => {};
@@ -97,6 +104,8 @@ export default function SystemSettingsPage() {
         "admin_whatsapp",
         "telegram_bot_token",
         "telegram_chat_id",
+        "telegram_berita_notif_enabled",
+        "telegram_berita_reminder_enabled",
         "excel_view_url",
         "google_sheets_webhook_url"
       ]);
@@ -111,6 +120,8 @@ export default function SystemSettingsPage() {
       const adminPhoneItem = data.find((d) => d.key === "admin_whatsapp");
       const tBotTokenItem = data.find((d) => d.key === "telegram_bot_token");
       const tChatIdItem = data.find((d) => d.key === "telegram_chat_id");
+      const tNotifItem = data.find((d) => d.key === "telegram_berita_notif_enabled");
+      const tReminderItem = data.find((d) => d.key === "telegram_berita_reminder_enabled");
       const excelViewUrlItem = data.find((d) => d.key === "excel_view_url");
       const webhookUrlItem = data.find((d) => d.key === "google_sheets_webhook_url");
 
@@ -120,6 +131,8 @@ export default function SystemSettingsPage() {
       const newAdminPhone = adminPhoneItem?.value || "";
       const newTBotToken = tBotTokenItem?.value || "";
       const newTChatId = tChatIdItem?.value || "";
+      const newTNotif = tNotifItem ? tNotifItem.value !== "false" : true;
+      const newTReminder = tReminderItem ? tReminderItem.value !== "false" : true;
       const newExcelViewUrl = excelViewUrlItem?.value || "";
       const newWebhookUrl = webhookUrlItem?.value || "";
       
@@ -152,6 +165,8 @@ export default function SystemSettingsPage() {
         adminPhone: newAdminPhone,
         tBotToken: newTBotToken,
         tChatId: newTChatId,
+        tNotifEnabled: newTNotif,
+        tReminderEnabled: newTReminder,
         excelViewUrl: newExcelViewUrl,
         webhookUrl: newWebhookUrl,
       };
@@ -166,6 +181,8 @@ export default function SystemSettingsPage() {
       setAdminPhone(newAdminPhone);
       setTBotToken(newTBotToken);
       setTChatId(newTChatId);
+      setTNotifEnabled(newTNotif);
+      setTReminderEnabled(newTReminder);
       setExcelViewUrl(newExcelViewUrl);
       setWebhookUrl(newWebhookUrl);
       
@@ -239,6 +256,10 @@ export default function SystemSettingsPage() {
       { key: "maintenance_message", value: mMsg.trim() },
       { key: "release_notes", value: JSON.stringify(releaseNotesObj) },
       { key: "admin_whatsapp", value: adminPhone.trim() },
+      { key: "telegram_bot_token", value: tBotToken.trim() },
+      { key: "telegram_chat_id", value: tChatId.trim() },
+      { key: "telegram_berita_notif_enabled", value: tNotifEnabled ? "true" : "false" },
+      { key: "telegram_berita_reminder_enabled", value: tReminderEnabled ? "true" : "false" },
     ];
 
     const { error } = await supabase
@@ -251,12 +272,37 @@ export default function SystemSettingsPage() {
       // Mark new values as clean
       savedRef.current = { 
         mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone,
-        tBotToken, tChatId, excelViewUrl, webhookUrl
+        tBotToken, tChatId, tNotifEnabled, tReminderEnabled, excelViewUrl, webhookUrl
       };
       setIsDirty(false);
       toast("Pengaturan Sistem berhasil disimpan!", "success");
     }
     setSavingMaintenance(false);
+  };
+
+  const handleTestTelegram = async () => {
+    if (!tBotToken.trim() || !tChatId.trim()) {
+      toast("Harap isi Telegram Bot Token dan Chat ID terlebih dahulu.", "error");
+      return;
+    }
+    try {
+      setTestingPing(true);
+      const res = await fetch("/api/admin/berita/telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "test_ping" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        toast("Pesan tes berhasil dikirim ke Telegram!", "success");
+      } else {
+        toast("Gagal tes Telegram: " + (data.error || "Cek token/chat ID"), "error");
+      }
+    } catch (e: any) {
+      toast("Error: " + e.message, "error");
+    } finally {
+      setTestingPing(false);
+    }
   };
 
   const handleAddFeaturePoint = () => {
@@ -518,6 +564,112 @@ export default function SystemSettingsPage() {
               placeholder="Contoh: 085199562719"
               className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm shadow-sm"
             />
+          </div>
+        </div>
+
+        {/* Telegram Bot Card */}
+        <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6 mt-6">
+          <div className="flex items-center justify-between pb-6 border-b border-outline-variant/20 mb-6 flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-sky-500/10 text-sky-600 dark:text-sky-400 p-3 rounded-2xl">
+                <FiSend size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-on-surface">
+                  Integrasi Bot Telegram (Berita & Notifikasi)
+                </h3>
+                <p className="text-xs text-on-surface-variant">
+                  Mengirim siaran otomatis berita baru dan peringatan berkala jika 1 minggu belum ada artikel baru.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleTestTelegram}
+              disabled={testingPing || !tBotToken || !tChatId}
+              className="px-4 py-2 text-xs font-bold rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 border border-sky-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
+            >
+              <FiSend size={14} className={testingPing ? "animate-spin" : ""} />
+              {testingPing ? "Menguji..." : "Uji Coba Pesan Bot"}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-bold text-on-surface uppercase tracking-wider mb-2">
+                Telegram Bot Token
+              </label>
+              <input
+                type="text"
+                value={tBotToken}
+                onChange={(e) => setTBotToken(e.target.value)}
+                placeholder="Contoh: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+                className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm shadow-sm"
+              />
+              <p className="text-[11px] text-on-surface-variant mt-1.5">
+                Dapatkan dari <strong>@BotFather</strong> di Telegram dengan perintah <code>/newbot</code>.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-on-surface uppercase tracking-wider mb-2">
+                Telegram Chat ID (Channel / Group / Pribadi)
+              </label>
+              <input
+                type="text"
+                value={tChatId}
+                onChange={(e) => setTChatId(e.target.value)}
+                placeholder="Contoh: -100xxxxxxxxxx atau ID chat Telegram"
+                className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm shadow-sm"
+              />
+              <p className="text-[11px] text-on-surface-variant mt-1.5">
+                ID grup/channel penerima. Gunakan <strong>@userinfobot</strong> untuk mengetahui ID Anda.
+              </p>
+            </div>
+          </div>
+
+          {/* Toggles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-outline-variant/20">
+            <div className="flex items-center justify-between p-3.5 bg-surface-variant/20 rounded-xl border border-outline-variant/20">
+              <div>
+                <p className="font-bold text-xs text-on-surface">Notifikasi Berita Baru</p>
+                <p className="text-[11px] text-on-surface-variant">Siarkan otomatis berita yang baru dipublikasikan</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTNotifEnabled(!tNotifEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  tNotifEnabled ? "bg-primary" : "bg-outline-variant/40"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
+                    tNotifEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between p-3.5 bg-surface-variant/20 rounded-xl border border-outline-variant/20">
+              <div>
+                <p className="font-bold text-xs text-on-surface">Peringatan Belum Upload 1 Minggu</p>
+                <p className="text-[11px] text-on-surface-variant">Kirim peringatan jika 7 hari tanpa upload berita</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTReminderEnabled(!tReminderEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  tReminderEnabled ? "bg-amber-500" : "bg-outline-variant/40"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
+                    tReminderEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </div>
 

@@ -482,7 +482,14 @@
     "download": "ダウンロード",
     "all": "すべて",
     "select": "選択",
-    "downloading": "ダウンロード中..."
+    "downloading": "ダウンロード中...",
+    "share": "シェア",
+    "shareText": "BEM STMIK Tazkiaポータルで注目のイベント「{title}」をチェック！",
+    "copied": "リンクをクリップボードにコピーしました！",
+    "copyFail": "リンクのコピーに失敗しました",
+    "shareTitle": "このイベントをシェアする",
+    "shareDesc": "この魅力的なイベントを友達に共有しましょう！",
+    "shareNow": "今すぐシェア"
   },
   "UserNotification": {
     "title": "作品通知",
@@ -871,6 +878,7 @@
     "errFixFields": "{count}個の無効なフィールドを修正してください！"
   },
   "NewsDetail": {
+    "share": "シェア",
     "shareText": "BEM STMIK Tazkiaポータルで興味深いニュース「{title}」を読んでください！",
     "copied": "リンクをクリップボードにコピーしました！",
     "copyFail": "リンクのコピーに失敗しました",

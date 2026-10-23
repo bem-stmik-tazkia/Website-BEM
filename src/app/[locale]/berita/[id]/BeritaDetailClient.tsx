@@ -19,6 +19,7 @@ import {
   FiLinkedin
 } from "react-icons/fi";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { SiWhatsapp } from "react-icons/si";
 import { toggleLike } from "@/actions/like";
 import { recordView } from "@/actions/view";
 import { createClient } from "@/utils/supabase/client";
@@ -68,24 +69,36 @@ export default function BeritaDetailPage() {
   const [relatedNews, setRelatedNews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const getShareUrl = () => {
+    if (typeof window === "undefined") return "";
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      return `https://bem.stmik.tazkia.ac.id${window.location.pathname}`;
+    }
+    return window.location.href;
+  };
+
   const handleShare = async () => {
     if (!newsDetail) return;
+    const shareUrl = getShareUrl();
     const shareText = t("shareText", { title: newsDetail.title });
+    const fullText = `${shareText}\n${shareUrl}`;
     const shareData = {
       title: newsDetail.title,
-      text: shareText,
-      url: window.location.href,
+      text: fullText,
+      url: shareUrl,
     };
 
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (err) {
-        console.error("Error sharing:", err);
+      } catch (err: any) {
+        if (err?.name !== "AbortError") {
+          console.error("Error sharing:", err);
+        }
       }
     } else {
       try {
-        await navigator.clipboard.writeText(`${shareText}\n${window.location.href}`);
+        await navigator.clipboard.writeText(fullText);
         toast(t("copied"), "success");
       } catch (err) {
         toast(t("copyFail"), "error");
@@ -277,9 +290,9 @@ export default function BeritaDetailPage() {
             </button>
             <button
               onClick={handleShare}
-              className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant/30 text-on-surface-variant rounded-full hover:border-gray-400 hover:text-on-background transition-colors duration-300 shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant/30 text-on-surface-variant rounded-full hover:border-gray-400 hover:text-on-background transition-colors duration-300 shadow-sm cursor-pointer"
             >
-              <FiShare2 size={18} /> Bagikan
+              <FiShare2 size={18} /> {t("share")}
             </button>
           </div>
         </div>
@@ -388,18 +401,29 @@ export default function BeritaDetailPage() {
           </div>
 
           {/* Social Share Bottom */}
-          <div className="mt-12 p-8 bg-surface rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-6 border border-outline-variant/30 shadow-sm relative overflow-hidden">
+          <div className="mt-12 p-6 sm:p-8 bg-surface rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 border border-outline-variant/30 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-primary)]/5 rounded-bl-full -z-0"></div>
-            <div className="flex flex-col z-10">
+            <div className="flex flex-col z-10 text-center md:text-left">
               <span className="font-extrabold text-lg text-on-background">{t("shareTitle")}</span>
-              <span className="text-sm text-on-surface-variant">{t("shareDesc")}</span>
+              <span className="text-sm text-on-surface-variant mt-0.5">{t("shareDesc")}</span>
             </div>
-            <button
-              onClick={handleShare}
-              className="flex items-center gap-2 px-6 py-3 bg-[var(--color-primary)] text-white rounded-xl font-bold shadow-md hover:-translate-y-1 hover:shadow-lg hover:bg-blue-800 transition-all duration-300 z-10"
-            >
-              <FiShare2 size={18} /> {t("shareNow")}
-            </button>
+            <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 z-10 w-full md:w-auto">
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${t("shareText", { title: newsDetail.title })}\n${getShareUrl()}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#25D366] text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:bg-[#20ba59] transition-all duration-300 shrink-0 cursor-pointer active:scale-95 text-sm"
+              >
+                <SiWhatsapp size={18} /> WhatsApp
+              </a>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[var(--color-primary)] text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:bg-blue-800 transition-all duration-300 shrink-0 cursor-pointer active:scale-95 text-sm"
+              >
+                <FiShare2 size={18} /> {t("shareNow")}
+              </button>
+            </div>
           </div>
 
         </article>

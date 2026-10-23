@@ -16,6 +16,7 @@ export default async function AdminDashboardPage() {
     topBeritaRes,
     beritaViewsRes,
     siteVisitorsRes,
+    latestBeritaRes,
   ] = await Promise.all([
     supabase.from('berita').select('*', { count: 'exact', head: true }),
     supabase.from('agendas').select('*', { count: 'exact', head: true }),
@@ -24,7 +25,17 @@ export default async function AdminDashboardPage() {
     supabase.from('berita').select('title, views').order('views', { ascending: false }).limit(3),
     supabase.from('berita').select('views, created_at'),
     supabase.from('site_visitors').select('created_at'),
+    supabase.from('berita').select('title, created_at, slug').eq('is_published', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
+
+  const latestBerita = latestBeritaRes?.data || null;
+  let daysSinceLastBerita = 0;
+  if (latestBerita && latestBerita.created_at) {
+    const diffMs = Date.now() - new Date(latestBerita.created_at).getTime();
+    daysSinceLastBerita = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  } else if (!latestBerita) {
+    daysSinceLastBerita = 999;
+  }
 
   const bCount = beritaCount || 0;
   const aCount = agendaCount || 0;
@@ -100,6 +111,8 @@ export default async function AdminDashboardPage() {
       topBerita={topBeritaRes.data}
       monthlyUploadData={monthlyUploadData}
       visitorData={visitorData}
+      latestBerita={latestBerita}
+      daysSinceLastBerita={daysSinceLastBerita}
     />
   );
 }

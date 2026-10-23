@@ -44,3 +44,5 @@ next-env.d.ts
 _astro_backup/
 
 DOKUMENTASI_SISTEM.md
+.history/
+.vscode

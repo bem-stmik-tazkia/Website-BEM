@@ -14,8 +14,19 @@ export default function LoginPage() {
   const pathname = usePathname();
 
   useEffect(() => {
-    setIsUnlocked(true);
-  }, []);
+    // Verifikasi proteksi Konami Code:
+    // Halaman login TIDAK boleh diakses dengan mengetik URL secara langsung.
+    // Pengguna harus sudah memasukkan Konami Code (sessionStorage '_bk' === '1' atau cookie 'maintenance_bypass')
+    const hasSessionPass = typeof window !== "undefined" && sessionStorage.getItem("_bk") === "1";
+    const hasCookiePass = typeof document !== "undefined" && document.cookie.split(";").some((c) => c.trim().startsWith("maintenance_bypass="));
+
+    if (!hasSessionPass && !hasCookiePass) {
+      // Jika tidak lolos verifikasi Konami, kembalikan langsung ke halaman utama
+      router.replace("/");
+    } else {
+      setIsUnlocked(true);
+    }
+  }, [router]);
 
   useEffect(() => {
     // Check if there's an error in the URL (e.g. from callback or domain restriction)

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { 
   FiFileText, FiBriefcase, FiCalendar, FiUsers, FiHeart, 
-  FiPieChart, FiServer, FiActivity
+  FiPieChart, FiServer, FiActivity, FiAlertTriangle
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import AdminDashboardCharts from "./AdminDashboardCharts";
@@ -17,6 +18,8 @@ interface AdminDashboardClientProps {
   topBerita: { title: string; views: number }[] | null;
   monthlyUploadData?: { name: string; Berita: number; Agenda: number }[];
   visitorData?: { name: string; Pengunjung: number }[];
+  latestBerita?: { title: string; created_at: string; slug: string } | null;
+  daysSinceLastBerita?: number;
 }
 
 export default function AdminDashboardClient({
@@ -25,6 +28,8 @@ export default function AdminDashboardClient({
   topBerita,
   monthlyUploadData,
   visitorData,
+  latestBerita,
+  daysSinceLastBerita = 0,
 }: AdminDashboardClientProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "monitoring" | "logs">("overview");
 
@@ -93,8 +98,33 @@ export default function AdminDashboardClient({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="space-y-8"
+            className="space-y-6"
           >
+            {/* 1-Week Berita Reminder Banner */}
+            {daysSinceLastBerita >= 7 && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-red-700 dark:text-red-400 shadow-sm">
+                <div className="flex items-start sm:items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                    <FiAlertTriangle size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm sm:text-base">
+                      Peringatan: Sudah {daysSinceLastBerita >= 999 ? "lebih dari 1 minggu" : `${daysSinceLastBerita} hari`} belum ada berita baru!
+                    </p>
+                    <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5">
+                      {latestBerita ? `Berita terakhir "${latestBerita.title}". ` : ""}
+                      Bot Telegram telah menjadwalkan/mengirimkan pesan pengingat ke Telegram.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/admin/berita/new"
+                  className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shrink-0 shadow-sm shadow-red-600/20"
+                >
+                  Tulis Berita Sekarang &rarr;
+                </Link>
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               {stats.map((stat, i) => (
                 <div key={i} className="bg-surface p-6 rounded-[24px] border border-outline-variant/30 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">

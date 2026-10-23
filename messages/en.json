@@ -500,7 +500,14 @@
     "download": "Download",
     "all": "All",
     "select": "Select",
-    "downloading": "Downloading..."
+    "downloading": "Downloading...",
+    "share": "Share",
+    "shareText": "Check out this exciting event \"{title}\" on BEM STMIK Tazkia Portal!",
+    "copied": "Link copied to clipboard!",
+    "copyFail": "Failed to copy link",
+    "shareTitle": "Share This Event",
+    "shareDesc": "Spread this exciting event to your friends!",
+    "shareNow": "Share Now"
   },
   "Dashboard": {
     "navProfile": "Profile",
@@ -871,6 +878,7 @@
     "errFixFields": "Please fix {count} invalid fields!"
   },
   "NewsDetail": {
+    "share": "Share",
     "shareText": "Read the interesting news \"{title}\" on BEM STMIK Tazkia Portal!",
     "copied": "Link copied to clipboard!",
     "copyFail": "Failed to copy link",

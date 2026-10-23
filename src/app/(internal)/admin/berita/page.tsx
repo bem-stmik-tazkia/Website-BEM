@@ -1,10 +1,11 @@
 import React from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
-import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiEye, FiEyeOff } from "react-icons/fi";
 import { revalidatePath } from "next/cache";
-import Image from "next/image";
 import DeleteBeritaButton from "./DeleteBeritaButton";
+import BroadcastBeritaButton from "./BroadcastBeritaButton";
+import TelegramBeritaWidget from "./TelegramBeritaWidget";
 import RealtimeRefresher from "@/components/RealtimeRefresher";
 
 export const revalidate = 0;
@@ -16,7 +17,7 @@ async function handleDelete(formData: FormData) {
   if (id) {
     const { error } = await supabase.from("berita").delete().eq("id", id);
     if (error) throw new Error(error.message);
-    
+
     revalidatePath("/admin/berita");
     revalidatePath("/berita");
     const { revalidateTag } = require("next/cache");
@@ -48,6 +49,8 @@ export default async function AdminBeritaPage() {
   return (
     <div className="space-y-6">
       <RealtimeRefresher table="berita" />
+
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-on-surface">Kelola Berita</h1>
@@ -63,6 +66,10 @@ export default async function AdminBeritaPage() {
         </Link>
       </div>
 
+      {/* Telegram Bot Widget (Upload Freshness & 1-Week Warning) */}
+      <TelegramBeritaWidget />
+
+      {/* News Table */}
       <div className="bg-surface border border-outline-variant/30 rounded-2xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -85,7 +92,7 @@ export default async function AdminBeritaPage() {
                         <FiPlus className="text-2xl text-on-surface-variant/50" />
                       </div>
                       <p className="font-bold text-on-surface">Belum ada berita</p>
-                      <p className="text-sm">Klik tombol "Tambah Berita" untuk membuat berita pertama.</p>
+                      <p className="text-sm">Klik tombol &quot;Tambah Berita&quot; untuk membuat berita pertama.</p>
                     </div>
                   </td>
                 </tr>
@@ -143,14 +150,20 @@ export default async function AdminBeritaPage() {
                       {new Date(item.created_at).toLocaleDateString("id-ID")}
                     </td>
                     <td className="p-4 text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-1 sm:gap-2">
+                        {/* Telegram Broadcast button */}
+                        <BroadcastBeritaButton id={item.id} title={item.title} />
+
+                        {/* Edit button */}
                         <Link
                           href={`/admin/berita/${item.id}`}
-                          className="p-2.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors"
                           title="Edit Berita"
                         >
                           <FiEdit2 size={16} />
                         </Link>
+
+                        {/* Delete button */}
                         <DeleteBeritaButton id={item.id} action={handleDelete} />
                       </div>
                     </td>

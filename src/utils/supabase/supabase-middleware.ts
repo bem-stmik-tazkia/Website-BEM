@@ -53,11 +53,20 @@ export async function updateSession(request: NextRequest) {
   // Protect /admin routes — only admin users can access
   if (request.nextUrl.pathname.startsWith('/admin')) {
     if (!user) {
-      // Not logged in — redirect to login
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      url.searchParams.set('next', request.nextUrl.pathname)
-      return NextResponse.redirect(url)
+      // Not logged in — hanya izinkan redirect ke /login jika sudah memasukkan Konami code
+      const bypassCookie = request.cookies.get('maintenance_bypass')?.value;
+      const expectedSecret = process.env.MAINTENANCE_BYPASS_SECRET || 'bem-bypass-2025-xK9mP7qR';
+      const isBypassValid = bypassCookie && (bypassCookie === expectedSecret || bypassCookie.length > 0);
+
+      const url = request.nextUrl.clone();
+      if (isBypassValid) {
+        url.pathname = '/login';
+        url.searchParams.set('next', request.nextUrl.pathname);
+      } else {
+        // Tanpa Konami code, jangan bocorkan route login
+        url.pathname = '/';
+      }
+      return NextResponse.redirect(url);
     }
 
     // Check if user is admin
@@ -83,30 +92,47 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // Prevent logged-in users from accessing /login
-  if (user && request.nextUrl.pathname === '/login') {
-    const url = request.nextUrl.clone()
-    const nextPath = request.nextUrl.searchParams.get('next')
+  // Protect /login route: HANYA bisa diakses jika sudah memasukkan Konami code (bypass cookie),
+  // atau jika sudah login sebagai admin (langsung redirect ke /admin).
+  // Mengetikkan /login di URL secara langsung tanpa Konami code akan ditolak dan diarahkan ke home.
+  if (request.nextUrl.pathname === '/login' || request.nextUrl.pathname.startsWith('/login/')) {
+    // 1. Jika sudah login, jangan izinkan buka halaman login lagi
+    if (user) {
+      const url = request.nextUrl.clone()
+      const nextPath = request.nextUrl.searchParams.get('next')
 
-    if (nextPath) {
-      url.pathname = nextPath
-      url.searchParams.delete('next')
-    } else {
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle()
-        // Only admins use the login page — always go to /admin
-        url.pathname = profile?.role === 'admin' ? '/admin' : '/'
-      } catch (err) {
-        console.error('[Middleware] Supabase profile check (login) failed:', err);
-        url.pathname = '/'
+      if (nextPath) {
+        url.pathname = nextPath
+        url.searchParams.delete('next')
+      } else {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle()
+          // Only admins use the login page — always go to /admin
+          url.pathname = profile?.role === 'admin' ? '/admin' : '/'
+        } catch (err) {
+          console.error('[Middleware] Supabase profile check (login) failed:', err);
+          url.pathname = '/'
+        }
       }
+
+      return NextResponse.redirect(url)
     }
 
-    return NextResponse.redirect(url)
+    // 2. Jika belum login: WAJIB memiliki cookie hasil input Konami code
+    const bypassCookie = request.cookies.get('maintenance_bypass')?.value;
+    const expectedSecret = process.env.MAINTENANCE_BYPASS_SECRET || 'bem-bypass-2025-xK9mP7qR';
+    const isBypassValid = bypassCookie && (bypassCookie === expectedSecret || bypassCookie.length > 0);
+
+    if (!isBypassValid) {
+      // Pengguna mengetik /login di URL tanpa Konami code — tolak dan arahkan ke homepage
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.

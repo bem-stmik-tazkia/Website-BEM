@@ -23,8 +23,11 @@ import {
   FiChevronRight,
   FiClipboard,
   FiFolder,
-  FiLink
+  FiLink,
+  FiShare2
 } from "react-icons/fi";
+import { SiWhatsapp } from "react-icons/si";
+import { useToast } from "@/components/ui/Toast";
 import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo, formatDateLocalized } from "@/utils/dateFormatter";
 import { translateContent } from "@/utils/translate";
@@ -87,6 +90,7 @@ function GoogleDriveFolderCard({ url, folderId }: { url: string; folderId: strin
 
 function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { agenda: AgendaKegiatan, participantCount: number }) {
   const t = useTranslations("AgendaDetail");
+  const { toast } = useToast();
   const locale = useLocale();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -139,6 +143,57 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
       router.push("/dokumentasi");
     } else {
       router.push("/agenda");
+    }
+  };
+
+  const getShareUrl = () => {
+    if (typeof window === "undefined") return "";
+    // Jika sedang di localhost, gunakan domain production agar crawler WhatsApp & medsos bisa mengambil preview banner
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      return `https://bem.stmik.tazkia.ac.id${window.location.pathname}`;
+    }
+    return window.location.href;
+  };
+
+  const handleShare = async () => {
+    if (!agenda) return;
+    const shareUrl = getShareUrl();
+    const shareText = t("shareText", { title: agenda.title });
+    const fullText = `${shareText}\n${shareUrl}`;
+    const shareData = {
+      title: agenda.title,
+      text: fullText,
+      url: shareUrl,
+    };
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err: any) {
+        if (err?.name !== "AbortError") {
+          console.error("Error sharing:", err);
+        }
+      }
+    } else {
+      try {
+        if (typeof navigator !== "undefined" && navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(fullText);
+        } else {
+          const textArea = document.createElement("textarea");
+          textArea.value = fullText;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand("copy");
+          textArea.remove();
+        }
+        toast(t("copied"), "success");
+      } catch (err) {
+        toast(t("copyFail"), "error");
+      }
     }
   };
 
@@ -391,8 +446,8 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
   return (
     <div className="bg-[#f8f9fc] min-h-screen pt-32 pb-20 font-sans">
       
-      {/* ── BACK BUTTON ────────────────────────────────────────────── */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-5 md:px-8 mb-4 md:mb-6">
+      {/* ── BACK BUTTON & TOP ACTIONS ───────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-5 md:px-8 mb-4 md:mb-6 flex items-center justify-between gap-4">
         <Link 
           href="/agenda" 
           onClick={handleBack}
@@ -400,6 +455,13 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
         >
           <FiArrowLeft /> {t("back")}
         </Link>
+        <button
+          type="button"
+          onClick={handleShare}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-primary hover:border-primary/40 rounded-full transition-all duration-200 shadow-sm text-sm font-semibold cursor-pointer active:scale-95"
+        >
+          <FiShare2 size={16} className="text-primary" /> {t("share")}
+        </button>
       </section>
 
       {/* ── HERO SECTION ───────────────────────────────────────────── */}
@@ -583,7 +645,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
       <section className="max-w-6xl mx-auto px-4 sm:px-5 md:px-8 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-start">
         
         {/* Deskripsi & Dokumentasi */}
-        <div className="flex flex-col gap-6 md:gap-8 lg:col-span-2">
+        <div className={`flex flex-col gap-6 md:gap-8 ${translatedSpeakers && translatedSpeakers.length > 0 ? "lg:col-span-2" : "lg:col-span-3"}`}>
           
           {translatedSpeakers && translatedSpeakers.length > 0 && (
             <div className="lg:hidden flex flex-col gap-4 mb-2">
@@ -733,11 +795,37 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
             </div>
           )}
 
+          {/* Social Share Bottom */}
+          <div className="p-6 sm:p-8 bg-surface rounded-2xl md:rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 border border-outline-variant/30 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-primary)]/5 rounded-bl-full pointer-events-none -z-0"></div>
+            <div className="flex flex-col z-10 text-center md:text-left">
+              <span className="font-extrabold text-lg text-on-background">{t("shareTitle")}</span>
+              <span className="text-sm text-on-surface-variant mt-0.5">{t("shareDesc")}</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 z-10 w-full md:w-auto">
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${t("shareText", { title: agenda.title })}\n${getShareUrl()}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#25D366] text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:bg-[#20ba59] transition-all duration-300 shrink-0 cursor-pointer active:scale-95 text-sm"
+              >
+                <SiWhatsapp size={18} /> WhatsApp
+              </a>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[var(--color-primary)] text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:bg-blue-800 transition-all duration-300 shrink-0 cursor-pointer active:scale-95 text-sm"
+              >
+                <FiShare2 size={18} /> {t("shareNow")}
+              </button>
+            </div>
+          </div>
+
         </div>
 
         {/* Sidebar / Speaker Card (Desktop) */}
-        <div className="hidden lg:flex flex-col gap-6 lg:col-span-1">
-          {translatedSpeakers && translatedSpeakers.length > 0 && (
+        {translatedSpeakers && translatedSpeakers.length > 0 && (
+          <div className="hidden lg:flex flex-col gap-6 lg:col-span-1">
             <div className="flex flex-col gap-4">
               <span className="text-[10px] font-bold text-secondary uppercase tracking-wider bg-secondary/10 px-3 py-1.5 rounded-full w-fit">{t("featuringSpeakers")}</span>
               {translatedSpeakers.map((speaker, idx) => (
@@ -758,8 +846,8 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* ── LIGHTBOX MODAL ────────────────────────────────────────── */}

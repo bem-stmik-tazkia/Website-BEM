@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FiArrowLeft, FiSave, FiAlertCircle, FiRefreshCw } from "react-icons/fi";
+import { FiArrowLeft, FiSave, FiAlertCircle, FiRefreshCw, FiSend } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageUpload from "@/components/ui/ImageUpload";
 import dynamic from "next/dynamic";
@@ -39,6 +39,7 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
   const router = useRouter();
   const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [sendTelegram, setSendTelegram] = useState(true);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -186,6 +187,7 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
         ...formData,
         content: cleanedContent,
         tags: finalTags.split(",").map((t: string) => t.trim()).filter(Boolean),
+        send_telegram: sendTelegram,
       };
 
       const res = await fetch("/api/admin/berita", {
@@ -194,14 +196,23 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
         body: JSON.stringify({ ...payload, id: initialData?.id }),
       });
 
+      const responseData = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Gagal menyimpan berita");
+        throw new Error(responseData.error || "Gagal menyimpan berita");
       }
 
       if (!initialData) localStorage.removeItem("berita_draft");
       setIsDirty(false);
-      toast("Berita berhasil disimpan!", "success");
+
+      if (responseData.telegram?.ok) {
+        toast("Berita berhasil disimpan & disiarkan ke Telegram!", "success");
+      } else if (responseData.telegram && !responseData.telegram.ok) {
+        toast(`Berita berhasil disimpan! (Catatan Telegram: ${responseData.telegram.error || "Gagal kirim"})`, "info");
+      } else {
+        toast("Berita berhasil disimpan!", "success");
+      }
+
       router.push("/admin/berita");
     } catch (err: any) {
       toast("Gagal menyimpan: " + err.message, "error");
@@ -256,6 +267,34 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
             <span
               className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
                 formData.is_published ? "translate-x-8" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Telegram Notification Toggle */}
+        <div className="flex items-center justify-between p-4 bg-sky-500/10 rounded-xl border border-sky-500/20">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 mt-0.5">
+              <FiSend size={15} />
+            </div>
+            <div>
+              <p className="font-bold text-sm text-on-surface">Siarkan ke Bot Telegram</p>
+              <p className="text-xs text-on-surface-variant mt-0.5">
+                Kirim ringkasan berita, gambar banner, dan tautan otomatis ke Telegram saat disimpan
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSendTelegram(!sendTelegram)}
+            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${
+              sendTelegram ? "bg-sky-500" : "bg-outline-variant/40"
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
+                sendTelegram ? "translate-x-8" : "translate-x-1"
               }`}
             />
           </button>

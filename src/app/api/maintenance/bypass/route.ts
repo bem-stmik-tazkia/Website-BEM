@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
 
-// POST /api/maintenance/bypass
-// Dipanggil setelah Konami code diinput di halaman maintenance.
-export async function POST() {
-  const secret = process.env.MAINTENANCE_BYPASS_SECRET;
+const DEFAULT_SECRET = "bem-bypass-2025-xK9mP7qR";
 
-  if (!secret) {
-    return NextResponse.json(
-      { error: "Bypass not configured" },
-      { status: 500 }
-    );
-  }
+// POST /api/maintenance/bypass
+// Dipanggil setelah Konami code diinput di halaman publik atau maintenance.
+export async function POST() {
+  const secret = process.env.MAINTENANCE_BYPASS_SECRET || DEFAULT_SECRET;
 
   const response = NextResponse.json({ success: true });
 

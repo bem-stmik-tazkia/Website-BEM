@@ -482,7 +482,14 @@
     "download": "Unduh",
     "all": "Semua",
     "select": "Pilih",
-    "downloading": "Unduh..."
+    "downloading": "Unduh...",
+    "share": "Bagikan",
+    "shareText": "Ikuti event menarik \"{title}\" di Portal BEM STMIK Tazkia!",
+    "copied": "Tautan disalin ke clipboard!",
+    "copyFail": "Gagal menyalin tautan",
+    "shareTitle": "Bagikan Event Ini",
+    "shareDesc": "Sebarkan informasi acara menarik ini ke teman-temanmu!",
+    "shareNow": "Bagikan Sekarang"
   },
   "UserNotification": {
     "title": "Notifikasi Karya",
@@ -871,6 +878,7 @@
     "errFixFields": "Mohon perbaiki {count} isian yang belum valid!"
   },
   "NewsDetail": {
+    "share": "Bagikan",
     "shareText": "Baca berita menarik \"{title}\" di Portal BEM STMIK Tazkia!",
     "copied": "Tautan disalin ke clipboard!",
     "copyFail": "Gagal menyalin tautan",
