@@ -80,11 +80,12 @@ export async function POST(req: Request) {
     revalidatePath("/berita");
 
     // Telegram notification logic:
-    // Automatically send for newly published articles, or if explicitly requested
+    // Hanya kirim otomatis untuk artikel baru (!id).
+    // Saat edit artikel yang sudah ada (id ada), JANGAN kirim notifikasi kecuali admin mencentang opsi kirim ulang secara eksplisit.
     let telegramResult: { ok: boolean; error?: string } | null = null;
-    const shouldSendTelegram =
-      send_telegram === true ||
-      (!id && data.is_published && send_telegram !== false);
+    const shouldSendTelegram = id
+      ? send_telegram === true
+      : data.is_published && send_telegram !== false;
 
     if (shouldSendTelegram && savedBerita) {
       try {

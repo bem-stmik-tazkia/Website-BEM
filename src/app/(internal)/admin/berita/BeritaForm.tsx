@@ -39,7 +39,7 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
   const router = useRouter();
   const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [sendTelegram, setSendTelegram] = useState(true);
+  const [sendTelegram, setSendTelegram] = useState(!initialData);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -273,15 +273,27 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
         </div>
 
         {/* Telegram Notification Toggle */}
-        <div className="flex items-center justify-between p-4 bg-sky-500/10 rounded-xl border border-sky-500/20">
+        <div className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+          sendTelegram 
+            ? "bg-sky-500/10 border-sky-500/20" 
+            : "bg-surface-variant/20 border-outline-variant/20"
+        }`}>
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 mt-0.5">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+              sendTelegram 
+                ? "bg-sky-500/20 text-sky-600 dark:text-sky-400" 
+                : "bg-surface-variant text-on-surface-variant/60"
+            }`}>
               <FiSend size={15} />
             </div>
             <div>
-              <p className="font-bold text-sm text-on-surface">Siarkan ke Bot Telegram</p>
+              <p className="font-bold text-sm text-on-surface">
+                {initialData ? "Kirim Ulang Notifikasi ke Telegram" : "Siarkan ke Bot Telegram"}
+              </p>
               <p className="text-xs text-on-surface-variant mt-0.5">
-                Kirim ringkasan berita, gambar banner, dan tautan otomatis ke Telegram saat disimpan
+                {initialData
+                  ? "Secara default mati saat edit berita agar tidak spam di chat Telegram. Aktifkan jika ingin menyiarkan ulang."
+                  : "Kirim ringkasan berita, gambar banner, dan tautan otomatis ke Telegram saat disimpan"}
               </p>
             </div>
           </div>
