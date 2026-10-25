@@ -41,7 +41,7 @@ export default async function middleware(request: NextRequest) {
 
 export const config = {
   // Matcher untuk menjalankan middleware ini
-  // Skip /api, /_next, /_vercel, dan file statis (berakhiran titik)
-  matcher: ['/((?!api|_vercel|_next/static|_next/image|favicon.ico|images|icons|.*\\..*).*)']
+  // Skip /api, /_next, /_vercel, /storage, dan file statis (berakhiran titik)
+  matcher: ['/((?!api|_vercel|_next/static|_next/image|storage|favicon.ico|images|icons|.*\\..*).*)']
 };
 

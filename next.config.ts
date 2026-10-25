@@ -57,6 +57,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Matikan header 'X-Powered-By: Next.js' untuk mencegah Information Disclosure
+  poweredByHeader: false,
   async redirects() {
     return [
       {
@@ -68,6 +70,16 @@ const nextConfig: NextConfig = {
         source: '/:locale(en|id|ar|ja|fr)/volunteer',
         destination: '/:locale/agenda?tab=volunteer',
         permanent: true,
+      },
+    ];
+  },
+  async rewrites() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dfeokmrfwgrufruieunh.supabase.co';
+    return [
+      {
+        // Masking URL Supabase Storage agar disajikan via domain sendiri (/storage/public_images/...)
+        source: '/storage/:path*',
+        destination: `${supabaseUrl}/storage/v1/object/public/:path*`,
       },
     ];
   },

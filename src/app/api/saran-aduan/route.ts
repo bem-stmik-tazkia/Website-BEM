@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, getClientIp, createRateLimitResponse } from '@/lib/rateLimit';
 
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -10,12 +11,30 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(req: Request) {
     try {
+        // 0. Rate Limiting Protection (Anti-Spam & Brute Force):
+        // Maksimal 5 pengiriman pesan per 5 menit per alamat IP
+        const clientIp = getClientIp(req);
+        const rateLimitResult = checkRateLimit(`saran_${clientIp}`, {
+            limit: 5,
+            windowMs: 5 * 60 * 1000, // 5 menit
+        });
+
+        if (!rateLimitResult.success) {
+            return createRateLimitResponse(
+                "Terlalu banyak pengiriman pesan dari perangkat Anda. Silakan tunggu beberapa menit sebelum mengirim saran baru.",
+                rateLimitResult
+            );
+        }
+
         const body = await req.json();
         const { nama, kategori, deskripsi, turnstileToken } = body;
 
         // 1. Verify Turnstile Token
         if (!turnstileToken) {
-            return NextResponse.json({ error: "Turnstile token is missing" }, { status: 400 });
+            return NextResponse.json(
+                { error: "Turnstile token is missing" },
+                { status: 400, headers: rateLimitResult.headers }
+            );
         }
 
         const formData = new URLSearchParams();
@@ -29,7 +48,10 @@ export async function POST(req: Request) {
 
         const outcome = await verifyRes.json();
         if (!outcome.success) {
-            return NextResponse.json({ error: "Captcha verification failed" }, { status: 400 });
+            return NextResponse.json(
+                { error: "Captcha verification failed" },
+                { status: 400, headers: rateLimitResult.headers }
+            );
         }
 
         // 2. Insert into Supabase
@@ -136,7 +158,7 @@ export async function POST(req: Request) {
             console.error("Gagal mengirim notif Telegram:", teleErr);
         }
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true }, { headers: rateLimitResult.headers });
     } catch (error: any) {
         console.error("Saran API Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

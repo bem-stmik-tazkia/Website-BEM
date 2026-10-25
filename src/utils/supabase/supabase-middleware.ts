@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -7,6 +8,36 @@ export async function updateSession(request: NextRequest) {
   })
 
   const pathname = request.nextUrl.pathname;
+
+  // Proteksi Rate Limiting & Anti Brute-Force untuk route autentikasi (/login & /auth)
+  if (pathname.startsWith('/login') || pathname.startsWith('/auth')) {
+    const clientIp = getClientIp(request);
+    const rateCheck = checkRateLimit(`auth_${clientIp}`, {
+      limit: 15, // Maksimal 15 request per menit per IP
+      windowMs: 60 * 1000,
+    });
+
+    if (!rateCheck.success) {
+      return new NextResponse(
+        JSON.stringify({
+          error: "Terlalu banyak percobaan akses login. Silakan coba lagi beberapa saat.",
+          retryAfter: rateCheck.retryAfter,
+        }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            ...rateCheck.headers,
+          },
+        }
+      );
+    }
+
+    // Sertakan header rate limit di response untuk deteksi scanner
+    Object.entries(rateCheck.headers).forEach(([k, v]) => {
+      supabaseResponse.headers.set(k, v);
+    });
+  }
 
   // Untuk halaman publik (bukan /admin dan /login), skip getUser() ke Supabase API.
   // Ini mencegah error "fetch failed" saat koneksi lambat, dan mempercepat halaman publik.
@@ -24,7 +55,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
