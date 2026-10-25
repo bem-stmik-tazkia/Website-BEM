@@ -148,7 +148,7 @@ function VolunteerPanel() {
           <h3 className="text-xl font-extrabold text-secondary leading-tight">Volunteer</h3>
           <p className="text-xs text-on-surface-variant mt-0.5">Bergabung & tinggalkan jejak nyata</p>
         </div>
-        <Link href="/volunteer" className="group flex items-center gap-1 text-secondary text-xs font-bold hover:text-primary transition-colors whitespace-nowrap">
+        <Link href="/agenda?tab=volunteer" className="group flex items-center gap-1 text-secondary text-xs font-bold hover:text-primary transition-colors whitespace-nowrap">
           Lihat Semua <FiArrowRight className="group-hover:translate-x-0.5 transition-transform" size={12} />
         </Link>
       </div>

@@ -39,6 +39,15 @@ export default function SafeLottie({
   const retryAttempted = useRef(false);
 
   useEffect(() => {
+    // Set local WASM file path to avoid external CDN fetch failures
+    import("@lottiefiles/dotlottie-web").then(({ DotLottie }) => {
+      try {
+        DotLottie.setWasmUrl("/dotlottie-player.wasm");
+      } catch {
+        // ignore if already set
+      }
+    });
+
     // Small delay to avoid Turbopack dev server race condition on first render
     const timer = setTimeout(() => setMounted(true), 60);
     return () => clearTimeout(timer);

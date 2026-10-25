@@ -566,7 +566,7 @@ export default function EventVolunteer({
                 </h2>
                 <p className="text-xs text-on-surface-variant mt-0.5">{t("volSubtitle")}</p>
               </div>
-              <Link href="/volunteer" className="group flex items-center gap-1 text-primary hover:text-secondary font-semibold text-xs transition-colors whitespace-nowrap shrink-0">
+              <Link href="/agenda?tab=volunteer" className="group flex items-center gap-1 text-primary hover:text-secondary font-semibold text-xs transition-colors whitespace-nowrap shrink-0">
                 {t("seeAll")} <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>

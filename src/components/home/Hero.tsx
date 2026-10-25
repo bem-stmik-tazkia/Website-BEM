@@ -76,8 +76,8 @@ export default function Hero() {
           fill
           priority
           fetchPriority="high"
-          quality={40}
-          sizes="(max-width: 768px) 100vw, 100vw"
+          quality={90}
+          sizes="100vw"
           className="object-cover origin-center will-change-[object-position]"
           style={{ objectPosition: '50% center' }}
         />
