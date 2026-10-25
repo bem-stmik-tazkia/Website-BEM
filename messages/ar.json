@@ -187,7 +187,12 @@
     "categoryArticle": "مقال",
     "categoryRelease": "إصدار",
     "categoryCampus": "حرم جامعي",
-    "categoryEducation": "تعليم"
+    "categoryEducation": "تعليم",
+    "categoryAnnouncement": "إعلان",
+    "categoryAchievement": "إنجاز",
+    "likes": "إعجابات",
+    "prevPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية"
   },
   "ProjectCard": {
     "projectShowcase": "معرض المشاريع",

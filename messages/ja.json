@@ -187,7 +187,12 @@
     "categoryArticle": "記事",
     "categoryRelease": "リリース",
     "categoryCampus": "キャンパス",
-    "categoryEducation": "教育"
+    "categoryEducation": "教育",
+    "categoryAnnouncement": "お知らせ",
+    "categoryAchievement": "実績",
+    "likes": "いいね",
+    "prevPage": "前のページ",
+    "nextPage": "次のページ"
   },
   "ProjectCard": {
     "projectShowcase": "プロジェクトショーケース",

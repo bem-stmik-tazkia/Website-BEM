@@ -27,6 +27,8 @@ import { getDeviceId } from "@/utils/identity";
 import { useToast } from "@/components/ui/Toast";
 import { useTranslations, useLocale } from "next-intl";
 import DOMPurify from "isomorphic-dompurify";
+import { formatDateLocalized } from "@/utils/dateFormatter";
+import { useTranslatedContent, useTranslatedList } from "@/hooks/useTranslatedContent";
 
 interface NewsDetail {
   id: string;
@@ -46,21 +48,25 @@ export default function BeritaDetailPage() {
   const params = useParams();
   const { toast } = useToast();
   const t = useTranslations("NewsDetail");
+  const tPage = useTranslations("BeritaPage");
   const locale = useLocale();
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "";
-    try {
-      const d = new Date(dateString);
-      if (isNaN(d.getTime())) return "";
-      return d.toLocaleDateString(
-        locale === "en" ? "en-GB" : locale === "ar" ? "ar-SA" : locale === "ja" ? "ja-JP" : locale === "fr" ? "fr-FR" : "id-ID",
-        { day: "numeric", month: "short", year: "numeric" }
-      );
-    } catch {
-      return dateString;
-    }
+  const formatDate = (dateString?: string) => formatDateLocalized(dateString, locale);
+
+  const translateCategory = (cat?: string) => {
+    if (!cat) return "";
+    const c = cat.toLowerCase();
+    if (c === "semua" || c === "all") return tPage("catAll");
+    if (c === "berita" || c === "news") return tPage("categoryNews");
+    if (c === "artikel" || c === "article") return tPage("categoryArticle");
+    if (c === "rilis" || c === "release") return tPage("categoryRelease");
+    if (c === "kampus" || c === "campus") return tPage("categoryCampus");
+    if (c === "pendidikan" || c === "education") return tPage("categoryEducation");
+    if (c === "pengumuman" || c === "announcement") return tPage("categoryAnnouncement");
+    if (c === "prestasi" || c === "achievement") return tPage("categoryAchievement");
+    return cat;
   };
+
   const [liked, setLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [viewCount, setViewCount] = useState(0);
@@ -68,6 +74,21 @@ export default function BeritaDetailPage() {
   const [newsDetail, setNewsDetail] = useState<NewsDetail | null>(null);
   const [relatedNews, setRelatedNews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Auto-translate berita utama & berita terkait sesuai bahasa aktif
+  const { data: displayNews } = useTranslatedContent(
+    newsDetail,
+    "berita",
+    locale,
+    ["title"]
+  );
+
+  const { data: displayRelatedNews } = useTranslatedList(
+    relatedNews,
+    "berita",
+    locale,
+    ["title"]
+  );
 
   const getShareUrl = () => {
     if (typeof window === "undefined") return "";
@@ -249,6 +270,8 @@ export default function BeritaDetailPage() {
     );
   }
 
+  const currentNews = displayNews || newsDetail;
+
   return (
     <div className="bg-[#f8f9fc] min-h-screen pt-28 md:pt-36 pb-20">
 
@@ -261,10 +284,10 @@ export default function BeritaDetailPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <span className="bg-[var(--color-primary)] text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
-              {newsDetail.category}
+              {translateCategory(currentNews.category)}
             </span>
             <span className="flex items-center gap-1.5 text-sm text-on-surface-variant font-medium">
-              <FiCalendar className="text-[var(--color-primary)]" /> {formatDate(newsDetail.created_at)}
+              <FiCalendar className="text-[var(--color-primary)]" /> {formatDate(currentNews.created_at)}
             </span>
           </div>
 
@@ -298,7 +321,7 @@ export default function BeritaDetailPage() {
         </div>
 
         <h1 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-on-background leading-tight max-w-4xl mb-6">
-          {newsDetail.title}
+          {currentNews.title}
         </h1>
 
         <div className="flex flex-wrap items-center gap-6 mb-10 mt-2">
@@ -439,7 +462,7 @@ export default function BeritaDetailPage() {
             </h3>
 
             <div className="flex flex-col gap-5">
-              {relatedNews.map((item) => (
+              {displayRelatedNews.map((item) => (
                 <Link key={item.id} href={`/berita/${item.slug}`} className="group flex gap-4 items-start">
                   <div className="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-outline-variant/20 bg-surface-variant/20">
                     <Image
@@ -452,7 +475,7 @@ export default function BeritaDetailPage() {
                   </div>
                   <div className="flex-1">
                     <span className="text-[10px] font-bold text-[var(--color-secondary)] uppercase tracking-wider mb-1 block">
-                      {item.category}
+                      {translateCategory(item.category)}
                     </span>
                     <h4 className="text-sm font-bold text-on-background group-hover:text-[var(--color-primary)] transition-colors line-clamp-2 leading-snug mb-2">
                       {item.title}

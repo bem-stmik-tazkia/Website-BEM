@@ -1,17 +1,26 @@
-export const formatDateLocalized = (dateStr: string | null | undefined, locale: string = 'id'): string => {
+export const formatDateLocalized = (
+  dateStr: string | null | undefined, 
+  locale: string = 'id',
+  options?: Intl.DateTimeFormatOptions
+): string => {
   if (!dateStr) return "-";
   try {
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return dateStr;
     const localeMap: Record<string, string> = {
-      en: 'en-US',
+      en: 'en-GB',
       ar: 'ar-SA',
       fr: 'fr-FR',
       ja: 'ja-JP',
       id: 'id-ID'
     };
     const targetLocale = localeMap[locale] || 'id-ID';
-    return date.toLocaleDateString(targetLocale, { day: 'numeric', month: 'long', year: 'numeric' });
+    const defaultOptions: Intl.DateTimeFormatOptions = { 
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric' 
+    };
+    return date.toLocaleDateString(targetLocale, options || defaultOptions);
   } catch {
     return dateStr;
   }

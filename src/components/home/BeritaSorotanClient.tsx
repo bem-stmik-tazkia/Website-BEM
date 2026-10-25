@@ -3,8 +3,10 @@
 import React from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { FiArrowRight, FiHeart, FiEye, FiCalendar } from "react-icons/fi";
+import { formatDateLocalized } from "@/utils/dateFormatter";
+import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 
 interface BeritaSorotanClientProps {
   news: {
@@ -22,8 +24,16 @@ interface BeritaSorotanClientProps {
 
 export default function BeritaSorotanClient({ news }: BeritaSorotanClientProps) {
   const t = useTranslations("News");
+  const locale = useLocale();
 
-  const item = news;
+  const { data: translatedNews } = useTranslatedContent(
+    news,
+    "berita",
+    locale,
+    ["title", "excerpt"]
+  );
+
+  const item = translatedNews || news;
 
   return (
     <div className="w-full">
@@ -56,11 +66,7 @@ export default function BeritaSorotanClient({ news }: BeritaSorotanClientProps) 
             </span>
             <span className="bg-surface/20 backdrop-blur-md text-white text-[10px] font-medium px-2.5 py-1 rounded-full flex items-center gap-1 border border-white/10">
               <FiCalendar className="inline shrink-0 text-white" />{" "}
-              {new Date(item.created_at).toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
+              {formatDateLocalized(item.created_at, locale)}
             </span>
           </div>
 

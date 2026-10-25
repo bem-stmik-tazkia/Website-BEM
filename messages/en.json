@@ -205,7 +205,12 @@
     "categoryArticle": "Article",
     "categoryRelease": "Release",
     "categoryCampus": "Campus",
-    "categoryEducation": "Education"
+    "categoryEducation": "Education",
+    "categoryAnnouncement": "Announcement",
+    "categoryAchievement": "Achievement",
+    "likes": "Likes",
+    "prevPage": "Previous Page",
+    "nextPage": "Next Page"
   },
   "ProjectCard": {
     "projectShowcase": "Project Showcase",

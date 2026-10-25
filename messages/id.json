@@ -187,7 +187,12 @@
     "categoryArticle": "Artikel",
     "categoryRelease": "Rilis",
     "categoryCampus": "Kampus",
-    "categoryEducation": "Pendidikan"
+    "categoryEducation": "Pendidikan",
+    "categoryAnnouncement": "Pengumuman",
+    "categoryAchievement": "Prestasi",
+    "likes": "Suka",
+    "prevPage": "Halaman Sebelumnya",
+    "nextPage": "Halaman Selanjutnya"
   },
   "ProjectCard": {
     "projectShowcase": "Pameran Proyek",

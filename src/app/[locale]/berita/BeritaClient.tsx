@@ -11,12 +11,14 @@ import {
   FiChevronLeft,
   FiChevronRight
 } from "react-icons/fi";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import LikeButton from "@/components/ui/LikeButton";
 import { motion } from "framer-motion";
 import SafeLottie from "@/components/ui/SafeLottie";
 import BeritaTourClient from "@/components/berita/BeritaTourClient";
 import { createClient } from "@/utils/supabase/client";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { formatDateLocalized } from "@/utils/dateFormatter";
 
 interface NewsItem {
   id: string;
@@ -32,6 +34,7 @@ interface NewsItem {
 
 export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] }) {
   const t = useTranslations("BeritaPage");
+  const locale = useLocale();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -83,35 +86,54 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
     fetchLatestStats();
   }, [initialNews]);
 
-  // Konten berita ditampilkan dalam bahasa asli (tanpa terjemahan)
-  const isTranslatingNews = false;
+  // Auto-translate konten berita sesuai bahasa yang dipilih pengguna
+  const { data: translatedNews, isTranslating: isTranslatingNews } = useTranslatedList(
+    allNews,
+    "berita",
+    locale,
+    ["title", "excerpt"]
+  );
+
+  // Pastikan urutan berita dari yang terbaru berdasarkan tanggal pembuatan (created_at)
+  const sortedNews = useMemo(() => {
+    return [...translatedNews].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+  }, [translatedNews]);
 
   // Compute featured, popular, and grid news dynamically
-  const featuredNews = allNews.length > 0 ? allNews[0] : null;
-  // All news appear in the grid (not sliced), so even 1 article is visible
-  const newsList = allNews;
-  const popularNews = [...allNews].sort((a, b) => b.views - a.views).slice(0, 3);
+  const featuredNews = sortedNews.length > 0 ? sortedNews[0] : null;
+  const newsList = sortedNews;
+  const popularNews = useMemo(() => {
+    return [...sortedNews].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 3);
+  }, [sortedNews]);
 
   // Categories list
   const categories = ["Semua", "Berita", "Artikel", "Rilis", "Kampus", "Pendidikan"];
 
-  const translateCategory = (cat: string) => {
-    if (cat === "Semua") return t("catAll");
-    if (cat === "Berita") return t("categoryNews");
-    if (cat === "Artikel") return t("categoryArticle");
-    if (cat === "Rilis") return t("categoryRelease");
-    if (cat === "Kampus") return t("categoryCampus");
-    if (cat === "Pendidikan") return t("categoryEducation");
+  const translateCategory = (cat?: string) => {
+    if (!cat) return "";
+    const c = cat.toLowerCase();
+    if (c === "semua" || c === "all") return t("catAll");
+    if (c === "berita" || c === "news") return t("categoryNews");
+    if (c === "artikel" || c === "article") return t("categoryArticle");
+    if (c === "rilis" || c === "release") return t("categoryRelease");
+    if (c === "kampus" || c === "campus") return t("categoryCampus");
+    if (c === "pendidikan" || c === "education") return t("categoryEducation");
+    if (c === "pengumuman" || c === "announcement") return t("categoryAnnouncement");
+    if (c === "prestasi" || c === "achievement") return t("categoryAchievement");
     return cat;
   };
 
   // Filter & Search Logic
   const filteredNews = useMemo(() => {
-    const listToFilter = selectedCategory === "Semua" && debouncedSearchQuery === "" ? newsList : allNews;
+    const listToFilter = selectedCategory === "Semua" && debouncedSearchQuery === "" ? newsList : sortedNews;
     return listToFilter.filter((item) => {
+      const q = debouncedSearchQuery.toLowerCase().trim();
       const matchesSearch =
-        item.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        item.excerpt.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+        q === "" ||
+        item.title.toLowerCase().includes(q) ||
+        item.excerpt.toLowerCase().includes(q);
 
       const matchesCategory =
         selectedCategory === "Semua" ||
@@ -119,7 +141,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
 
       return matchesSearch && matchesCategory;
     });
-  }, [allNews, newsList, debouncedSearchQuery, selectedCategory]);
+  }, [sortedNews, newsList, debouncedSearchQuery, selectedCategory]);
 
   // Pagination Logic
   const itemsPerPage = 4;
@@ -210,8 +232,8 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 <span className="bg-secondary text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm whitespace-nowrap">
                   {translateCategory(featuredNews.category)}
                 </span>
-                <span className="bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1 border border-white/20">
-                  <FiCalendar className="inline shrink-0" /> {new Date(featuredNews.created_at).toLocaleDateString('id-ID')}
+                <span className="bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/20">
+                  <FiCalendar className="inline shrink-0" /> {formatDateLocalized(featuredNews.created_at, locale)}
                 </span>
               </div>
 
@@ -230,7 +252,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                   <div className="flex items-center gap-4 text-xs text-white/90 z-30">
                     {/* The like button needs to be clickable independently, so it gets z-30 and relative position */}
                     <div className="relative z-30">
-                      <LikeButton initialLikes={featuredNews.likes} id={featuredNews.id} table="berita" label="Suka" size={16} />
+                      <LikeButton initialLikes={featuredNews.likes} id={featuredNews.id} table="berita" label={t("likes")} size={16} />
                     </div>
                     <span className="flex items-center gap-1"><FiEye /> {featuredNews.views} {t("views")}</span>
                   </div>
@@ -287,13 +309,19 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0d2a5c] via-[#0d2a5c]/80 to-[#1b4086]/20 transition-opacity duration-300 group-hover:opacity-90"></div>
 
                       {/* Content */}
-                      <div className="relative z-10 p-6 flex flex-col items-start text-white">
-                        {/* Category Badge + Stats */}
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider border border-white/20">
-                            {translateCategory(news.category)}
-                          </span>
-                          <div className="flex items-center gap-2 text-[10px] text-white/90 font-medium">
+                      <div className="relative z-10 p-6 flex flex-col items-start text-white w-full">
+                        {/* Category Badge + Date Badge + Stats */}
+                        <div className="flex items-center justify-between w-full mb-2.5 gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider border border-white/20">
+                              {translateCategory(news.category)}
+                            </span>
+                            <span className="bg-white/15 backdrop-blur-sm text-white/95 text-[10px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1 border border-white/15 shadow-xs">
+                              <FiCalendar size={11} className="shrink-0 text-white/80" />
+                              {formatDateLocalized(news.created_at, locale)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-white/90 font-medium shrink-0">
                             <div className="relative z-30">
                               <LikeButton initialLikes={news.likes} id={news.id} table="berita" size={11} />
                             </div>
@@ -346,7 +374,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                       {isUserSearching
                         ? searchQuery
                           ? `${t("noNewsSearchDesc")} "${searchQuery}".`
-                          : `${t("noNewsSearchDesc")} "${selectedCategory}".`
+                          : `${t("noNewsSearchDesc")} "${translateCategory(selectedCategory)}".`
                         : t("noNewsEmptyDesc")}
                     </p>
                   </div>
@@ -361,7 +389,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   className="p-2.5 rounded-xl border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                  aria-label="Halaman Sebelumnya"
+                  aria-label={t("prevPage")}
                 >
                   <FiChevronLeft size={18} />
                 </button>
@@ -383,7 +411,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   className="p-2.5 rounded-xl border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                  aria-label="Halaman Selanjutnya"
+                  aria-label={t("nextPage")}
                 >
                   <FiChevronRight size={18} />
                 </button>
@@ -423,12 +451,12 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0d2a5c] via-[#0d2a5c]/80 to-[#1b4086]/20 transition-opacity duration-300 group-hover:opacity-90"></div>
 
                     {/* Content */}
-                    <div className="relative z-10 p-5 flex flex-col items-start text-white">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div className="relative z-10 p-5 flex flex-col items-start text-white w-full">
+                      <div className="flex items-center justify-between w-full gap-2 mb-2">
                         <span className="bg-surface text-primary text-[9px] font-bold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider">
                           {translateCategory(item.category)}
                         </span>
-                        <div className="flex items-center gap-2 text-[9px] text-white/90 font-medium">
+                        <div className="flex items-center gap-2 text-[9px] text-white/90 font-medium shrink-0">
                           <span className="flex items-center gap-0.5"><FiEye size={10} /> {item.views}</span>
                           <div className="relative z-30">
                             <LikeButton initialLikes={item.likes} id={item.id} table="berita" size={10} />
@@ -438,8 +466,8 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                       <h4 className="text-sm font-bold leading-snug text-white group-hover:text-secondary transition-colors duration-300 line-clamp-2 drop-shadow-md">
                         {item.title}
                       </h4>
-                      <span className="flex items-center gap-1 text-[9px] text-white/80 mt-1.5 font-medium drop-shadow-sm">
-                        <FiCalendar size={9} /> {new Date(item.created_at).toLocaleDateString('id-ID')}
+                      <span className="flex items-center gap-1 text-[10px] text-white/90 mt-2 font-medium drop-shadow-sm bg-black/25 backdrop-blur-xs px-2 py-0.5 rounded border border-white/10">
+                        <FiCalendar size={10} className="text-white/80 shrink-0" /> {formatDateLocalized(item.created_at, locale)}
                       </span>
                     </div>
 

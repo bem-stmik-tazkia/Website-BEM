@@ -15,7 +15,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { translateContentBatch } from "@/utils/translate";
 
 type TranslateResult<T> = {
@@ -34,17 +34,17 @@ export function useTranslatedContent<T extends Record<string, any>>(
   contentIdField: keyof T = "id",
   options?: { expiresAt?: Date }
 ): TranslateResult<T | null> {
-  const [translated, setTranslated] = useState<T | null>(item ?? null);
+  const [translatedFields, setTranslatedFields] = useState<Record<string, string>>({});
   const [isTranslating, setIsTranslating] = useState(false);
   const prevLangRef = useRef<string>(targetLang);
   const prevIdRef = useRef<string>("");
 
-  // Gunakan ID item sebagai dependency yang stabil, bukan object-nya
+  // Gunakan ID item sebagai dependency yang stabil
   const contentId = item ? String(item[contentIdField] ?? "") : "";
 
   useEffect(() => {
     if (!item) {
-      setTranslated(null);
+      setTranslatedFields({});
       return;
     }
 
@@ -53,7 +53,7 @@ export function useTranslatedContent<T extends Record<string, any>>(
 
     // Reset ke konten asli jika bahasa adalah Indonesia
     if (targetLang === "id") {
-      setTranslated(item);
+      setTranslatedFields({});
       prevLangRef.current = targetLang;
       prevIdRef.current = contentId;
       return;
@@ -71,7 +71,7 @@ export function useTranslatedContent<T extends Record<string, any>>(
     }
 
     if (Object.keys(fields).length === 0) {
-      setTranslated(item);
+      setTranslatedFields({});
       return;
     }
 
@@ -80,11 +80,11 @@ export function useTranslatedContent<T extends Record<string, any>>(
     prevIdRef.current = contentId;
 
     translateContentBatch(contentId, contentTable, fields, targetLang, options)
-      .then((translatedFields) => {
-        setTranslated({ ...item, ...translatedFields });
+      .then((fields) => {
+        setTranslatedFields(fields);
       })
       .catch(() => {
-        setTranslated(item); // fallback
+        setTranslatedFields({}); // fallback
       })
       .finally(() => {
         setIsTranslating(false);
@@ -92,7 +92,13 @@ export function useTranslatedContent<T extends Record<string, any>>(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentId, targetLang]);
 
-  return { data: translated, isTranslating };
+  const data = useMemo(() => {
+    if (!item) return null;
+    if (targetLang === "id" || Object.keys(translatedFields).length === 0) return item;
+    return { ...item, ...translatedFields };
+  }, [item, targetLang, translatedFields]);
+
+  return { data, isTranslating };
 }
 
 /**
@@ -106,20 +112,25 @@ export function useTranslatedList<T extends Record<string, any>>(
   contentIdField: keyof T = "id",
   options?: { expiresAt?: Date }
 ): TranslateResult<T[]> {
-  const [translated, setTranslated] = useState<T[]>(items);
+  const [translatedMap, setTranslatedMap] = useState<Record<string, Record<string, string>>>({});
   const [isTranslating, setIsTranslating] = useState(false);
   // Track last processed signature to avoid re-running on same data
   const prevSignatureRef = useRef<string>("");
 
   // Buat signature stabil berupa string primitif dari ID-ID item
-  // Ini AMAN sebagai dependency karena string selalu dibandingkan by value
-  const itemsIdString = items.map(i => String(i[contentIdField] ?? "")).join(",");
+  const itemsIdString = items ? items.map(i => String(i[contentIdField] ?? "")).join(",") : "";
 
   useEffect(() => {
     const signature = targetLang + ":" + itemsIdString;
 
     if (!items || items.length === 0) {
-      setTranslated([]);
+      setTranslatedMap({});
+      prevSignatureRef.current = signature;
+      return;
+    }
+
+    if (targetLang === "id") {
+      setTranslatedMap({});
       prevSignatureRef.current = signature;
       return;
     }
@@ -128,13 +139,7 @@ export function useTranslatedList<T extends Record<string, any>>(
     if (signature === prevSignatureRef.current) return;
     prevSignatureRef.current = signature;
 
-    if (targetLang === "id") {
-      setTranslated(items);
-      return;
-    }
-
     setIsTranslating(true);
-    setTranslated(items);
 
     Promise.all(
       items.map(async (item) => {
@@ -146,7 +151,7 @@ export function useTranslatedList<T extends Record<string, any>>(
             fields[field as string] = val;
           }
         }
-        if (Object.keys(fields).length === 0) return item;
+        if (Object.keys(fields).length === 0) return { contentId, translatedFields: {} };
 
         const translatedFields = await translateContentBatch(
           contentId,
@@ -155,14 +160,33 @@ export function useTranslatedList<T extends Record<string, any>>(
           targetLang,
           options
         );
-        return { ...item, ...translatedFields };
+        return { contentId, translatedFields };
       })
     )
-      .then((results) => setTranslated(results))
-      .catch(() => setTranslated(items))
+      .then((results) => {
+        const newMap: Record<string, Record<string, string>> = {};
+        for (const res of results) {
+          newMap[res.contentId] = res.translatedFields;
+        }
+        setTranslatedMap(newMap);
+      })
+      .catch(() => setTranslatedMap({}))
       .finally(() => setIsTranslating(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemsIdString, targetLang]);
 
-  return { data: translated, isTranslating };
+  // Combine latest items (with live views/likes) with translated text fields
+  const data = useMemo(() => {
+    if (!items) return [];
+    if (targetLang === "id" || Object.keys(translatedMap).length === 0) {
+      return items;
+    }
+    return items.map((item) => {
+      const id = String(item[contentIdField] ?? "");
+      const trans = translatedMap[id];
+      return trans ? { ...item, ...trans } : item;
+    });
+  }, [items, targetLang, translatedMap, contentIdField]);
+
+  return { data, isTranslating };
 }

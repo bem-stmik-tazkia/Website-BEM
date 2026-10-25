@@ -37,6 +37,38 @@ function simpleHash(str: string): string {
   return Math.abs(hash).toString(36);
 }
 
+// Client-side memory & sessionStorage cache
+const translationMemoryCache = new Map<string, string>();
+
+function getClientCache(key: string): string | null {
+  if (translationMemoryCache.has(key)) {
+    return translationMemoryCache.get(key)!;
+  }
+  if (typeof window !== "undefined") {
+    try {
+      const stored = sessionStorage.getItem(`trans_${key}`);
+      if (stored) {
+        translationMemoryCache.set(key, stored);
+        return stored;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return null;
+}
+
+function setClientCache(key: string, value: string): void {
+  translationMemoryCache.set(key, value);
+  if (typeof window !== "undefined") {
+    try {
+      sessionStorage.setItem(`trans_${key}`, value);
+    } catch {
+      // ignore quota exceeded
+    }
+  }
+}
+
 async function callGoogleTranslateAPI(text: string, targetLang: string): Promise<string | null> {
   if (!text || !text.trim()) return text;
   
@@ -84,29 +116,14 @@ export async function translateContent(
   // Jika teks kosong → kembalikan langsung
   if (!originalText?.trim()) return originalText;
   
-  const supabase = createClient();
   const sourceHash = simpleHash(originalText);
-  
-  // 1. Coba cek cache di Supabase (DINONAKTIFKAN SEMENTARA agar console bersih)
-  /*
-  try {
-    const { data: cached, error: cacheErr } = await supabase
-      .from("translations_cache")
-      .select("translated_text, source_hash")
-      .eq("content_id", contentId)
-      .eq("content_table", contentTable)
-      .eq("field_name", fieldName)
-      .eq("target_lang", targetLang)
-      .maybeSingle();
-    
-    // Cache ditemukan dan teks sumber belum berubah
-    if (!cacheErr && cached && cached.source_hash === sourceHash) {
-      return cached.translated_text;
-    }
-  } catch {
-    // Tabel belum ada atau error lain — lanjut ke API
+  const cacheKey = `${contentTable}_${contentId}_${fieldName}_${targetLang}_${sourceHash}`;
+
+  // 1. Cek memory / sessionStorage cache terlebih dahulu
+  const localCached = getClientCache(cacheKey);
+  if (localCached) {
+    return localCached;
   }
-  */
 
   // 2. Terjemahkan via Google API
   try {
@@ -115,29 +132,9 @@ export async function translateContent(
     if (!translated || translated === originalText) {
       return originalText; // Fallback ke teks asli
     }
-    
-    // 3. Simpan ke cache (DINONAKTIFKAN SEMENTARA)
-    /*
-    try {
-      await supabase.from("translations_cache").upsert(
-        {
-          content_id: contentId,
-          content_table: contentTable,
-          field_name: fieldName,
-          source_lang: "id",
-          target_lang: targetLang,
-          translated_text: translated,
-          source_hash: sourceHash,
-          expires_at: options?.expiresAt?.toISOString() ?? null,
-        },
-        {
-          onConflict: "content_id,content_table,field_name,target_lang",
-        }
-      );
-    } catch {
-      // Abaikan error cache — terjemahan tetap dikembalikan
-    }
-    */
+
+    // Simpan ke client cache
+    setClientCache(cacheKey, translated);
     
     return translated;
   } catch {

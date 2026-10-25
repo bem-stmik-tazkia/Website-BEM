@@ -187,7 +187,12 @@
     "categoryArticle": "Article",
     "categoryRelease": "Communiqué",
     "categoryCampus": "Campus",
-    "categoryEducation": "Éducation"
+    "categoryEducation": "Éducation",
+    "categoryAnnouncement": "Annonce",
+    "categoryAchievement": "Réussite",
+    "likes": "J'aime",
+    "prevPage": "Page Précédente",
+    "nextPage": "Page Suivante"
   },
   "ProjectCard": {
     "projectShowcase": "Vitrine de projets",
