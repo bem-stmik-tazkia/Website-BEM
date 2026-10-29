@@ -1,21 +1,27 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { verifyAdminApi } from '@/lib/auth';
 import { Resend } from 'resend';
-
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(req: Request) {
     try {
+        // Auth guard – only admin can trigger blast email
+        const auth = await verifyAdminApi();
+        if (!auth.authorized) {
+            return auth.response;
+        }
+        const { supabase } = auth;
+
         const resend = new Resend(process.env.RESEND_API_KEY || "re_dummy");
-        
-        // TODO: In production, verify that the user is logged in as Admin here
         
         const body = await req.json();
         const { title, type, date, location, description } = body;
+
+        if (!title || !description) {
+            return NextResponse.json(
+                { error: "Judul dan deskripsi wajib diisi" },
+                { status: 400 }
+            );
+        }
 
         // 1. Ambil semua email subscriber yang VERIFIED
         const { data: subscribers, error } = await supabase
@@ -68,14 +74,13 @@ export async function POST(req: Request) {
         `;
 
         // 3. Kirim via Resend Batch API (max 100 per request)
-        // Note: For free tier with unverified domain, this will only reach your own registered email.
         const BATCH_SIZE = 90;
         let sentCount = 0;
 
         for (let i = 0; i < emails.length; i += BATCH_SIZE) {
             const batch = emails.slice(i, i + BATCH_SIZE);
             const payload = batch.map(email => ({
-                from: 'onboarding@resend.dev', // Ganti dengan email domain verified nanti
+                from: 'onboarding@resend.dev',
                 to: email,
                 subject: `📢 [Info BEM] ${title}`,
                 html: htmlContent

@@ -1,8 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
+import { requireAdmin } from "@/lib/auth";
 import { FiPlus, FiEdit2, FiEye, FiEyeOff } from "react-icons/fi";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import DeleteBeritaButton from "./DeleteBeritaButton";
 import BroadcastBeritaButton from "./BroadcastBeritaButton";
 import TelegramBeritaWidget from "./TelegramBeritaWidget";
@@ -12,7 +13,7 @@ export const revalidate = 0;
 
 async function handleDelete(formData: FormData) {
   "use server";
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const id = formData.get("id") as string;
   if (id) {
     const { error } = await supabase.from("berita").delete().eq("id", id);
@@ -20,22 +21,20 @@ async function handleDelete(formData: FormData) {
 
     revalidatePath("/admin/berita");
     revalidatePath("/berita");
-    const { revalidateTag } = require("next/cache");
-    revalidateTag("berita");
+    revalidateTag("berita", "max");
   }
 }
 
 async function handleTogglePublish(formData: FormData) {
   "use server";
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const id = formData.get("id") as string;
   const currentStatus = formData.get("is_published") === "true";
   if (id) {
     await supabase.from("berita").update({ is_published: !currentStatus }).eq("id", id);
     revalidatePath("/admin/berita");
     revalidatePath("/berita");
-    const { revalidateTag } = require("next/cache");
-    revalidateTag("berita");
+    revalidateTag("berita", "max");
   }
 }
 

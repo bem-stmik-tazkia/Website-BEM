@@ -1,27 +1,16 @@
-import { createClient } from "@/utils/supabase/server";
+import { verifyAdminApi } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { sendNewBeritaNotification } from "@/lib/telegram";
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient();
-
     // Auth guard – only admin can create/update berita
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAdminApi();
+    if (!auth.authorized) {
+      return auth.response;
     }
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    if (profile?.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const { supabase } = auth;
 
     const body = await req.json();
     const {
@@ -93,7 +82,7 @@ export async function POST(req: Request) {
       } catch (teleErr: unknown) {
         const msg = teleErr instanceof Error ? teleErr.message : "Error sending telegram";
         console.error("Gagal mengirim notifikasi Telegram:", msg);
-        telegramResult = { ok: false, error: msg };
+        telegramResult = { ok: false, error: "Gagal mengirim notifikasi Telegram" };
       }
     }
 
@@ -106,7 +95,7 @@ export async function POST(req: Request) {
     const msg = err instanceof Error ? err.message : "Internal Server Error";
     console.error("Save berita error:", msg);
     return NextResponse.json(
-      { error: msg },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }

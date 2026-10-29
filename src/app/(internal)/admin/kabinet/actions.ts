@@ -1,11 +1,11 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+import { requireAdmin } from "@/lib/auth";
 import { KabinetProfile } from "@/types/kabinet";
 import { revalidatePath } from "next/cache";
 
 export async function saveKabinetProfile(profile: KabinetProfile) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   
   // Update the existing profile or insert if not exists
   if (profile.id) {

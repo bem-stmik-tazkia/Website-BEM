@@ -6,6 +6,14 @@ import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 
+const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  unauthorized: "Akses ditolak. Akun Google Anda tidak terdaftar sebagai administrator BEM.",
+  auth_failed: "Gagal memproses autentikasi. Silakan coba masuk kembali.",
+  session_expired: "Sesi login Anda telah berakhir. Silakan masuk kembali.",
+  access_denied: "Permintaan login dibatalkan atau ditolak.",
+  rate_limited: "Terlalu banyak percobaan masuk. Silakan tunggu beberapa saat.",
+};
+
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,13 +37,14 @@ export default function LoginPage() {
   }, [router]);
 
   useEffect(() => {
-    // Check if there's an error in the URL (e.g. from callback or domain restriction)
+    // Sanitasi dan pemetaan parameter error untuk mencegah Information Disclosure & Content Spoofing
     const params = new URLSearchParams(window.location.search);
-    const errorMsg = params.get('error');
-    const errorDesc = params.get('error_description');
+    const errorKey = params.get('error') || params.get('error_code');
 
-    if (errorMsg || errorDesc) {
-      setError(errorDesc || errorMsg || "Terjadi kesalahan saat login.");
+    if (errorKey) {
+      const normalizedKey = errorKey.toLowerCase().trim();
+      const message = KNOWN_ERROR_MESSAGES[normalizedKey] || "Terjadi kendala saat proses login. Pastikan Anda menggunakan akun yang berwenang.";
+      setError(message);
     }
   }, []);
 
@@ -59,7 +68,8 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
+      console.error("Google sign in error:", error.message);
+      setError("Gagal menghubungkan ke layanan Google. Silakan coba lagi.");
       setIsLoading(false);
     }
   };
@@ -110,7 +120,7 @@ export default function LoginPage() {
           <span className="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">admin_panel_settings</span>
           <div>
             <p className="font-bold text-primary mb-0.5">Khusus Pengurus BEM</p>
-            <p>Halaman login ini hanya untuk anggota & pengurus aktif BEM STMIK Tazkia.</p>
+            <p>Halaman login ini hanya untuk administrator BEM STMIK Tazkia yang terdaftar.</p>
           </div>
         </div>
 

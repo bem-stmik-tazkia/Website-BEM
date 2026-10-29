@@ -1,8 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FiArrowLeft, FiDownload, FiExternalLink } from "react-icons/fi";
+import { FiArrowLeft, FiExternalLink } from "react-icons/fi";
 import { getKegiatanById, getVolunteerApplications } from "../../actions";
+import ExportPendaftarButton from "./ExportPendaftarButton";
 
 const formatDateWithTime = (dateStr: string) => {
   const date = new Date(dateStr);
@@ -14,7 +15,25 @@ const formatDateWithTime = (dateStr: string) => {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${day} ${month} ${year}, ${hours}:${minutes}`;
 };
-import ExportPendaftarButton from "./ExportPendaftarButton";
+
+// Helper: Hanya izinkan URL valid yang diawali dengan protokol https://
+function getSafeHttpsUrl(urlString: unknown): { href: string; hostname: string } | null {
+  if (typeof urlString !== "string") return null;
+  const trimmed = urlString.trim();
+  if (!trimmed.startsWith("https://")) return null;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "https:" && parsed.hostname) {
+      return {
+        href: parsed.toString(),
+        hostname: parsed.hostname,
+      };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
 
 export const metadata = {
   title: "Kelola Pendaftar - BEM STMIK Tazkia Admin",
@@ -78,13 +97,26 @@ export default async function KelolaPendaftarPage({ params }: { params: Promise<
                     
                     {fields.map(field => {
                       const answer = app.responses[field.id];
+                      const safeLink = getSafeHttpsUrl(answer);
+
                       return (
                         <td key={field.id} className="p-4 text-sm text-on-surface max-w-[250px]">
                           {field.type === 'file' || field.type === 'image' ? (
-                            answer ? (
-                              <a href={answer} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary bg-primary/10 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors">
-                                Lihat Lampiran <FiExternalLink size={12} />
+                            safeLink ? (
+                              <a 
+                                href={safeLink.href} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="inline-flex items-center gap-1.5 text-primary bg-primary/10 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/20 transition-colors"
+                                title={safeLink.href}
+                              >
+                                <span className="truncate max-w-[130px]">{safeLink.hostname}</span>
+                                <FiExternalLink size={12} className="shrink-0" />
                               </a>
+                            ) : answer ? (
+                              <span className="text-red-500/80 text-xs italic" title="Nilai bukan tautan https yang valid">
+                                Tautan tidak valid
+                              </span>
                             ) : (
                               <span className="text-on-surface-variant/50 italic text-xs">Kosong</span>
                             )

@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { FiTrash2, FiMessageSquare, FiEye, FiX, FiLink, FiHelpCircle, FiChevronDown, FiCopy, FiDownload } from "react-icons/fi";
+import { FiTrash2, FiMessageSquare, FiEye, FiX, FiLink, FiHelpCircle, FiChevronDown, FiCopy, FiDownload, FiExternalLink } from "react-icons/fi";
 import { useToast } from "@/components/ui/Toast";
+import { getExcelViewUrl } from "./actions";
 
 const GOOGLE_SCRIPT_CODE = `function doPost(e) {
   try {
@@ -41,7 +42,6 @@ export default function SaranAduanAdminPage() {
   const [tChatId, setTChatId] = useState("");
   const [excelViewUrl, setExcelViewUrl] = useState("");
 
-  const [isSavingWebhook, setIsSavingWebhook] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
   const fetchData = async () => {
@@ -68,18 +68,13 @@ export default function SaranAduanAdminPage() {
   };
 
   const fetchIntegrationSettings = async () => {
-    const { data } = await supabase.from('system_settings').select('key, value').in('key', [
-      'google_sheets_webhook_url', 
-      'telegram_bot_token', 
-      'telegram_chat_id', 
-      'excel_view_url'
-    ]);
-    if (data) {
-      const settings = data.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {} as Record<string, string>);
-      setWebhookUrl(settings['google_sheets_webhook_url'] || "");
-      setTBotToken(settings['telegram_bot_token'] || "");
-      setTChatId(settings['telegram_chat_id'] || "");
-      setExcelViewUrl(settings['excel_view_url'] || "");
+    try {
+      const url = await getExcelViewUrl();
+      if (url) {
+        setExcelViewUrl(url);
+      }
+    } catch (e) {
+      console.error("Gagal memuat EXCEL_VIEW_URL:", e);
     }
   };
 
@@ -131,26 +126,6 @@ export default function SaranAduanAdminPage() {
       toast(e.message || "Terjadi kesalahan sistem.", "error");
     } finally {
       setConfirmingId(null);
-    }
-  };
-
-  const handleSaveWebhook = async () => {
-    setIsSavingWebhook(true);
-    try {
-      const updates = [
-        { key: 'google_sheets_webhook_url', value: webhookUrl.trim() },
-        { key: 'telegram_bot_token', value: tBotToken.trim() },
-        { key: 'telegram_chat_id', value: tChatId.trim() },
-        { key: 'excel_view_url', value: excelViewUrl.trim() },
-      ];
-      const { error } = await supabase.from('system_settings').upsert(updates, { onConflict: 'key' });
-      if (error) throw error;
-      toast("Pengaturan Integrasi berhasil disimpan.", "success");
-      setIsSettingsOpen(false);
-    } catch (e: any) {
-      toast("Gagal menyimpan: " + e.message, "error");
-    } finally {
-      setIsSavingWebhook(false);
     }
   };
 
@@ -378,33 +353,14 @@ export default function SaranAduanAdminPage() {
             </div>
             <div className="px-6 py-5 overflow-y-auto flex-1 space-y-6">
               
-              {/* Telegram Section */}
-              <div className="space-y-4">
-                <h4 className="font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant/20 pb-2">
-                  <span className="material-symbols-outlined text-blue-500 text-[20px]">send</span>
-                  Notifikasi Telegram
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold text-on-surface uppercase tracking-wider">Telegram Bot Token</label>
-                    <input
-                      type="text"
-                      value={tBotToken}
-                      onChange={(e) => setTBotToken(e.target.value)}
-                      placeholder="Contoh: 876543210:AAH_..."
-                      className="w-full px-3 py-2 text-sm rounded-xl border border-outline-variant/50 bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-surface"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-bold text-on-surface uppercase tracking-wider">Telegram Chat ID</label>
-                    <input
-                      type="text"
-                      value={tChatId}
-                      onChange={(e) => setTChatId(e.target.value)}
-                      placeholder="Contoh: -100xxxxxxxxx"
-                      className="w-full px-3 py-2 text-sm rounded-xl border border-outline-variant/50 bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-surface"
-                    />
-                  </div>
+              {/* Security Notice: Env Vars */}
+              <div className="bg-sky-500/10 border border-sky-500/20 rounded-xl p-3.5 text-xs text-on-surface flex items-start gap-2.5">
+                <span className="material-symbols-outlined text-sky-500 text-[18px] shrink-0 mt-0.5">verified_user</span>
+                <div className="space-y-1">
+                  <p className="font-bold">Kredensial Integrasi Dikelola via Environment Variables</p>
+                  <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                    Demi keamanan, <code>GOOGLE_SHEETS_WEBHOOK_URL</code>, <code>TELEGRAM_BOT_TOKEN</code>, dan <code>TELEGRAM_CHAT_ID</code> dikonfigurasi melalui <strong>Environment Variables di Vercel</strong> dan tidak lagi disimpan di database.
+                  </p>
                 </div>
               </div>
 
@@ -412,35 +368,28 @@ export default function SaranAduanAdminPage() {
               <div className="space-y-4">
                 <h4 className="font-bold text-on-surface flex items-center gap-2 border-b border-outline-variant/20 pb-2">
                   <FiLink className="text-emerald-500" />
-                  Google Sheets (Excel)
+                  Google Sheets (Excel Rekap)
                 </h4>
-                
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-on-surface uppercase tracking-wider">URL Webhook (Make.com / Apps Script)</label>
-                  <p className="text-[10px] text-on-surface-variant leading-tight mb-1">
-                    Digunakan sistem untuk mengirim data saran (POST) setiap ada yang mengisi kotak saran.
-                  </p>
-                  <input
-                    type="text"
-                    value={webhookUrl}
-                    onChange={(e) => setWebhookUrl(e.target.value)}
-                    placeholder="https://hook.eu1.make.com/... atau script.google.com..."
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-outline-variant/50 bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-surface"
-                  />
-                </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-on-surface uppercase tracking-wider">Link Tampilan Excel (View URL)</label>
-                  <p className="text-[10px] text-on-surface-variant leading-tight mb-1">
-                    Akan muncul sebagai tombol "Lihat Rekap Spreadsheet" di chat Telegram.
+                <div className="flex flex-col gap-2">
+                  <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                    Tautan rekap spreadsheet dikonfigurasi melalui server environment variable <code>EXCEL_VIEW_URL</code> (hanya dibaca oleh admin terverifikasi).
                   </p>
-                  <input
-                    type="text"
-                    value={excelViewUrl}
-                    onChange={(e) => setExcelViewUrl(e.target.value)}
-                    placeholder="https://docs.google.com/spreadsheets/d/..."
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-outline-variant/50 bg-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-on-surface"
-                  />
+                  {excelViewUrl ? (
+                    <a
+                      href={excelViewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold hover:bg-emerald-600/20 transition-colors w-fit"
+                    >
+                      <span>Buka Rekap Spreadsheet di Google Sheets</span>
+                      <FiExternalLink size={14} />
+                    </a>
+                  ) : (
+                    <div className="p-3 bg-surface-variant/30 rounded-xl border border-outline-variant/30 text-xs text-on-surface-variant">
+                      <em>Tautan belum dikonfigurasi di Vercel (EXCEL_VIEW_URL).</em>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -492,19 +441,12 @@ export default function SaranAduanAdminPage() {
               </div>
 
             </div>
-            <div className="px-6 py-4 bg-surface-variant/20 border-t border-outline-variant/20 flex justify-end gap-3">
+            <div className="px-6 py-4 bg-surface-variant/20 border-t border-outline-variant/20 flex justify-end">
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2.5 text-sm font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30 rounded-xl transition-colors"
+                className="px-5 py-2.5 text-sm font-bold bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors shadow-soft"
               >
                 Tutup
-              </button>
-              <button
-                onClick={handleSaveWebhook}
-                disabled={isSavingWebhook}
-                className="px-5 py-2.5 text-sm font-bold bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors shadow-soft disabled:opacity-70 flex items-center gap-2"
-              >
-                {isSavingWebhook ? 'Menyimpan...' : 'Simpan Pengaturan'}
               </button>
             </div>
           </div>

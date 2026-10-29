@@ -6,21 +6,20 @@ import { updateSession } from './utils/supabase/supabase-middleware';
 const handleI18nRouting = createIntlMiddleware(routing);
 
 export default async function middleware(request: NextRequest) {
-  // 1. Jalankan Supabase middleware untuk proteksi route dan refresh token
+  // 1. Jalankan Supabase middleware untuk proteksi route, auth, dan refresh token
   const supabaseResponse = await updateSession(request);
   
-  // Jika Supabase melakukan redirect (misal dari /admin ke /login), langsung return
+  // Jika Supabase melakukan redirect atau merespons status selain 200 (misal 401, 403, 429), langsung return
   if (supabaseResponse.headers.get('location') || supabaseResponse.status !== 200) {
-    if (supabaseResponse.status >= 300 && supabaseResponse.status < 400) {
-      return supabaseResponse;
-    }
+    return supabaseResponse;
   }
 
-  // 2. Cek apakah ini route internal yang TIDAK butuh multi-bahasa
+  // 2. Cek apakah ini route internal atau API yang TIDAK butuh multi-bahasa
   const pathname = request.nextUrl.pathname;
   const isInternalRoute = pathname.startsWith('/admin') || 
                           pathname.startsWith('/login') || 
-                          pathname.startsWith('/auth');
+                          pathname.startsWith('/auth') ||
+                          pathname.startsWith('/api');
 
   if (isInternalRoute) {
     return supabaseResponse;
@@ -40,8 +39,11 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Matcher untuk menjalankan middleware ini
-  // Skip /api, /_next, /_vercel, /storage, dan file statis (berakhiran titik)
-  matcher: ['/((?!api|_vercel|_next/static|_next/image|storage|favicon.ico|images|icons|.*\\..*).*)']
+  // Matcher Next.js: mencakup /admin dan /api/admin untuk perlindungan auth,
+  // serta seluruh halaman aplikasi kecuali aset statis dan route internal non-admin.
+  matcher: [
+    '/admin/:path*',
+    '/api/admin/:path*',
+    '/((?!api|_vercel|_next/static|_next/image|storage|favicon.ico|images|icons|.*\\..*).*)',
+  ],
 };
-

@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { getKegiatans, deleteKegiatan } from "./actions";
+import { requireAdmin } from "@/lib/auth";
 import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiClock, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { revalidatePath } from "next/cache";
 import DeleteButton from "./DeleteButton";
@@ -66,6 +67,7 @@ export default async function KegiatanAdminPage({
 
   const handleDelete = async (formData: FormData) => {
     "use server";
+    await requireAdmin();
     const id = formData.get("id") as string;
     if (id) {
       await deleteKegiatan(id);

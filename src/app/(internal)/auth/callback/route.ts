@@ -5,7 +5,6 @@ import { cookies } from 'next/headers'
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
   
   // Use Next.js built-in nextUrl which correctly resolves Vercel's internal routing
   const publicOrigin = request.nextUrl.origin;
@@ -50,9 +49,9 @@ export async function GET(request: NextRequest) {
         if (profile?.role === 'admin') {
           return NextResponse.redirect(`${publicOrigin}/admin`)
         }
-        // Non-admin users: sign them out and redirect to login with error
+        // Non-admin users: sign them out and redirect to login with safe error code
         await supabase.auth.signOut()
-        return NextResponse.redirect(`${publicOrigin}/login?error=Akses+ditolak.+Halaman+ini+khusus+untuk+pengurus+BEM.`)
+        return NextResponse.redirect(`${publicOrigin}/login?error=unauthorized`)
       }
 
       // No user found, redirect to home
@@ -60,6 +59,6 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Return the user to an error page with some instructions
-  return NextResponse.redirect(`${publicOrigin}/login?error=Tidak%20bisa%20login.%20Gunakan%20email%20kampus.`)
+  // Safe redirect on failure without exposing internal auth or database errors
+  return NextResponse.redirect(`${publicOrigin}/login?error=auth_failed`)
 }

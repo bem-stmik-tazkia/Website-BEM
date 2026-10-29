@@ -46,3 +46,8 @@ _astro_backup/
 DOKUMENTASI_SISTEM.md
 .history/
 .vscode
+
+# Pentest reports and documents
+*.pdf
+docs
+supabase

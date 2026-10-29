@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FiArrowLeft, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
+import { FiArrowLeft, FiAlertCircle } from "react-icons/fi";
 import { AgendaKegiatan } from "@/types/agenda";
-import { submitVolunteerApplication } from "@/app/(internal)/admin/kegiatan/actions";
-import FileUpload from "@/components/ui/FileUpload";
-import ImageUpload from "@/components/ui/ImageUpload";
 import { formatDateToIndo } from "@/utils/dateFormatter";
 import { useToast } from "@/components/ui/Toast";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -16,6 +14,8 @@ import { useTranslations } from "next-intl";
 export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false }: { agenda: AgendaKegiatan, isClosed: boolean, isQuotaFull?: boolean }) {
   const router = useRouter();
   const [responses, setResponses] = useState<Record<string, string>>({});
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [invalidFields, setInvalidFields] = useState<Record<string, string>>({});
@@ -39,7 +39,7 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
     e.preventDefault();
     if (isClosed || isQuotaFull) return;
 
-    // Rate limit check (3 minutes cooldown per agenda)
+    // Rate limit check sisi klien (3 minutes cooldown per agenda)
     const lastSubmitTime = localStorage.getItem(`last_volunteer_submit_${agenda.id}`);
     if (lastSubmitTime) {
       const timeDiff = Date.now() - parseInt(lastSubmitTime, 10);
@@ -81,6 +81,15 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
             newInvalidFields[field.id] = t("errPhone");
             if (!firstInvalidId) firstInvalidId = field.id;
           }
+        } else if (field.type === 'file' || field.type === 'image') {
+          // Validasi tautan dokumen: wajib https dan maksimal 500 karakter
+          if (!value.startsWith('https://')) {
+            newInvalidFields[field.id] = "Tautan dokumen wajib menggunakan protokol https://";
+            if (!firstInvalidId) firstInvalidId = field.id;
+          } else if (value.length > 500) {
+            newInvalidFields[field.id] = "Tautan dokumen maksimal 500 karakter";
+            if (!firstInvalidId) firstInvalidId = field.id;
+          }
         }
       }
     }
@@ -103,11 +112,30 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
       return;
     }
 
+    if (!turnstileToken) {
+      showErrorToast("Silakan selesaikan verifikasi Captcha terlebih dahulu.");
+      return;
+    }
+
     setIsSubmitting(true);
     setInvalidFields({});
 
     try {
-      await submitVolunteerApplication(agenda.id, responses);
+      const res = await fetch("/api/volunteer/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agendaId: agenda.id,
+          responses,
+          turnstileToken,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || t("errorToast"));
+      }
+
       setIsSuccess(true);
       showSuccessToast(t("successToast"));
       
@@ -119,6 +147,8 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
       } catch (e) {}
     } catch (err: any) {
       showErrorToast(err.message || t("errorToast"));
+      setTurnstileToken("");
+      turnstileRef.current?.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -273,20 +303,24 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
                       />
                     )}
 
-                    {field.type === 'file' && (
-                      <FileUpload 
-                        value={responses[field.id] || ""}
-                        onChange={(url) => handleChange(field.id, url)}
-                        className="w-full"
-                      />
-                    )}
-
-                    {field.type === 'image' && (
-                      <ImageUpload 
-                        value={responses[field.id] || ""}
-                        onChange={(url) => handleChange(field.id, url)}
-                        className="w-full"
-                      />
+                    {/* Menggantikan FileUpload: Menggunakan input URL yang divalidasi https:// */}
+                    {(field.type === 'file' || field.type === 'image') && (
+                      <div className="space-y-1.5">
+                        <input 
+                          type="url"
+                          id={field.id}
+                          required={field.required}
+                          maxLength={500}
+                          value={responses[field.id] || ""}
+                          onChange={(e) => handleChange(field.id, e.target.value)}
+                          placeholder={field.placeholder || "https://drive.google.com/... atau https://notion.so/..."}
+                          className={`w-full bg-background border rounded-xl px-4 py-3 text-sm outline-none transition-colors ${isInvalid ? 'border-red-400 focus:border-red-500' : 'border-outline-variant/50 focus:border-primary'}`}
+                        />
+                        <p className="text-[11px] text-on-surface-variant flex items-start gap-1.5">
+                          <span className="shrink-0">🔗</span>
+                          <span>Lampirkan tautan publik (Google Drive, Notion, GitHub, LinkedIn, Figma, Canva, atau OneDrive). Pastikan izin akses link dibuka untuk publik/siapa saja yang memiliki tautan. Wajib diawali <code>https://</code> (maks. 500 karakter).</span>
+                        </p>
+                      </div>
                     )}
 
                     {isInvalid && (
@@ -299,10 +333,22 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
                 )})
               )}
 
+              {/* Cloudflare Turnstile Captcha */}
+              <div className="flex justify-center w-full my-4 min-h-[65px]">
+                <Turnstile
+                  ref={turnstileRef}
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onError={() => showErrorToast("Gagal memuat verifikasi Captcha")}
+                  onExpire={() => setTurnstileToken("")}
+                  options={{ theme: 'light' }}
+                />
+              </div>
+
               <div className="pt-6 border-t border-outline-variant/20 flex justify-end">
                 <button
                   type="submit"
-                  disabled={isSubmitting || fields.length === 0}
+                  disabled={isSubmitting || fields.length === 0 || !turnstileToken}
                   className="bg-primary text-white font-bold px-8 py-3.5 rounded-xl hover:bg-primary/90 transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isSubmitting ? (

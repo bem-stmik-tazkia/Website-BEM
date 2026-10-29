@@ -1,6 +1,18 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+
+/**
+ * D13: Timing-safe string comparison to prevent timing attacks on bypass secret.
+ * Fails closed (returns false) if either value is falsy or lengths differ.
+ */
+function isTimingSafeMatch(a: string | undefined, b: string | undefined): boolean {
+  if (!a || !b || a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -9,39 +21,13 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Proteksi Rate Limiting & Anti Brute-Force untuk route autentikasi (/login & /auth)
-  if (pathname.startsWith('/login') || pathname.startsWith('/auth')) {
-    const clientIp = getClientIp(request);
-    const rateCheck = checkRateLimit(`auth_${clientIp}`, {
-      limit: 15, // Maksimal 15 request per menit per IP
-      windowMs: 60 * 1000,
-    });
-
-    if (!rateCheck.success) {
-      return new NextResponse(
-        JSON.stringify({
-          error: "Terlalu banyak percobaan akses login. Silakan coba lagi beberapa saat.",
-          retryAfter: rateCheck.retryAfter,
-        }),
-        {
-          status: 429,
-          headers: {
-            "Content-Type": "application/json",
-            ...rateCheck.headers,
-          },
-        }
-      );
-    }
-
-    // Sertakan header rate limit di response untuk deteksi scanner
-    Object.entries(rateCheck.headers).forEach(([k, v]) => {
-      supabaseResponse.headers.set(k, v);
-    });
-  }
-
-  // Untuk halaman publik (bukan /admin dan /login), skip getUser() ke Supabase API.
+  // Untuk halaman publik (bukan /admin, /api/admin, dan /login), skip getUser() ke Supabase API.
   // Ini mencegah error "fetch failed" saat koneksi lambat, dan mempercepat halaman publik.
-  const isProtectedRoute = pathname.startsWith('/admin') || pathname === '/login';
+  const isApiAdmin = pathname.startsWith('/api/admin');
+  const isAdminRoute = pathname.startsWith('/admin');
+  const isLoginRoute = pathname === '/login' || pathname.startsWith('/login/');
+  const isProtectedRoute = isApiAdmin || isAdminRoute || isLoginRoute;
+
   if (!isProtectedRoute) {
     return supabaseResponse;
   }
@@ -81,13 +67,47 @@ export async function updateSession(request: NextRequest) {
     console.error('[Middleware] Supabase getUser failed (network issue?):', err);
   }
 
+  // Protect /api/admin routes — API returns 401/403 JSON instead of redirecting
+  if (isApiAdmin) {
+    if (!user) {
+      return new NextResponse(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profile?.role !== 'admin') {
+        return new NextResponse(
+          JSON.stringify({ error: "Forbidden" }),
+          { status: 403, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    } catch (err) {
+      console.error('[Middleware] Supabase profile check for API admin failed:', err);
+      return new NextResponse(
+        JSON.stringify({ error: "Forbidden" }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    return supabaseResponse;
+  }
+
   // Protect /admin routes — only admin users can access
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  if (isAdminRoute) {
     if (!user) {
       // Not logged in — hanya izinkan redirect ke /login jika sudah memasukkan Konami code
       const bypassCookie = request.cookies.get('maintenance_bypass')?.value;
-      const expectedSecret = process.env.MAINTENANCE_BYPASS_SECRET || 'bem-bypass-2025-xK9mP7qR';
-      const isBypassValid = bypassCookie && (bypassCookie === expectedSecret || bypassCookie.length > 0);
+      const expectedSecret = process.env.MAINTENANCE_BYPASS_SECRET;
+      // D13: Hardcoded secret dihapus, fallback len>0 dihapus, perbandingan timing-safe, gagal tertutup
+      const isBypassValid = Boolean(expectedSecret && bypassCookie && isTimingSafeMatch(bypassCookie, expectedSecret));
 
       const url = request.nextUrl.clone();
       if (isBypassValid) {
@@ -126,7 +146,7 @@ export async function updateSession(request: NextRequest) {
   // Protect /login route: HANYA bisa diakses jika sudah memasukkan Konami code (bypass cookie),
   // atau jika sudah login sebagai admin (langsung redirect ke /admin).
   // Mengetikkan /login di URL secara langsung tanpa Konami code akan ditolak dan diarahkan ke home.
-  if (request.nextUrl.pathname === '/login' || request.nextUrl.pathname.startsWith('/login/')) {
+  if (isLoginRoute) {
     // 1. Jika sudah login, jangan izinkan buka halaman login lagi
     if (user) {
       const url = request.nextUrl.clone()
@@ -155,8 +175,9 @@ export async function updateSession(request: NextRequest) {
 
     // 2. Jika belum login: WAJIB memiliki cookie hasil input Konami code
     const bypassCookie = request.cookies.get('maintenance_bypass')?.value;
-    const expectedSecret = process.env.MAINTENANCE_BYPASS_SECRET || 'bem-bypass-2025-xK9mP7qR';
-    const isBypassValid = bypassCookie && (bypassCookie === expectedSecret || bypassCookie.length > 0);
+    const expectedSecret = process.env.MAINTENANCE_BYPASS_SECRET;
+    // D13: Hardcoded secret dihapus, fallback len>0 dihapus, perbandingan timing-safe, gagal tertutup
+    const isBypassValid = Boolean(expectedSecret && bypassCookie && isTimingSafeMatch(bypassCookie, expectedSecret));
 
     if (!isBypassValid) {
       // Pengguna mengetik /login di URL tanpa Konami code — tolak dan arahkan ke homepage
@@ -165,19 +186,6 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
   }
-
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
-  // If you're creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
 
   return supabaseResponse
 }

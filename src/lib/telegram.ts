@@ -1,15 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
+import { getServiceRoleClient } from "@/lib/auth";
+import { getSecret } from "@/lib/secrets";
 
 /**
  * Creates an admin/service-role Supabase client to bypass RLS
  * for reading/writing system_settings and cron/background operations.
  */
 export function getAdminSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createClient(supabaseUrl, supabaseKey);
+  return getServiceRoleClient();
 }
 
 /**
@@ -61,12 +58,15 @@ export interface TelegramConfig {
 }
 
 /**
- * Loads Telegram configuration from system_settings or environment variables.
+ * Loads Telegram configuration.
+ * Sensitive credentials (botToken, chatId) are loaded EXCLUSIVELY from environment variables
+ * (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) for defense in depth.
+ * Operational feature flags (notifEnabled, reminderEnabled, lastReminderSentAt) are read from system_settings.
  */
 export async function getTelegramConfig(): Promise<TelegramConfig> {
   const supabase = getAdminSupabaseClient();
-  let botToken = process.env.TELEGRAM_BOT_TOKEN || "";
-  let chatId = process.env.TELEGRAM_CHAT_ID || "";
+  const botToken = await getSecret("telegram_bot_token");
+  const chatId = await getSecret("telegram_chat_id");
   let notifEnabled = true;
   let reminderEnabled = true;
   let lastReminderSentAt: string | null = null;
@@ -76,8 +76,6 @@ export async function getTelegramConfig(): Promise<TelegramConfig> {
       .from("system_settings")
       .select("key, value")
       .in("key", [
-        "telegram_bot_token",
-        "telegram_chat_id",
         "telegram_berita_notif_enabled",
         "telegram_berita_reminder_enabled",
         "telegram_last_reminder_sent_at",
@@ -88,15 +86,13 @@ export async function getTelegramConfig(): Promise<TelegramConfig> {
         (acc, curr) => ({ ...acc, [curr.key]: curr.value }),
         {} as Record<string, string>
       );
-      if (map["telegram_bot_token"]) botToken = map["telegram_bot_token"];
-      if (map["telegram_chat_id"]) chatId = map["telegram_chat_id"];
       if (map["telegram_berita_notif_enabled"] === "false") notifEnabled = false;
       if (map["telegram_berita_reminder_enabled"] === "false") reminderEnabled = false;
       if (map["telegram_last_reminder_sent_at"])
         lastReminderSentAt = map["telegram_last_reminder_sent_at"];
     }
   } catch (err) {
-    console.error("Error fetching telegram config:", err);
+    console.error("Error fetching telegram config from system_settings:", err);
   }
 
   return {
@@ -526,3 +522,4 @@ export async function sendTelegramTestPing(): Promise<{ ok: boolean; error?: str
 
   return await sendTelegramMessage(testMsg, { inlineButtons });
 }
+

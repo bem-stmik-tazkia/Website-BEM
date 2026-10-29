@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
 
 /**
  * Record a view for a berita article.
@@ -17,7 +16,7 @@ export async function recordView(
   const supabase = await createClient();
 
   if (table === 'berita') {
-    // Gunakan RPC yang sudah ada cooldown + logging di DB
+    // Gunakan RPC SECURITY DEFINER yang memiliki cooldown 24 jam & logging anti-spam di DB
     const { data: counted, error } = await supabase.rpc('record_berita_view', {
       p_berita_id: id,
       p_device_id: deviceId || 'unknown',
@@ -32,12 +31,6 @@ export async function recordView(
     return counted ?? false;
   }
 
-  // Fallback untuk table lain (agendas) — masih pakai simple increment
-  // TODO: buat tabel log untuk agendas juga jika diperlukan
-  const { data } = await supabase.from(table).select('views').eq('id', id).single();
-  if (data) {
-    await supabase.from(table).update({ views: (data.views || 0) + 1 }).eq('id', id);
-    return true;
-  }
+  // Untuk tabel lain (agendas), direct update dinonaktifkan demi integritas RLS
   return false;
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { verifyAdminApi } from "@/lib/auth";
 import {
   getTelegramConfig,
   sendTelegramTestPing,
@@ -8,38 +8,15 @@ import {
   getAdminSupabaseClient,
 } from "@/lib/telegram";
 
-async function verifyAdminAuth() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { authorized: false, error: "Unauthorized", status: 401 };
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "admin") {
-    return { authorized: false, error: "Forbidden", status: 403 };
-  }
-
-  return { authorized: true, user };
-}
-
 /**
  * GET: Retrieves the current Telegram bot connection status,
  * freshness of news uploads, days elapsed since last post, and last reminder sent info.
  */
 export async function GET() {
   try {
-    const auth = await verifyAdminAuth();
+    const auth = await verifyAdminApi();
     if (!auth.authorized) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
+      return auth.response;
     }
 
     const config = await getTelegramConfig();
@@ -82,7 +59,7 @@ export async function GET() {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Internal Server Error";
     console.error("GET /api/admin/berita/telegram error:", msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -94,9 +71,9 @@ export async function GET() {
  */
 export async function POST(req: Request) {
   try {
-    const auth = await verifyAdminAuth();
+    const auth = await verifyAdminApi();
     if (!auth.authorized) {
-      return NextResponse.json({ error: auth.error }, { status: auth.status });
+      return auth.response;
     }
 
     const body = await req.json();
@@ -154,6 +131,6 @@ export async function POST(req: Request) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Internal Server Error";
     console.error("POST /api/admin/berita/telegram error:", msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

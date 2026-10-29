@@ -1,18 +1,31 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { FiTool, FiX, FiStar, FiCheckCircle, FiSave, FiPlus, FiAlertTriangle, FiSend } from "react-icons/fi";
+import { 
+  FiTool, 
+  FiX, 
+  FiStar, 
+  FiCheckCircle, 
+  FiSave, 
+  FiPlus, 
+  FiAlertTriangle, 
+  FiSend, 
+  FiShield, 
+  FiLock, 
+  FiKey, 
+  FiRefreshCw,
+  FiLink,
+  FiFileText
+} from "react-icons/fi";
 import { useToast } from "@/components/ui/Toast";
 import { useRouter } from "next/navigation";
-
-interface ReleaseNotes {
-  version: string;
-  title: string;
-  date: string;
-  features: string[];
-  published: boolean;
-}
+import { 
+  getSecretStatus, 
+  setSecret, 
+  SecretStatusMap 
+} from "./actions";
+import { AppSecretKey } from "@/lib/secrets";
 
 export default function SystemSettingsPage() {
   const supabase = createClient();
@@ -36,12 +49,8 @@ export default function SystemSettingsPage() {
     ],
     rPublished: true,
     adminPhone: "",
-    tBotToken: "",
-    tChatId: "",
     tNotifEnabled: true,
     tReminderEnabled: true,
-    excelViewUrl: "",
-    webhookUrl: "",
   });
 
   const [mMode, setMMode] = useState(false);
@@ -50,21 +59,23 @@ export default function SystemSettingsPage() {
   const [rVersion, setRVersion] = useState("v1.3.0");
   const [rTitle, setRTitle] = useState("Peningkatan Stabilitas & Kenyamanan Sistem");
   const [rFeatures, setRFeatures] = useState<string[]>([
-      "Penyempurnaan dukungan multi-bahasa di berbagai area website",
-      "Peningkatan kenyamanan tampilan dan kelancaran akses pengguna (User Experience)",
-      "Perbaikan stabilitas sistem secara keseluruhan",
+    "Penyempurnaan dukungan multi-bahasa di berbagai area website",
+    "Peningkatan kenyamanan tampilan dan kelancaran akses pengguna (User Experience)",
+    "Perbaikan stabilitas sistem secara keseluruhan",
   ]);
   const [rPublished, setRPublished] = useState(true);
   const [adminPhone, setAdminPhone] = useState("");
-  const [tBotToken, setTBotToken] = useState("");
-  const [tChatId, setTChatId] = useState("");
   const [tNotifEnabled, setTNotifEnabled] = useState(true);
   const [tReminderEnabled, setTReminderEnabled] = useState(true);
   const [testingPing, setTestingPing] = useState(false);
-  const [excelViewUrl, setExcelViewUrl] = useState("");
-  const [webhookUrl, setWebhookUrl] = useState("");
   const [newFeatureInput, setNewFeatureInput] = useState("");
   const [savingMaintenance, setSavingMaintenance] = useState(false);
+
+  // ── State Pengaturan Rahasia (App Secrets) ──────────────────────────────
+  const [secretStatuses, setSecretStatuses] = useState<SecretStatusMap | null>(null);
+  const [loadingSecrets, setLoadingSecrets] = useState(true);
+  const [secretInputs, setSecretInputs] = useState<Record<string, string>>({});
+  const [savingKey, setSavingKey] = useState<string | null>(null);
 
   // Check dirty against saved ref using useEffect
   useEffect(() => {
@@ -78,18 +89,24 @@ export default function SystemSettingsPage() {
       rTitle !== s.rTitle ||
       rPublished !== s.rPublished ||
       adminPhone !== s.adminPhone ||
-      tBotToken !== s.tBotToken ||
-      tChatId !== s.tChatId ||
       tNotifEnabled !== s.tNotifEnabled ||
       tReminderEnabled !== s.tReminderEnabled ||
-      excelViewUrl !== s.excelViewUrl ||
-      webhookUrl !== s.webhookUrl ||
       JSON.stringify(rFeatures) !== JSON.stringify(s.rFeatures);
     setIsDirty(dirty);
-  }, [mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone, tBotToken, tChatId, tNotifEnabled, tReminderEnabled, excelViewUrl, webhookUrl, loading]);
+  }, [mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone, tNotifEnabled, tReminderEnabled, loading]);
 
-  // Dummy function to prevent errors from existing checkDirty calls
-  const checkDirty = (...args: any[]) => {};
+  const loadSecretStatusData = async () => {
+    setLoadingSecrets(true);
+    try {
+      const statuses = await getSecretStatus();
+      setSecretStatuses(statuses);
+    } catch (e: any) {
+      console.error("Gagal memuat status rahasia:", e);
+      toast("Gagal memuat status kredensial rahasia.", "error");
+    } finally {
+      setLoadingSecrets(false);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -102,12 +119,8 @@ export default function SystemSettingsPage() {
         "maintenance_message",
         "release_notes",
         "admin_whatsapp",
-        "telegram_bot_token",
-        "telegram_chat_id",
         "telegram_berita_notif_enabled",
         "telegram_berita_reminder_enabled",
-        "excel_view_url",
-        "google_sheets_webhook_url"
       ]);
 
     if (error) {
@@ -118,23 +131,15 @@ export default function SystemSettingsPage() {
       const mMsgItem = data.find((d) => d.key === "maintenance_message");
       const rNotesItem = data.find((d) => d.key === "release_notes");
       const adminPhoneItem = data.find((d) => d.key === "admin_whatsapp");
-      const tBotTokenItem = data.find((d) => d.key === "telegram_bot_token");
-      const tChatIdItem = data.find((d) => d.key === "telegram_chat_id");
       const tNotifItem = data.find((d) => d.key === "telegram_berita_notif_enabled");
       const tReminderItem = data.find((d) => d.key === "telegram_berita_reminder_enabled");
-      const excelViewUrlItem = data.find((d) => d.key === "excel_view_url");
-      const webhookUrlItem = data.find((d) => d.key === "google_sheets_webhook_url");
 
       const newMMode = mModeItem?.value === "true";
       const newMTime = mTimeItem?.value || "1-2 Jam";
       const newMMsg = mMsgItem?.value || "";
       const newAdminPhone = adminPhoneItem?.value || "";
-      const newTBotToken = tBotTokenItem?.value || "";
-      const newTChatId = tChatIdItem?.value || "";
       const newTNotif = tNotifItem ? tNotifItem.value !== "false" : true;
       const newTReminder = tReminderItem ? tReminderItem.value !== "false" : true;
-      const newExcelViewUrl = excelViewUrlItem?.value || "";
-      const newWebhookUrl = webhookUrlItem?.value || "";
       
       let newRVersion = "v1.2.0";
       let newRTitle = "Pembaruan Sistem Portal BEM";
@@ -153,7 +158,6 @@ export default function SystemSettingsPage() {
         }
       }
 
-      // Update saved ref to represent clean state
       savedRef.current = {
         mMode: newMMode,
         mTime: newMTime,
@@ -163,12 +167,8 @@ export default function SystemSettingsPage() {
         rFeatures: newRFeatures,
         rPublished: newRPublished,
         adminPhone: newAdminPhone,
-        tBotToken: newTBotToken,
-        tChatId: newTChatId,
         tNotifEnabled: newTNotif,
         tReminderEnabled: newTReminder,
-        excelViewUrl: newExcelViewUrl,
-        webhookUrl: newWebhookUrl,
       };
 
       setMMode(newMMode);
@@ -179,12 +179,8 @@ export default function SystemSettingsPage() {
       setRFeatures(newRFeatures);
       setRPublished(newRPublished);
       setAdminPhone(newAdminPhone);
-      setTBotToken(newTBotToken);
-      setTChatId(newTChatId);
       setTNotifEnabled(newTNotif);
       setTReminderEnabled(newTReminder);
-      setExcelViewUrl(newExcelViewUrl);
-      setWebhookUrl(newWebhookUrl);
       
       setIsDirty(false);
     }
@@ -193,6 +189,7 @@ export default function SystemSettingsPage() {
 
   useEffect(() => {
     fetchData();
+    loadSecretStatusData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -256,8 +253,6 @@ export default function SystemSettingsPage() {
       { key: "maintenance_message", value: mMsg.trim() },
       { key: "release_notes", value: JSON.stringify(releaseNotesObj) },
       { key: "admin_whatsapp", value: adminPhone.trim() },
-      { key: "telegram_bot_token", value: tBotToken.trim() },
-      { key: "telegram_chat_id", value: tChatId.trim() },
       { key: "telegram_berita_notif_enabled", value: tNotifEnabled ? "true" : "false" },
       { key: "telegram_berita_reminder_enabled", value: tReminderEnabled ? "true" : "false" },
     ];
@@ -269,10 +264,9 @@ export default function SystemSettingsPage() {
     if (error) {
       toast("Gagal menyimpan pengaturan sistem.", "error");
     } else {
-      // Mark new values as clean
       savedRef.current = { 
-        mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone,
-        tBotToken, tChatId, tNotifEnabled, tReminderEnabled, excelViewUrl, webhookUrl
+        mMode, mTime, mMsg, rVersion, rTitle, rFeatures, 
+        rPublished, adminPhone, tNotifEnabled, tReminderEnabled
       };
       setIsDirty(false);
       toast("Pengaturan Sistem berhasil disimpan!", "success");
@@ -280,11 +274,31 @@ export default function SystemSettingsPage() {
     setSavingMaintenance(false);
   };
 
-  const handleTestTelegram = async () => {
-    if (!tBotToken.trim() || !tChatId.trim()) {
-      toast("Harap isi Telegram Bot Token dan Chat ID terlebih dahulu.", "error");
+  const handleUpdateSecret = async (key: AppSecretKey) => {
+    const rawVal = secretInputs[key] || "";
+    if (!rawVal.trim()) {
+      toast("Silakan masukkan nilai baru untuk mengganti kredensial.", "error");
       return;
     }
+
+    setSavingKey(key);
+    try {
+      const res = await setSecret(key, rawVal);
+      if (res.success) {
+        toast("Kredensial rahasia berhasil diperbarui!", "success");
+        setSecretInputs((prev) => ({ ...prev, [key]: "" }));
+        await loadSecretStatusData();
+      } else {
+        toast(res.error || "Gagal memperbarui rahasia.", "error");
+      }
+    } catch (e: any) {
+      toast(e.message || "Terjadi kesalahan.", "error");
+    } finally {
+      setSavingKey(null);
+    }
+  };
+
+  const handleTestTelegram = async () => {
     try {
       setTestingPing(true);
       const res = await fetch("/api/admin/berita/telegram", {
@@ -296,7 +310,7 @@ export default function SystemSettingsPage() {
       if (res.ok && data.ok) {
         toast("Pesan tes berhasil dikirim ke Telegram!", "success");
       } else {
-        toast("Gagal tes Telegram: " + (data.error || "Cek token/chat ID"), "error");
+        toast("Gagal tes Telegram: " + (data.error || "Pastikan Token dan Chat ID Telegram terpasang."), "error");
       }
     } catch (e: any) {
       toast("Error: " + e.message, "error");
@@ -311,13 +325,11 @@ export default function SystemSettingsPage() {
     const next = [...rFeatures, val];
     setRFeatures(next);
     setNewFeatureInput("");
-    checkDirty(mMode, mTime, mMsg, rVersion, rTitle, next, rPublished);
   };
 
   const handleRemoveFeaturePoint = (index: number) => {
     const next = rFeatures.filter((_, i) => i !== index);
     setRFeatures(next);
-    checkDirty(mMode, mTime, mMsg, rVersion, rTitle, next, rPublished);
   };
 
   return (
@@ -326,10 +338,10 @@ export default function SystemSettingsPage() {
         <div>
           <h2 className="text-2xl font-bold text-on-surface flex items-center gap-2">
             <FiTool className="text-primary" />
-            Pengaturan Sistem & Pemeliharaan
+            Pengaturan Sistem & Kredensial
           </h2>
           <p className="text-on-surface-variant mt-1">
-            Kelola Mode Maintenance (Pemeliharaan Situs) dan Pengumuman Pembaruan Sistem (What&apos;s New).
+            Kelola Mode Maintenance, Kredensial Rahasia Aplikasi (App Secrets), dan Integrasi Bot Telegram.
           </p>
         </div>
       </div>
@@ -350,12 +362,272 @@ export default function SystemSettingsPage() {
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
-          <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6 space-y-6">
-          {/* Header Switcher */}
-          <div className="flex items-center justify-between gap-4 pb-6 border-b border-outline-variant/20">
+      <div className="space-y-6">
+
+        {/* ── KREDENSIAL RAHASIA APLIKASI (APP SECRETS) ───────────────── */}
+        <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6">
+          <div className="flex items-center justify-between pb-6 border-b border-outline-variant/20 mb-6 flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-2xl ${mMode ? "bg-amber-500/10 text-amber-500" : "bg-primary/10 text-primary"}`}>
+              <div className="bg-primary/10 text-primary p-3 rounded-2xl">
+                <FiKey size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-on-surface flex items-center gap-2">
+                  Pengaturan Rahasia Aplikasi (App Secrets)
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    Bebas Bocor
+                  </span>
+                </h3>
+                <p className="text-xs text-on-surface-variant">
+                  Kredensial tersimpan di tabel terisolasi dengan akses eksklusif Service Role. Nilai rahasia tidak pernah ditampilkan di layar demi keamanan saat ganti kepengurusan.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={loadSecretStatusData}
+              disabled={loadingSecrets}
+              className="px-3.5 py-2 text-xs font-bold rounded-xl bg-surface-variant/40 hover:bg-surface-variant/60 text-on-surface border border-outline-variant/30 transition-all flex items-center gap-2 disabled:opacity-50"
+              title="Perbarui Status Kredensial"
+            >
+              <FiRefreshCw size={14} className={loadingSecrets ? "animate-spin" : ""} />
+              {loadingSecrets ? "Memuat..." : "Segarkan Status"}
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {/* 1. Token Bot Telegram */}
+            <div className="p-4 bg-surface-variant/10 rounded-2xl border border-outline-variant/20">
+              <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <FiSend size={15} className="text-sky-500" />
+                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
+                      Token Bot Telegram
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant mt-0.5">
+                    Token otentikasi dari @BotFather (Format: <code>&lt;angka_id&gt;:&lt;token_alphanumeric&gt;</code>).
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {secretStatuses?.telegram_bot_token.isSet ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                      <FiCheckCircle size={12} />
+                      Terisi
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                      <FiAlertTriangle size={12} />
+                      Kosong
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {secretStatuses?.telegram_bot_token.updatedAt && (
+                <p className="text-[10px] text-on-surface-variant mb-2">
+                  Terakhir diubah: {new Date(secretStatuses.telegram_bot_token.updatedAt).toLocaleString("id-ID")}
+                  {secretStatuses.telegram_bot_token.updatedBy ? ` oleh ${secretStatuses.telegram_bot_token.updatedBy}` : ''}
+                </p>
+              )}
+
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={secretInputs.telegram_bot_token || ""}
+                  onChange={(e) => setSecretInputs((prev) => ({ ...prev, telegram_bot_token: e.target.value }))}
+                  placeholder="Ketik token Telegram baru untuk mengganti..."
+                  className="flex-1 bg-surface border border-outline-variant/30 rounded-xl px-4 py-2 text-xs outline-none focus:border-primary font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleUpdateSecret("telegram_bot_token")}
+                  disabled={savingKey === "telegram_bot_token" || !(secretInputs.telegram_bot_token || "").trim()}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 shadow-sm"
+                >
+                  {savingKey === "telegram_bot_token" ? "Menyimpan..." : "Ganti"}
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Chat ID Telegram */}
+            <div className="p-4 bg-surface-variant/10 rounded-2xl border border-outline-variant/20">
+              <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <FiSend size={15} className="text-sky-500" />
+                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
+                      Chat ID Telegram
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant mt-0.5">
+                    ID grup / channel tujuan notifikasi berita & aduan (Angka bulat numerik, contoh: <code>-1001234567890</code>).
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {secretStatuses?.telegram_chat_id.isSet ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                      <FiCheckCircle size={12} />
+                      Terisi
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                      <FiAlertTriangle size={12} />
+                      Kosong
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {secretStatuses?.telegram_chat_id.updatedAt && (
+                <p className="text-[10px] text-on-surface-variant mb-2">
+                  Terakhir diubah: {new Date(secretStatuses.telegram_chat_id.updatedAt).toLocaleString("id-ID")}
+                  {secretStatuses.telegram_chat_id.updatedBy ? ` oleh ${secretStatuses.telegram_chat_id.updatedBy}` : ''}
+                </p>
+              )}
+
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={secretInputs.telegram_chat_id || ""}
+                  onChange={(e) => setSecretInputs((prev) => ({ ...prev, telegram_chat_id: e.target.value }))}
+                  placeholder="Ketik Chat ID Telegram baru untuk mengganti..."
+                  className="flex-1 bg-surface border border-outline-variant/30 rounded-xl px-4 py-2 text-xs outline-none focus:border-primary font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleUpdateSecret("telegram_chat_id")}
+                  disabled={savingKey === "telegram_chat_id" || !(secretInputs.telegram_chat_id || "").trim()}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 shadow-sm"
+                >
+                  {savingKey === "telegram_chat_id" ? "Menyimpan..." : "Ganti"}
+                </button>
+              </div>
+            </div>
+
+            {/* 3. URL Webhook Make (Kotak Saran) */}
+            <div className="p-4 bg-surface-variant/10 rounded-2xl border border-outline-variant/20">
+              <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <FiLink size={15} className="text-purple-500" />
+                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
+                      URL Webhook Make / Sheets
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant mt-0.5">
+                    Endpoint penerima otomatis aduan mahasiswa (Wajib HTTPS dengan host resmi <code>make.com</code>).
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {secretStatuses?.google_sheets_webhook_url.isSet ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                      <FiCheckCircle size={12} />
+                      Terisi
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                      <FiAlertTriangle size={12} />
+                      Kosong
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {secretStatuses?.google_sheets_webhook_url.updatedAt && (
+                <p className="text-[10px] text-on-surface-variant mb-2">
+                  Terakhir diubah: {new Date(secretStatuses.google_sheets_webhook_url.updatedAt).toLocaleString("id-ID")}
+                  {secretStatuses.google_sheets_webhook_url.updatedBy ? ` oleh ${secretStatuses.google_sheets_webhook_url.updatedBy}` : ''}
+                </p>
+              )}
+
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={secretInputs.google_sheets_webhook_url || ""}
+                  onChange={(e) => setSecretInputs((prev) => ({ ...prev, google_sheets_webhook_url: e.target.value }))}
+                  placeholder="https://hook.eu1.make.com/..."
+                  className="flex-1 bg-surface border border-outline-variant/30 rounded-xl px-4 py-2 text-xs outline-none focus:border-primary font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleUpdateSecret("google_sheets_webhook_url")}
+                  disabled={savingKey === "google_sheets_webhook_url" || !(secretInputs.google_sheets_webhook_url || "").trim()}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 shadow-sm"
+                >
+                  {savingKey === "google_sheets_webhook_url" ? "Menyimpan..." : "Ganti"}
+                </button>
+              </div>
+            </div>
+
+            {/* 4. URL Spreadsheet Rekap Aduan */}
+            <div className="p-4 bg-surface-variant/10 rounded-2xl border border-outline-variant/20">
+              <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <FiFileText size={15} className="text-emerald-500" />
+                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
+                      URL Spreadsheet Rekap Aduan
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant mt-0.5">
+                    Tautan Google Sheets rekap aduan (Wajib HTTPS dengan host <code>docs.google.com</code>).
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {secretStatuses?.excel_view_url.isSet ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                      <FiCheckCircle size={12} />
+                      Terisi
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                      <FiAlertTriangle size={12} />
+                      Kosong
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {secretStatuses?.excel_view_url.updatedAt && (
+                <p className="text-[10px] text-on-surface-variant mb-2">
+                  Terakhir diubah: {new Date(secretStatuses.excel_view_url.updatedAt).toLocaleString("id-ID")}
+                  {secretStatuses.excel_view_url.updatedBy ? ` oleh ${secretStatuses.excel_view_url.updatedBy}` : ''}
+                </p>
+              )}
+
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={secretInputs.excel_view_url || ""}
+                  onChange={(e) => setSecretInputs((prev) => ({ ...prev, excel_view_url: e.target.value }))}
+                  placeholder="https://docs.google.com/spreadsheets/d/..."
+                  className="flex-1 bg-surface border border-outline-variant/30 rounded-xl px-4 py-2 text-xs outline-none focus:border-primary font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleUpdateSecret("excel_view_url")}
+                  disabled={savingKey === "excel_view_url" || !(secretInputs.excel_view_url || "").trim()}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 shadow-sm"
+                >
+                  {savingKey === "excel_view_url" ? "Menyimpan..." : "Ganti"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── MODE PEMELIHARAAN (MAINTENANCE MODE) ───────────────────── */}
+        <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6 space-y-6">
+          <div className="flex items-center justify-between pb-6 border-b border-outline-variant/20 flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-amber-500/10 text-amber-500 p-3 rounded-2xl">
                 <FiTool size={24} />
               </div>
               <div>
@@ -373,11 +645,7 @@ export default function SystemSettingsPage() {
               <input
                 type="checkbox"
                 checked={mMode}
-                onChange={(e) => {
-                  const v = e.target.checked;
-                  setMMode(v);
-                  checkDirty(v, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished);
-                }}
+                onChange={(e) => setMMode(e.target.checked)}
                 className="sr-only peer"
               />
               <div className="w-14 h-7 bg-outline-variant/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500"></div>
@@ -400,10 +668,7 @@ export default function SystemSettingsPage() {
               <input
                 type="text"
                 value={mTime}
-                onChange={(e) => {
-                  setMTime(e.target.value);
-                  checkDirty(mMode, e.target.value, mMsg, rVersion, rTitle, rFeatures, rPublished);
-                }}
+                onChange={(e) => setMTime(e.target.value)}
                 placeholder="Contoh: 1-2 Jam atau 20 Agustus 14:00"
                 className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-4 py-2.5 outline-none focus:border-primary text-sm"
               />
@@ -416,10 +681,7 @@ export default function SystemSettingsPage() {
               <input
                 type="text"
                 value={mMsg}
-                onChange={(e) => {
-                  setMMsg(e.target.value);
-                  checkDirty(mMode, mTime, e.target.value, rVersion, rTitle, rFeatures, rPublished);
-                }}
+                onChange={(e) => setMMsg(e.target.value)}
                 placeholder="Contoh: Kami sedang meningkatkan kecepatan sistem & keamanan."
                 className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-4 py-2.5 outline-none focus:border-primary text-sm"
               />
@@ -440,10 +702,7 @@ export default function SystemSettingsPage() {
                 <input
                   type="checkbox"
                   checked={rPublished}
-                  onChange={(e) => {
-                    setRPublished(e.target.checked);
-                    checkDirty(mMode, mTime, mMsg, rVersion, rTitle, rFeatures, e.target.checked);
-                  }}
+                  onChange={(e) => setRPublished(e.target.checked)}
                   className="rounded border-outline-variant text-primary focus:ring-primary h-4 w-4"
                 />
                 Tampilkan Modal &apos;What&apos;s New&apos; saat Maintenance Selesai
@@ -458,10 +717,7 @@ export default function SystemSettingsPage() {
                 <input
                   type="text"
                   value={rVersion}
-                  onChange={(e) => {
-                    setRVersion(e.target.value);
-                    checkDirty(mMode, mTime, mMsg, e.target.value, rTitle, rFeatures, rPublished);
-                  }}
+                  onChange={(e) => setRVersion(e.target.value)}
                   placeholder="v1.2.0"
                   className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-3.5 py-2 text-sm outline-none focus:border-primary"
                 />
@@ -473,10 +729,7 @@ export default function SystemSettingsPage() {
                 <input
                   type="text"
                   value={rTitle}
-                  onChange={(e) => {
-                    setRTitle(e.target.value);
-                    checkDirty(mMode, mTime, mMsg, rVersion, e.target.value, rFeatures, rPublished);
-                  }}
+                  onChange={(e) => setRTitle(e.target.value)}
                   placeholder="Pembaruan Sistem Portal BEM"
                   className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-3.5 py-2 text-sm outline-none focus:border-primary"
                 />
@@ -537,8 +790,8 @@ export default function SystemSettingsPage() {
           </div>
         </div>
 
-        {/* Admin Contact Card */}
-        <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6 mt-6">
+        {/* ── ADMIN CONTACT CARD ────────────────────────────────────── */}
+        <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6">
           <div className="flex items-center gap-3 mb-6 pb-6 border-b border-outline-variant/20">
             <div className="bg-primary/10 text-primary p-3 rounded-2xl">
               <span className="material-symbols-outlined text-[24px]">support_agent</span>
@@ -548,7 +801,7 @@ export default function SystemSettingsPage() {
                 Kontak Admin (WhatsApp)
               </h3>
               <p className="text-xs text-on-surface-variant">
-                Nomor ini akan digunakan sebagai kontak default jika pengguna butuh bantuan (misalnya saat error).
+                Nomor ini akan digunakan sebagai kontak bantuan darurat jika pengguna mengalami kendala teknis.
               </p>
             </div>
           </div>
@@ -567,8 +820,8 @@ export default function SystemSettingsPage() {
           </div>
         </div>
 
-        {/* Telegram Bot Card */}
-        <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6 mt-6">
+        {/* ── BOT TELEGRAM OPERATIONAL CARD ──────────────────────────── */}
+        <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6">
           <div className="flex items-center justify-between pb-6 border-b border-outline-variant/20 mb-6 flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <div className="bg-sky-500/10 text-sky-600 dark:text-sky-400 p-3 rounded-2xl">
@@ -576,10 +829,10 @@ export default function SystemSettingsPage() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-on-surface">
-                  Integrasi Bot Telegram (Berita & Notifikasi)
+                  Fitur Notifikasi Telegram Berita
                 </h3>
                 <p className="text-xs text-on-surface-variant">
-                  Mengirim siaran otomatis berita baru dan peringatan berkala jika 1 minggu belum ada artikel baru.
+                  Kontrol penyiaran otomatis berita baru dan peringatan berkala mingguan.
                 </p>
               </div>
             </div>
@@ -587,7 +840,7 @@ export default function SystemSettingsPage() {
             <button
               type="button"
               onClick={handleTestTelegram}
-              disabled={testingPing || !tBotToken || !tChatId}
+              disabled={testingPing}
               className="px-4 py-2 text-xs font-bold rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 border border-sky-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
             >
               <FiSend size={14} className={testingPing ? "animate-spin" : ""} />
@@ -595,36 +848,14 @@ export default function SystemSettingsPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs font-bold text-on-surface uppercase tracking-wider mb-2">
-                Telegram Bot Token
-              </label>
-              <input
-                type="text"
-                value={tBotToken}
-                onChange={(e) => setTBotToken(e.target.value)}
-                placeholder="Contoh: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
-                className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm shadow-sm"
-              />
-              <p className="text-[11px] text-on-surface-variant mt-1.5">
-                Dapatkan dari <strong>@BotFather</strong> di Telegram dengan perintah <code>/newbot</code>.
-              </p>
+          <div className="bg-sky-500/5 border border-sky-500/20 rounded-xl p-4 flex items-start gap-3">
+            <div className="p-2 bg-sky-500/10 text-sky-600 dark:text-sky-400 rounded-lg shrink-0 mt-0.5">
+              <FiShield size={18} />
             </div>
-
-            <div>
-              <label className="block text-xs font-bold text-on-surface uppercase tracking-wider mb-2">
-                Telegram Chat ID (Channel / Group / Pribadi)
-              </label>
-              <input
-                type="text"
-                value={tChatId}
-                onChange={(e) => setTChatId(e.target.value)}
-                placeholder="Contoh: -100xxxxxxxxxx atau ID chat Telegram"
-                className="w-full bg-surface-variant/20 border border-outline-variant/30 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm shadow-sm"
-              />
-              <p className="text-[11px] text-on-surface-variant mt-1.5">
-                ID grup/channel penerima. Gunakan <strong>@userinfobot</strong> untuk mengetahui ID Anda.
+            <div className="text-xs space-y-1">
+              <p className="font-bold text-on-surface">Kredensial Terhubung Otomatis</p>
+              <p className="text-on-surface-variant leading-relaxed">
+                Token dan Chat ID Telegram dibaca dari tabel rahasia <strong>App Secrets</strong> di atas (dengan fallback ke Environment Variables). Tombol di samping langsung menguji pengiriman pesan ke channel aktif.
               </p>
             </div>
           </div>
@@ -673,9 +904,7 @@ export default function SystemSettingsPage() {
           </div>
         </div>
 
-
-
-        {/* Action Footer */}
+        {/* ── ACTION FOOTER ────────────────────────────────────────── */}
         <div className="flex justify-end mt-6">
           <button
             type="button"

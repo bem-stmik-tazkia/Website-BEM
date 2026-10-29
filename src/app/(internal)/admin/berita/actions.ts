@@ -1,12 +1,12 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/auth";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { sendNewBeritaNotification } from "@/lib/telegram";
 
 export async function saveBerita(formData: FormData) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
 
   const id = formData.get("id") as string | null;
   const title = formData.get("title") as string;
@@ -53,7 +53,6 @@ export async function saveBerita(formData: FormData) {
 
   revalidatePath("/admin/berita");
   revalidatePath("/berita");
-  const { revalidateTag } = require("next/cache");
-  revalidateTag("berita");
+  revalidateTag("berita", "max");
   redirect("/admin/berita");
 }

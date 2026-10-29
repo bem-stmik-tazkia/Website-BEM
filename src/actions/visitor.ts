@@ -9,9 +9,11 @@ export async function recordSiteVisitor(sessionId: string, path: string) {
     const headersList = await headers();
     const userAgent = headersList.get("user-agent") || "Unknown";
     
-    await supabase.from("site_visitors").insert([
-      { session_id: sessionId, path, user_agent: userAgent }
-    ]);
+    await supabase.rpc('record_site_visitor', {
+      p_session_id: sessionId || 'unknown',
+      p_path: path || '/',
+      p_user_agent: userAgent || 'Unknown'
+    });
   } catch (error) {
     console.error("Error recording visitor:", error);
   }

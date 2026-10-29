@@ -17,7 +17,7 @@ export default function ErrorBoundary({
   const t = useTranslations("ErrorPage");
 
   useEffect(() => {
-    // Optionally log the error to an error reporting service
+    // Log exception to server/console without displaying raw internals to client
     console.error("Global Error Boundary caught an error:", error);
   }, [error]);
 
@@ -30,7 +30,7 @@ export default function ErrorBoundary({
 
         <div className="max-w-xl w-full bg-white border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center shadow-xl relative z-10 flex flex-col items-center justify-center animate-fade-up border-t-4 border-t-red-500">
           
-          {/* We can reuse the 404 lottie or a generic warning */}
+          {/* 404/Error lottie */}
           <div className="w-48 h-48 sm:w-56 sm:h-56 relative -my-4 mb-2">
             <DotLottieReact
               src="/animations/404 error.lottie"
@@ -45,10 +45,21 @@ export default function ErrorBoundary({
           
           <p className="text-xs sm:text-sm text-on-surface-variant mb-6 max-w-md leading-relaxed">
             {t("desc")}
-            <br/><br/>
-            <span className="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded font-mono break-words border border-red-100">
-              {error.message || "Unknown Runtime Error"}
-            </span>
+            {process.env.NODE_ENV !== "production" ? (
+              <>
+                <br /><br />
+                <span className="text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded font-mono break-words border border-red-100">
+                  {error.message}
+                </span>
+              </>
+            ) : error.digest ? (
+              <>
+                <br /><br />
+                <span className="text-[10px] bg-zinc-100 text-zinc-600 px-2 py-1 rounded font-mono break-words border border-zinc-200">
+                  Kode Insiden: {error.digest}
+                </span>
+              </>
+            ) : null}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">

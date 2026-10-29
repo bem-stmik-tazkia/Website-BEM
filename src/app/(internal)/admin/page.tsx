@@ -31,6 +31,7 @@ export default async function AdminDashboardPage() {
   const latestBerita = latestBeritaRes?.data || null;
   let daysSinceLastBerita = 0;
   if (latestBerita && latestBerita.created_at) {
+    // eslint-disable-next-line react-hooks/purity
     const diffMs = Date.now() - new Date(latestBerita.created_at).getTime();
     daysSinceLastBerita = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   } else if (!latestBerita) {

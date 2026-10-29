@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { requireAdmin } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { AgendaKegiatan } from "@/types/agenda";
 
@@ -42,7 +43,7 @@ export async function getKegiatanById(idOrSlug: string) {
 }
 
 export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   
   if (!data.slug) {
     // Generate slug from title
@@ -120,7 +121,7 @@ export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
 }
 
 export async function deleteKegiatan(id: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("agendas")
     .delete()
@@ -138,23 +139,12 @@ export async function deleteKegiatan(id: string) {
   revalidatePath("/[locale]/publikasi/dokumentasi", "page");
   revalidatePath("/", "layout");
   
-  const { revalidateTag } = require("next/cache");
-  revalidateTag("agenda");
+  revalidateTag("agenda", "max");
   return data;
 }
 
-export async function submitVolunteerApplication(agendaId: string, responses: Record<string, string>) {
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("volunteer_applications")
-    .insert([{ agenda_id: agendaId, responses }]);
-    
-  if (error) throw new Error(error.message);
-  return true;
-}
-
 export async function getVolunteerApplications(agendaId: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("volunteer_applications")
     .select("*")
@@ -164,3 +154,4 @@ export async function getVolunteerApplications(agendaId: string) {
   if (error) throw new Error(error.message);
   return data;
 }
+

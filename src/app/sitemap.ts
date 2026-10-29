@@ -5,17 +5,19 @@ import { routing } from '@/i18n/routing';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://bem.stmik.tazkia.ac.id';
   
-  // Connect to Supabase to fetch dynamic routes
+  // Connect to Supabase to fetch published dynamic routes
   const supabase = await createClient();
   
-  // Fetch published agendas and berita
+  // Fetch only published agendas and berita to prevent leaking unpublished drafts
   const { data: agendas } = await supabase
     .from("agendas")
-    .select("id, slug, created_at");
+    .select("id, slug, created_at")
+    .eq("is_published", true);
     
   const { data: berita } = await supabase
     .from("berita")
-    .select("slug, created_at");
+    .select("slug, created_at")
+    .eq("is_published", true);
 
   // Define static routes
   const staticRoutes = [
