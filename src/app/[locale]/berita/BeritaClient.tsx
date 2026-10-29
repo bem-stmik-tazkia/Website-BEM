@@ -10,12 +10,14 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiClock,
-  FiBell
+  FiBell,
+  FiShare2,
+  FiCheck
 } from "react-icons/fi";
-import { SiWhatsapp, SiInstagram, SiDiscord } from "react-icons/si";
+import { SiInstagram, SiDiscord } from "react-icons/si";
 import { useTranslations, useLocale } from "next-intl";
 import LikeButton from "@/components/ui/LikeButton";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import SafeLottie from "@/components/ui/SafeLottie";
 import BeritaTourClient from "@/components/berita/BeritaTourClient";
 import { createClient } from "@/utils/supabase/client";
@@ -42,6 +44,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
+  const [copyNotice, setCopyNotice] = useState<string | null>(null);
 
   const [allNews, setAllNews] = useState<NewsItem[]>(initialNews);
   const isLoading = false;
@@ -137,14 +140,37 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
     return locale === "id" ? `${minutes} mnt baca` : `${minutes} min read`;
   };
 
-  // Bagikan berita cepat ke WhatsApp grup kelas / teman mahasiswa
-  const handleShareWA = (e: React.MouseEvent, title: string, slug: string) => {
+  // Universal Share: Web Share API di HP (bisa ke WA/Telegram/IG dll), Clipboard di Desktop
+  const handleUniversalShare = async (e: React.MouseEvent, title: string, slug: string) => {
     e.preventDefault();
     e.stopPropagation();
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://bem.stmik.tazkia.ac.id";
     const url = `${baseUrl}/${locale}/berita/${slug}`;
-    const text = encodeURIComponent(`📢 *${title}*\n\nBaca selengkapnya di Website Resmi BEM STMIK Tazkia:\n${url}`);
-    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank", "noopener,noreferrer");
+    const shareData = {
+      title: title,
+      text: `${title}\n\n${url}`,
+      url: url,
+    };
+
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+
+    // Fallback: Salin ke clipboard dan tampilkan feedback toast
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        setCopyNotice(locale === "id" ? "Tautan berita berhasil disalin!" : "News link copied to clipboard!");
+        setTimeout(() => setCopyNotice(null), 2500);
+      }
+    } catch (err) {
+      console.error("Clipboard copy failed:", err);
+    }
   };
 
   // Filter & Search Logic — EKSKLUSI Hero Banner dari Grid agar tidak muncul dobel di satu layar
@@ -191,6 +217,24 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
     <div className="relative flex flex-col min-h-screen bg-background pt-24 pb-32 md:pb-20 font-sans overflow-x-hidden w-full">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-primary/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 
+      {/* Floating Share Feedback Pill */}
+      <AnimatePresence>
+        {copyNotice && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.25 }}
+            className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-md text-white border border-white/20 px-5 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 text-xs font-semibold"
+          >
+            <span className="p-1 rounded-full bg-emerald-500 text-white">
+              <FiCheck size={12} />
+            </span>
+            {copyNotice}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main Container */}
       <main className="px-container-padding-mobile md:px-container-padding-desktop max-w-7xl mx-auto w-full pt-8">
 
@@ -231,7 +275,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
               <button
                 key={category}
                 onClick={() => handleCategoryChange(category)}
-                className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${selectedCategory === category
+                className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 whitespace-nowrap active:scale-95 ${selectedCategory === category
                     ? "bg-primary text-on-primary shadow-soft"
                     : "bg-surface-variant/45 text-on-surface-variant hover:bg-surface-variant/80"
                   }`}
@@ -245,33 +289,33 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
         {/* Featured News Section (Hero Banner) */}
         {selectedCategory === "Semua" && searchQuery === "" && featuredNews && (
           <section id="tour-berita-featured" className="mb-10 md:mb-12">
-            <div className="group relative rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 bg-slate-950 min-h-[380px] md:min-h-[430px] flex flex-col justify-end transition-all duration-300 hover:shadow-2xl cursor-pointer">
-              {/* Background Image */}
+            <div className="group relative rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 hover:border-primary/40 bg-slate-950 min-h-[380px] md:min-h-[430px] flex flex-col justify-end transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1.5 cursor-pointer">
+              {/* Background Image with Dynamic Zoom */}
               <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-108"
                 style={{ backgroundImage: `url('${featuredNews.image_url}')` }}
               ></div>
 
               {/* Multi-layer Dark Gradient for High Contrast */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/30 transition-opacity duration-300 group-hover:opacity-95"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/25 transition-opacity duration-300 group-hover:opacity-95"></div>
               <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
 
               {/* Featured Badges */}
               <div className="absolute top-5 sm:top-6 left-5 sm:left-6 z-10 flex flex-wrap items-center gap-2 pr-6">
-                <span className="bg-secondary text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm whitespace-nowrap">
+                <span className="bg-secondary text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm whitespace-nowrap transition-transform duration-300 group-hover:scale-105">
                   {translateCategory(featuredNews.category)}
                 </span>
                 <span className="bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/20">
                   <FiCalendar className="inline shrink-0" /> {formatDateLocalized(featuredNews.created_at, locale)}
                 </span>
-                <span className="bg-white/15 backdrop-blur-md text-white/90 text-[10px] md:text-xs font-medium px-2.5 py-1.5 rounded-full flex items-center gap-1.5 border border-white/15">
-                  <FiClock className="inline shrink-0" /> {calculateReadingTime(featuredNews.excerpt)}
+                <span className="bg-white/15 backdrop-blur-md text-white/95 text-[10px] md:text-xs font-medium px-2.5 py-1.5 rounded-full flex items-center gap-1.5 border border-white/15">
+                  <FiClock className="inline shrink-0 text-amber-300" /> {calculateReadingTime(featuredNews.excerpt)}
                 </span>
               </div>
 
               {/* Featured Content */}
               <div className="relative z-10 p-5 sm:p-8 md:p-10 text-white max-w-4xl">
-                <h2 className="text-xl sm:text-2xl md:text-4xl font-extrabold mb-3 md:mb-4 leading-tight group-hover:text-secondary-container transition-colors duration-300 drop-shadow-md">
+                <h2 className="text-xl sm:text-2xl md:text-4xl font-extrabold mb-3 md:mb-4 leading-tight group-hover:text-secondary-container transition-all duration-300 drop-shadow-md">
                   {featuredNews.title}
                 </h2>
                 <p className="text-white/85 text-xs sm:text-sm md:text-base mb-4 md:mb-6 font-light leading-relaxed line-clamp-3 drop-shadow-xs">
@@ -279,16 +323,16 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 </p>
                 <div className="flex flex-wrap sm:flex-row gap-3 sm:gap-4 items-center justify-between">
                   <div className="flex items-center gap-2.5 sm:gap-3">
-                    <span className="inline-flex items-center gap-2 bg-secondary text-white transition-all duration-300 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-xs md:text-sm group-hover:translate-x-1 group-hover:bg-secondary/90 shadow-md">
-                      {t("readMore")} <FiArrowRight />
+                    <span className="inline-flex items-center gap-2 bg-secondary text-white transition-all duration-300 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-xs md:text-sm group-hover:bg-secondary/90 shadow-md group-hover:shadow-glow group-hover:scale-105">
+                      {t("readMore")} <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1.5" />
                     </span>
-                    {/* Tombol Cepat Bagikan ke WhatsApp */}
+                    {/* Tombol Universal Share */}
                     <button
-                      onClick={(e) => handleShareWA(e, featuredNews.title, featuredNews.slug)}
-                      title={locale === "id" ? "Bagikan ke WhatsApp" : "Share to WhatsApp"}
-                      className="relative z-30 inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 rounded-full text-xs font-semibold shadow-md transition-all active:scale-95"
+                      onClick={(e) => handleUniversalShare(e, featuredNews.title, featuredNews.slug)}
+                      title={locale === "id" ? "Bagikan berita" : "Share news"}
+                      className="relative z-30 inline-flex items-center gap-1.5 bg-white/20 hover:bg-primary text-white backdrop-blur-md px-3.5 py-2.5 rounded-full text-xs font-semibold shadow-md transition-all duration-300 border border-white/20 hover:scale-105 active:scale-95"
                     >
-                      <SiWhatsapp size={14} />
+                      <FiShare2 size={14} />
                       <span className="hidden sm:inline">{locale === "id" ? "Bagikan" : "Share"}</span>
                     </button>
                   </div>
@@ -338,13 +382,14 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.05 }}
+                    whileHover={{ y: -8 }}
                     key={news.id}
                     className="w-full"
                   >
-                    <article className="group relative rounded-3xl overflow-hidden shadow-md cursor-pointer h-[380px] sm:h-[400px] flex flex-col justify-end transition-all duration-300 hover:shadow-2xl border border-outline-variant/15 w-full bg-slate-900">
-                      {/* Background Image */}
+                    <article className="group relative rounded-3xl overflow-hidden shadow-md cursor-pointer h-[380px] sm:h-[400px] flex flex-col justify-end transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 border border-outline-variant/15 hover:border-primary/40 w-full bg-slate-900">
+                      {/* Background Image with Smooth Zoom */}
                       <div
-                        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110"
                         style={{ backgroundImage: `url('${news.image_url}')` }}
                       ></div>
 
@@ -357,15 +402,15 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                         {/* Category Badge + Date Badge + Read Time + Stats */}
                         <div className="flex items-center justify-between w-full mb-3 gap-2">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="bg-secondary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider shadow-xs">
+                            <span className="bg-secondary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider shadow-xs transition-transform duration-300 group-hover:scale-105">
                               {translateCategory(news.category)}
                             </span>
                             <span className="bg-white/20 backdrop-blur-sm text-white/95 text-[10px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1 border border-white/15 shadow-xs">
                               <FiCalendar size={11} className="shrink-0 text-white/80" />
                               {formatDateLocalized(news.created_at, locale)}
                             </span>
-                            <span className="bg-white/15 backdrop-blur-sm text-white/90 text-[10px] font-medium px-2 py-0.5 rounded-md hidden sm:flex items-center gap-1 border border-white/15 shadow-xs">
-                              <FiClock size={11} className="shrink-0 text-white/80" />
+                            <span className="bg-white/15 backdrop-blur-sm text-white/95 text-[10px] font-medium px-2 py-0.5 rounded-md hidden sm:flex items-center gap-1 border border-white/15 shadow-xs">
+                              <FiClock size={11} className="shrink-0 text-amber-300" />
                               {calculateReadingTime(news.excerpt)}
                             </span>
                           </div>
@@ -377,8 +422,8 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                           </div>
                         </div>
 
-                        {/* Title */}
-                        <h3 className="text-base sm:text-lg font-bold mb-2 leading-snug text-white group-hover:text-secondary-container transition-colors duration-300 line-clamp-2 drop-shadow-md">
+                        {/* Title with Smooth Hover Color */}
+                        <h3 className="text-base sm:text-lg font-bold mb-2 leading-snug text-white group-hover:text-secondary-container transition-all duration-300 line-clamp-2 drop-shadow-md">
                           {news.title}
                         </h3>
 
@@ -387,17 +432,17 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                           {news.excerpt}
                         </p>
 
-                        {/* Actions: Read More + Quick WhatsApp Share */}
+                        {/* Actions: Read More + Universal Share */}
                         <div className="flex items-center justify-between w-full pt-1">
-                          <span className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-secondary transition-all duration-300 group-hover:translate-x-1">
-                            {t("readMore").toUpperCase()} <FiArrowRight size={13} />
+                          <span className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-secondary transition-all duration-300 group-hover:text-secondary-container">
+                            {t("readMore").toUpperCase()} <FiArrowRight size={13} className="transition-transform duration-300 group-hover:translate-x-1.5" />
                           </span>
                           <button
-                            onClick={(e) => handleShareWA(e, news.title, news.slug)}
-                            title={locale === "id" ? "Bagikan ke WhatsApp" : "Share to WhatsApp"}
-                            className="relative z-30 p-2 rounded-full bg-white/15 hover:bg-emerald-600 text-white backdrop-blur-sm transition-all duration-200 border border-white/20 active:scale-95 shadow-xs"
+                            onClick={(e) => handleUniversalShare(e, news.title, news.slug)}
+                            title={locale === "id" ? "Bagikan berita" : "Share news"}
+                            className="relative z-30 p-2.5 rounded-full bg-white/15 hover:bg-primary text-white backdrop-blur-md transition-all duration-300 border border-white/20 hover:scale-110 active:scale-95 shadow-xs"
                           >
-                            <SiWhatsapp size={13} />
+                            <FiShare2 size={13} />
                           </button>
                         </div>
                       </div>
@@ -439,13 +484,13 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
               })()
             )}
 
-            {/* Pagination Component — Kini tampil rapi di Laptop maupun HP */}
+            {/* Pagination Component — Tampil rapi di Laptop maupun HP */}
             {totalPages > 1 && (
               <nav className="flex justify-center items-center gap-1.5 sm:gap-2 mt-8 md:mt-10">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  className="p-2 sm:p-2.5 rounded-xl border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="p-2 sm:p-2.5 rounded-xl border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
                   aria-label={t("prevPage")}
                 >
                   <FiChevronLeft size={18} />
@@ -455,9 +500,9 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl font-bold text-xs sm:text-sm transition-all ${currentPage === page
-                        ? "bg-secondary text-white shadow-glow"
-                        : "border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container"
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl font-bold text-xs sm:text-sm transition-all active:scale-95 ${currentPage === page
+                        ? "bg-secondary text-white shadow-glow scale-105"
+                        : "border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container hover:scale-105"
                       }`}
                   >
                     {page}
@@ -467,7 +512,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  className="p-2 sm:p-2.5 rounded-xl border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="p-2 sm:p-2.5 rounded-xl border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
                   aria-label={t("nextPage")}
                 >
                   <FiChevronRight size={18} />
@@ -485,22 +530,23 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
               {t("sidebarTitle")}
             </h3>
 
-            {/* Popular News Cards */}
+            {/* Popular News Cards with Hover Lift */}
             <div className="flex flex-row overflow-x-auto gap-4 pb-4 w-full lg:flex-col lg:overflow-visible lg:pb-0 scrollbar-none snap-x snap-mandatory flex-nowrap lg:flex-wrap">
               {popularNews.map((item, index) => (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
+                  whileHover={{ y: -5, scale: 1.01 }}
                   key={item.id}
                   className="w-[280px] sm:w-[320px] lg:w-auto shrink-0 lg:shrink snap-start"
                 >
                   <div
-                    className="group relative rounded-3xl overflow-hidden shadow-md cursor-pointer h-[210px] flex flex-col justify-end transition-all duration-300 hover:shadow-xl w-full border border-outline-variant/15 bg-slate-900"
+                    className="group relative rounded-3xl overflow-hidden shadow-md cursor-pointer h-[210px] flex flex-col justify-end transition-all duration-500 hover:shadow-xl hover:shadow-primary/15 w-full border border-outline-variant/15 hover:border-primary/40 bg-slate-900"
                   >
-                    {/* Background Image */}
+                    {/* Background Image with Zoom */}
                     <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110"
                       style={{ backgroundImage: `url('${item.image_url}')` }}
                     ></div>
 
@@ -511,7 +557,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                     {/* Content */}
                     <div className="relative z-10 p-4 sm:p-5 flex flex-col items-start text-white w-full">
                       <div className="flex items-center justify-between w-full gap-2 mb-2">
-                        <span className="bg-secondary text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-xs uppercase tracking-wider">
+                        <span className="bg-secondary text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-xs uppercase tracking-wider transition-transform duration-300 group-hover:scale-105">
                           {translateCategory(item.category)}
                         </span>
                         <div className="flex items-center gap-2 text-[9px] text-white/90 font-medium shrink-0">
@@ -529,11 +575,11 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                           <FiCalendar size={10} className="text-white/80 shrink-0" /> {formatDateLocalized(item.created_at, locale)}
                         </span>
                         <button
-                          onClick={(e) => handleShareWA(e, item.title, item.slug)}
-                          title={locale === "id" ? "Bagikan ke WhatsApp" : "Share to WhatsApp"}
-                          className="relative z-30 p-1.5 rounded-full bg-white/15 hover:bg-emerald-600 text-white backdrop-blur-sm transition-all duration-200 border border-white/20 active:scale-95"
+                          onClick={(e) => handleUniversalShare(e, item.title, item.slug)}
+                          title={locale === "id" ? "Bagikan berita" : "Share news"}
+                          className="relative z-30 p-2 rounded-full bg-white/15 hover:bg-primary text-white backdrop-blur-sm transition-all duration-300 border border-white/20 hover:scale-110 active:scale-95 shadow-xs"
                         >
-                          <SiWhatsapp size={11} />
+                          <FiShare2 size={11} />
                         </button>
                       </div>
                     </div>
@@ -550,7 +596,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
             </div>
 
             {/* Community Retention Widget: Saluran Resmi BEM STMIK Tazkia */}
-            <div className="mt-2 bg-gradient-to-br from-primary/10 via-surface to-secondary/10 border border-primary/20 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col gap-3 relative overflow-hidden">
+            <div className="mt-2 bg-gradient-to-br from-primary/10 via-surface to-secondary/10 border border-primary/20 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col gap-3 relative overflow-hidden transition-all duration-300 hover:shadow-md">
               <div className="flex items-center gap-2.5">
                 <span className="p-2.5 rounded-2xl bg-primary text-white shadow-sm">
                   <FiBell size={18} />
@@ -574,7 +620,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                   href="https://www.instagram.com/bem_stmiktazkia?igsh=amNsbWRqODVwemV4"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white text-xs font-semibold shadow-xs transition-all active:scale-95"
+                  className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white text-xs font-semibold shadow-xs transition-all duration-300 hover:scale-105 active:scale-95"
                 >
                   <SiInstagram size={13} /> Instagram
                 </a>
@@ -582,7 +628,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                   href="https://discord.gg/dFVN24ZMXU"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold shadow-xs transition-all active:scale-95"
+                  className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold shadow-xs transition-all duration-300 hover:scale-105 active:scale-95"
                 >
                   <SiDiscord size={13} /> Discord
                 </a>
