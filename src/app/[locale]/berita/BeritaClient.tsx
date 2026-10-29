@@ -109,12 +109,6 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
   // Compute featured news dynamically (hanya aktif pada kategori Semua dan tanpa pencarian)
   const featuredNews = sortedNews.length > 0 ? sortedNews[0] : null;
 
-  // Berita terpopuler — filter keluar berita yang sedang jadi hero agar pengunjung melihat konten variatif
-  const popularNews = useMemo(() => {
-    const pool = sortedNews.filter(n => (featuredNews && sortedNews.length >= 4) ? n.id !== featuredNews.id : true);
-    return [...pool].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 3);
-  }, [sortedNews, featuredNews]);
-
   // Categories list
   const categories = ["Semua", "Berita", "Artikel", "Rilis", "Kampus", "Pendidikan"];
 
@@ -225,6 +219,29 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredNews.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredNews, currentPage]);
+
+  // Berita terpopuler — Filter keluar SEMUA berita yang sedang tampil di layar (Hero + Grid aktif)
+  // sehingga 100% TIDAK PERNAH ada berita kembar/dobel di layar yang sama!
+  const popularNews = useMemo(() => {
+    const displayedIds = new Set<string>();
+    // 1. Catat ID Hero jika sedang aktif tampil
+    if (featuredNews && selectedCategory === "Semua" && debouncedSearchQuery === "") {
+      displayedIds.add(featuredNews.id);
+    }
+    // 2. Catat ID semua berita yang tampil di Grid halaman aktif saat ini
+    paginatedNews.forEach((item) => displayedIds.add(item.id));
+
+    // 3. Kolam berita yang belum tampil sama sekali di layar
+    const unshownPool = sortedNews.filter((n) => !displayedIds.has(n.id));
+
+    // Jika artikel di DB cukup (>= 3), ambil hanya dari yang belum tampil.
+    // Jika artikel DB sangat sedikit (< 3), fallback dengan hanya mengecualikan Hero.
+    const pool = unshownPool.length >= 3 
+      ? unshownPool 
+      : sortedNews.filter((n) => featuredNews ? n.id !== featuredNews.id : true);
+
+    return [...pool].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 3);
+  }, [sortedNews, featuredNews, paginatedNews, selectedCategory, debouncedSearchQuery]);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
