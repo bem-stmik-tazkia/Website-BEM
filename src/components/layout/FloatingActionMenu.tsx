@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { SiWhatsapp } from "react-icons/si";
 import { FiX, FiPlus, FiHelpCircle } from "react-icons/fi";
-import { createClient } from "@/utils/supabase/client";
+import { getAdminWhatsappContact } from "@/actions/public-settings";
 import { useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/routing";
 
@@ -24,13 +24,8 @@ export default function FloatingActionMenu() {
   useEffect(() => {
     async function fetchPhone() {
       try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("system_settings")
-          .select("value")
-          .eq("key", "admin_whatsapp")
-          .maybeSingle();
-        if (!error && data?.value) setPhone(data.value);
+        const phoneValue = await getAdminWhatsappContact();
+        if (phoneValue) setPhone(phoneValue);
       } catch (e) {}
     }
     fetchPhone();

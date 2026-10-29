@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import SafeLottie from "@/components/ui/SafeLottie";
 import { createClient } from "@/utils/supabase/client";
+import { getPublicMaintenanceSettings } from "@/actions/public-settings";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiTool, FiClock, FiRefreshCw,
@@ -173,7 +174,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
         .select("key, value")
         .in("key", ["maintenance_mode", "maintenance_estimated_time", "maintenance_message", "release_notes"]);
 
-      if (!error && settings) {
+      if (!error && settings && settings.length > 0) {
         const mMode = settings.find((s) => s.key === "maintenance_mode")?.value === "true";
         const mTime = settings.find((s) => s.key === "maintenance_estimated_time")?.value || "1-2 Jam";
         const mMsg = settings.find((s) => s.key === "maintenance_message")?.value || "";
@@ -193,6 +194,26 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
               const seenKey = `seen_release_notes_${parsedNotes.version}`;
               const hasSeen = localStorage.getItem(seenKey);
               if (!hasSeen) {
+                setShowWhatsNew(true);
+              }
+            }
+          } catch (e) {
+            console.error("Error parsing release notes:", e);
+          }
+        }
+      } else {
+        // Fallback via secure Server Action untuk pengunjung umum (non-admin)
+        const pub = await getPublicMaintenanceSettings();
+        setMaintenanceMode(pub.maintenanceMode);
+        setEstimatedTime(pub.estimatedTime);
+        setCustomMessage(pub.message);
+        if (pub.releaseNotes) {
+          try {
+            const parsedNotes: ReleaseNotes = JSON.parse(pub.releaseNotes);
+            setReleaseNotes(parsedNotes);
+            if (!pub.maintenanceMode && parsedNotes.published && parsedNotes.version) {
+              const seenKey = `seen_release_notes_${parsedNotes.version}`;
+              if (!localStorage.getItem(seenKey)) {
                 setShowWhatsNew(true);
               }
             }

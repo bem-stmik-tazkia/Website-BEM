@@ -324,7 +324,12 @@ export default function SaranAduan() {
                 <Turnstile
                   ref={turnstileRef}
                   siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
-                  onSuccess={(token) => setTurnstileToken(token)}
+                  onSuccess={(token) => {
+                    setTurnstileToken(token);
+                    if (errorMsg === t("errorCaptcha")) {
+                      setErrorMsg("");
+                    }
+                  }}
                   onError={() => setErrorMsg(t("errorCaptcha"))}
                   onExpire={() => setTurnstileToken("")}
                   options={{ theme: 'light' }}
