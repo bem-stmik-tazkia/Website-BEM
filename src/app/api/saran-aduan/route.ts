@@ -151,7 +151,8 @@ export async function POST(req: Request) {
             nama: finalNama,
             kategori,
             deskripsi,
-            tanggal: new Date().toLocaleString('id-ID', { 
+            tanggal: new Date().toLocaleString('id-ID', {
+              timeZone: 'Asia/Jakarta', 
               day: 'numeric', 
               month: 'long', 
               year: 'numeric', 
@@ -182,9 +183,20 @@ export async function POST(req: Request) {
         const safeKategori = escapeHtml(kategori);
         const safeDeskripsi = escapeHtml(deskripsi);
         
+        const wibTime = new Date().toLocaleString('id-ID', {
+          timeZone: 'Asia/Jakarta',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }) + ' WIB';
+
         let message = `🚨 <b>Pesan Baru di Kotak Saran / Aduan!</b> 🚨\n\n` +
                       `👤 <b>Pengirim:</b> ${safeNama}\n` +
                       `📂 <b>Kategori:</b> ${safeKategori}\n` +
+                      `📅 <b>Waktu:</b> ${wibTime}\n` +
                       `📝 <b>Pesan:</b> \n${safeDeskripsi}\n\n`;
                       
         if (excelLink && excelLink.startsWith('http')) {

@@ -266,6 +266,7 @@ export async function sendNewBeritaNotification(
     .join(" ");
 
   const todayStr = new Date().toLocaleDateString("id-ID", {
+    timeZone: "Asia/Jakarta",
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -421,6 +422,7 @@ export async function checkBeritaReminder(
 
   if (latest) {
     const formattedLastDate = new Date(latest.created_at).toLocaleDateString("id-ID", {
+      timeZone: "Asia/Jakarta",
       weekday: "long",
       day: "numeric",
       month: "long",
@@ -506,7 +508,7 @@ export async function sendTelegramTestPing(): Promise<{ ok: boolean; error?: str
   const testMsg =
     `🤖 <b>Uji Coba Koneksi Bot Telegram BEM STMIK Tazkia</b>\n\n` +
     `✅ <b>Status:</b> Bot terhubung dan berfungsi dengan baik!\n` +
-    `📅 <b>Waktu:</b> ${new Date().toLocaleString("id-ID")} WIB\n\n` +
+    `📅 <b>Waktu:</b> ${new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB\n\n` +
     `Fitur yang aktif:\n` +
     `• 📢 Notifikasi otomatis saat berita baru diupload\n` +
     `• ⏰ Peringatan otomatis jika 1 minggu belum ada upload berita baru`;
