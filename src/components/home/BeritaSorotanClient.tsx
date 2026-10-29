@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { Link } from "@/i18n/routing";
+import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { FiArrowRight, FiHeart, FiEye, FiCalendar, FiClock, FiShare2, FiCheck } from "react-icons/fi";
 import { formatDateLocalized } from "@/utils/dateFormatter";
@@ -45,6 +45,34 @@ export default function BeritaSorotanClient({ news }: BeritaSorotanClientProps) 
     return locale === "id" ? `${minutes} mnt baca` : `${minutes} min read`;
   };
 
+  // Robust Clipboard Copy Fallback
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        console.warn("navigator.clipboard failed, attempting fallback:", err);
+      }
+    }
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const success = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return success;
+    } catch (err) {
+      console.error("Clipboard copy failed:", err);
+      return false;
+    }
+  };
+
   // Universal Share: Web Share API di HP, Clipboard di Desktop
   const handleUniversalShare = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -66,14 +94,10 @@ export default function BeritaSorotanClient({ news }: BeritaSorotanClientProps) 
       }
     }
 
-    try {
-      if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(url);
-        setCopyNotice(locale === "id" ? "Tautan berita berhasil disalin!" : "News link copied to clipboard!");
-        setTimeout(() => setCopyNotice(null), 2500);
-      }
-    } catch (err) {
-      console.error("Clipboard copy failed:", err);
+    const copied = await copyToClipboard(url);
+    if (copied) {
+      setCopyNotice(locale === "id" ? "Tautan berita berhasil disalin!" : "News link copied to clipboard!");
+      setTimeout(() => setCopyNotice(null), 2500);
     }
   };
 
@@ -97,12 +121,9 @@ export default function BeritaSorotanClient({ news }: BeritaSorotanClientProps) 
         )}
       </AnimatePresence>
 
-      <Link
-        href={`/berita/${item.slug}`}
-        className="group relative rounded-2xl md:rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 hover:border-primary/40 bg-slate-950 min-h-[420px] sm:min-h-[380px] md:min-h-[430px] flex flex-col justify-end transition-all duration-500 hover:shadow-2xl hover:shadow-primary/25 hover:-translate-y-2 block cursor-pointer"
-      >
+      <div className="group relative rounded-2xl md:rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 hover:border-primary/40 bg-slate-950 min-h-[420px] sm:min-h-[380px] md:min-h-[430px] flex flex-col justify-end transition-all duration-500 hover:shadow-2xl hover:shadow-primary/25 hover:-translate-y-2 block">
         {/* Background Image with Dynamic Zoom */}
-        <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-108">
+        <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-108 pointer-events-none">
           {item.image_url && (
             <Image
               src={item.image_url}
@@ -116,11 +137,18 @@ export default function BeritaSorotanClient({ news }: BeritaSorotanClientProps) 
         </div>
 
         {/* Multi-layer Gradient Overlay for High Contrast */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/25 transition-opacity duration-500 group-hover:opacity-95"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/25 transition-opacity duration-500 group-hover:opacity-95 pointer-events-none"></div>
         <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
 
-        {/* Featured Content */}
-        <div className="relative z-10 p-5 sm:p-6 md:p-10 text-white w-full md:max-w-4xl text-left">
+        {/* Full-card link at z-10 */}
+        <Link
+          href={`/berita/${item.slug}`}
+          className="absolute inset-0 z-10 cursor-pointer"
+          aria-label={item.title}
+        />
+
+        {/* Featured Content at z-20 pointer-events-none */}
+        <div className="relative z-20 p-5 sm:p-6 md:p-10 text-white w-full md:max-w-4xl text-left pointer-events-none">
           {/* Featured Badges (Category + Date + Read Time) */}
           <div className="flex items-center gap-2 mb-3 md:mb-4 flex-wrap">
             <span className="bg-secondary text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm transition-transform duration-300 group-hover:scale-105">
@@ -155,13 +183,14 @@ export default function BeritaSorotanClient({ news }: BeritaSorotanClientProps) 
 
           <div className="flex flex-row gap-3 items-center justify-between flex-wrap">
             <div className="flex items-center gap-2.5">
-              <div className="inline-flex items-center gap-2 bg-secondary text-white hover:bg-secondary/90 transition-all duration-300 px-4 sm:px-6 py-2 md:py-3 rounded-full font-bold text-xs sm:text-sm shadow-md group-hover:scale-105 group-hover:shadow-glow shrink-0">
+              <span className="inline-flex items-center gap-2 bg-secondary text-white hover:bg-secondary/90 transition-all duration-300 px-4 sm:px-6 py-2 md:py-3 rounded-full font-bold text-xs sm:text-sm shadow-md group-hover:scale-105 group-hover:shadow-glow shrink-0 pointer-events-none">
                 {t("readMore")} <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1.5" />
-              </div>
+              </span>
               <button
+                type="button"
                 onClick={handleUniversalShare}
                 title={locale === "id" ? "Bagikan berita" : "Share news"}
-                className="relative z-30 inline-flex items-center gap-1.5 bg-white/20 hover:bg-primary text-white backdrop-blur-md px-3.5 py-2 md:py-3 rounded-full text-xs font-semibold shadow-md transition-all duration-300 border border-white/20 hover:scale-105 active:scale-95"
+                className="pointer-events-auto relative z-30 inline-flex items-center gap-1.5 bg-white/20 hover:bg-primary text-white backdrop-blur-md px-3.5 py-2 md:py-3 rounded-full text-xs font-semibold shadow-md transition-all duration-300 border border-white/20 hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <FiShare2 size={13} />
                 <span className="hidden sm:inline">{locale === "id" ? "Bagikan" : "Share"}</span>
@@ -177,7 +206,7 @@ export default function BeritaSorotanClient({ news }: BeritaSorotanClientProps) 
             </div>
           </div>
         </div>
-      </Link>
+      </div>
     </div>
   );
 }

@@ -140,7 +140,35 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
     return locale === "id" ? `${minutes} mnt baca` : `${minutes} min read`;
   };
 
-  // Universal Share: Web Share API di HP (bisa ke WA/Telegram/IG dll), Clipboard di Desktop
+  // Robust Clipboard Copy Fallback
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        console.warn("navigator.clipboard failed, attempting fallback:", err);
+      }
+    }
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const success = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return success;
+    } catch (err) {
+      console.error("Clipboard copy failed:", err);
+      return false;
+    }
+  };
+
+  // Universal Share: Web Share API di HP, Clipboard di Desktop
   const handleUniversalShare = async (e: React.MouseEvent, title: string, slug: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -161,15 +189,10 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
       }
     }
 
-    // Fallback: Salin ke clipboard dan tampilkan feedback toast
-    try {
-      if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(url);
-        setCopyNotice(locale === "id" ? "Tautan berita berhasil disalin!" : "News link copied to clipboard!");
-        setTimeout(() => setCopyNotice(null), 2500);
-      }
-    } catch (err) {
-      console.error("Clipboard copy failed:", err);
+    const copied = await copyToClipboard(url);
+    if (copied) {
+      setCopyNotice(locale === "id" ? "Tautan berita berhasil disalin!" : "News link copied to clipboard!");
+      setTimeout(() => setCopyNotice(null), 2500);
     }
   };
 
@@ -289,19 +312,26 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
         {/* Featured News Section (Hero Banner) */}
         {selectedCategory === "Semua" && searchQuery === "" && featuredNews && (
           <section id="tour-berita-featured" className="mb-10 md:mb-12">
-            <div className="group relative rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 hover:border-primary/40 bg-slate-950 min-h-[380px] md:min-h-[430px] flex flex-col justify-end transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1.5 cursor-pointer">
+            <div className="group relative rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 hover:border-primary/40 bg-slate-950 min-h-[380px] md:min-h-[430px] flex flex-col justify-end transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1.5">
               {/* Background Image with Dynamic Zoom */}
               <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-108"
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-108 pointer-events-none"
                 style={{ backgroundImage: `url('${featuredNews.image_url}')` }}
               ></div>
 
               {/* Multi-layer Dark Gradient for High Contrast */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/25 transition-opacity duration-300 group-hover:opacity-95"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/25 transition-opacity duration-300 group-hover:opacity-95 pointer-events-none"></div>
               <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
 
-              {/* Featured Badges */}
-              <div className="absolute top-5 sm:top-6 left-5 sm:left-6 z-10 flex flex-wrap items-center gap-2 pr-6">
+              {/* Full-card link: sits at z-10 so clicks anywhere outside buttons trigger navigation */}
+              <Link
+                href={`/berita/${featuredNews.slug}`}
+                className="absolute inset-0 z-10 cursor-pointer"
+                aria-label={featuredNews.title}
+              />
+
+              {/* Featured Badges at z-20 pointer-events-none */}
+              <div className="absolute top-5 sm:top-6 left-5 sm:left-6 z-20 flex flex-wrap items-center gap-2 pr-6 pointer-events-none">
                 <span className="bg-secondary text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm whitespace-nowrap transition-transform duration-300 group-hover:scale-105">
                   {translateCategory(featuredNews.category)}
                 </span>
@@ -313,8 +343,8 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 </span>
               </div>
 
-              {/* Featured Content */}
-              <div className="relative z-10 p-5 sm:p-8 md:p-10 text-white max-w-4xl">
+              {/* Featured Content: z-20 pointer-events-none, buttons have pointer-events-auto z-30 */}
+              <div className="relative z-20 p-5 sm:p-8 md:p-10 text-white max-w-4xl pointer-events-none">
                 <h2 className="text-xl sm:text-2xl md:text-4xl font-extrabold mb-3 md:mb-4 leading-tight group-hover:text-secondary-container transition-all duration-300 drop-shadow-md">
                   {featuredNews.title}
                 </h2>
@@ -323,34 +353,28 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 </p>
                 <div className="flex flex-wrap sm:flex-row gap-3 sm:gap-4 items-center justify-between">
                   <div className="flex items-center gap-2.5 sm:gap-3">
-                    <span className="inline-flex items-center gap-2 bg-secondary text-white transition-all duration-300 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-xs md:text-sm group-hover:bg-secondary/90 shadow-md group-hover:shadow-glow group-hover:scale-105">
+                    <span className="inline-flex items-center gap-2 bg-secondary text-white transition-all duration-300 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-xs md:text-sm group-hover:bg-secondary/90 shadow-md group-hover:shadow-glow group-hover:scale-105 pointer-events-none">
                       {t("readMore")} <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1.5" />
                     </span>
-                    {/* Tombol Universal Share */}
+                    {/* Tombol Universal Share: pointer-events-auto & z-30 */}
                     <button
+                      type="button"
                       onClick={(e) => handleUniversalShare(e, featuredNews.title, featuredNews.slug)}
                       title={locale === "id" ? "Bagikan berita" : "Share news"}
-                      className="relative z-30 inline-flex items-center gap-1.5 bg-white/20 hover:bg-primary text-white backdrop-blur-md px-3.5 py-2.5 rounded-full text-xs font-semibold shadow-md transition-all duration-300 border border-white/20 hover:scale-105 active:scale-95"
+                      className="pointer-events-auto relative z-30 inline-flex items-center gap-1.5 bg-white/20 hover:bg-primary text-white backdrop-blur-md px-3.5 py-2.5 rounded-full text-xs font-semibold shadow-md transition-all duration-300 border border-white/20 hover:scale-105 active:scale-95 cursor-pointer"
                     >
                       <FiShare2 size={14} />
                       <span className="hidden sm:inline">{locale === "id" ? "Bagikan" : "Share"}</span>
                     </button>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-white/90 z-30">
-                    <div className="relative z-30">
+                  <div className="flex items-center gap-4 text-xs text-white/90">
+                    <div className="pointer-events-auto relative z-30">
                       <LikeButton initialLikes={featuredNews.likes} id={featuredNews.id} table="berita" label={t("likes")} size={16} />
                     </div>
                     <span className="flex items-center gap-1"><FiEye /> {featuredNews.views} {t("views")}</span>
                   </div>
                 </div>
               </div>
-
-              {/* Invisible full-card link */}
-              <Link
-                href={`/berita/${featuredNews.slug}`}
-                className="absolute inset-0 z-20"
-                aria-label={featuredNews.title}
-              />
             </div>
           </section>
         )}
@@ -386,19 +410,26 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                     key={news.id}
                     className="w-full"
                   >
-                    <article className="group relative rounded-3xl overflow-hidden shadow-md cursor-pointer h-[380px] sm:h-[400px] flex flex-col justify-end transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 border border-outline-variant/15 hover:border-primary/40 w-full bg-slate-900">
+                    <article className="group relative rounded-3xl overflow-hidden shadow-md h-[380px] sm:h-[400px] flex flex-col justify-end transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20 border border-outline-variant/15 hover:border-primary/40 w-full bg-slate-900">
                       {/* Background Image with Smooth Zoom */}
                       <div
-                        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110"
+                        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110 pointer-events-none"
                         style={{ backgroundImage: `url('${news.image_url}')` }}
                       ></div>
 
-                      {/* Multi-layer Dark Gradient: menjamin teks putih selalu kontras & nyaman dibaca */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/90 via-55% to-slate-950/25 transition-opacity duration-300 group-hover:opacity-95"></div>
+                      {/* Multi-layer Dark Gradient */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/90 via-55% to-slate-950/25 transition-opacity duration-300 group-hover:opacity-95 pointer-events-none"></div>
                       <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
 
-                      {/* Content */}
-                      <div className="relative z-10 p-5 sm:p-6 flex flex-col items-start text-white w-full">
+                      {/* Full-card link at z-10 */}
+                      <Link
+                        href={`/berita/${news.slug}`}
+                        className="absolute inset-0 z-10 cursor-pointer"
+                        aria-label={news.title}
+                      />
+
+                      {/* Content at z-20 pointer-events-none */}
+                      <div className="relative z-20 p-5 sm:p-6 flex flex-col items-start text-white w-full pointer-events-none">
                         {/* Category Badge + Date Badge + Read Time + Stats */}
                         <div className="flex items-center justify-between w-full mb-3 gap-2">
                           <div className="flex items-center gap-1.5 flex-wrap">
@@ -415,7 +446,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-white/90 font-medium shrink-0">
-                            <div className="relative z-30">
+                            <div className="pointer-events-auto relative z-30">
                               <LikeButton initialLikes={news.likes} id={news.id} table="berita" size={11} />
                             </div>
                             <span className="flex items-center gap-0.5"><FiEye size={11} /> {news.views}</span>
@@ -438,21 +469,15 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                             {t("readMore").toUpperCase()} <FiArrowRight size={13} className="transition-transform duration-300 group-hover:translate-x-1.5" />
                           </span>
                           <button
+                            type="button"
                             onClick={(e) => handleUniversalShare(e, news.title, news.slug)}
                             title={locale === "id" ? "Bagikan berita" : "Share news"}
-                            className="relative z-30 p-2.5 rounded-full bg-white/15 hover:bg-primary text-white backdrop-blur-md transition-all duration-300 border border-white/20 hover:scale-110 active:scale-95 shadow-xs"
+                            className="pointer-events-auto relative z-30 p-2.5 rounded-full bg-white/15 hover:bg-primary text-white backdrop-blur-md transition-all duration-300 border border-white/20 hover:scale-110 active:scale-95 shadow-xs cursor-pointer"
                           >
                             <FiShare2 size={13} />
                           </button>
                         </div>
                       </div>
-
-                      {/* Invisible full-card link */}
-                      <Link
-                        href={`/berita/${news.slug}`}
-                        className="absolute inset-0 z-20"
-                        aria-label={news.title}
-                      />
                     </article>
                   </motion.div>
                 ))}
@@ -542,27 +567,34 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                   className="w-[280px] sm:w-[320px] lg:w-auto shrink-0 lg:shrink snap-start"
                 >
                   <div
-                    className="group relative rounded-3xl overflow-hidden shadow-md cursor-pointer h-[210px] flex flex-col justify-end transition-all duration-500 hover:shadow-xl hover:shadow-primary/15 w-full border border-outline-variant/15 hover:border-primary/40 bg-slate-900"
+                    className="group relative rounded-3xl overflow-hidden shadow-md h-[210px] flex flex-col justify-end transition-all duration-500 hover:shadow-xl hover:shadow-primary/15 w-full border border-outline-variant/15 hover:border-primary/40 bg-slate-900"
                   >
                     {/* Background Image with Zoom */}
                     <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110"
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110 pointer-events-none"
                       style={{ backgroundImage: `url('${item.image_url}')` }}
                     ></div>
 
                     {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/20 transition-opacity duration-300 group-hover:opacity-95"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/20 transition-opacity duration-300 group-hover:opacity-95 pointer-events-none"></div>
                     <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
 
-                    {/* Content */}
-                    <div className="relative z-10 p-4 sm:p-5 flex flex-col items-start text-white w-full">
+                    {/* Full-card link at z-10 */}
+                    <Link
+                      href={`/berita/${item.slug}`}
+                      className="absolute inset-0 z-10 cursor-pointer"
+                      aria-label={item.title}
+                    />
+
+                    {/* Content at z-20 pointer-events-none */}
+                    <div className="relative z-20 p-4 sm:p-5 flex flex-col items-start text-white w-full pointer-events-none">
                       <div className="flex items-center justify-between w-full gap-2 mb-2">
                         <span className="bg-secondary text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-xs uppercase tracking-wider transition-transform duration-300 group-hover:scale-105">
                           {translateCategory(item.category)}
                         </span>
                         <div className="flex items-center gap-2 text-[9px] text-white/90 font-medium shrink-0">
                           <span className="flex items-center gap-0.5"><FiEye size={10} /> {item.views}</span>
-                          <div className="relative z-30">
+                          <div className="pointer-events-auto relative z-30">
                             <LikeButton initialLikes={item.likes} id={item.id} table="berita" size={10} />
                           </div>
                         </div>
@@ -575,21 +607,15 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                           <FiCalendar size={10} className="text-white/80 shrink-0" /> {formatDateLocalized(item.created_at, locale)}
                         </span>
                         <button
+                          type="button"
                           onClick={(e) => handleUniversalShare(e, item.title, item.slug)}
                           title={locale === "id" ? "Bagikan berita" : "Share news"}
-                          className="relative z-30 p-2 rounded-full bg-white/15 hover:bg-primary text-white backdrop-blur-sm transition-all duration-300 border border-white/20 hover:scale-110 active:scale-95 shadow-xs"
+                          className="pointer-events-auto relative z-30 p-1.5 rounded-full bg-white/15 hover:bg-primary text-white backdrop-blur-sm transition-all duration-300 border border-white/20 hover:scale-110 active:scale-95 shadow-xs cursor-pointer"
                         >
                           <FiShare2 size={11} />
                         </button>
                       </div>
                     </div>
-
-                    {/* Invisible full-card link */}
-                    <Link
-                      href={`/berita/${item.slug}`}
-                      className="absolute inset-0 z-20"
-                      aria-label={item.title}
-                    />
                   </div>
                 </motion.div>
               ))}
