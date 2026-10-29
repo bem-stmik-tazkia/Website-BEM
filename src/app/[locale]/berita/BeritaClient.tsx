@@ -220,28 +220,43 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
     return filteredNews.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredNews, currentPage]);
 
-  // Berita terpopuler — Filter keluar SEMUA berita yang sedang tampil di layar (Hero + Grid aktif)
-  // sehingga 100% TIDAK PERNAH ada berita kembar/dobel di layar yang sama!
+  // Skor interaksi: 1 view = 1 poin, 1 like = 2 poin
+  const getEngagementScore = (item: NewsItem) => {
+    return (item.views || 0) + (item.likes || 0) * 2;
+  };
+
+  // Berita terpopuler — Dinamis mengikuti kategori yang dipilih & KONSISTEN antar halaman
   const popularNews = useMemo(() => {
-    const displayedIds = new Set<string>();
-    // 1. Catat ID Hero jika sedang aktif tampil
-    if (featuredNews && selectedCategory === "Semua" && debouncedSearchQuery === "") {
-      displayedIds.add(featuredNews.id);
+    const isAll = selectedCategory === "Semua" || selectedCategory.toLowerCase() === "all";
+
+    if (isAll) {
+      // Kategori "Semua": Tampilkan Top 3 terpopuler se-kampus (kecualikan Hero utama agar tidak duplikat)
+      const pool = sortedNews.filter((n) => (featuredNews && sortedNews.length >= 4) ? n.id !== featuredNews.id : true);
+      return [...pool].sort((a, b) => getEngagementScore(b) - getEngagementScore(a)).slice(0, 3);
+    } else {
+      // Kategori Spesifik (misal: "Artikel", "Berita", "Kampus"):
+      // 1. Ambil berita yang sesuai kategori yang dipilih
+      const categoryNews = sortedNews.filter(
+        (n) => n.category.toLowerCase() === selectedCategory.toLowerCase()
+      );
+      const sortedCategoryNews = [...categoryNews].sort(
+        (a, b) => getEngagementScore(b) - getEngagementScore(a)
+      );
+
+      // 2. Jika kategori tersebut memiliki >= 3 berita, langsung ambil top 3
+      if (sortedCategoryNews.length >= 3) {
+        return sortedCategoryNews.slice(0, 3);
+      }
+
+      // 3. Fallback cerdas: jika berita dalam kategori < 3, lengkapi sisanya dengan berita terpopuler global
+      const selectedIds = new Set(sortedCategoryNews.map((n) => n.id));
+      const fallbackNews = sortedNews
+        .filter((n) => !selectedIds.has(n.id) && (featuredNews ? n.id !== featuredNews.id : true))
+        .sort((a, b) => getEngagementScore(b) - getEngagementScore(a));
+
+      return [...sortedCategoryNews, ...fallbackNews].slice(0, 3);
     }
-    // 2. Catat ID semua berita yang tampil di Grid halaman aktif saat ini
-    paginatedNews.forEach((item) => displayedIds.add(item.id));
-
-    // 3. Kolam berita yang belum tampil sama sekali di layar
-    const unshownPool = sortedNews.filter((n) => !displayedIds.has(n.id));
-
-    // Jika artikel di DB cukup (>= 3), ambil hanya dari yang belum tampil.
-    // Jika artikel DB sangat sedikit (< 3), fallback dengan hanya mengecualikan Hero.
-    const pool = unshownPool.length >= 3 
-      ? unshownPool 
-      : sortedNews.filter((n) => featuredNews ? n.id !== featuredNews.id : true);
-
-    return [...pool].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 3);
-  }, [sortedNews, featuredNews, paginatedNews, selectedCategory, debouncedSearchQuery]);
+  }, [sortedNews, featuredNews, selectedCategory]);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -566,10 +581,12 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
           {/* Right Column: Sidebar (4/12) */}
           <aside id="tour-berita-popular" className="lg:col-span-4 flex flex-col gap-6 w-full order-2 lg:order-2">
 
-            {/* Sidebar Title */}
+            {/* Dynamic Sidebar Title */}
             <h3 className="text-base md:text-lg font-bold text-primary pb-2.5 border-b border-outline-variant/30 flex items-center gap-2 uppercase tracking-wide">
               <span className="w-2.5 h-4 bg-secondary rounded-full inline-block"></span>
-              {t("sidebarTitle")}
+              {selectedCategory === "Semua" || selectedCategory.toLowerCase() === "all"
+                ? t("sidebarTitle")
+                : `${translateCategory(selectedCategory)} ${locale === "id" ? "Terpopuler" : "Popular"}`}
             </h3>
 
             {/* Popular News Cards with Hover Lift */}
@@ -606,9 +623,21 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                     {/* Content at z-20 pointer-events-none */}
                     <div className="relative z-20 p-4 sm:p-5 flex flex-col items-start text-white w-full pointer-events-none">
                       <div className="flex items-center justify-between w-full gap-2 mb-2">
-                        <span className="bg-secondary text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-xs uppercase tracking-wider transition-transform duration-300 group-hover:scale-105">
-                          {translateCategory(item.category)}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* Ranking Badge #1, #2, #3 */}
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs flex items-center gap-0.5 tracking-wider ${
+                            index === 0
+                              ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-amber-500/25 ring-1 ring-amber-300/40"
+                              : index === 1
+                              ? "bg-gradient-to-r from-slate-200 to-slate-400 text-slate-950 shadow-slate-400/25 ring-1 ring-slate-200/40"
+                              : "bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-amber-700/25 ring-1 ring-amber-500/30"
+                          }`}>
+                            #{index + 1}
+                          </span>
+                          <span className="bg-secondary text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-xs uppercase tracking-wider transition-transform duration-300 group-hover:scale-105">
+                            {translateCategory(item.category)}
+                          </span>
+                        </div>
                         <div className="flex items-center gap-2 text-[9px] text-white/90 font-medium shrink-0">
                           <span className="flex items-center gap-0.5"><FiEye size={10} /> {item.views}</span>
                           <div className="pointer-events-auto relative z-30">
