@@ -62,3 +62,4 @@ export async function getPublicMaintenanceSettings(): Promise<{
     releaseNotes: null,
   };
 }
+

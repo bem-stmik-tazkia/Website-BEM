@@ -6,11 +6,13 @@ import {
   FiSearch,
   FiCalendar,
   FiArrowRight,
-  FiHeart,
   FiEye,
   FiChevronLeft,
-  FiChevronRight
+  FiChevronRight,
+  FiClock,
+  FiBell
 } from "react-icons/fi";
+import { SiWhatsapp, SiInstagram, SiDiscord } from "react-icons/si";
 import { useTranslations, useLocale } from "next-intl";
 import LikeButton from "@/components/ui/LikeButton";
 import { motion } from "framer-motion";
@@ -101,12 +103,14 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
     );
   }, [translatedNews]);
 
-  // Compute featured, popular, and grid news dynamically
+  // Compute featured news dynamically (hanya aktif pada kategori Semua dan tanpa pencarian)
   const featuredNews = sortedNews.length > 0 ? sortedNews[0] : null;
-  const newsList = sortedNews;
+
+  // Berita terpopuler — filter keluar berita yang sedang jadi hero agar pengunjung melihat konten variatif
   const popularNews = useMemo(() => {
-    return [...sortedNews].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 3);
-  }, [sortedNews]);
+    const pool = sortedNews.filter(n => (featuredNews && sortedNews.length >= 4) ? n.id !== featuredNews.id : true);
+    return [...pool].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 3);
+  }, [sortedNews, featuredNews]);
 
   // Categories list
   const categories = ["Semua", "Berita", "Artikel", "Rilis", "Kampus", "Pendidikan"];
@@ -125,9 +129,31 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
     return cat;
   };
 
-  // Filter & Search Logic
+  // Estimasi waktu baca untuk menaikkan minat klik (Click-Through Rate)
+  const calculateReadingTime = (text?: string) => {
+    if (!text) return locale === "id" ? "2 mnt baca" : "2 min read";
+    const words = text.trim().split(/\s+/).length;
+    const minutes = Math.max(2, Math.ceil(words / 35));
+    return locale === "id" ? `${minutes} mnt baca` : `${minutes} min read`;
+  };
+
+  // Bagikan berita cepat ke WhatsApp grup kelas / teman mahasiswa
+  const handleShareWA = (e: React.MouseEvent, title: string, slug: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://bem.stmik.tazkia.ac.id";
+    const url = `${baseUrl}/${locale}/berita/${slug}`;
+    const text = encodeURIComponent(`📢 *${title}*\n\nBaca selengkapnya di Website Resmi BEM STMIK Tazkia:\n${url}`);
+    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank", "noopener,noreferrer");
+  };
+
+  // Filter & Search Logic — EKSKLUSI Hero Banner dari Grid agar tidak muncul dobel di satu layar
   const filteredNews = useMemo(() => {
-    const listToFilter = selectedCategory === "Semua" && debouncedSearchQuery === "" ? newsList : sortedNews;
+    const isHeroActive = selectedCategory === "Semua" && debouncedSearchQuery === "" && featuredNews !== null;
+    const listToFilter = isHeroActive
+      ? sortedNews.filter(item => item.id !== featuredNews.id)
+      : sortedNews;
+
     return listToFilter.filter((item) => {
       const q = debouncedSearchQuery.toLowerCase().trim();
       const matchesSearch =
@@ -141,9 +167,9 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
 
       return matchesSearch && matchesCategory;
     });
-  }, [sortedNews, newsList, debouncedSearchQuery, selectedCategory]);
+  }, [sortedNews, debouncedSearchQuery, selectedCategory, featuredNews]);
 
-  // Pagination Logic
+  // Pagination Logic (4 berita per halaman pada grid kiri)
   const itemsPerPage = 4;
   const totalPages = Math.ceil(filteredNews.length / itemsPerPage) || 1;
   const paginatedNews = useMemo(() => {
@@ -200,7 +226,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
           </div>
 
           {/* Category Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-thin">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
             {categories.map((category) => (
               <button
                 key={category}
@@ -216,41 +242,57 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
           </div>
         </section>
 
-        {/* Featured News Section */}
+        {/* Featured News Section (Hero Banner) */}
         {selectedCategory === "Semua" && searchQuery === "" && featuredNews && (
-          <section id="tour-berita-featured" className="mb-12">
-            <div className="group relative rounded-3xl overflow-hidden shadow-md border border-outline-variant/20 bg-surface min-h-[350px] md:min-h-[400px] flex flex-col justify-end transition-all duration-300 hover:shadow-xl cursor-pointer">
+          <section id="tour-berita-featured" className="mb-10 md:mb-12">
+            <div className="group relative rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 bg-slate-950 min-h-[380px] md:min-h-[430px] flex flex-col justify-end transition-all duration-300 hover:shadow-2xl cursor-pointer">
+              {/* Background Image */}
               <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                 style={{ backgroundImage: `url('${featuredNews.image_url}')` }}
               ></div>
-              {/* Gradient Overlay for Text Visibility - Stronger bottom gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0d2a5c] via-[#1b4086]/70 to-[#1b4086]/10 transition-opacity duration-300 group-hover:opacity-90"></div>
 
-              {/* Featured Badge */}
-              <div className="absolute top-6 left-6 z-10 flex flex-wrap items-center gap-2 pr-6">
+              {/* Multi-layer Dark Gradient for High Contrast */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/30 transition-opacity duration-300 group-hover:opacity-95"></div>
+              <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
+
+              {/* Featured Badges */}
+              <div className="absolute top-5 sm:top-6 left-5 sm:left-6 z-10 flex flex-wrap items-center gap-2 pr-6">
                 <span className="bg-secondary text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider shadow-sm whitespace-nowrap">
                   {translateCategory(featuredNews.category)}
                 </span>
                 <span className="bg-white/20 backdrop-blur-md text-white text-[10px] md:text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/20">
                   <FiCalendar className="inline shrink-0" /> {formatDateLocalized(featuredNews.created_at, locale)}
                 </span>
+                <span className="bg-white/15 backdrop-blur-md text-white/90 text-[10px] md:text-xs font-medium px-2.5 py-1.5 rounded-full flex items-center gap-1.5 border border-white/15">
+                  <FiClock className="inline shrink-0" /> {calculateReadingTime(featuredNews.excerpt)}
+                </span>
               </div>
 
               {/* Featured Content */}
-              <div className="relative z-10 p-5 md:p-10 text-white max-w-4xl">
-                <h2 className="text-xl md:text-4xl font-extrabold mb-3 md:mb-4 leading-tight group-hover:text-secondary-container transition-colors duration-300">
+              <div className="relative z-10 p-5 sm:p-8 md:p-10 text-white max-w-4xl">
+                <h2 className="text-xl sm:text-2xl md:text-4xl font-extrabold mb-3 md:mb-4 leading-tight group-hover:text-secondary-container transition-colors duration-300 drop-shadow-md">
                   {featuredNews.title}
                 </h2>
-                <p className="text-white/90 text-xs md:text-base mb-4 md:mb-6 font-light leading-relaxed line-clamp-3">
+                <p className="text-white/85 text-xs sm:text-sm md:text-base mb-4 md:mb-6 font-light leading-relaxed line-clamp-3 drop-shadow-xs">
                   {featuredNews.excerpt}
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                  <span className="inline-flex items-center gap-2 bg-secondary text-white transition-all duration-300 px-6 py-3 rounded-full font-bold text-xs md:text-sm group-hover:translate-x-1 group-hover:bg-secondary/90">
-                    {t("readMore")} <FiArrowRight />
-                  </span>
+                <div className="flex flex-wrap sm:flex-row gap-3 sm:gap-4 items-center justify-between">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <span className="inline-flex items-center gap-2 bg-secondary text-white transition-all duration-300 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-xs md:text-sm group-hover:translate-x-1 group-hover:bg-secondary/90 shadow-md">
+                      {t("readMore")} <FiArrowRight />
+                    </span>
+                    {/* Tombol Cepat Bagikan ke WhatsApp */}
+                    <button
+                      onClick={(e) => handleShareWA(e, featuredNews.title, featuredNews.slug)}
+                      title={locale === "id" ? "Bagikan ke WhatsApp" : "Share to WhatsApp"}
+                      className="relative z-30 inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 rounded-full text-xs font-semibold shadow-md transition-all active:scale-95"
+                    >
+                      <SiWhatsapp size={14} />
+                      <span className="hidden sm:inline">{locale === "id" ? "Bagikan" : "Share"}</span>
+                    </button>
+                  </div>
                   <div className="flex items-center gap-4 text-xs text-white/90 z-30">
-                    {/* The like button needs to be clickable independently, so it gets z-30 and relative position */}
                     <div className="relative z-30">
                       <LikeButton initialLikes={featuredNews.likes} id={featuredNews.id} table="berita" label={t("likes")} size={16} />
                     </div>
@@ -259,7 +301,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 </div>
               </div>
 
-              {/* Invisible full-card link — makes entire banner clickable */}
+              {/* Invisible full-card link */}
               <Link
                 href={`/berita/${featuredNews.slug}`}
                 className="absolute inset-0 z-20"
@@ -279,7 +321,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
               {t("categoryNews")}
             </h3>
             {isLoading || isSearching || isTranslatingNews ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
                 {[1, 2, 3, 4].map((n) => (
                   <div key={n} className="bg-surface rounded-3xl p-6 shadow-sm border border-outline-variant/20 h-80 flex flex-col justify-between animate-pulse">
                     <div className="w-full h-40 bg-surface-variant/60 rounded-xl" />
@@ -289,36 +331,42 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 ))}
               </div>
             ) : paginatedNews.length > 0 ? (
-              <div className="flex flex-row overflow-x-auto gap-6 pb-6 w-full md:grid md:grid-cols-2 md:overflow-visible md:pb-0 scrollbar-hide flex-nowrap md:flex-wrap">
+              /* Responsif: 1 kolom di HP, 2 kolom di tablet & desktop agar nyaman di-scroll */
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6 w-full">
                 {paginatedNews.map((news, index) => (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.05 }}
                     key={news.id}
-                    className="w-[280px] sm:w-[320px] md:w-auto shrink-0 md:shrink"
+                    className="w-full"
                   >
-                    <article className="group relative rounded-3xl overflow-hidden shadow-md cursor-pointer h-[360px] flex flex-col justify-end transition-all duration-300 hover:shadow-xl w-full">
+                    <article className="group relative rounded-3xl overflow-hidden shadow-md cursor-pointer h-[380px] sm:h-[400px] flex flex-col justify-end transition-all duration-300 hover:shadow-2xl border border-outline-variant/15 w-full bg-slate-900">
                       {/* Background Image */}
                       <div
-                        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                         style={{ backgroundImage: `url('${news.image_url}')` }}
                       ></div>
 
-                      {/* Gradient Overlay — stronger at bottom, slightly dims whole card on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0d2a5c] via-[#0d2a5c]/80 to-[#1b4086]/20 transition-opacity duration-300 group-hover:opacity-90"></div>
+                      {/* Multi-layer Dark Gradient: menjamin teks putih selalu kontras & nyaman dibaca */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/90 via-55% to-slate-950/25 transition-opacity duration-300 group-hover:opacity-95"></div>
+                      <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
 
                       {/* Content */}
-                      <div className="relative z-10 p-6 flex flex-col items-start text-white w-full">
-                        {/* Category Badge + Date Badge + Stats */}
-                        <div className="flex items-center justify-between w-full mb-2.5 gap-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider border border-white/20">
+                      <div className="relative z-10 p-5 sm:p-6 flex flex-col items-start text-white w-full">
+                        {/* Category Badge + Date Badge + Read Time + Stats */}
+                        <div className="flex items-center justify-between w-full mb-3 gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="bg-secondary text-white text-[10px] font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider shadow-xs">
                               {translateCategory(news.category)}
                             </span>
-                            <span className="bg-white/15 backdrop-blur-sm text-white/95 text-[10px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1 border border-white/15 shadow-xs">
+                            <span className="bg-white/20 backdrop-blur-sm text-white/95 text-[10px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1 border border-white/15 shadow-xs">
                               <FiCalendar size={11} className="shrink-0 text-white/80" />
                               {formatDateLocalized(news.created_at, locale)}
+                            </span>
+                            <span className="bg-white/15 backdrop-blur-sm text-white/90 text-[10px] font-medium px-2 py-0.5 rounded-md hidden sm:flex items-center gap-1 border border-white/15 shadow-xs">
+                              <FiClock size={11} className="shrink-0 text-white/80" />
+                              {calculateReadingTime(news.excerpt)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-white/90 font-medium shrink-0">
@@ -330,22 +378,31 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                         </div>
 
                         {/* Title */}
-                        <h3 className="text-base font-bold mb-2 leading-snug text-white group-hover:text-secondary transition-colors duration-300 line-clamp-2 drop-shadow-md">
+                        <h3 className="text-base sm:text-lg font-bold mb-2 leading-snug text-white group-hover:text-secondary-container transition-colors duration-300 line-clamp-2 drop-shadow-md">
                           {news.title}
                         </h3>
 
                         {/* Excerpt */}
-                        <p className="text-white/80 text-xs mb-4 line-clamp-2 font-light leading-relaxed drop-shadow-sm">
+                        <p className="text-white/85 text-xs mb-4 line-clamp-2 font-light leading-relaxed drop-shadow-xs">
                           {news.excerpt}
                         </p>
 
-                        {/* Read More indicator */}
-                        <span className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-secondary opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
-                          {t("readMore").toUpperCase()} <FiArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
-                        </span>
+                        {/* Actions: Read More + Quick WhatsApp Share */}
+                        <div className="flex items-center justify-between w-full pt-1">
+                          <span className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-secondary transition-all duration-300 group-hover:translate-x-1">
+                            {t("readMore").toUpperCase()} <FiArrowRight size={13} />
+                          </span>
+                          <button
+                            onClick={(e) => handleShareWA(e, news.title, news.slug)}
+                            title={locale === "id" ? "Bagikan ke WhatsApp" : "Share to WhatsApp"}
+                            className="relative z-30 p-2 rounded-full bg-white/15 hover:bg-emerald-600 text-white backdrop-blur-sm transition-all duration-200 border border-white/20 active:scale-95 shadow-xs"
+                          >
+                            <SiWhatsapp size={13} />
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Invisible full-card link — makes entire card clickable */}
+                      {/* Invisible full-card link */}
                       <Link
                         href={`/berita/${news.slug}`}
                         className="absolute inset-0 z-20"
@@ -382,13 +439,13 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
               })()
             )}
 
-            {/* Pagination Component */}
+            {/* Pagination Component — Kini tampil rapi di Laptop maupun HP */}
             {totalPages > 1 && (
-              <nav className="hidden md:flex justify-center items-center gap-2 mt-6">
+              <nav className="flex justify-center items-center gap-1.5 sm:gap-2 mt-8 md:mt-10">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  className="p-2.5 rounded-xl border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="p-2 sm:p-2.5 rounded-xl border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                   aria-label={t("prevPage")}
                 >
                   <FiChevronLeft size={18} />
@@ -398,7 +455,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${currentPage === page
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl font-bold text-xs sm:text-sm transition-all ${currentPage === page
                         ? "bg-secondary text-white shadow-glow"
                         : "border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container"
                       }`}
@@ -410,7 +467,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  className="p-2.5 rounded-xl border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="p-2 sm:p-2.5 rounded-xl border border-outline-variant/35 bg-surface text-primary hover:bg-primary-container disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                   aria-label={t("nextPage")}
                 >
                   <FiChevronRight size={18} />
@@ -428,32 +485,33 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
               {t("sidebarTitle")}
             </h3>
 
-            {/* Popular News Cards - Horizontal scroll on mobile, vertical stack on desktop */}
-            <div className="flex flex-row overflow-x-auto gap-4 pb-4 w-full lg:flex-col lg:overflow-visible lg:pb-0 scrollbar-hide flex-nowrap lg:flex-wrap">
+            {/* Popular News Cards */}
+            <div className="flex flex-row overflow-x-auto gap-4 pb-4 w-full lg:flex-col lg:overflow-visible lg:pb-0 scrollbar-none snap-x snap-mandatory flex-nowrap lg:flex-wrap">
               {popularNews.map((item, index) => (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
                   key={item.id}
-                  className="w-[260px] sm:w-[300px] lg:w-auto shrink-0 lg:shrink"
+                  className="w-[280px] sm:w-[320px] lg:w-auto shrink-0 lg:shrink snap-start"
                 >
                   <div
-                    className="group relative rounded-3xl overflow-hidden shadow-md cursor-pointer h-[200px] flex flex-col justify-end transition-all duration-300 hover:shadow-xl w-full"
+                    className="group relative rounded-3xl overflow-hidden shadow-md cursor-pointer h-[210px] flex flex-col justify-end transition-all duration-300 hover:shadow-xl w-full border border-outline-variant/15 bg-slate-900"
                   >
                     {/* Background Image */}
                     <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
                       style={{ backgroundImage: `url('${item.image_url}')` }}
                     ></div>
 
-                    {/* Gradient Overlay - Stronger bottom */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0d2a5c] via-[#0d2a5c]/80 to-[#1b4086]/20 transition-opacity duration-300 group-hover:opacity-90"></div>
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/20 transition-opacity duration-300 group-hover:opacity-95"></div>
+                    <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
 
                     {/* Content */}
-                    <div className="relative z-10 p-5 flex flex-col items-start text-white w-full">
+                    <div className="relative z-10 p-4 sm:p-5 flex flex-col items-start text-white w-full">
                       <div className="flex items-center justify-between w-full gap-2 mb-2">
-                        <span className="bg-surface text-primary text-[9px] font-bold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider">
+                        <span className="bg-secondary text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-xs uppercase tracking-wider">
                           {translateCategory(item.category)}
                         </span>
                         <div className="flex items-center gap-2 text-[9px] text-white/90 font-medium shrink-0">
@@ -463,12 +521,21 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                           </div>
                         </div>
                       </div>
-                      <h4 className="text-sm font-bold leading-snug text-white group-hover:text-secondary transition-colors duration-300 line-clamp-2 drop-shadow-md">
+                      <h4 className="text-sm font-bold leading-snug text-white group-hover:text-secondary-container transition-colors duration-300 line-clamp-2 drop-shadow-md">
                         {item.title}
                       </h4>
-                      <span className="flex items-center gap-1 text-[10px] text-white/90 mt-2 font-medium drop-shadow-sm bg-black/25 backdrop-blur-xs px-2 py-0.5 rounded border border-white/10">
-                        <FiCalendar size={10} className="text-white/80 shrink-0" /> {formatDateLocalized(item.created_at, locale)}
-                      </span>
+                      <div className="flex items-center justify-between w-full mt-2.5">
+                        <span className="flex items-center gap-1 text-[10px] text-white/85 font-medium drop-shadow-xs bg-white/10 backdrop-blur-xs px-2 py-0.5 rounded border border-white/10">
+                          <FiCalendar size={10} className="text-white/80 shrink-0" /> {formatDateLocalized(item.created_at, locale)}
+                        </span>
+                        <button
+                          onClick={(e) => handleShareWA(e, item.title, item.slug)}
+                          title={locale === "id" ? "Bagikan ke WhatsApp" : "Share to WhatsApp"}
+                          className="relative z-30 p-1.5 rounded-full bg-white/15 hover:bg-emerald-600 text-white backdrop-blur-sm transition-all duration-200 border border-white/20 active:scale-95"
+                        >
+                          <SiWhatsapp size={11} />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Invisible full-card link */}
@@ -482,6 +549,45 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
               ))}
             </div>
 
+            {/* Community Retention Widget: Saluran Resmi BEM STMIK Tazkia */}
+            <div className="mt-2 bg-gradient-to-br from-primary/10 via-surface to-secondary/10 border border-primary/20 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col gap-3 relative overflow-hidden">
+              <div className="flex items-center gap-2.5">
+                <span className="p-2.5 rounded-2xl bg-primary text-white shadow-sm">
+                  <FiBell size={18} />
+                </span>
+                <div>
+                  <h4 className="text-sm font-bold text-primary">
+                    {locale === "id" ? "Saluran Resmi BEM" : "Official BEM Channels"}
+                  </h4>
+                  <p className="text-[11px] text-on-surface-variant font-light">
+                    {locale === "id" ? "Info beasiswa, lomba & agenda kampus" : "Campus updates & scholarships"}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                {locale === "id"
+                  ? "Dapatkan notifikasi berita terkini, info beasiswa, dan agenda kegiatan BEM STMIK Tazkia langsung di genggamanmu."
+                  : "Get instant campus news, competition alerts, and agenda updates straight to your social apps."}
+              </p>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <a
+                  href="https://www.instagram.com/bem_stmiktazkia?igsh=amNsbWRqODVwemV4"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white text-xs font-semibold shadow-xs transition-all active:scale-95"
+                >
+                  <SiInstagram size={13} /> Instagram
+                </a>
+                <a
+                  href="https://discord.gg/dFVN24ZMXU"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold shadow-xs transition-all active:scale-95"
+                >
+                  <SiDiscord size={13} /> Discord
+                </a>
+              </div>
+            </div>
 
           </aside>
 
