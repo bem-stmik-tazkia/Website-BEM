@@ -23,7 +23,7 @@ const QUILL_MODULES = {
   ],
 };
 
-const CATEGORIES = ["Berita", "Artikel", "Rilis", "Kampus", "Pendidikan", "Mahasiswa", "Event"];
+const CATEGORIES = ["Berita", "Artikel", "Kampus"];
 
 function generateSlug(title: string) {
   return title
