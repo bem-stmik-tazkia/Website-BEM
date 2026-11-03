@@ -67,7 +67,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
   const [title, setTitle] = useState(initialData?.title || "");
   const [slug, setSlug] = useState(initialData?.slug || "");
   const [slugManual, setSlugManual] = useState(Boolean(initialData?.slug));
-  const [category, setCategory] = useState(initialData?.category || CATEGORIES[0]);
+  const [category] = useState(initialData?.category || "Artikel");
   const [coverUrl, setCoverUrl] = useState(initialData?.cover_url || "");
   const [content, setContent] = useState(initialData?.content || "");
   const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
@@ -138,7 +138,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         setErrorMessage("Judul artikel wajib antara 10 hingga 120 karakter.");
         return;
       }
-      if (!isSlugValid && !isRevision) {
+      if (isEdit && !isSlugValid) {
         setErrorMessage("Slug hanya boleh berupa huruf kecil, angka, dan tanda hubung (-), maksimal 80 karakter.");
         return;
       }
@@ -257,7 +257,9 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         router.refresh();
       } else {
         // Alur Buat Artikel Baru
-        const finalSlug = slug || slugify(title);
+        const baseSlug = slugify(title);
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const finalSlug = baseSlug ? `${baseSlug}-${randomSuffix}` : `artikel-${randomSuffix}`;
 
         const insertPayload: Record<string, any> = {
           author_id: user.id,
@@ -427,81 +429,38 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             maxLength={120}
           />
 
-          {/* Slug Tautan URL */}
-          {!isRevision && (
-            <div className="mt-3.5 pt-3 border-t border-outline-variant/15 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-2 text-on-surface-variant min-w-0">
-                <span className="shrink-0 font-medium text-on-surface-variant/70">Slug URL:</span>
-                {slugManual ? (
-                  <input
-                    type="text"
-                    value={slug}
-                    onChange={(e) => setSlug(slugify(e.target.value))}
-                    className="px-2.5 py-1 rounded-lg bg-surface-variant/30 border border-outline-variant/40 text-xs text-on-surface outline-none focus:border-primary w-full max-w-sm"
-                    placeholder="slug-artikel"
-                  />
-                ) : (
-                  <span className="font-mono text-primary truncate">/artikel/{slug || "slug-otomatis"}</span>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setSlugManual(!slugManual)}
-                className="text-[11px] font-bold text-primary hover:underline shrink-0"
-              >
-                {slugManual ? "Kunci Otomatis" : "Ubah Slug Manual"}
-              </button>
-            </div>
-          )}
+          {/* Info Tautan Publik Otomatis */}
+          <div className="mt-3 pt-2.5 border-t border-outline-variant/15 flex items-center justify-between text-xs text-on-surface-variant">
+            <span className="font-medium text-on-surface-variant/70">Tautan Publik Otomatis:</span>
+            <span className="font-mono text-primary text-[11px] sm:text-xs">
+              /artikel/{slugify(title) || "judul-artikel"}-{isNew ? "[hash-acak]" : (initialData?.slug?.split('-').pop() || "id")}
+            </span>
+          </div>
         </div>
 
-        {/* Kategori & Gambar Sampul */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Kategori */}
-          <div className="bg-surface border border-outline-variant/30 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+        {/* Gambar Sampul (Cover Image) dengan Badge Tipe Artikel Tunggal */}
+        <div className="bg-surface border border-outline-variant/30 rounded-2xl p-5 sm:p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
             <div>
-              <label htmlFor="article-category" className="text-xs sm:text-sm font-bold text-on-surface flex items-center gap-1.5 mb-2">
-                <FiTag className="text-primary" />
-                <span>Kategori Artikel</span>
+              <label className="text-xs sm:text-sm font-bold text-on-surface flex items-center gap-1.5">
+                <FiImage className="text-primary" />
+                <span>Gambar Sampul (Cover Image)</span>
               </label>
-              <p className="text-[11px] text-on-surface-variant mb-3 leading-relaxed">
-                Pilih topik yang paling mewakili tulisan Anda agar mudah ditemukan pembaca.
+              <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                Unggah gambar landscape resolusi tinggi (maks 2MB, JPG/PNG/WebP) atau masukkan tautan URL gambar langsung.
               </p>
-              <select
-                id="article-category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-variant/20 border border-outline-variant/40 focus:border-primary text-on-surface text-xs sm:text-sm outline-none transition-all font-medium"
-              >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
             </div>
-
-            <div className="mt-4 p-2.5 rounded-xl bg-surface-variant/30 text-[11px] text-on-surface-variant">
-              Kategori aktif: <span className="font-bold text-primary">{category}</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold self-start sm:self-center shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Tipe: Artikel Mahasiswa</span>
             </div>
           </div>
 
-          {/* Gambar Sampul (Cover) */}
-          <div className="md:col-span-2 bg-surface border border-outline-variant/30 rounded-2xl p-5 sm:p-6 shadow-sm">
-            <label className="text-xs sm:text-sm font-bold text-on-surface flex items-center gap-1.5 mb-2">
-              <FiImage className="text-primary" />
-              <span>Gambar Sampul (Cover Image)</span>
-            </label>
-            <p className="text-[11px] text-on-surface-variant mb-3 leading-relaxed">
-              Unggah gambar landscape resolusi tinggi (maks 2MB, JPG/PNG/WebP) atau masukkan tautan URL gambar langsung.
-            </p>
-
-            <ImageUpload
-              value={coverUrl}
-              onChange={(url) => setCoverUrl(url)}
-              folder="artikel"
-            />
-          </div>
+          <ImageUpload
+            value={coverUrl}
+            onChange={(url) => setCoverUrl(url)}
+            folder="artikel"
+          />
         </div>
 
         {/* Konten Artikel */}
