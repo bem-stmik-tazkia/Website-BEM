@@ -20,6 +20,7 @@ export default function LayoutClientWrapper({
   const isLoginPage = pathname?.includes("/login") || false;
   const isAdminPage = pathname?.includes("/admin") || false;
   const isMasukPage = pathname?.includes("/masuk") || false;
+  const isDashboardPage = pathname?.includes("/dashboard") || false;
   const hideLayout = isLoginPage || isAdminPage || isMasukPage;
 
   useEffect(() => {
@@ -71,7 +72,7 @@ export default function LayoutClientWrapper({
       </main>
       {!hideLayout && (
         <>
-          <FloatingKaryaPrompt />
+          {!isDashboardPage && <FloatingKaryaPrompt />}
           <FloatingActionMenu />
           <Footer />
         </>

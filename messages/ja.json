@@ -27,7 +27,8 @@
     "logoutConfirmTitle": "ログアウトの確認",
     "logoutConfirmDesc": "このアカウントからログアウトしてもよろしいですか？ダッシュボードにアクセスするには再度ログインする必要があります。",
     "cancel": "キャンセル",
-    "yesLogout": "はい、ログアウトします"
+    "yesLogout": "はい、ログアウトします",
+    "myArticles": "私の記事"
   },
   "Footer": {
     "description": "STMIK Tazkia の学生の可能性を開発し、願望を表明する上で革新的、協力的、そして積極的な BEM のパイオニアになること。",

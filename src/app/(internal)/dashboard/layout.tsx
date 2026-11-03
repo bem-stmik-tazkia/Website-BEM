@@ -16,11 +16,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-surface-variant/20 pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-surface-variant/20 pt-20 sm:pt-24 pb-32 sm:pb-20 px-3.5 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {children}
       </div>
     </div>
   );
 }
-

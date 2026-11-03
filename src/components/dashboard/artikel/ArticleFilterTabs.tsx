@@ -37,7 +37,7 @@ export default function ArticleFilterTabs({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       {/* Scrollable Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 sm:pb-0 scrollbar-none no-scrollbar -mx-1 px-1">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           return (
@@ -45,7 +45,7 @@ export default function ArticleFilterTabs({
               key={tab.key}
               onClick={() => onTabChange(tab.key)}
               type="button"
-              className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-2 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 shrink-0 ${
                 isActive
                   ? "bg-primary text-white shadow-sm shadow-primary/25"
                   : "bg-surface border border-outline-variant/30 text-on-surface-variant hover:border-primary/40 hover:text-on-surface"

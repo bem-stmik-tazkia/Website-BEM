@@ -172,7 +172,7 @@ export default function DashboardArtikelPage() {
           <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
             Artikel Saya
           </h1>
-          <p className="text-xs sm:text-sm text-on-surface-variant mt-1">
+          <p className="text-xs sm:text-sm text-on-surface-variant mt-1 max-w-xl">
             Kelola draf, pantau hasil moderasi admin BEM, dan bagikan gagasan Anda ke seluruh kampus.
           </p>
         </div>
@@ -180,7 +180,7 @@ export default function DashboardArtikelPage() {
         {/* CTA Tulis Artikel Baru */}
         <Link
           href="/dashboard/artikel/baru"
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-sm shadow-md shadow-primary/25 transition-all hover:scale-[1.02] shrink-0"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-sm shadow-md shadow-primary/25 transition-all hover:scale-[1.02] shrink-0 text-center cursor-pointer"
         >
           <FiPlus size={18} />
           <span>Tulis Artikel Baru</span>
