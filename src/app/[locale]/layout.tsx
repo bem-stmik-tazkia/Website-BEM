@@ -101,7 +101,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang={locale} className={`light ${plusJakartaSans.variable} ${outfit.variable}`} suppressHydrationWarning>
+    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className={`light ${plusJakartaSans.variable} ${outfit.variable}`} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

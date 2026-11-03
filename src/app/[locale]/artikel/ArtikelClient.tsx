@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import NativeLink from "next/link";
 import {
   FiSearch,
   FiClock,
@@ -105,13 +106,13 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
           </p>
 
           <div className="flex flex-wrap items-center gap-3 mt-6">
-            <Link
+            <NativeLink
               href="/dashboard/artikel/baru"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 transition-all cursor-pointer"
             >
               <FiEdit3 size={15} />
               <span>Tulis Karya Anda</span>
-            </Link>
+            </NativeLink>
             <a
               href="#katalog"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 hover:bg-surface-variant/30 text-on-surface text-xs sm:text-sm font-bold transition-colors"
