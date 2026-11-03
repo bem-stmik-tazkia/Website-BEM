@@ -14,11 +14,19 @@ export async function toggleLike(
     return false;
   }
 
-  // 1. Anti-Cheat: Validasi deviceId
-  const cleanDeviceId = (deviceId || '').trim();
+  // 1. Anti-Cheat: Validasi deviceId (dengan fallback otomatis jika kosong)
+  let cleanDeviceId = (deviceId || '').trim();
   if (cleanDeviceId.length < 5 || cleanDeviceId.length > 100) {
-    console.warn("[toggleLike] Ditolak: deviceId tidak valid.");
-    return false;
+    try {
+      const headersList = await headers();
+      const vercelIp = headersList.get("x-vercel-forwarded-for");
+      const clientIp = vercelIp
+        ? vercelIp.split(",")[0].trim()
+        : (headersList.get("x-forwarded-for")?.split(",")[0].trim() || "127.0.0.1");
+      cleanDeviceId = `ip_${clientIp.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    } catch {
+      cleanDeviceId = 'guest_device';
+    }
   }
 
   // 2. Anti-Spam: Rate Limit berbasis IP (maks 25 aksi like per menit per IP)

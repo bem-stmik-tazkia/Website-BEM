@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
 import {
   FiBookOpen,
   FiClock,
@@ -14,6 +15,7 @@ import {
   FiUser,
   FiCalendar,
   FiTag,
+  FiPlus,
 } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/Toast";
@@ -168,15 +170,25 @@ export default function AdminArtikelPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface border border-outline-variant/40 hover:bg-surface-variant/30 text-xs sm:text-sm font-semibold transition-all self-start sm:self-auto cursor-pointer"
-        >
-          <FiRefreshCw className={`text-primary ${refreshing ? "animate-spin" : ""}`} />
-          <span>{refreshing ? "Menyinkronkan..." : "Segarkan"}</span>
-        </button>
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <Link
+            href="/dashboard/artikel/baru"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-primary/20 cursor-pointer"
+          >
+            <FiPlus size={16} />
+            <span>+ Tulis Artikel (Admin)</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface border border-outline-variant/40 hover:bg-surface-variant/30 text-xs sm:text-sm font-semibold transition-all cursor-pointer"
+          >
+            <FiRefreshCw className={`text-primary ${refreshing ? "animate-spin" : ""}`} />
+            <span>{refreshing ? "Menyinkronkan..." : "Segarkan"}</span>
+          </button>
+        </div>
       </div>
 
       {/* Grid Statistik Counter */}

@@ -73,6 +73,20 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Periksa apakah user yang sedang aktif memiliki role admin
+  useEffect(() => {
+    async function checkAdminStatus() {
+      try {
+        const { data } = await supabase.rpc("is_admin");
+        if (data) setIsAdmin(true);
+      } catch {
+        // Bukan admin
+      }
+    }
+    checkAdminStatus();
+  }, [supabase]);
 
   // Auto-generate slug dari judul jika belum manual diubah
   useEffect(() => {
@@ -114,11 +128,11 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
     }, 50);
   };
 
-  const handleSubmit = async (targetStatus: "draft" | "pending") => {
+  const handleSubmit = async (targetStatus: "draft" | "pending" | "published") => {
     setErrorMessage(null);
 
-    // Validasi untuk pengajuan review
-    if (targetStatus === "pending") {
+    // Validasi untuk pengajuan review atau terbit langsung
+    if (targetStatus === "pending" || targetStatus === "published") {
       if (!isTitleValid) {
         setErrorMessage("Judul artikel wajib antara 10 hingga 120 karakter.");
         return;
@@ -128,7 +142,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         return;
       }
       if (!isContentValid) {
-        setErrorMessage("Isi artikel wajib minimal 300 karakter untuk diajukan ke admin (saat ini: " + contentLen + " karakter).");
+        setErrorMessage("Isi artikel wajib minimal 300 karakter (saat ini: " + contentLen + " karakter).");
         return;
       }
     } else {
@@ -160,8 +174,8 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             content: content.trim(),
             cover_url: coverUrl || null,
             category: category,
-            status: targetStatus,
-            submitted_at: targetStatus === "pending" ? new Date().toISOString() : null,
+            status: targetStatus === "published" ? "pending" : targetStatus,
+            submitted_at: new Date().toISOString(),
           });
 
         if (revError) throw revError;
@@ -185,8 +199,10 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           updated_at: new Date().toISOString(),
         };
 
-        // Jika diajukan pending, set submitted_at dan reset review_note
-        if (targetStatus === "pending") {
+        if (targetStatus === "published") {
+          updatePayload.published_at = new Date().toISOString();
+          updatePayload.review_note = null;
+        } else if (targetStatus === "pending") {
           updatePayload.submitted_at = new Date().toISOString();
           updatePayload.review_note = null;
         }
@@ -205,39 +221,49 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         if (updateError) throw updateError;
 
         toast(
-          targetStatus === "pending"
+          targetStatus === "published"
+            ? "Artikel berhasil diterbitkan langsung ke publik!"
+            : targetStatus === "pending"
             ? "Artikel berhasil diajukan untuk dimoderasi admin!"
             : "Perubahan draf berhasil disimpan.",
           "success"
         );
-        router.push("/dashboard/artikel");
+        router.push(targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel");
         router.refresh();
       } else {
         // Alur Buat Artikel Baru
         const finalSlug = slug || slugify(title);
 
+        const insertPayload: Record<string, any> = {
+          author_id: user.id,
+          title: title.trim(),
+          slug: finalSlug,
+          content: content.trim(),
+          cover_url: coverUrl || null,
+          category: category,
+          status: targetStatus,
+          submitted_at: targetStatus === "pending" ? new Date().toISOString() : null,
+        };
+
+        if (targetStatus === "published") {
+          insertPayload.published_at = new Date().toISOString();
+        }
+
         const { error: insertError } = await supabase
           .from("articles")
-          .insert({
-            author_id: user.id,
-            title: title.trim(),
-            slug: finalSlug,
-            content: content.trim(),
-            cover_url: coverUrl || null,
-            category: category,
-            status: targetStatus,
-            submitted_at: targetStatus === "pending" ? new Date().toISOString() : null,
-          });
+          .insert(insertPayload);
 
         if (insertError) throw insertError;
 
         toast(
-          targetStatus === "pending"
+          targetStatus === "published"
+            ? "Artikel berhasil langsung diterbitkan ke publik!"
+            : targetStatus === "pending"
             ? "Artikel baru berhasil diajukan untuk moderasi admin!"
             : "Draf artikel berhasil disimpan.",
           "success"
         );
-        router.push("/dashboard/artikel");
+        router.push(targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel");
         router.refresh();
       }
     } catch (err: any) {
@@ -613,6 +639,19 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
               <FiSend size={15} />
               <span>{isSubmitting ? "Mengajukan..." : isRevision ? "Ajukan Revisi" : "Ajukan untuk Moderasi"}</span>
             </button>
+
+            {/* Tombol Terbitkan Langsung Khusus Admin (Bypass Moderasi) */}
+            {isAdmin && !isRevision && (
+              <button
+                type="button"
+                disabled={isSubmitting || !isTitleValid || !isContentValid}
+                onClick={() => handleSubmit("published")}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <FiCheckCircle size={15} />
+                <span>{isSubmitting ? "Menerbitkan..." : "Terbitkan Langsung (Admin)"}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
