@@ -45,7 +45,7 @@ draft -> pending -> published
 
 ## 5. Kebutuhan Fungsional
 
-### 5.1 Autentikasi
+### 5.1 Autentikasii
 
 - **FR-A1** Mahasiswa login dengan Google OAuth.
 - **FR-A2** Server memverifikasi email berakhiran domain kampus (`@student.stmik.tazkia.ac.id`, **satu-satunya domain yang diizinkan untuk akun mahasiswa**). Parameter `hd` di sisi client hanya petunjuk tampilan dan tidak boleh dijadikan satu-satunya pengecekan. Pencocokan harus pada akhiran persis (huruf kecil) dan hanya untuk email yang sudah diverifikasi Google (email\_verified = true), bukan sekadar mengandung teks domain tersebut. Email non-kampus ditolak dan sesi dihapus.
