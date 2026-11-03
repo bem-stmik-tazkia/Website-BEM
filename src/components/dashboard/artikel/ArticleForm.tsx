@@ -25,6 +25,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import ImageUpload from "@/components/ui/ImageUpload";
 import { ArticleItem } from "./ArticleCard";
+import UnsavedChangesModal from "./UnsavedChangesModal";
 import { notifyArticleSubmitted, notifyArticleModerated } from "@/actions/telegram-notifications";
 
 const CATEGORIES = [
@@ -77,6 +78,10 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // State untuk popup konfirmasi draf belum disimpan
+  const [pendingTargetUrl, setPendingTargetUrl] = useState<string | null>(null);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+
   // Periksa apakah user yang sedang aktif memiliki role admin
   useEffect(() => {
     async function checkAdminStatus() {
@@ -102,7 +107,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
     (title.trim().length > 0 || content.trim().length > 0 || coverUrl.trim().length > 0)
   );
 
-  // 1. Guard penutupan tab atau reload browser
+  // 1. Guard penutupan tab atau reload browser (F5 / tutup tab browser)
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty && !isSubmitting) {
@@ -114,7 +119,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty, isSubmitting]);
 
-  // 2. Guard navigasi in-app (saat user mengklik tautan apapun seperti Kembali / Navbar)
+  // 2. Guard navigasi in-app (intersepsi klik tautan navbar, logo, atau link lain)
   useEffect(() => {
     if (!isDirty || isSubmitting) return;
 
@@ -122,25 +127,60 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
       const anchor = (e.target as HTMLElement).closest("a[href]");
       if (!anchor) return;
       const href = (anchor as HTMLAnchorElement).href;
-      if (!href || href === window.location.href || href.startsWith("javascript:")) return;
+      if (!href || href === window.location.href || href.startsWith("javascript:") || href.startsWith("#")) return;
 
       e.preventDefault();
       e.stopPropagation();
 
-      const confirmed = window.confirm(t("unsavedPrompt"));
-      if (confirmed) {
-        try {
-          const targetUrl = new URL(href);
-          router.push(targetUrl.pathname + targetUrl.search);
-        } catch {
-          window.location.href = href;
-        }
-      }
+      setPendingTargetUrl(href);
+      setShowLeaveModal(true);
     };
 
     document.addEventListener("click", handleLinkClick, true);
     return () => document.removeEventListener("click", handleLinkClick, true);
-  }, [isDirty, isSubmitting, router, t]);
+  }, [isDirty, isSubmitting]);
+
+  // 3. Guard tombol Back browser
+  useEffect(() => {
+    if (!isDirty || isSubmitting) return;
+
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = (e: PopStateEvent) => {
+      e.preventDefault();
+      window.history.pushState(null, "", window.location.href);
+      setPendingTargetUrl("/dashboard/artikel");
+      setShowLeaveModal(true);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isDirty, isSubmitting]);
+
+  const handleStay = () => {
+    setPendingTargetUrl(null);
+    setShowLeaveModal(false);
+  };
+
+  const handleLeave = () => {
+    setIsSubmitting(true);
+    setShowLeaveModal(false);
+
+    if (pendingTargetUrl) {
+      try {
+        const targetUrl = new URL(pendingTargetUrl, window.location.origin);
+        if (targetUrl.origin === window.location.origin) {
+          router.push(targetUrl.pathname + targetUrl.search);
+        } else {
+          window.location.href = pendingTargetUrl;
+        }
+      } catch {
+        window.location.href = pendingTargetUrl;
+      }
+    } else {
+      router.push("/dashboard/artikel");
+    }
+  };
 
   // Auto-generate slug dari judul jika belum manual diubah
   useEffect(() => {
@@ -376,13 +416,21 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
     <div className="max-w-4xl mx-auto pb-16">
       {/* Top Navigation */}
       <div className="flex items-center justify-between gap-4 mb-6">
-        <Link
-          href="/dashboard/artikel"
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors"
+        <button
+          type="button"
+          onClick={() => {
+            if (isDirty) {
+              setPendingTargetUrl("/dashboard/artikel");
+              setShowLeaveModal(true);
+            } else {
+              router.push("/dashboard/artikel");
+            }
+          }}
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
         >
           <FiArrowLeft size={16} />
           <span>Kembali ke Dashboard</span>
-        </Link>
+        </button>
 
         <div className="text-xs text-on-surface-variant font-medium">
           Perkiraan baca: <span className="font-bold text-primary">{readingTime} menit</span> ({wordCount} kata)
@@ -697,6 +745,13 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           </div>
         </div>
       </div>
+
+      {/* Modal Popup Konfirmasi Draf Belum Disimpan */}
+      <UnsavedChangesModal
+        isOpen={showLeaveModal}
+        onStay={handleStay}
+        onLeave={handleLeave}
+      />
     </div>
   );
 }
