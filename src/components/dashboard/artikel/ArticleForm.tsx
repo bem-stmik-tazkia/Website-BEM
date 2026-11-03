@@ -25,6 +25,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import ImageUpload from "@/components/ui/ImageUpload";
 import { ArticleItem } from "./ArticleCard";
+import { notifyArticleSubmitted, notifyArticleModerated } from "@/actions/telegram-notifications";
 
 const CATEGORIES = [
   "Opini & Esai",
@@ -180,6 +181,18 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
 
         if (revError) throw revError;
 
+        // Notifikasi Telegram pengajuan revisi artikel
+        if (targetStatus === "pending") {
+          notifyArticleSubmitted({
+            title: title.trim(),
+            category,
+            authorName: user.user_metadata?.full_name || user.email,
+            authorEmail: user.email,
+            isRevision: true,
+            slug: initialData.slug,
+          }).catch((err) => console.warn("[Telegram] Gagal kirim notif revisi:", err));
+        }
+
         toast(
           targetStatus === "pending"
             ? "Revisi artikel berhasil diajukan untuk dimoderasi admin!"
@@ -220,6 +233,18 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
 
         if (updateError) throw updateError;
 
+        // Notifikasi Telegram pengajuan artikel ulang setelah revisi
+        if (targetStatus === "pending") {
+          notifyArticleSubmitted({
+            title: title.trim(),
+            category,
+            authorName: user.user_metadata?.full_name || user.email,
+            authorEmail: user.email,
+            isRevision: false,
+            slug: slug.trim() || initialData.slug,
+          }).catch((err) => console.warn("[Telegram] Gagal kirim notif pengajuan:", err));
+        }
+
         toast(
           targetStatus === "published"
             ? "Artikel berhasil diterbitkan langsung ke publik!"
@@ -254,6 +279,26 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           .insert(insertPayload);
 
         if (insertError) throw insertError;
+
+        // Notifikasi Telegram
+        if (targetStatus === "pending") {
+          notifyArticleSubmitted({
+            title: title.trim(),
+            category,
+            authorName: user.user_metadata?.full_name || user.email,
+            authorEmail: user.email,
+            isRevision: false,
+            slug: finalSlug,
+          }).catch((err) => console.warn("[Telegram] Gagal kirim notif pengajuan baru:", err));
+        } else if (targetStatus === "published") {
+          notifyArticleModerated({
+            title: title.trim(),
+            action: "approved",
+            category,
+            authorName: user.user_metadata?.full_name || user.email,
+            slug: finalSlug,
+          }).catch((err) => console.warn("[Telegram] Gagal kirim notif terbit admin:", err));
+        }
 
         toast(
           targetStatus === "published"

@@ -17,6 +17,7 @@ import {
 } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/Toast";
+import { notifyArticleModerated } from "@/actions/telegram-notifications";
 
 export interface ModerationArticle {
   id: string;
@@ -110,6 +111,17 @@ export default function ArticleModerationModal({
         if (error) throw error;
         toast("Artikel berhasil disetujui dan resmi dipublikasikan!", "success");
       }
+
+      // Notifikasi Telegram Approval
+      notifyArticleModerated({
+        title: item.title,
+        action: "approved",
+        category: item.category || undefined,
+        authorName: author?.full_name || undefined,
+        slug: 'slug' in item ? item.slug : (item.article?.slug || undefined),
+        isRevision: isRevisionItem,
+      }).catch((err) => console.warn("[Telegram] Gagal kirim notif approve:", err));
+
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -144,6 +156,18 @@ export default function ArticleModerationModal({
         if (error) throw error;
         toast("Artikel telah ditolak dan dikembalikan ke mahasiswa untuk revisi.", "info");
       }
+
+      // Notifikasi Telegram Rejection / Evaluasi
+      notifyArticleModerated({
+        title: item.title,
+        action: "rejected",
+        category: item.category || undefined,
+        note: rejectNote.trim(),
+        authorName: author?.full_name || undefined,
+        slug: 'slug' in item ? item.slug : (item.article?.slug || undefined),
+        isRevision: isRevisionItem,
+      }).catch((err) => console.warn("[Telegram] Gagal kirim notif reject:", err));
+
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -166,6 +190,16 @@ export default function ArticleModerationModal({
         p_article_id: item.id,
       });
       if (error) throw error;
+
+      // Notifikasi Telegram Unpublish
+      notifyArticleModerated({
+        title: item.title,
+        action: "unpublished",
+        category: item.category || undefined,
+        authorName: author?.full_name || undefined,
+        slug: 'slug' in item ? item.slug : (item.article?.slug || undefined),
+      }).catch((err) => console.warn("[Telegram] Gagal kirim notif unpublish:", err));
+
       toast("Artikel berhasil diturunkan (unpublish) dari publik.", "info");
       onSuccess();
       onClose();

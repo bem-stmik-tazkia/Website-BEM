@@ -26,6 +26,7 @@ import {
   SecretStatusMap 
 } from "./actions";
 import { AppSecretKey } from "@/lib/secrets";
+import { notifyMaintenanceMode } from "@/actions/telegram-notifications";
 
 export default function SystemSettingsPage() {
   const supabase = createClient();
@@ -261,9 +262,18 @@ export default function SystemSettingsPage() {
       .from("system_settings")
       .upsert(updates, { onConflict: "key" });
 
+    const maintenanceChanged = savedRef.current.mMode !== mMode;
+
     if (error) {
       toast("Gagal menyimpan pengaturan sistem.", "error");
     } else {
+      if (maintenanceChanged) {
+        notifyMaintenanceMode({
+          isEnabled: mMode,
+          message: mMsg,
+          estimatedTime: mTime,
+        }).catch((err) => console.warn("[Telegram] Gagal kirim notif maintenance:", err));
+      }
       savedRef.current = { 
         mMode, mTime, mMsg, rVersion, rTitle, rFeatures, 
         rPublished, adminPhone, tNotifEnabled, tReminderEnabled

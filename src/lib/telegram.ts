@@ -525,3 +525,240 @@ export async function sendTelegramTestPing(): Promise<{ ok: boolean; error?: str
   return await sendTelegramMessage(testMsg, { inlineButtons });
 }
 
+
+
+export interface ArticleSubmittedPayload {
+  title: string;
+  category?: string;
+  authorName?: string;
+  authorEmail?: string;
+  isRevision?: boolean;
+  slug?: string;
+}
+
+/**
+ * Mengirim notifikasi ke Telegram ketika mahasiswa mengajukan artikel baru atau revisi.
+ */
+export async function sendArticleSubmittedNotification(
+  payload: ArticleSubmittedPayload
+): Promise<{ ok: boolean; error?: string }> {
+  const config = await getTelegramConfig();
+  if (!config.isConfigured || !config.notifEnabled) {
+    return { ok: false, error: "Notifikasi Telegram tidak aktif atau belum dikonfigurasi." };
+  }
+
+  const siteUrl = getBaseSiteUrl();
+  const safeTitle = escapeHtml(payload.title);
+  const safeCategory = escapeHtml(payload.category || "Artikel Mahasiswa");
+  const safeAuthor = escapeHtml(payload.authorName || "Mahasiswa STMIK Tazkia");
+  const safeEmail = payload.authorEmail ? escapeHtml(payload.authorEmail) : "";
+  const jenisText = payload.isRevision ? "Pengajuan Revisi Artikel" : "Artikel Baru";
+
+  const timeStr = new Date().toLocaleString("id-ID", {
+    timeZone: "Asia/Jakarta",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const message =
+    `📝 <b>PENGAJUAN ARTIKEL MAHASISWA BARU</b>\n\n` +
+    `Ada karya tulis mahasiswa yang baru saja diajukan dan membutuhkan peninjauan/moderasi admin:\n\n` +
+    `📌 <b>Judul:</b> ${safeTitle}\n` +
+    `📂 <b>Kategori:</b> ${safeCategory}\n` +
+    `👤 <b>Penulis:</b> ${safeAuthor}${safeEmail ? ` (<code>${safeEmail}</code>)` : ""}\n` +
+    `📄 <b>Jenis:</b> ${jenisText}\n` +
+    `📅 <b>Waktu:</b> ${timeStr} WIB\n\n` +
+    `Silakan buka portal admin untuk meninjau dan memoderasi naskah ini.`;
+
+  const inlineButtons = [
+    [
+      {
+        text: "🔍 Buka Panel Moderasi Artikel",
+        url: `${siteUrl}/admin/artikel`,
+      },
+    ],
+  ];
+
+  return await sendTelegramMessage(message, { inlineButtons });
+}
+
+export interface ArticleModeratedPayload {
+  title: string;
+  action: "approved" | "rejected" | "unpublished";
+  category?: string;
+  note?: string;
+  authorName?: string;
+  adminName?: string;
+  slug?: string;
+  isRevision?: boolean;
+}
+
+/**
+ * Mengirim notifikasi audit ke Telegram ketika artikel disetujui, ditolak (minta revisi), atau di-unpublish.
+ */
+export async function sendArticleModeratedNotification(
+  payload: ArticleModeratedPayload
+): Promise<{ ok: boolean; error?: string }> {
+  const config = await getTelegramConfig();
+  if (!config.isConfigured || !config.notifEnabled) {
+    return { ok: false, error: "Notifikasi Telegram tidak aktif atau belum dikonfigurasi." };
+  }
+
+  const siteUrl = getBaseSiteUrl();
+  const safeTitle = escapeHtml(payload.title);
+  const safeAuthor = escapeHtml(payload.authorName || "Mahasiswa");
+  const safeAdmin = escapeHtml(payload.adminName || "Administrator BEM");
+  const safeCategory = escapeHtml(payload.category || "Artikel Mahasiswa");
+
+  const timeStr = new Date().toLocaleString("id-ID", {
+    timeZone: "Asia/Jakarta",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  let message = "";
+  const inlineButtons: Array<Array<{ text: string; url: string }>> = [];
+
+  if (payload.action === "approved") {
+    const articleUrl = payload.slug
+      ? `${siteUrl}/id/artikel/${encodeURIComponent(payload.slug)}`
+      : `${siteUrl}/berita`;
+    message =
+      `✅ <b>ARTIKEL MAHASISWA DISETUJUI & TAYANG</b>\n\n` +
+      `Karya tulis mahasiswa telah disetujui oleh admin dan kini resmi tayang di website:\n\n` +
+      `📌 <b>Judul:</b> ${safeTitle}\n` +
+      `📂 <b>Kategori:</b> ${safeCategory}\n` +
+      `👤 <b>Penulis:</b> ${safeAuthor}\n` +
+      `🛡️ <b>Disetujui Oleh:</b> ${safeAdmin}\n` +
+      `📅 <b>Waktu Tayang:</b> ${timeStr} WIB\n\n` +
+      `Artikel sudah dapat diakses dan dibaca oleh seluruh mahasiswa dan publik.`;
+
+    inlineButtons.push([
+      {
+        text: "📖 Baca Artikel di Website",
+        url: articleUrl,
+      },
+    ]);
+  } else if (payload.action === "rejected") {
+    const safeNote = escapeHtml(payload.note || "Tidak ada catatan evaluasi.");
+    message =
+      `⚠️ <b>ARTIKEL MAHASISWA DIKEMBALIKAN (REVISI)</b>\n\n` +
+      `Karya tulis mahasiswa telah dimoderasi dan dikembalikan kepada penulis untuk perbaikan:\n\n` +
+      `📌 <b>Judul:</b> ${safeTitle}\n` +
+      `👤 <b>Penulis:</b> ${safeAuthor}\n` +
+      `🛡️ <b>Dimoderasi Oleh:</b> ${safeAdmin}\n` +
+      `📅 <b>Waktu:</b> ${timeStr} WIB\n\n` +
+      `📝 <b>Catatan Evaluasi / Alasan:</b>\n` +
+      `<i>"${safeNote}"</i>\n\n` +
+      `Status artikel di dashboard penulis kini menjadi perlu revisi/ditolak.`;
+
+    inlineButtons.push([
+      {
+        text: "🛡️ Buka Panel Moderasi",
+        url: `${siteUrl}/admin/artikel`,
+      },
+    ]);
+  } else {
+    message =
+      `🛑 <b>ARTIKEL MAHASISWA DITURUNKAN (UNPUBLISH)</b>\n\n` +
+      `Sebuah artikel yang sebelumnya tayang telah diturunkan dari publik oleh administrator:\n\n` +
+      `📌 <b>Judul:</b> ${safeTitle}\n` +
+      `👤 <b>Penulis:</b> ${safeAuthor}\n` +
+      `🛡️ <b>Diturunkan Oleh:</b> ${safeAdmin}\n` +
+      `📅 <b>Waktu:</b> ${timeStr} WIB\n\n` +
+      `Artikel tidak lagi tampil di katalog publik dan kembali berstatus draf di dashboard penulis.`;
+
+    inlineButtons.push([
+      {
+        text: "🛡️ Buka Panel Moderasi",
+        url: `${siteUrl}/admin/artikel`,
+      },
+    ]);
+  }
+
+  return await sendTelegramMessage(message, { inlineButtons });
+}
+
+export interface MaintenanceModePayload {
+  isEnabled: boolean;
+  message?: string;
+  estimatedTime?: string;
+  adminName?: string;
+}
+
+/**
+ * Mengirim notifikasi ke Telegram saat mode maintenance dinyalakan atau dimatikan/beres.
+ */
+export async function sendMaintenanceModeNotification(
+  payload: MaintenanceModePayload
+): Promise<{ ok: boolean; error?: string }> {
+  const config = await getTelegramConfig();
+  if (!config.isConfigured || !config.notifEnabled) {
+    return { ok: false, error: "Notifikasi Telegram tidak aktif atau belum dikonfigurasi." };
+  }
+
+  const siteUrl = getBaseSiteUrl();
+  const safeAdmin = escapeHtml(payload.adminName || "Administrator BEM");
+  const timeStr = new Date().toLocaleString("id-ID", {
+    timeZone: "Asia/Jakarta",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  let message = "";
+  const inlineButtons: Array<Array<{ text: string; url: string }>> = [];
+
+  if (payload.isEnabled) {
+    const safeMsg = escapeHtml(
+      payload.message?.trim() ||
+        "Pembaruan sistem, optimalisasi database, dan peningkatan keamanan portal resmi BEM STMIK Tazkia."
+    );
+    const safeTime = escapeHtml(payload.estimatedTime?.trim() || "1-2 Jam");
+
+    message =
+      `🚧 <b>PEMBERITAHUAN: MODE MAINTENANCE DIAKTIFKAN</b> 🚧\n\n` +
+      `Website resmi BEM STMIK Tazkia saat ini sedang dialihkan ke <b>Mode Pemeliharaan (Maintenance Mode)</b>.\n\n` +
+      `📢 <b>Pesan Pemeliharaan:</b>\n` +
+      `<i>"${safeMsg}"</i>\n\n` +
+      `⏳ <b>Estimasi Pengerjaan:</b> ${safeTime}\n` +
+      `🛡️ <b>Diaktifkan Oleh:</b> ${safeAdmin}\n` +
+      `📅 <b>Waktu Mulai:</b> ${timeStr} WIB\n\n` +
+      `Akses pengunjung publik sementara ditutup dan dialihkan ke layar pemeliharaan. Pengurus tetap dapat mengakses portal internal.`;
+
+    inlineButtons.push([
+      {
+        text: "🌐 Pantau Website",
+        url: siteUrl,
+      },
+    ]);
+  } else {
+    message =
+      `🟢 <b>PEMELIHARAAN SELESAI: WEBSITE KEMBALI NORMAL</b> 🟢\n\n` +
+      `Proses maintenance sistem website BEM STMIK Tazkia telah <b>selesai</b> dan situs kini kembali beroperasi normal untuk seluruh pengguna dan publik!\n\n` +
+      `📢 <b>Status:</b> Sistem normal, pembaruan berhasil diterapkan.\n` +
+      `🛡️ <b>Dinonaktifkan Oleh:</b> ${safeAdmin}\n` +
+      `📅 <b>Waktu Selesai:</b> ${timeStr} WIB\n\n` +
+      `Terima kasih atas kerja keras seluruh tim! Silakan akses portal seperti biasa.`;
+
+    inlineButtons.push([
+      {
+        text: "🌐 Kunjungi Website",
+        url: siteUrl,
+      },
+    ]);
+  }
+
+  return await sendTelegramMessage(message, { inlineButtons });
+}
