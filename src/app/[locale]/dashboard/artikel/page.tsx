@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { createClient } from "@/utils/supabase/client";
 import {
   FiEdit3,

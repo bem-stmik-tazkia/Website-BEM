@@ -396,13 +396,13 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
               </div>
 
               {/* Right Column: CTA Button (Internal Portal) */}
-              <NativeLink
+              <Link
                 href="/dashboard/artikel/baru"
                 className="shrink-0 inline-flex items-center gap-2 bg-white text-primary hover:bg-slate-100 font-extrabold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 group whitespace-nowrap self-stretch sm:self-center justify-center"
               >
                 <span>{t("writerPortalBtn")}</span>
                 <FiArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
-              </NativeLink>
+              </Link>
             </div>
           </div>
         </section>

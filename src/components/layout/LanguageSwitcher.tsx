@@ -132,6 +132,11 @@ export default function LanguageSwitcher({
     });
   };
 
+  // Sembunyikan LanguageSwitcher saat sedang di area admin internal (Admin tetap Bahasa Indonesia)
+  if (pathname.startsWith("/admin") || (typeof window !== "undefined" && window.location.pathname.startsWith("/admin"))) {
+    return null;
+  }
+
   const currentLanguage = LANGUAGES.find((l) => l.code === locale) || LANGUAGES[0];
   const CurrentFlag = currentLanguage.Flag;
 

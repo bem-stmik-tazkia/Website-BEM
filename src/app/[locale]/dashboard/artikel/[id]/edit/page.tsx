@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useParams } from "next/navigation";
+import { Link, useRouter } from "@/i18n/routing";
 import { FiArrowLeft, FiAlertTriangle } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 import ArticleForm from "@/components/dashboard/artikel/ArticleForm";

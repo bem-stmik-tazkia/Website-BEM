@@ -16,7 +16,7 @@ export default async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // 2. Cek apakah ini route internal, rute token admin 75 karakter (hanya saat random path aktif), atau API yang TIDAK butuh multi-bahasa
+  // 2. Cek apakah ini route internal murni (admin/api/auth) yang TIDAK butuh multi-bahasa
   const pathname = request.nextUrl.pathname;
   const isRandomActive = isRandomAdminPathActive();
   const isTokenPath = isRandomActive && pathname.startsWith('/') && ADMIN_TOKEN_REGEX.test(pathname.slice(1));
@@ -24,7 +24,6 @@ export default async function middleware(request: NextRequest) {
                           pathname.startsWith('/admin') || 
                           pathname.startsWith('/login') || 
                           pathname.startsWith('/masuk') || 
-                          pathname.startsWith('/dashboard') || 
                           pathname.startsWith('/auth') ||
                           pathname.startsWith('/api');
 
@@ -32,7 +31,7 @@ export default async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // 3. Untuk halaman publik, jalankan next-intl middleware
+  // 3. Untuk halaman publik dan dashboard mahasiswa, jalankan next-intl middleware (Mendukung Multi-Bahasa)
   const intlResponse = handleI18nRouting(request);
   
   // Gabungkan cookie dari Supabase (jika ada refresh session) ke response next-intl
@@ -46,12 +45,11 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Matcher Next.js: mencakup /admin, /api/admin, /dashboard, dan /masuk untuk perlindungan auth,
-  // serta seluruh halaman aplikasi (termasuk token satu segmen tanpa titik) kecuali aset statis.
+  // Matcher Next.js: mencakup /admin, /api/admin, /masuk untuk perlindungan auth,
+  // serta seluruh halaman aplikasi termasuk dashboard multi-bahasa.
   matcher: [
     '/admin/:path*',
     '/api/admin/:path*',
-    '/dashboard/:path*',
     '/masuk',
     '/((?!api|_vercel|_next/static|_next/image|storage|favicon.ico|images|icons|.*\\..*).*)',
   ],

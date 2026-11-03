@@ -31,7 +31,7 @@ export async function updateSession(request: NextRequest, customSupabase?: any) 
   const isApiAdmin = pathname.startsWith('/api/admin');
   const isAdminRoute = pathname.startsWith('/admin');
   const isLoginRoute = pathname === '/login' || pathname.startsWith('/login/');
-  const isDashboardRoute = pathname.startsWith('/dashboard');
+  const isDashboardRoute = pathname.startsWith('/dashboard') || /^\/(?:id|en|ar|fr|ja)\/dashboard(?:\/|$)/.test(pathname);
   const isMasukRoute = pathname === '/masuk' || pathname.startsWith('/masuk/');
   const isProtectedRoute = isApiAdmin || isAdminRoute || isLoginRoute || isDashboardRoute || isMasukRoute || isTokenPath;
 
@@ -159,8 +159,8 @@ export async function updateSession(request: NextRequest, customSupabase?: any) 
 
     try {
       const { data: isRpcAdmin } = await supabase.rpc('is_admin');
-      if (isRpcAdmin === true) {
-        // Sesi admin dilarang di /dashboard/*: redirect ke /admin
+      if (isRpcAdmin === true && !pathname.includes('/dashboard/artikel')) {
+        // Sesi admin dialihkan ke /admin jika bukan halaman artikel
         const url = request.nextUrl.clone();
         url.pathname = '/admin';
         return NextResponse.redirect(url);
