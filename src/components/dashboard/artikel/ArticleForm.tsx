@@ -508,6 +508,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           <input
             id="article-title"
             type="text"
+            dir="auto"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder={t("titlePlaceholder")}
@@ -661,6 +662,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
               <textarea
                 id="article-content-input"
                 rows={16}
+                dir="auto"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder={t("contentPlaceholder")}
