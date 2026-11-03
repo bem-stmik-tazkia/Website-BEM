@@ -3,11 +3,27 @@ import { createClient } from "@/utils/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import type { User } from "@supabase/supabase-js";
+export { sanitizeNextPath } from "@/utils/auth-url";
 
 export type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 export interface AdminAuthContext {
   user: User;
+  supabase: SupabaseServerClient;
+}
+
+export interface AuthUserProfile {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: string;
+}
+
+export interface AuthContext {
+  user: User;
+  profile: AuthUserProfile | null;
+  isAdmin: boolean;
   supabase: SupabaseServerClient;
 }
 
@@ -38,7 +54,7 @@ export function getServiceRoleClient() {
  * profiles.role is NOT used — it is not the canonical source of truth.
  * B7: Removed profiles.role check to prevent privilege escalation via profile edits.
  */
-async function checkUserIsAdmin(
+export async function checkUserIsAdmin(
   supabase: SupabaseServerClient,
   _userId: string
 ): Promise<boolean> {
@@ -53,6 +69,49 @@ async function checkUserIsAdmin(
   }
 
   return false;
+}
+
+/**
+ * Mengambil pengguna yang sedang login saat ini (mahasiswa atau admin).
+ * Mengembalikan null jika unauthenticated.
+ */
+export async function getCurrentUser(): Promise<AuthContext | null> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return null;
+    }
+
+    const isAdmin = await checkUserIsAdmin(supabase, user.id);
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url, role')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    return { user, profile, isAdmin, supabase };
+  } catch (err: any) {
+    if (err?.digest === 'DYNAMIC_SERVER_USAGE') throw err;
+    console.error("[auth] getCurrentUser failed:", err);
+    return null;
+  }
+}
+
+/**
+ * Guard otentikasi umum untuk Server Action (mahasiswa atau admin).
+ * Melempar error jika pengguna belum login.
+ */
+export async function requireAuth(): Promise<AuthContext> {
+  const auth = await getCurrentUser();
+  if (!auth) {
+    throw new Error("Unauthorized: Sesi login tidak ditemukan atau telah berakhir.");
+  }
+  return auth;
 }
 
 /**

@@ -1,5 +1,8 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+import { sanitizeNextPath } from '@/utils/auth-url';
+import { isRandomAdminPathActive, verifyAdminToken } from '@/lib/admin-token';
+import { ADMIN_TOKEN_REGEX } from '@/lib/admin-path';
 
 /**
  * D13: Timing-safe string comparison to prevent timing attacks on bypass secret.
@@ -14,60 +17,74 @@ function isTimingSafeMatch(a: string | undefined, b: string | undefined): boolea
   return mismatch === 0;
 }
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(request: NextRequest, customSupabase?: any) {
   let supabaseResponse = NextResponse.next({
     request,
-  })
+  });
 
   const pathname = request.nextUrl.pathname;
+  const isRandomActive = isRandomAdminPathActive();
+  const tokenCandidate = pathname.slice(1);
+  const isTokenPath = isRandomActive && pathname.length === 76 && pathname.startsWith('/') && ADMIN_TOKEN_REGEX.test(tokenCandidate);
 
-  // Untuk halaman publik (bukan /admin, /api/admin, dan /login), skip getUser() ke Supabase API.
-  // Ini mencegah error "fetch failed" saat koneksi lambat, dan mempercepat halaman publik.
+  // Rute yang membutuhkan verifikasi token via getUser() atau token rewrite
   const isApiAdmin = pathname.startsWith('/api/admin');
   const isAdminRoute = pathname.startsWith('/admin');
   const isLoginRoute = pathname === '/login' || pathname.startsWith('/login/');
-  const isProtectedRoute = isApiAdmin || isAdminRoute || isLoginRoute;
+  const isDashboardRoute = pathname.startsWith('/dashboard');
+  const isMasukRoute = pathname === '/masuk' || pathname.startsWith('/masuk/');
+  const isProtectedRoute = isApiAdmin || isAdminRoute || isLoginRoute || isDashboardRoute || isMasukRoute || isTokenPath;
 
   if (!isProtectedRoute) {
     return supabaseResponse;
   }
 
-  const supabase = createServerClient(
+  // 1. Tangani Rute Token Admin Acak 75 Karakter (Hanya jika flag aktif)
+  if (isTokenPath) {
+    const isValid = await verifyAdminToken(tokenCandidate);
+    if (isValid) {
+      // Rewrite internal ke halaman login admin (URL di browser tetap acak)
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.rewrite(url, { headers: supabaseResponse.headers });
+    }
+    // Token tidak valid atau kedaluwarsa: respons 404 Not Found
+    const notFoundUrl = new URL('/not-found', request.url);
+    return NextResponse.rewrite(notFoundUrl, { status: 404 });
+  }
+
+  const supabase = customSupabase || createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll()
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({
             request,
-          })
+          });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
-          )
+          );
         },
       },
     }
-  )
+  );
 
-  // IMPORTANT: DO NOT use supabase.auth.getSession() here!
-  // getUser() memvalidasi token ke Supabase API (tidak bisa di-spoof).
-  // Dibungkus try-catch agar jika Supabase tidak bisa dijangkau (timeout/offline),
-  // halaman publik tetap dapat diakses alih-alih crash dengan error 500.
+  // IMPORTANT: Menggunakan supabase.auth.getUser() untuk validasi token resmi ke Supabase Auth
+  // Mencegah spoofing session atau manipulasi klaim client
   let user = null;
   try {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch (err) {
-    // Supabase tidak bisa dijangkau — lanjutkan sebagai guest
-    // Route yang dilindungi (/admin) akan tetap di-redirect ke /login
     console.error('[Middleware] Supabase getUser failed (network issue?):', err);
   }
 
-  // Protect /api/admin routes — API returns 401/403 JSON instead of redirecting
+  // 2. Protect /api/admin routes — API returns 401/403 JSON instead of redirecting
   if (isApiAdmin) {
     if (!user) {
       return new NextResponse(
@@ -77,20 +94,15 @@ export async function updateSession(request: NextRequest) {
     }
 
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profile?.role !== 'admin') {
+      const { data: isRpcAdmin } = await supabase.rpc('is_admin');
+      if (isRpcAdmin !== true) {
         return new NextResponse(
           JSON.stringify({ error: "Forbidden" }),
           { status: 403, headers: { "Content-Type": "application/json" } }
         );
       }
     } catch (err) {
-      console.error('[Middleware] Supabase profile check for API admin failed:', err);
+      console.error('[Middleware] Supabase is_admin check for API admin failed:', err);
       return new NextResponse(
         JSON.stringify({ error: "Forbidden" }),
         { status: 403, headers: { "Content-Type": "application/json" } }
@@ -100,92 +112,147 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Protect /admin routes — only admin users can access
+  // 3. Protect /admin routes — HANYA admin sah yang dapat mengakses.
+  //    Bagi non-admin / mahasiswa: memberikan respons 404 (rewrite ke /not-found)
+  //    sehingga path admin benar-benar tersembunyi.
   if (isAdminRoute) {
     if (!user) {
-      // Not logged in — hanya izinkan redirect ke /login jika sudah memasukkan Konami code
       const bypassCookie = request.cookies.get('maintenance_bypass')?.value;
       const expectedSecret = process.env.MAINTENANCE_BYPASS_SECRET;
-      // D13: Hardcoded secret dihapus, fallback len>0 dihapus, perbandingan timing-safe, gagal tertutup
       const isBypassValid = Boolean(expectedSecret && bypassCookie && isTimingSafeMatch(bypassCookie, expectedSecret));
 
-      const url = request.nextUrl.clone();
-      if (isBypassValid) {
+      if (isBypassValid && !isRandomActive) {
+        const url = request.nextUrl.clone();
         url.pathname = '/login';
         url.searchParams.set('next', request.nextUrl.pathname);
+        return NextResponse.redirect(url);
       } else {
-        // Tanpa Konami code, jangan bocorkan route login
-        url.pathname = '/';
+        // Tanpa bypass valid atau saat random path aktif: 404 Not Found
+        const notFoundUrl = new URL('/not-found', request.url);
+        return NextResponse.rewrite(notFoundUrl, { status: 404 });
       }
-      return NextResponse.redirect(url);
     }
 
-    // Check if user is admin
+    // Periksa status admin pengguna
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (profile?.role !== 'admin') {
-        // Non-admin — redirect to home
-        const url = request.nextUrl.clone()
-        url.pathname = '/'
-        return NextResponse.redirect(url)
+      const { data: isRpcAdmin } = await supabase.rpc('is_admin');
+      if (isRpcAdmin !== true) {
+        // Mahasiswa / non-admin yang login: respons 404 Not Found
+        const notFoundUrl = new URL('/not-found', request.url);
+        return NextResponse.rewrite(notFoundUrl, { status: 404 });
       }
     } catch (err) {
-      // Gagal cek role — amankan dengan redirect ke home
-      console.error('[Middleware] Supabase profile check failed:', err);
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
+      console.error('[Middleware] Supabase is_admin check failed:', err);
+      const notFoundUrl = new URL('/not-found', request.url);
+      return NextResponse.rewrite(notFoundUrl, { status: 404 });
     }
   }
 
-  // Protect /login route: HANYA bisa diakses jika sudah memasukkan Konami code (bypass cookie),
-  // atau jika sudah login sebagai admin (langsung redirect ke /admin).
-  // Mengetikkan /login di URL secara langsung tanpa Konami code akan ditolak dan diarahkan ke home.
-  if (isLoginRoute) {
-    // 1. Jika sudah login, jangan izinkan buka halaman login lagi
-    if (user) {
-      const url = request.nextUrl.clone()
-      const nextPath = request.nextUrl.searchParams.get('next')
-
-      if (nextPath) {
-        url.pathname = nextPath
-        url.searchParams.delete('next')
-      } else {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .maybeSingle()
-          // Only admins use the login page — always go to /admin
-          url.pathname = profile?.role === 'admin' ? '/admin' : '/'
-        } catch (err) {
-          console.error('[Middleware] Supabase profile check (login) failed:', err);
-          url.pathname = '/'
-        }
-      }
-
-      return NextResponse.redirect(url)
+  // 4. Protect /dashboard routes — HANYA untuk mahasiswa (sesi admin ditolak dan dialihkan ke /admin)
+  if (isDashboardRoute) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/masuk';
+      url.searchParams.set('next', request.nextUrl.pathname);
+      return NextResponse.redirect(url);
     }
 
-    // 2. Jika belum login: WAJIB memiliki cookie hasil input Konami code
+    try {
+      const { data: isRpcAdmin } = await supabase.rpc('is_admin');
+      if (isRpcAdmin === true) {
+        // Sesi admin dilarang di /dashboard/*: redirect ke /admin
+        const url = request.nextUrl.clone();
+        url.pathname = '/admin';
+        return NextResponse.redirect(url);
+      }
+    } catch (err) {
+      console.error('[Middleware] Supabase is_admin check for dashboard failed:', err);
+    }
+
+    return supabaseResponse;
+  }
+
+  // 5. Handle /masuk route — jika sudah login, langsung alihkan ke dashboard / admin
+  if (isMasukRoute) {
+    if (user) {
+      const url = request.nextUrl.clone();
+      const nextParam = request.nextUrl.searchParams.get('next');
+
+      let isUserAdmin = false;
+      try {
+        const { data: isRpcAdmin } = await supabase.rpc('is_admin');
+        isUserAdmin = isRpcAdmin === true;
+      } catch {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+        isUserAdmin = profile?.role === 'admin';
+      }
+
+      if (isUserAdmin) {
+        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/admin']);
+        url.pathname = safeNext || '/admin';
+      } else {
+        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/dashboard']);
+        url.pathname = safeNext || '/dashboard/artikel';
+      }
+      url.searchParams.delete('next');
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
+  }
+
+  // 6. Protect /login route:
+  // Jika random path aktif: akses langsung ke /login menghasilkan 404 Not Found
+  // Jika tidak aktif (default): HANYA bisa diakses jika sudah memasukkan Konami code
+  if (isLoginRoute) {
+    if (isRandomActive) {
+      // Akses langsung ke /login dilarang saat random path aktif -> 404
+      const notFoundUrl = new URL('/not-found', request.url);
+      return NextResponse.rewrite(notFoundUrl, { status: 404 });
+    }
+
+    if (user) {
+      const url = request.nextUrl.clone();
+      const nextParam = request.nextUrl.searchParams.get('next');
+
+      let isUserAdmin = false;
+      try {
+        const { data: isRpcAdmin } = await supabase.rpc('is_admin');
+        isUserAdmin = isRpcAdmin === true;
+      } catch {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+        isUserAdmin = profile?.role === 'admin';
+      }
+
+      if (isUserAdmin) {
+        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/admin']);
+        url.pathname = safeNext || '/admin';
+      } else {
+        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/dashboard']);
+        url.pathname = safeNext || '/dashboard/artikel';
+      }
+      url.searchParams.delete('next');
+      return NextResponse.redirect(url);
+    }
+
     const bypassCookie = request.cookies.get('maintenance_bypass')?.value;
     const expectedSecret = process.env.MAINTENANCE_BYPASS_SECRET;
-    // D13: Hardcoded secret dihapus, fallback len>0 dihapus, perbandingan timing-safe, gagal tertutup
     const isBypassValid = Boolean(expectedSecret && bypassCookie && isTimingSafeMatch(bypassCookie, expectedSecret));
 
     if (!isBypassValid) {
-      // Pengguna mengetik /login di URL tanpa Konami code — tolak dan arahkan ke homepage
+      // Mengetik /login di URL tanpa Konami code ditolak dan diarahkan ke homepage
       const url = request.nextUrl.clone();
       url.pathname = '/';
       return NextResponse.redirect(url);
     }
   }
 
-  return supabaseResponse
+  return supabaseResponse;
 }

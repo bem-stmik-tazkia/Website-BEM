@@ -27,7 +27,8 @@
     "logoutConfirmTitle": "Confirm Logout",
     "logoutConfirmDesc": "Are you sure you want to log out of this account? You must log in again to access the dashboard.",
     "cancel": "Cancel",
-    "yesLogout": "Yes, Logout"
+    "yesLogout": "Yes, Logout",
+    "myArticles": "My Articles"
   },
   "Footer": {
     "description": "Becoming an innovative, collaborative, and proactive BEM pioneer in voicing aspirations and developing the potential of STMIK Tazkia students.",

@@ -8,11 +8,13 @@ import { getPublicMaintenanceSettings } from "@/actions/public-settings";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiTool, FiClock, FiRefreshCw,
-  FiCheckCircle, FiX, FiStar, FiArrowRight
+  FiCheckCircle, FiX, FiStar, FiArrowRight, FiUnlock
 } from "react-icons/fi";
 import { Link } from "@/i18n/routing";
+import NativeLink from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { translateContent } from "@/utils/translate";
+import { isAdminLoginPath } from "@/lib/admin-path";
 
 interface ReleaseNotes {
   version: string;
@@ -138,7 +140,18 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
   const KONAMI = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"];
   const konamiProgress = useRef(0);
   const [konamiUnlocked, setKonamiUnlocked] = useState(false);
+  const [isBypassChecked, setIsBypassChecked] = useState(false);
+  const [showBypassNotice, setShowBypassNotice] = useState(false);
+  const [bypassAdminPath, setBypassAdminPath] = useState<string>("/login");
+
   useEffect(() => {
+    if (showBypassNotice) {
+      const timer = setTimeout(() => setShowBypassNotice(false), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [showBypassNotice]);
+  useEffect(() => {
+    setIsBypassChecked(true);
     setKonamiUnlocked(
       sessionStorage.getItem("_bk") === "1" ||
       document.cookie.includes("maintenance_bypass=")
@@ -254,15 +267,22 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
         if (konamiProgress.current === KONAMI.length) {
           konamiProgress.current = 0;
           try {
-            // Panggil API untuk set bypass cookie (secret hanya ada di server)
-            await fetch("/api/maintenance/bypass", { method: "POST" });
+            // Panggil API untuk set bypass cookie (dan dapatkan path token jika random path aktif)
+            const res = await fetch("/api/maintenance/bypass", { method: "POST" });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.path) {
+                setBypassAdminPath(data.path);
+              }
+            }
           } catch (err) {
             console.error("Failed to set bypass cookie:", err);
           }
           // Set session gate then navigate
           sessionStorage.setItem("_bk", "1");
+          setIsBypassChecked(true);
           setKonamiUnlocked(true);
-          window.location.href = "/login";
+          setShowBypassNotice(true);
         }
       } else {
         if (e.key === KONAMI[0]) {
@@ -287,9 +307,24 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
     setShowWhatsNew(false);
   };
 
-  // Block visitors: maintenance ON + not admin + not admin path + not konami-unlocked login path
-  const isLoginPath = pathname?.includes("/login");
-  const shouldBlockVisitor = maintenanceMode && !isAdmin && !isAdminPath && !(isLoginPath && konamiUnlocked);
+  const handleExitBypass = async () => {
+    try {
+      await fetch("/api/maintenance/bypass", { method: "DELETE" });
+    } catch (err) {
+      console.error("Failed to clear bypass cookie:", err);
+    }
+    sessionStorage.removeItem("_bk");
+    setIsBypassChecked(true);
+    setKonamiUnlocked(false);
+    setShowBypassNotice(false);
+    setBypassAdminPath("/login");
+  };
+
+  // Block visitors: maintenance ON + not admin path + not bypassed (admin or konami unlocked)
+  const isBypassed = konamiUnlocked || isAdmin;
+  const isLoginPath = isAdminLoginPath(pathname);
+  const isExcludedRoute = isAdminPath || (isLoginPath && konamiUnlocked);
+  const shouldBlockVisitor = !loading && isBypassChecked && maintenanceMode && !isExcludedRoute && !isBypassed;
 
   return (
     <>
@@ -367,6 +402,70 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
       ) : (
         <>
           {children}
+
+          {/* Pop-up Toast Pemberitahuan Konami Berhasil */}
+          <AnimatePresence>
+            {showBypassNotice && (
+              <motion.div
+                initial={{ opacity: 0, y: -40, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                className="fixed top-6 left-1/2 -translate-x-1/2 z-[10000] w-[90%] max-w-md bg-emerald-600 text-white rounded-2xl p-4 shadow-2xl border border-emerald-400 flex items-start gap-3.5 backdrop-blur-md"
+              >
+                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                  <FiUnlock size={20} className="text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm leading-snug">Konami Code Terverifikasi!</p>
+                  <p className="text-xs text-emerald-100 mt-0.5 leading-relaxed">
+                    Bypass maintenance aktif. Halaman beranda dan seluruh website terbuka tanpa harus login.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowBypassNotice(false)}
+                  className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <FiX size={18} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Floating Pill Status Bypass Maintenance */}
+          {maintenanceMode && konamiUnlocked && (
+            <aside
+              aria-label="Status Bypass Maintenance"
+              className="fixed bottom-20 md:bottom-6 right-4 z-[9999] bg-amber-500/95 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-amber-300/40 flex items-center gap-3 text-xs md:text-sm animate-fade-in"
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <div>
+                  <p className="font-bold leading-tight">Bypass Maintenance Aktif</p>
+                  <p className="text-[11px] text-amber-100 hidden sm:block">
+                    Website terbuka tanpa login.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 border-l border-white/20 pl-2.5">
+                <NativeLink
+                  href={bypassAdminPath}
+                  className="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
+                >
+                  Masuk Admin
+                </NativeLink>
+                <button
+                  type="button"
+                  onClick={handleExitBypass}
+                  title="Kunci kembali dan aktifkan layar maintenance"
+                  className="px-2 py-1 bg-black/20 hover:bg-black/40 rounded-lg text-xs font-bold transition-colors whitespace-nowrap cursor-pointer"
+                >
+                  Kunci
+                </button>
+              </div>
+            </aside>
+          )}
 
           {/* Release Notes / What's New Modal */}
           <AnimatePresence>

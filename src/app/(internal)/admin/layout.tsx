@@ -2,7 +2,7 @@ import React from "react";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopbar from "./AdminTopbar";
 import { getAdminUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 export const metadata = {
   title: "Admin Dashboard - BEM STMIK Tazkia",
@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const admin = await getAdminUser();
 
   if (!admin) {
-    redirect('/login');
+    notFound();
   }
 
   const { user } = admin;

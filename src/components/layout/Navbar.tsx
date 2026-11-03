@@ -6,7 +6,7 @@ import NativeLink from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/routing";
-import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid } from "react-icons/fi";
+import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid, FiEdit3 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
@@ -41,7 +41,18 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
         }
         if (user) {
           const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
-          setUserProfile({ ...user, ...profile });
+          let effectiveRole = profile?.role || 'mahasiswa';
+          try {
+            const { data: isRpcAdmin } = await supabase.rpc('is_admin');
+            if (isRpcAdmin === true) {
+              effectiveRole = 'admin';
+            } else if (effectiveRole === 'admin') {
+              effectiveRole = 'mahasiswa';
+            }
+          } catch {
+            // Biarkan fallback ke profile?.role jika RPC offline
+          }
+          setUserProfile({ ...user, ...profile, role: effectiveRole });
         } else {
           setUserProfile(null);
         }
@@ -183,7 +194,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
             {userProfile && userProfile.role === 'admin' && (
               <AdminNotificationBell isScrolled={isScrolled} isHome={isHome} />
             )}
-            {userProfile && (
+            {userProfile ? (
               <div className="relative" ref={profileMenuRef}>
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -233,7 +244,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                         <p className="text-xs text-on-surface-variant truncate">{userProfile.email}</p>
                       </div>
 
-                      {userProfile.role === 'admin' && (
+                      {userProfile.role === 'admin' ? (
                         <NativeLink
                           href="/admin"
                           onClick={() => setShowProfileMenu(false)}
@@ -241,6 +252,15 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                         >
                           <FiGrid size={16} />
                           {t("dashboardAdmin")}
+                        </NativeLink>
+                      ) : (
+                        <NativeLink
+                          href="/dashboard/artikel"
+                          onClick={() => setShowProfileMenu(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-on-surface hover:bg-primary/10 hover:text-primary transition-colors"
+                        >
+                          <FiEdit3 size={16} />
+                          {t("myArticles")}
                         </NativeLink>
                       )}
 
@@ -258,6 +278,19 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                   )}
                 </AnimatePresence>
               </div>
+            ) : (
+              <NativeLink
+                href="/masuk"
+                className={`inline-flex items-center justify-center px-3.5 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold rounded-full border transition-all ${
+                  isScrolled
+                    ? "border-primary/30 text-primary hover:bg-primary/5"
+                    : isHome
+                      ? "border-white/40 text-white hover:bg-white/10"
+                      : "border-primary/30 text-primary hover:bg-primary/5"
+                }`}
+              >
+                {t("login")}
+              </NativeLink>
             )}
           </div>
         </div>
