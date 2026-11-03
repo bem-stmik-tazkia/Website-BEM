@@ -34,6 +34,10 @@ interface NewsItem {
   image_url: string;
   views: number;
   likes: number;
+  /** 'article' untuk artikel mahasiswa, 'berita' untuk berita resmi BEM */
+  type?: 'berita' | 'article';
+  /** URL detail yang tepat: /berita/slug atau /artikel/slug */
+  detailUrl?: string;
 }
 
 export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] }) {
@@ -69,19 +73,31 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
     const fetchLatestStats = async () => {
       try {
         const supabase = createClient();
-        const ids = initialNews.map(n => n.id);
-        const { data } = await supabase
-          .from('berita')
-          .select('id, views, likes')
-          .in('id', ids);
-          
-        if (data) {
+
+        // Pisahkan berita resmi dan artikel mahasiswa
+        const beritaItems = initialNews.filter(n => !n.type || n.type === 'berita');
+        const articleItems = initialNews.filter(n => n.type === 'article');
+
+        const updates: Record<string, { views: number; likes: number }> = {};
+
+        // Fetch stats berita
+        if (beritaItems.length > 0) {
+          const ids = beritaItems.map(n => n.id);
+          const { data } = await supabase.from('berita').select('id, views, likes').in('id', ids);
+          if (data) data.forEach(d => { updates[d.id] = { views: d.views || 0, likes: d.likes || 0 }; });
+        }
+
+        // Fetch stats artikel mahasiswa
+        if (articleItems.length > 0) {
+          const ids = articleItems.map(n => n.id);
+          const { data } = await supabase.from('articles').select('id, views, likes').in('id', ids);
+          if (data) data.forEach(d => { updates[d.id] = { views: d.views || 0, likes: d.likes || 0 }; });
+        }
+
+        if (Object.keys(updates).length > 0) {
           setAllNews(prev => prev.map(news => {
-            const fresh = data.find(d => d.id === news.id);
-            if (fresh) {
-              return { ...news, views: fresh.views || 0, likes: fresh.likes || 0 };
-            }
-            return news;
+            const fresh = updates[news.id];
+            return fresh ? { ...news, views: fresh.views, likes: fresh.likes } : news;
           }));
         }
       } catch (err) {
@@ -341,6 +357,42 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
           </div>
         </section>
 
+        {/* CTA Banner: Ajak Mahasiswa Menulis Artikel */}
+        <section className="mb-8">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-secondary border border-primary/30 shadow-md px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Decorative blobs */}
+            <div className="absolute -top-6 -left-6 w-28 h-28 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-6 -right-6 w-28 h-28 rounded-full bg-secondary/30 blur-2xl pointer-events-none" />
+            <div className="flex items-center gap-3 relative z-10">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 text-white text-xl">
+                ✍️
+              </div>
+              <div>
+                <p className="text-[10px] sm:text-xs font-bold text-white/80 uppercase tracking-wider mb-0.5">
+                  {locale === "id" ? "Portal Penulis Mahasiswa" : "Student Writer Portal"}
+                </p>
+                <p className="font-extrabold text-white text-sm sm:text-base leading-tight">
+                  {locale === "id"
+                    ? "Punya ide, opini, atau karya inovatif?"
+                    : "Have an idea, opinion, or innovative work?"}
+                </p>
+                <p className="text-white/80 text-[11px] sm:text-xs mt-0.5 font-light">
+                  {locale === "id"
+                    ? "Tulis & kirim artikel—tim BEM akan me-review dan menerbitkannya."
+                    : "Write & submit an article—the BEM team will review and publish it."}
+                </p>
+              </div>
+            </div>
+            <a
+              href="/dashboard/artikel/baru"
+              className="relative z-10 shrink-0 inline-flex items-center gap-2 bg-white text-primary font-extrabold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-md hover:bg-primary-container transition-all duration-300 hover:scale-105 active:scale-95 whitespace-nowrap"
+            >
+              <span>+ {locale === "id" ? "Tulis Artikel" : "Write Article"}</span>
+              <FiArrowRight size={14} />
+            </a>
+          </div>
+        </section>
+
         {/* Featured News Section (Hero Banner) */}
         {selectedCategory === "Semua" && searchQuery === "" && featuredNews && (
           <section id="tour-berita-featured" className="mb-10 md:mb-12">
@@ -357,7 +409,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
 
               {/* Full-card link: sits at z-10 so clicks anywhere outside buttons trigger navigation */}
               <Link
-                href={`/berita/${featuredNews.slug}`}
+                href={(featuredNews as any).detailUrl || `/berita/${featuredNews.slug}`}
                 className="absolute inset-0 z-10 cursor-pointer"
                 aria-label={featuredNews.title}
               />
@@ -401,7 +453,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                   </div>
                   <div className="flex items-center gap-4 text-xs text-white/90">
                     <div className="pointer-events-auto relative z-30">
-                      <LikeButton initialLikes={featuredNews.likes} id={featuredNews.id} table="berita" label={t("likes")} size={16} />
+                      <LikeButton initialLikes={featuredNews.likes} id={featuredNews.id} table={(featuredNews as any).type === 'article' ? 'articles' : 'berita'} label={t("likes")} size={16} />
                     </div>
                     <span className="flex items-center gap-1"><FiEye /> {featuredNews.views} {t("views")}</span>
                   </div>
@@ -455,7 +507,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
 
                       {/* Full-card link at z-10 */}
                       <Link
-                        href={`/berita/${news.slug}`}
+                        href={(news as any).detailUrl || `/berita/${news.slug}`}
                         className="absolute inset-0 z-10 cursor-pointer"
                         aria-label={news.title}
                       />
@@ -479,7 +531,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-white/90 font-medium shrink-0">
                             <div className="pointer-events-auto relative z-30">
-                              <LikeButton initialLikes={news.likes} id={news.id} table="berita" size={11} />
+                              <LikeButton initialLikes={news.likes} id={news.id} table={(news as any).type === 'article' ? 'articles' : 'berita'} size={11} />
                             </div>
                             <span className="flex items-center gap-0.5"><FiEye size={11} /> {news.views}</span>
                           </div>
@@ -615,7 +667,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
 
                     {/* Full-card link at z-10 */}
                     <Link
-                      href={`/berita/${item.slug}`}
+                      href={(item as any).detailUrl || `/berita/${item.slug}`}
                       className="absolute inset-0 z-10 cursor-pointer"
                       aria-label={item.title}
                     />
@@ -641,7 +693,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                         <div className="flex items-center gap-2 text-[9px] text-white/90 font-medium shrink-0">
                           <span className="flex items-center gap-0.5"><FiEye size={10} /> {item.views}</span>
                           <div className="pointer-events-auto relative z-30">
-                            <LikeButton initialLikes={item.likes} id={item.id} table="berita" size={10} />
+                            <LikeButton initialLikes={item.likes} id={item.id} table={(item as any).type === 'article' ? 'articles' : 'berita'} size={10} />
                           </div>
                         </div>
                       </div>
