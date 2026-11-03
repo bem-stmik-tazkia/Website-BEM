@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   FiArrowLeft,
@@ -58,6 +59,7 @@ interface ArticleFormProps {
 export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations("ArticlePortal");
   const supabase = createClient();
 
   const isNew = mode === "new";
@@ -88,6 +90,58 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
     }
     checkAdminStatus();
   }, [supabase]);
+
+  // Cek apakah form memiliki data tulisan yang belum disimpan (Dirty state)
+  const isCoverValid = coverUrl.trim().length > 0;
+  const isDirty = (
+    !isSubmitting &&
+    (
+      title.trim() !== (initialData?.title || "").trim() ||
+      content.trim() !== (initialData?.content || "").trim() ||
+      coverUrl.trim() !== (initialData?.cover_url || "").trim()
+    ) &&
+    (title.trim().length > 0 || content.trim().length > 0 || coverUrl.trim().length > 0)
+  );
+
+  // 1. Guard penutupan tab atau reload browser
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty && !isSubmitting) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty, isSubmitting]);
+
+  // 2. Guard navigasi in-app (saat user mengklik tautan apapun seperti Kembali / Navbar)
+  useEffect(() => {
+    if (!isDirty || isSubmitting) return;
+
+    const handleLinkClick = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a[href]");
+      if (!anchor) return;
+      const href = (anchor as HTMLAnchorElement).href;
+      if (!href || href === window.location.href || href.startsWith("javascript:")) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const confirmed = window.confirm(t("unsavedPrompt"));
+      if (confirmed) {
+        try {
+          const targetUrl = new URL(href);
+          router.push(targetUrl.pathname + targetUrl.search);
+        } catch {
+          window.location.href = href;
+        }
+      }
+    };
+
+    document.addEventListener("click", handleLinkClick, true);
+    return () => document.removeEventListener("click", handleLinkClick, true);
+  }, [isDirty, isSubmitting, router, t]);
 
   // Auto-generate slug dari judul jika belum manual diubah
   useEffect(() => {
@@ -135,7 +189,11 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
     // Validasi untuk pengajuan review atau terbit langsung
     if (targetStatus === "pending" || targetStatus === "published") {
       if (!isTitleValid) {
-        setErrorMessage("Judul artikel wajib antara 10 hingga 120 karakter.");
+        setErrorMessage(t("errTitle"));
+        return;
+      }
+      if (!coverUrl.trim()) {
+        setErrorMessage(t("errCover"));
         return;
       }
       if (isEdit && !isSlugValid) {
@@ -143,13 +201,13 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         return;
       }
       if (!isContentValid) {
-        setErrorMessage("Isi artikel wajib minimal 300 karakter (saat ini: " + contentLen + " karakter).");
+        setErrorMessage(t("errContent", { len: contentLen }));
         return;
       }
     } else {
       // Validasi minimal untuk draft
       if (titleLen === 0) {
-        setErrorMessage("Silakan isi judul sebelum menyimpan draf.");
+        setErrorMessage(t("errDraftTitle"));
         return;
       }
     }
@@ -193,12 +251,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           }).catch((err) => console.warn("[Telegram] Gagal kirim notif revisi:", err));
         }
 
-        toast(
-          targetStatus === "pending"
-            ? "Revisi artikel berhasil diajukan untuk dimoderasi admin!"
-            : "Draf revisi berhasil disimpan.",
-          "success"
-        );
+        toast(targetStatus === "pending" ? t("toastRevisionSubmitted") : t("toastDraftSaved"), "success");
         router.push("/dashboard/artikel");
         router.refresh();
       } else if (isEdit && initialData) {
@@ -245,14 +298,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           }).catch((err) => console.warn("[Telegram] Gagal kirim notif pengajuan:", err));
         }
 
-        toast(
-          targetStatus === "published"
-            ? "Artikel berhasil diterbitkan langsung ke publik!"
-            : targetStatus === "pending"
-            ? "Artikel berhasil diajukan untuk dimoderasi admin!"
-            : "Perubahan draf berhasil disimpan.",
-          "success"
-        );
+        toast(targetStatus === "published" ? t("toastDirectPublished") : targetStatus === "pending" ? t("toastSubmitted") : t("toastDraftSaved"), "success");
         router.push(targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel");
         router.refresh();
       } else {
@@ -302,14 +348,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           }).catch((err) => console.warn("[Telegram] Gagal kirim notif terbit admin:", err));
         }
 
-        toast(
-          targetStatus === "published"
-            ? "Artikel berhasil langsung diterbitkan ke publik!"
-            : targetStatus === "pending"
-            ? "Artikel baru berhasil diajukan untuk moderasi admin!"
-            : "Draf artikel berhasil disimpan.",
-          "success"
-        );
+        toast(targetStatus === "published" ? t("toastDirectPublished") : targetStatus === "pending" ? t("toastSubmitted") : t("toastDraftSaved"), "success");
         router.push(targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel");
         router.refresh();
       }
@@ -354,12 +393,12 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
       {/* Header Banner */}
       <div className="bg-surface border border-outline-variant/30 rounded-2xl p-5 sm:p-6 mb-6 shadow-sm">
         <h1 className="text-xl sm:text-2xl font-black text-on-surface leading-tight">
-          {isNew && "Tulis Artikel Mahasiswa Baru"}
-          {isEdit && "Edit Artikel"}
-          {isRevision && "Ajukan Revisi Artikel Tayang"}
+          {isNew && t("newTitle")}
+          {isEdit && t("editTitle")}
+          {isRevision && t("revisionTitle")}
         </h1>
         <p className="text-xs sm:text-sm text-on-surface-variant mt-1.5 leading-relaxed">
-          {isNew && "Bagikan karya pemikiran, wawasan teknologi, opini, atau kegiatan kampus Tazkia ke publik."}
+          {isNew && t("newSubtitle")}
           {isEdit && "Perbaiki konten draf Anda atau sesuaikan dengan masukan catatan review dari admin."}
           {isRevision && "Artikel publik Anda tetap tayang tanpa gangguan selagi admin meninjau revisi yang Anda ajukan."}
         </p>
@@ -424,14 +463,14 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Contoh: Mengembangkan Agen Cerdas AI di Lingkungan Kampus STMIK Tazkia"
+            placeholder={t("titlePlaceholder")}
             className="w-full px-4 py-3 rounded-xl bg-surface-variant/20 border border-outline-variant/40 focus:border-primary focus:ring-2 focus:ring-primary/20 text-on-surface text-sm sm:text-base outline-none transition-all placeholder:text-on-surface-variant/40"
             maxLength={120}
           />
 
           {/* Info Tautan Publik Otomatis */}
           <div className="mt-3 pt-2.5 border-t border-outline-variant/15 flex items-center justify-between text-xs text-on-surface-variant">
-            <span className="font-medium text-on-surface-variant/70">Tautan Publik Otomatis:</span>
+            <span className="font-medium text-on-surface-variant/70">{t("autoUrlLabel")}</span>
             <span className="font-mono text-primary text-[11px] sm:text-xs">
               /artikel/{slugify(title) || "judul-artikel"}-{isNew ? "[hash-acak]" : (initialData?.slug?.split('-').pop() || "id")}
             </span>
@@ -444,15 +483,15 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             <div>
               <label className="text-xs sm:text-sm font-bold text-on-surface flex items-center gap-1.5">
                 <FiImage className="text-primary" />
-                <span>Gambar Sampul (Cover Image)</span>
+                <span>{t("coverLabel")} <span className="text-rose-500">*</span></span>
               </label>
               <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                Unggah gambar landscape resolusi tinggi (maks 2MB, JPG/PNG/WebP) atau masukkan tautan URL gambar langsung.
+                {t("coverDesc")}
               </p>
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold self-start sm:self-center shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Tipe: Artikel Mahasiswa</span>
+              <span>{t("typeBadge")}</span>
             </div>
           </div>
 
@@ -478,7 +517,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 }`}
               >
                 <FiEdit3 size={13} />
-                <span>Tulis</span>
+                <span>{t("tabWrite")}</span>
               </button>
               <button
                 type="button"
@@ -490,7 +529,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 }`}
               >
                 <FiEye size={13} />
-                <span>Pratinjau Tampilan</span>
+                <span>{t("tabPreview")}</span>
               </button>
             </div>
 
@@ -576,7 +615,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 rows={16}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Mulai menulis artikel Anda di sini... Gunakan format Markdown untuk menyusun paragraf, subjudul, daftar poin, dan kutipan pemikiran Anda."
+                placeholder={t("contentPlaceholder")}
                 className="w-full p-4 rounded-xl bg-surface-variant/20 border border-outline-variant/40 focus:border-primary focus:ring-2 focus:ring-primary/20 text-on-surface text-sm sm:text-base outline-none transition-all placeholder:text-on-surface-variant/40 font-mono leading-relaxed resize-y min-h-[320px]"
                 maxLength={20000}
               />
@@ -630,30 +669,30 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-surface-variant/50 hover:bg-surface-variant text-on-surface border border-outline-variant/40 text-xs sm:text-sm font-bold transition-all disabled:opacity-50 cursor-pointer"
             >
               <FiSave size={15} />
-              <span>{isSubmitting ? "Menyimpan..." : "Simpan Draf"}</span>
+              <span>{isSubmitting ? t("savingDraft") : t("saveDraft")}</span>
             </button>
 
             {/* Tombol Ajukan ke Admin */}
             <button
               type="button"
-              disabled={isSubmitting || !isTitleValid || !isContentValid}
+              disabled={isSubmitting || !isTitleValid || !isContentValid || !isCoverValid}
               onClick={() => handleSubmit("pending")}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <FiSend size={15} />
-              <span>{isSubmitting ? "Mengajukan..." : isRevision ? "Ajukan Revisi" : "Ajukan untuk Moderasi"}</span>
+              <span>{isSubmitting ? t("submitting") : isRevision ? t("submitRevision") : t("submitModeration")}</span>
             </button>
 
             {/* Tombol Terbitkan Langsung Khusus Admin (Bypass Moderasi) */}
             {isAdmin && !isRevision && (
               <button
                 type="button"
-                disabled={isSubmitting || !isTitleValid || !isContentValid}
+                disabled={isSubmitting || !isTitleValid || !isContentValid || !isCoverValid}
                 onClick={() => handleSubmit("published")}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <FiCheckCircle size={15} />
-                <span>{isSubmitting ? "Menerbitkan..." : "Terbitkan Langsung (Admin)"}</span>
+                <span>{isSubmitting ? t("publishingDirect") : t("publishDirect")}</span>
               </button>
             )}
           </div>

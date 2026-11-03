@@ -15,7 +15,7 @@ import {
   FiEdit3,
   FiBookOpen,
 } from "react-icons/fi";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export interface PublishedArticleItem {
   id: string;
@@ -49,6 +49,7 @@ const CATEGORIES = [
 
 export default function ArtikelClient({ initialArticles }: { initialArticles: PublishedArticleItem[] }) {
   const locale = useLocale();
+  const t = useTranslations("ArticleList");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [sortBy, setSortBy] = useState<"newest" | "popular">("newest");
@@ -111,7 +112,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 transition-all cursor-pointer"
             >
               <FiEdit3 size={15} />
-              <span>Tulis Karya Anda</span>
+              <span>{t("writeArticle")}</span>
             </NativeLink>
             <a
               href="#katalog"
@@ -134,7 +135,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari artikel, topik, atau penulis..."
+              placeholder={t("searchPlaceholder")}
               className="w-full pl-10 pr-4 py-2 rounded-xl bg-surface border border-outline-variant/40 text-xs sm:text-sm text-on-surface outline-none focus:border-primary shadow-xs transition-all"
             />
           </div>
@@ -150,7 +151,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                   sortBy === "newest" ? "bg-primary text-white shadow-xs" : "text-on-surface-variant hover:text-on-surface"
                 }`}
               >
-                Terbaru
+                {t("sortNewest")}
               </button>
               <button
                 type="button"
@@ -160,7 +161,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                 }`}
               >
                 <FiTrendingUp size={12} />
-                <span>Terpopuler</span>
+                <span>{t("sortPopular")}</span>
               </button>
             </div>
           </div>
@@ -191,9 +192,9 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
           <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center mb-4">
             <FiBookOpen size={26} />
           </div>
-          <h3 className="text-lg font-bold text-on-surface">Belum Ada Artikel Ditemukan</h3>
+          <h3 className="text-lg font-bold text-on-surface">{t("emptyTitle")}</h3>
           <p className="text-xs sm:text-sm text-on-surface-variant mt-1.5 leading-relaxed">
-            Tidak ada artikel yang cocok dengan filter atau kata kunci pencarian Anda.
+            {t("emptyDesc")}
           </p>
           <button
             type="button"
@@ -240,7 +241,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                       <FiCalendar size={13} />
                       <span>
                         {new Date(featuredArticle.published_at || featuredArticle.created_at).toLocaleDateString(
-                          "id-ID",
+                          locale,
                           { day: "numeric", month: "long", year: "numeric" }
                         )}
                       </span>
@@ -318,7 +319,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                       <div className="flex items-center gap-2 text-[11px] text-on-surface-variant mb-2">
                         <FiCalendar size={11} />
                         <span>
-                          {new Date(art.published_at || art.created_at).toLocaleDateString("id-ID", {
+                          {new Date(art.published_at || art.created_at).toLocaleDateString(locale, {
                             day: "numeric",
                             month: "short",
                             year: "numeric",

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link } from "@/i18n/routing";
+import { useTranslations, useLocale } from "next-intl";
 import {
   FiArrowLeft,
   FiCalendar,
@@ -28,6 +29,8 @@ interface Props {
 }
 
 export default function ArtikelDetailClient({ article, relatedArticles }: Props) {
+  const t = useTranslations("ArticleDetail");
+  const locale = useLocale();
   const { toast } = useToast();
   const supabase = createClient();
 
@@ -139,7 +142,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
       toast("Tautan artikel berhasil disalin!", "success");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast("Gagal menyalin tautan.", "error");
+      toast(t("shareFail"), "error");
     }
   };
 
@@ -205,7 +208,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
               <p className="font-bold text-sm text-on-surface leading-tight">
                 {article.author?.full_name || "Mahasiswa STMIK Tazkia"}
               </p>
-              <p className="text-[11px] text-on-surface-variant mt-0.5">Penulis Mahasiswa</p>
+              <p className="text-[11px] text-on-surface-variant mt-0.5">{t("studentAuthor")}</p>
             </div>
           </div>
 
@@ -213,7 +216,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
             <span className="flex items-center gap-1.5">
               <FiCalendar size={13} />
               <span>
-                {new Date(article.published_at || article.created_at).toLocaleDateString("id-ID", {
+                {new Date(article.published_at || article.created_at).toLocaleDateString(locale, {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
@@ -223,7 +226,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
             <span>•</span>
             <span className="flex items-center gap-1.5">
               <FiClock size={13} />
-              <span>{readingTime} menit baca</span>
+              <span>{t("minRead", { min: readingTime })}</span>
             </span>
           </div>
         </div>
@@ -263,19 +266,19 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
             }`}
           >
             <FiHeart size={18} className={isLiked ? "fill-white" : ""} />
-            <span>{likes} Suka</span>
+            <span>{t("likes", { count: likes })}</span>
           </button>
 
           {/* Views Badge */}
           <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-medium px-3 py-2 rounded-xl bg-surface-variant/20 border border-outline-variant/20">
             <FiEye size={14} />
-            <span>{views} Pembaca</span>
+            <span>{t("readers", { count: views })}</span>
           </div>
         </div>
 
         {/* Share Buttons */}
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <span className="text-xs text-on-surface-variant font-medium mr-1 hidden sm:inline">Bagikan:</span>
+          <span className="text-xs text-on-surface-variant font-medium mr-1 hidden sm:inline">{t("shareLabel")}</span>
 
           <a
             href={whatsappShareUrl}
@@ -294,7 +297,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-variant/40 hover:bg-surface-variant text-on-surface text-xs font-bold border border-outline-variant/30 transition-colors cursor-pointer"
           >
             {copied ? <FiCheck className="text-emerald-500" size={15} /> : <FiShare2 size={15} />}
-            <span>{copied ? "Tersalin!" : "Bagikan"}</span>
+            <span>{copied ? t("copied") : t("share")}</span>
           </button>
         </div>
       </div>
@@ -309,12 +312,12 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
           )}
         </div>
         <div>
-          <span className="text-[11px] font-bold text-primary uppercase tracking-wider">Tentang Penulis</span>
+          <span className="text-[11px] font-bold text-primary uppercase tracking-wider">{t("aboutAuthor")}</span>
           <h3 className="text-lg font-black text-on-surface mt-0.5">
             {article.author?.full_name || "Mahasiswa STMIK Tazkia"}
           </h3>
           <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-            Karya tulisan ini merupakan gagasan independen dari mahasiswa STMIK Tazkia yang telah melalui kurasi tim redaksi BEM STMIK Tazkia untuk kemaslahatan civitas akademika.
+            {t("curationNotice")}
           </p>
         </div>
       </div>
@@ -322,7 +325,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
       {/* Related Articles */}
       {relatedArticles.length > 0 && (
         <div className="border-t border-outline-variant/20 pt-10">
-          <h2 className="text-xl font-bold text-on-surface mb-6">Artikel Terkait Lainnya</h2>
+          <h2 className="text-xl font-bold text-on-surface mb-6">{t("relatedArticles")}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             {relatedArticles.map((rel) => (
               <Link
@@ -341,7 +344,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
                     {rel.title}
                   </h4>
                   <span className="text-[11px] text-on-surface-variant mt-2 block">
-                    {new Date(rel.published_at || rel.created_at).toLocaleDateString("id-ID", {
+                    {new Date(rel.published_at || rel.created_at).toLocaleDateString(locale, {
                       day: "numeric",
                       month: "short",
                     })}
