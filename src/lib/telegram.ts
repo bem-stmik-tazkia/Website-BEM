@@ -692,6 +692,9 @@ export interface MaintenanceModePayload {
   message?: string;
   estimatedTime?: string;
   adminName?: string;
+  releaseVersion?: string;
+  releaseTitle?: string;
+  releaseFeatures?: string[];
 }
 
 /**
@@ -744,13 +747,30 @@ export async function sendMaintenanceModeNotification(
       },
     ]);
   } else {
+    const versionStr = payload.releaseVersion ? ` (${escapeHtml(payload.releaseVersion)})` : "";
+    const releaseTitleStr = payload.releaseTitle ? escapeHtml(payload.releaseTitle) : "Pembaruan & Peningkatan Sistem";
+
+    let featuresBlock = "";
+    if (payload.releaseFeatures && payload.releaseFeatures.length > 0) {
+      const validFeatures = payload.releaseFeatures
+        .map((f) => f.trim())
+        .filter((f) => f.length > 0);
+
+      if (validFeatures.length > 0) {
+        featuresBlock =
+          `\n\n✨ <b>Poin-poin Fitur Baru & Peningkatan:</b>\n` +
+          validFeatures.map((f, i) => `  ${i + 1}. ${escapeHtml(f)}`).join("\n");
+      }
+    }
+
     message =
       `🟢 <b>PEMELIHARAAN SELESAI: WEBSITE KEMBALI NORMAL</b> 🟢\n\n` +
-      `Proses maintenance sistem website BEM STMIK Tazkia telah <b>selesai</b> dan situs kini kembali beroperasi normal untuk seluruh pengguna dan publik!\n\n` +
-      `📢 <b>Status:</b> Sistem normal, pembaruan berhasil diterapkan.\n` +
-      `🛡️ <b>Dinonaktifkan Oleh:</b> ${safeAdmin}\n` +
+      `Proses pemeliharaan sistem website BEM STMIK Tazkia telah <b>selesai</b> dan situs kini kembali beroperasi normal untuk seluruh pengguna dan publik!\n\n` +
+      `📦 <b>Pembaruan:</b> ${releaseTitleStr}${versionStr}` +
+      featuresBlock +
+      `\n\n🛡️ <b>Dinonaktifkan Oleh:</b> ${safeAdmin}\n` +
       `📅 <b>Waktu Selesai:</b> ${timeStr} WIB\n\n` +
-      `Terima kasih atas kerja keras seluruh tim! Silakan akses portal seperti biasa.`;
+      `Terima kasih atas kesabaran dan kerja keras seluruh tim! Silakan akses portal seperti biasa.`;
 
     inlineButtons.push([
       {

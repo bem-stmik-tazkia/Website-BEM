@@ -272,6 +272,9 @@ export default function SystemSettingsPage() {
           isEnabled: mMode,
           message: mMsg,
           estimatedTime: mTime,
+          releaseVersion: rVersion,
+          releaseTitle: rTitle,
+          releaseFeatures: rFeatures,
         }).catch((err) => console.warn("[Telegram] Gagal kirim notif maintenance:", err));
       }
       savedRef.current = { 
