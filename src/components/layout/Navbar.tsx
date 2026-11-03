@@ -135,7 +135,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 width={64}
                 height={64}
                 priority
-                className="h-8 sm:h-10 w-auto md:h-12 lg:h-14 object-contain group-hover:scale-105 transition-transform duration-300"
+                className="h-7 sm:h-9 md:h-12 lg:h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
               />
               <Image
                 alt="BEM STMIK Tazkia Logo 2"
@@ -143,18 +143,18 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 width={64}
                 height={64}
                 priority
-                className="h-8 sm:h-10 w-auto md:h-12 lg:h-14 object-contain group-hover:scale-105 transition-transform duration-300"
+                className="h-7 sm:h-9 md:h-12 lg:h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </div>
             <div className="flex flex-row items-center gap-1 sm:gap-1.5 shrink min-w-0">
               <span
-                className={`font-bold leading-none text-[15px] sm:text-lg md:text-xl transition-colors duration-300 ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"
+                className={`font-bold leading-none text-xs sm:text-base md:text-xl transition-colors duration-300 ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"
                   }`}
               >
-                BEM STMIK
+                BEM <span className="hidden sm:inline">STMIK</span>
               </span>
               <span
-                className={`font-bold leading-none text-[15px] sm:text-lg md:text-xl transition-colors duration-300 ${isScrolled ? "text-secondary" : isHome ? "text-white" : "text-secondary"
+                className={`font-bold leading-none text-xs sm:text-base md:text-xl transition-colors duration-300 ${isScrolled ? "text-secondary" : isHome ? "text-white" : "text-secondary"
                   }`}
               >
                 Tazkia
@@ -188,7 +188,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           </div>
 
           {/* Action Button (Mobile, Tablet, Desktop) */}
-          <div id="tour-login-btn" className="flex items-center gap-2 md:gap-3 ml-auto lg:ml-0">
+          <div id="tour-login-btn" className="flex items-center gap-1.5 sm:gap-2 md:gap-3 ml-auto lg:ml-0">
             {/* CTA Portal Karya (Mobile) Removed in favor of FloatingKaryaPrompt */}
             
             <LanguageSwitcher />
@@ -202,7 +202,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
               <div className="relative" ref={profileMenuRef}>
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className={`flex items-center gap-3 ml-1 md:ml-2 p-1.5 md:p-2 pr-3 md:pr-4 rounded-full border transition-all ${showProfileMenu
+                  className={`flex items-center gap-1.5 sm:gap-2 md:gap-3 p-1 sm:p-1.5 md:p-2 pr-2 sm:pr-3 md:pr-4 rounded-full border transition-all ${showProfileMenu
                     ? "bg-primary text-white border-primary shadow-lg shadow-primary/30"
                     : isScrolled
                       ? "bg-surface border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5 text-on-surface"
@@ -211,7 +211,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                         : "bg-surface border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5 text-on-surface"
                     }`}
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-sm">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 overflow-hidden shadow-sm">
                     {userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || userProfile.raw_user_meta_data?.avatar_url || userProfile.raw_user_meta_data?.picture ? (
                       <img src={userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || userProfile.raw_user_meta_data?.avatar_url || userProfile.raw_user_meta_data?.picture} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -224,7 +224,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                       {userProfile.role || 'USER'}
                     </span>
                   </div>
-                  <FiChevronDown className={`transition-transform ${showProfileMenu ? 'rotate-180' : ''} text-sm md:text-base`} />
+                  <FiChevronDown className={`transition-transform ${showProfileMenu ? 'rotate-180' : ''} text-xs sm:text-sm md:text-base`} />
                 </button>
 
 

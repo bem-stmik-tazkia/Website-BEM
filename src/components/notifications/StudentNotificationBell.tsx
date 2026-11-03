@@ -227,7 +227,7 @@ export default function StudentNotificationBell({
         type="button"
         title="Notifikasi Artikel Saya"
         aria-label="Notifikasi Artikel Mahasiswa"
-        className={`relative flex items-center justify-center w-9 h-9 rounded-full transition-all cursor-pointer ${
+        className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all cursor-pointer ${
           open
             ? isScrolled || !isHome
               ? "bg-primary/10 border border-primary/40 text-primary shadow-sm"
@@ -236,7 +236,7 @@ export default function StudentNotificationBell({
         }`}
       >
         <span className={animating ? "animate-[wiggle_0.5s_ease-in-out]" : ""}>
-          <FiBell size={17} />
+          <FiBell className="text-sm sm:text-base" />
         </span>
 
         {/* Badge Hitungan */}
