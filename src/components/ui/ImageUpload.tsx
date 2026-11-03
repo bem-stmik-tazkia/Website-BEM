@@ -10,9 +10,10 @@ interface ImageUploadProps {
   onChange: (url: string) => void;
   className?: string;
   folder?: string;
+  label?: string;
 }
 
-export default function ImageUpload({ value, onChange, className = "", folder = "kabinet" }: ImageUploadProps) {
+export default function ImageUpload({ value, onChange, className = "", folder = "kabinet", label }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -152,7 +153,7 @@ export default function ImageUpload({ value, onChange, className = "", folder = 
             <>
               <FiImage className="text-2xl opacity-70" />
               <span className="text-[10px] font-medium px-2 text-center leading-tight">
-                Upload Foto
+                {label || "Upload Foto"}
               </span>
             </>
           )}

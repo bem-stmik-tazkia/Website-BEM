@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { FiTrash2, FiX, FiAlertTriangle } from "react-icons/fi";
+import { FiTrash2, FiAlertTriangle } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface Props {
   isOpen: boolean;
@@ -19,6 +20,8 @@ export default function DeleteConfirmModal({
   title,
   isDeleting,
 }: Props) {
+  const t = useTranslations("DashboardArtikel");
+
   if (!isOpen) return null;
 
   return (
@@ -34,12 +37,12 @@ export default function DeleteConfirmModal({
             <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center justify-center mb-3">
               <FiAlertTriangle size={24} />
             </div>
-            <h3 className="font-bold text-base text-on-surface">Hapus Artikel Ini?</h3>
+            <h3 className="font-bold text-base text-on-surface">{t("deleteModalTitle")}</h3>
             <p className="text-xs text-on-surface-variant mt-1 line-clamp-2 px-2">
               "{title}"
             </p>
             <p className="text-[11px] text-rose-500 mt-2">
-              Tindakan ini permanen dan tidak dapat dibatalkan.
+              {t("deleteModalWarning")}
             </p>
           </div>
 
@@ -48,22 +51,22 @@ export default function DeleteConfirmModal({
               onClick={onClose}
               disabled={isDeleting}
               type="button"
-              className="py-2.5 px-4 rounded-xl border border-outline-variant/40 text-on-surface-variant hover:bg-surface-variant/30 text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50"
+              className="py-2.5 px-4 rounded-xl border border-outline-variant/40 text-on-surface-variant hover:bg-surface-variant/30 text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer"
             >
-              Batal
+              {t("deleteModalCancel")}
             </button>
             <button
               onClick={onConfirm}
               disabled={isDeleting}
               type="button"
-              className="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-bold transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-1.5"
+              className="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-bold transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
             >
               {isDeleting ? (
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <FiTrash2 size={15} />
               )}
-              <span>{isDeleting ? "Menghapus..." : "Ya, Hapus"}</span>
+              <span>{isDeleting ? t("deleteModalDeleting") : t("deleteModalConfirm")}</span>
             </button>
           </div>
         </motion.div>
@@ -71,4 +74,3 @@ export default function DeleteConfirmModal({
     </AnimatePresence>
   );
 }
-

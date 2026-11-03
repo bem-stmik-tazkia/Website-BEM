@@ -1,10 +1,15 @@
 import React from "react";
 import ArticleForm from "@/components/dashboard/artikel/ArticleForm";
+import { getTranslations } from "next-intl/server";
 
-export const metadata = {
-  title: "Tulis Artikel Baru - Portal Penulis Mahasiswa BEM STMIK Tazkia",
-  description: "Tulis dan ajukan draf artikel karya ilmiah, opini, atau kegiatan mahasiswa Tazkia.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "ArticlePortal" });
+  return {
+    title: `${t("newTitle")} - BEM STMIK Tazkia`,
+    description: t("newSubtitle"),
+  };
+}
 
 export default function BaruArticlePage() {
   return (
@@ -13,4 +18,3 @@ export default function BaruArticlePage() {
     </div>
   );
 }
-

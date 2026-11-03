@@ -429,11 +429,11 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
         >
           <FiArrowLeft size={16} />
-          <span>Kembali ke Dashboard</span>
+          <span>{t("backToDashboard")}</span>
         </button>
 
         <div className="text-xs text-on-surface-variant font-medium">
-          Perkiraan baca: <span className="font-bold text-primary">{readingTime} menit</span> ({wordCount} kata)
+          {t("readingTimeEstimate", { min: readingTime, words: wordCount })}
         </div>
       </div>
 
@@ -446,8 +446,8 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         </h1>
         <p className="text-xs sm:text-sm text-on-surface-variant mt-1.5 leading-relaxed">
           {isNew && t("newSubtitle")}
-          {isEdit && "Perbaiki konten draf Anda atau sesuaikan dengan masukan catatan review dari admin."}
-          {isRevision && "Artikel publik Anda tetap tayang tanpa gangguan selagi admin meninjau revisi yang Anda ajukan."}
+          {isEdit && t("editSubtitle")}
+          {isRevision && t("revisionSubtitle")}
         </p>
 
         {/* Catatan Review Jika Rejected */}
@@ -456,12 +456,12 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             <div className="flex items-start gap-2.5">
               <FiAlertCircle className="text-rose-600 text-base shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold text-xs sm:text-sm">Catatan Moderasi Admin Sebelumnya:</p>
+                <p className="font-bold text-xs sm:text-sm">{t("modNoteTitle")}</p>
                 <p className="text-xs mt-1 leading-relaxed bg-surface/60 p-2.5 rounded-lg border border-rose-500/10">
                   {initialData.review_note}
                 </p>
                 <p className="text-[11px] text-rose-600/80 mt-1.5">
-                  Tips: Perbaiki poin-poin yang diminta di atas sebelum mengklik <strong>Ajukan untuk Moderasi</strong>.
+                  {t("modNoteTips")}
                 </p>
               </div>
             </div>
@@ -499,10 +499,10 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         <div className="bg-surface border border-outline-variant/30 rounded-2xl p-5 sm:p-6 shadow-sm">
           <div className="flex items-center justify-between gap-2 mb-2">
             <label htmlFor="article-title" className="text-xs sm:text-sm font-bold text-on-surface">
-              Judul Artikel <span className="text-rose-500">*</span>
+              {t("titleLabel")} <span className="text-rose-500">*</span>
             </label>
             <span className={`text-[11px] font-semibold ${isTitleValid ? "text-emerald-600" : "text-on-surface-variant"}`}>
-              {titleLen} / 120 karakter (min. 10)
+              {titleLen} / 120 {t("charsMin", { min: 10 })}
             </span>
           </div>
           <input
@@ -546,6 +546,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             value={coverUrl}
             onChange={(url) => setCoverUrl(url)}
             folder="artikel"
+            label={t("uploadPhoto")}
           />
         </div>
 
@@ -589,7 +590,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                     : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                 }`}
               >
-                {contentLen} / 20.000 karakter (min. 300)
+                {contentLen} / 20.000 {t("charsMin", { min: 300 })}
               </span>
             </div>
           </div>
@@ -676,14 +677,14 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 </div>
               )}
               <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface mb-4">
-                {title || "Judul Artikel Akan Ditampilkan di Sini"}
+                {title || t("previewPlaceholderTitle")}
               </h1>
               <div className="text-xs text-on-surface-variant flex items-center gap-3 pb-4 mb-6 border-b border-outline-variant/20">
                 <span className="bg-primary/10 text-primary font-bold px-2.5 py-0.5 rounded-md">
                   {category}
                 </span>
                 <span>•</span>
-                <span>{readingTime} menit baca</span>
+                <span>{t("previewReadTime", { min: readingTime })}</span>
               </div>
               <div className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base text-on-surface space-y-4">
                 {content ? (
@@ -700,12 +701,20 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
 
         {/* Action Buttons Bar */}
         <div className="bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Link
-            href="/dashboard/artikel"
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-outline-variant/40 text-on-surface hover:bg-surface-variant/30 text-xs sm:text-sm font-bold transition-colors text-center"
+          <button
+            type="button"
+            onClick={() => {
+              if (isDirty) {
+                setPendingTargetUrl("/dashboard/artikel");
+                setShowLeaveModal(true);
+              } else {
+                router.push("/dashboard/artikel");
+              }
+            }}
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-outline-variant/40 text-on-surface hover:bg-surface-variant/30 text-xs sm:text-sm font-bold transition-colors text-center cursor-pointer"
           >
-            Batal & Kembali
-          </Link>
+            {t("cancelBack")}
+          </button>
 
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
             {/* Tombol Simpan Draf */}

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { FiSearch, FiFilter } from "react-icons/fi";
+import { useTranslations } from "next-intl";
 
 export type FilterStatus = "all" | "published" | "pending" | "draft" | "rejected";
 
@@ -26,12 +27,14 @@ export default function ArticleFilterTabs({
   onSearchChange,
   counts,
 }: Props) {
+  const t = useTranslations("DashboardArtikel");
+
   const tabs: { key: FilterStatus; label: string; count: number }[] = [
-    { key: "all", label: "Semua", count: counts.all },
-    { key: "published", label: "Tayang", count: counts.published },
-    { key: "pending", label: "Menunggu", count: counts.pending },
-    { key: "draft", label: "Draf", count: counts.draft },
-    { key: "rejected", label: "Perlu Revisi", count: counts.rejected },
+    { key: "all", label: t("tabAll"), count: counts.all },
+    { key: "published", label: t("tabPublished"), count: counts.published },
+    { key: "pending", label: t("tabPending"), count: counts.pending },
+    { key: "draft", label: t("tabDraft"), count: counts.draft },
+    { key: "rejected", label: t("tabRejected"), count: counts.rejected },
   ];
 
   return (
@@ -68,16 +71,26 @@ export default function ArticleFilterTabs({
 
       {/* Search Input */}
       <div className="relative w-full sm:w-64">
-        <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm pointer-events-none" />
+        <FiSearch
+          size={14}
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant/60"
+        />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Cari judul artikel..."
-          className="w-full pl-9 pr-3.5 py-1.5 text-xs sm:text-sm bg-surface border border-outline-variant/40 rounded-xl focus:outline-none focus:border-primary text-on-surface placeholder:text-on-surface-variant/60 shadow-sm"
+          placeholder={t("searchPlaceholder")}
+          className="w-full pl-9 pr-4 py-2 rounded-xl bg-surface border border-outline-variant/30 focus:border-primary focus:ring-2 focus:ring-primary/20 text-on-surface text-xs sm:text-sm outline-none transition-all placeholder:text-on-surface-variant/40"
         />
+        {searchQuery && (
+          <button
+            onClick={() => onSearchChange("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 hover:text-on-surface text-xs font-bold"
+          >
+            ×
+          </button>
+        )}
       </div>
     </div>
   );
 }
-

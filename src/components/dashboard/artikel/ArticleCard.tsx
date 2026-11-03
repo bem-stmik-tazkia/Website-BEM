@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Link } from "@/i18n/routing";
-import Image from "next/image";
 import {
   FiEdit2,
   FiTrash2,
@@ -12,6 +11,7 @@ import {
   FiClock,
   FiTag,
 } from "react-icons/fi";
+import { useTranslations, useLocale } from "next-intl";
 import ArticleStatusBadge, { ArticleStatus } from "./ArticleStatusBadge";
 
 export interface ArticleItem {
@@ -37,24 +37,31 @@ interface Props {
   onOpenDelete: (article: ArticleItem) => void;
 }
 
-function formatDate(dateStr?: string | null): string {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 export default function ArticleCard({
   article,
   onOpenReviewNote,
   onOpenDelete,
 }: Props) {
+  const t = useTranslations("DashboardArtikel");
+  const locale = useLocale();
+
   const isPublished = article.status === "published";
   const isPending = article.status === "pending";
   const isRejected = article.status === "rejected";
   const isDraft = article.status === "draft";
+
+  const formatDate = (dateStr?: string | null): string => {
+    if (!dateStr) return "-";
+    try {
+      return new Date(dateStr).toLocaleDateString(locale, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   // Snippet cuplikan teks artikel
   const contentSnippet = (article.content || "")
@@ -75,7 +82,7 @@ export default function ArticleCard({
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-on-surface-variant/50 p-3 text-center">
             <span className="material-symbols-outlined text-3xl">image</span>
-            <span className="text-[10px] mt-1">Tanpa Sampul</span>
+            <span className="text-[10px] mt-1">{t("noCover")}</span>
           </div>
         )}
 
@@ -104,8 +111,8 @@ export default function ArticleCard({
               <FiCalendar size={12} />
               <span>
                 {isPublished
-                  ? `Terbit ${formatDate(article.published_at)}`
-                  : `Dibuat ${formatDate(article.created_at)}`}
+                  ? t("publishedAt", { date: formatDate(article.published_at) })
+                  : t("createdAt", { date: formatDate(article.created_at) })}
               </span>
             </span>
           </div>
@@ -117,7 +124,7 @@ export default function ArticleCard({
 
           {/* Snippet */}
           <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-2 sm:line-clamp-3 mb-3">
-            {contentSnippet || "Belum ada konten tulisan."}
+            {contentSnippet || t("emptySnippet")}
           </p>
 
           {/* Rejection Alert Banner (Jika rejected) */}
@@ -126,8 +133,8 @@ export default function ArticleCard({
               <div className="flex items-start gap-2 min-w-0">
                 <FiAlertCircle className="text-rose-500 text-sm shrink-0 mt-0.5" />
                 <p className="text-xs text-rose-600 dark:text-rose-400 line-clamp-2 leading-relaxed">
-                  <span className="font-bold">Catatan Admin: </span>
-                  {article.review_note || "Perlu revisi sesuai pedoman penulisan."}
+                  <span className="font-bold">{t("adminNote")}</span>
+                  {article.review_note || t("adminNoteDefault")}
                 </p>
               </div>
               <button
@@ -135,7 +142,7 @@ export default function ArticleCard({
                 onClick={() => onOpenReviewNote(article)}
                 className="text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline shrink-0 whitespace-nowrap cursor-pointer"
               >
-                Lihat Detail
+                {t("viewDetail")}
               </button>
             </div>
           )}
@@ -148,12 +155,12 @@ export default function ArticleCard({
             {isPending && (
               <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 text-xs font-medium">
                 <FiClock size={12} />
-                <span>Menunggu antrean review</span>
+                <span>{t("waitingReviewQueue")}</span>
               </span>
             )}
             {article.updated_at && !isPending && (
               <span className="text-[11px] text-on-surface-variant/70 hidden sm:inline">
-                Diperbarui: {formatDate(article.updated_at)}
+                {t("updatedAt", { date: formatDate(article.updated_at) })}
               </span>
             )}
           </div>
@@ -167,21 +174,21 @@ export default function ArticleCard({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-on-surface text-xs font-semibold transition-colors"
-                title="Lihat halaman artikel publik"
+                title={t("viewPublic")}
               >
                 <FiExternalLink size={13} />
-                <span>Lihat Publik</span>
+                <span>{t("viewPublic")}</span>
               </Link>
             )}
 
-            {/* Tombol Edit Artikel (Hanya draf atau rejected, atau ajukan revisi untuk published) */}
+            {/* Tombol Edit Artikel (Hanya draf atau rejected) */}
             {(isDraft || isRejected) && (
               <Link
                 href={`/dashboard/artikel/${article.id}/edit`}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-white hover:bg-primary/90 text-xs font-bold transition-all shadow-sm"
               >
                 <FiEdit2 size={13} />
-                <span>Edit & Ajukan</span>
+                <span>{t("editAndSubmit")}</span>
               </Link>
             )}
 
@@ -192,7 +199,7 @@ export default function ArticleCard({
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 text-xs font-bold transition-all"
               >
                 <FiEdit2 size={13} />
-                <span>Ajukan Revisi</span>
+                <span>{t("requestRevision")}</span>
               </Link>
             )}
 
@@ -202,7 +209,7 @@ export default function ArticleCard({
                 type="button"
                 onClick={() => onOpenDelete(article)}
                 className="p-1.5 rounded-xl text-on-surface-variant hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
-                title="Hapus artikel"
+                title={t("deleteArticle")}
               >
                 <FiTrash2 size={15} />
               </button>
@@ -213,4 +220,3 @@ export default function ArticleCard({
     </div>
   );
 }
-

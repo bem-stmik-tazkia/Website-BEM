@@ -68,3 +68,4 @@ export default function UnsavedChangesModal({ isOpen, onStay, onLeave }: Props) 
     </AnimatePresence>
   );
 }
+

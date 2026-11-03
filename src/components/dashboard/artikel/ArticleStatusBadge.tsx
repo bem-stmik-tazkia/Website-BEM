@@ -2,6 +2,7 @@
 
 import React from "react";
 import { FiCheckCircle, FiClock, FiXCircle, FiFileText } from "react-icons/fi";
+import { useTranslations } from "next-intl";
 
 export type ArticleStatus = "published" | "pending" | "rejected" | "draft";
 
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function ArticleStatusBadge({ status, size = "md" }: Props) {
+  const t = useTranslations("DashboardArtikel");
   const isSm = size === "sm";
 
   switch (status) {
@@ -22,7 +24,7 @@ export default function ArticleStatusBadge({ status, size = "md" }: Props) {
           }`}
         >
           <FiCheckCircle className={isSm ? "text-[11px]" : "text-xs"} />
-          <span>Tayang</span>
+          <span>{t("statusPublished")}</span>
         </span>
       );
 
@@ -34,7 +36,7 @@ export default function ArticleStatusBadge({ status, size = "md" }: Props) {
           }`}
         >
           <FiClock className={isSm ? "text-[11px]" : "text-xs"} />
-          <span>Menunggu Moderasi</span>
+          <span>{t("statusPending")}</span>
         </span>
       );
 
@@ -46,7 +48,7 @@ export default function ArticleStatusBadge({ status, size = "md" }: Props) {
           }`}
         >
           <FiXCircle className={isSm ? "text-[11px]" : "text-xs"} />
-          <span>Perlu Revisi</span>
+          <span>{t("statusRejected")}</span>
         </span>
       );
 
@@ -59,9 +61,8 @@ export default function ArticleStatusBadge({ status, size = "md" }: Props) {
           }`}
         >
           <FiFileText className={isSm ? "text-[11px]" : "text-xs"} />
-          <span>Draf</span>
+          <span>{t("statusDraft")}</span>
         </span>
       );
   }
 }
-

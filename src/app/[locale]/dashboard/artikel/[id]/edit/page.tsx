@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import { FiArrowLeft, FiAlertTriangle } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 import ArticleForm from "@/components/dashboard/artikel/ArticleForm";
 import { ArticleItem } from "@/components/dashboard/artikel/ArticleCard";
 
 export default function EditArticlePage() {
+  const t = useTranslations("ArticlePortal");
   const params = useParams();
   const router = useRouter();
   const articleId = params?.id as string;
@@ -73,7 +75,7 @@ export default function EditArticlePage() {
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-xs sm:text-sm font-bold shadow-md hover:bg-primary/90 transition-all"
         >
           <FiArrowLeft size={16} />
-          <span>Kembali ke Dashboard</span>
+          <span>{t("backToDashboard")}</span>
         </Link>
       </div>
     );
@@ -95,7 +97,7 @@ export default function EditArticlePage() {
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-xs sm:text-sm font-bold shadow-md hover:bg-primary/90 transition-all"
         >
           <FiArrowLeft size={16} />
-          <span>Kembali ke Daftar Artikel</span>
+          <span>{t("backToDashboard")}</span>
         </Link>
       </div>
     );

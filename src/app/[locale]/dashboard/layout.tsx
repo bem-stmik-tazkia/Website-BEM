@@ -1,14 +1,18 @@
 import React from "react";
-import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
-  title: "Dashboard Artikel Mahasiswa - BEM STMIK Tazkia",
-  description: "Kelola, tulis, dan pantau status publikasi artikel mahasiswa STMIK Tazkia.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "DashboardArtikel" });
+  return {
+    title: `${t("pageTitle")} - BEM STMIK Tazkia`,
+    description: t("pageSubtitle"),
+    robots: {
+      index: false,
+      follow: false,
+    },
+  };
+}
 
 export default function DashboardLayout({
   children,

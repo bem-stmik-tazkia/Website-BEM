@@ -160,9 +160,11 @@ export default function LanguageSwitcher({
         aria-label="Pilih Bahasa"
       >
         {isPending ? (
-          <div className="w-5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <div className="w-5 h-3.5 flex items-center justify-center shrink-0">
+            <span className="w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin inline-block" />
+          </div>
         ) : (
-          <CurrentFlag className="w-5 h-3.5" />
+          <CurrentFlag className="w-5 h-3.5 shrink-0" />
         )}
         <span className="hidden lg:inline-block font-bold text-on-surface whitespace-nowrap">
           {currentLanguage.label}

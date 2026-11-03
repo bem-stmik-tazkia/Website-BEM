@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { FiAlertCircle, FiX, FiCheck } from "react-icons/fi";
+import { FiAlertCircle, FiX } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface Props {
   isOpen: boolean;
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export default function ReviewNoteModal({ isOpen, onClose, title, note }: Props) {
+  const t = useTranslations("DashboardArtikel");
+
   if (!isOpen) return null;
 
   return (
@@ -30,7 +33,7 @@ export default function ReviewNoteModal({ isOpen, onClose, title, note }: Props)
                 <FiAlertCircle size={20} />
               </div>
               <div>
-                <h3 className="font-bold text-base text-on-surface">Catatan Review Admin</h3>
+                <h3 className="font-bold text-base text-on-surface">{t("reviewModalTitle")}</h3>
                 <p className="text-xs text-on-surface-variant truncate max-w-[240px]">
                   {title}
                 </p>
@@ -38,7 +41,7 @@ export default function ReviewNoteModal({ isOpen, onClose, title, note }: Props)
             </div>
             <button
               onClick={onClose}
-              className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-surface-variant/40 transition-colors"
+              className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-surface-variant/40 transition-colors cursor-pointer"
             >
               <FiX size={18} />
             </button>
@@ -47,10 +50,10 @@ export default function ReviewNoteModal({ isOpen, onClose, title, note }: Props)
           {/* Note Content */}
           <div className="bg-surface-variant/30 border border-outline-variant/20 rounded-xl p-4 mb-5">
             <p className="text-xs text-on-surface-variant uppercase font-bold tracking-wider mb-1.5">
-              Umpan Balik Moderator:
+              {t("adminNote")}
             </p>
             <p className="text-sm text-on-surface leading-relaxed whitespace-pre-wrap">
-              {note || "Tidak ada catatan spesifik dari administrator."}
+              {note || t("adminNoteDefault")}
             </p>
           </div>
 
@@ -59,9 +62,9 @@ export default function ReviewNoteModal({ isOpen, onClose, title, note }: Props)
             <button
               onClick={onClose}
               type="button"
-              className="px-4 py-2 bg-primary text-white text-xs sm:text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
+              className="px-4 py-2 bg-primary text-white text-xs sm:text-sm font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
             >
-              Mengerti
+              {t("reviewModalClose")}
             </button>
           </div>
         </motion.div>
@@ -69,4 +72,3 @@ export default function ReviewNoteModal({ isOpen, onClose, title, note }: Props)
     </AnimatePresence>
   );
 }
-

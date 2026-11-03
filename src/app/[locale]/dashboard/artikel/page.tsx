@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
 import {
   FiEdit3,
@@ -19,6 +20,7 @@ import ReviewNoteModal from "@/components/dashboard/artikel/ReviewNoteModal";
 import DeleteConfirmModal from "@/components/dashboard/artikel/DeleteConfirmModal";
 
 export default function DashboardArtikelPage() {
+  const t = useTranslations("DashboardArtikel");
   const supabase = createClient();
   const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,7 +163,7 @@ export default function DashboardArtikelPage() {
               disabled={refreshing}
               type="button"
               className="text-on-surface-variant hover:text-primary p-1 rounded-lg hover:bg-surface-variant/30 transition-colors cursor-pointer"
-              title="Perbarui daftar artikel"
+              title={t("refresh")}
             >
               <FiRefreshCw
                 size={14}
@@ -170,10 +172,10 @@ export default function DashboardArtikelPage() {
             </button>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface tracking-tight">
-            Artikel Saya
+            {t("pageTitle")}
           </h1>
           <p className="text-xs sm:text-sm text-on-surface-variant mt-1 max-w-xl">
-            Kelola draf, pantau hasil moderasi admin BEM, dan bagikan gagasan Anda ke seluruh kampus.
+            {t("pageSubtitle")}
           </p>
         </div>
 
@@ -183,7 +185,7 @@ export default function DashboardArtikelPage() {
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-sm shadow-md shadow-primary/25 transition-all hover:scale-[1.02] shrink-0 text-center cursor-pointer"
         >
           <FiPlus size={18} />
-          <span>Tulis Artikel Baru</span>
+          <span>{t("btnWriteNew")}</span>
         </Link>
       </div>
 
