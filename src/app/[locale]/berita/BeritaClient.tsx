@@ -358,31 +358,55 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
           </div>
         </section>
 
-        {/* CTA Banner: Ajak Mahasiswa Menulis Artikel */}
-        <section className="mb-8">
-          <div className="rounded-2xl border border-outline-variant/40 bg-surface px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <FiEdit2 size={17} />
+        {/* CTA Banner: Ajak Mahasiswa Menulis Artikel (Animasi Lottie Write & Desain Profesional) */}
+        <section className="mb-10">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0d234d] via-[#1b4086] to-[#12316c] p-5 sm:p-6 md:p-8 text-white shadow-xl shadow-primary/15 border border-white/15">
+            {/* Ambient background glow */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-secondary/10 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-6">
+              {/* Left Column: Lottie Animation & Typography */}
+              <div className="flex items-center sm:items-start gap-4 md:gap-5 w-full sm:w-auto">
+                {/* Lottie Container */}
+                <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-2 flex items-center justify-center shadow-inner">
+                  <SafeLottie
+                    src="/animations/Write.lottie"
+                    loop
+                    autoplay
+                    className="w-full h-full object-contain"
+                    fallback={<FiEdit2 size={24} className="text-white" />}
+                  />
+                </div>
+
+                {/* Text Content */}
+                <div className="space-y-1.5 flex-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-[10px] sm:text-xs font-bold text-white tracking-wide uppercase">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>{locale === "id" ? "Portal Penulis Mahasiswa" : "Student Writer Portal"}</span>
+                  </div>
+                  <h3 className="font-extrabold text-white text-base sm:text-lg md:text-xl tracking-tight leading-snug">
+                    {locale === "id"
+                      ? "Punya Ide, Riset, atau Opini Kritis?"
+                      : "Have Ideas, Research, or Critical Insights?"}
+                  </h3>
+                  <p className="text-white/80 text-xs sm:text-sm font-light leading-relaxed max-w-xl">
+                    {locale === "id"
+                      ? "Publikasikan karya tulismu di portal resmi BEM STMIK Tazkia. Tulisan terpilih akan tayang ke seluruh kampus."
+                      : "Publish your writing on the official BEM STMIK Tazkia portal. Selected articles reach the entire campus."}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-0.5">
-                  {locale === "id" ? "Portal Penulis Mahasiswa" : "Student Writer Portal"}
-                </p>
-                <p className="font-bold text-on-surface text-sm leading-snug">
-                  {locale === "id"
-                    ? "Punya ide atau opini? Kirim artikel ke BEM."
-                    : "Have an idea or opinion? Submit an article to BEM."}
-                </p>
-              </div>
+
+              {/* Right Column: CTA Button */}
+              <Link
+                href="/dashboard/artikel/baru"
+                className="shrink-0 inline-flex items-center gap-2 bg-white text-primary hover:bg-slate-100 font-extrabold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 group whitespace-nowrap self-stretch sm:self-center justify-center"
+              >
+                <span>{locale === "id" ? "Mulai Menulis" : "Start Writing"}</span>
+                <FiArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
-            <a
-              href="/dashboard/artikel/baru"
-              className="shrink-0 inline-flex items-center gap-1.5 bg-primary text-white font-semibold text-xs px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors whitespace-nowrap"
-            >
-              {locale === "id" ? "Tulis Artikel" : "Write Article"}
-              <FiArrowRight size={13} />
-            </a>
           </div>
         </section>
 
