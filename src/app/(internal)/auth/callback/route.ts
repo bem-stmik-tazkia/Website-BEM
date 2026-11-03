@@ -88,8 +88,20 @@ export async function handleAuthCallback(request: NextRequest, customSupabase?: 
   }
 
   // 5. Periksa hak akses Admin via RPC is_admin() (canonical source of truth: public.admins)
-  const { data: isRpcAdmin } = await supabase.rpc('is_admin');
-  const isAdmin = isRpcAdmin === true;
+  let isAdmin = false;
+  try {
+    const { data: isRpcAdmin, error: rpcError } = await supabase.rpc('is_admin');
+    if (rpcError) {
+      console.warn('[auth/callback] is_admin() RPC returned error:', rpcError.message);
+    } else {
+      isAdmin = isRpcAdmin === true;
+    }
+  } catch (rpcException) {
+    console.error('[auth/callback] is_admin() RPC threw exception:', rpcException);
+    // Fail-open untuk mahasiswa: jika RPC crash, anggap bukan admin
+    // Otorisasi /admin/* tetap fail-closed di middleware
+    isAdmin = false;
+  }
 
   if (isAdminFlow) {
     // Alur Admin (dimulai dari login admin via Konami dengan next=/admin)

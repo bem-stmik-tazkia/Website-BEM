@@ -419,7 +419,9 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm leading-snug">Konami Code Terverifikasi!</p>
                   <p className="text-xs text-emerald-100 mt-0.5 leading-relaxed">
-                    Bypass maintenance aktif. Halaman beranda dan seluruh website terbuka tanpa harus login.
+                    {maintenanceMode
+                      ? "Bypass maintenance aktif. Halaman beranda dan seluruh website terbuka tanpa harus login."
+                      : "Pintu masuk admin terbuka. Silakan klik tombol 'Masuk Admin' di pojok kanan bawah."}
                   </p>
                 </div>
                 <button
@@ -433,18 +435,20 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
             )}
           </AnimatePresence>
 
-          {/* Floating Pill Status Bypass Maintenance */}
-          {maintenanceMode && konamiUnlocked && (
+          {/* Floating Pill Status Bypass Maintenance / Akses Admin */}
+          {konamiUnlocked && (
             <aside
-              aria-label="Status Bypass Maintenance"
+              aria-label={maintenanceMode ? "Status Bypass Maintenance" : "Akses Admin Terbuka"}
               className="fixed bottom-20 md:bottom-6 right-4 z-[9999] bg-amber-500/95 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-amber-300/40 flex items-center gap-3 text-xs md:text-sm animate-fade-in"
             >
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                 <div>
-                  <p className="font-bold leading-tight">Bypass Maintenance Aktif</p>
+                  <p className="font-bold leading-tight">
+                    {maintenanceMode ? "Bypass Maintenance Aktif" : "Akses Admin Terbuka"}
+                  </p>
                   <p className="text-[11px] text-amber-100 hidden sm:block">
-                    Website terbuka tanpa login.
+                    {maintenanceMode ? "Website terbuka tanpa login." : "Klik Masuk Admin untuk login."}
                   </p>
                 </div>
               </div>
@@ -458,7 +462,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
                 <button
                   type="button"
                   onClick={handleExitBypass}
-                  title="Kunci kembali dan aktifkan layar maintenance"
+                  title={maintenanceMode ? "Kunci kembali dan aktifkan layar maintenance" : "Kunci kembali akses admin"}
                   className="px-2 py-1 bg-black/20 hover:bg-black/40 rounded-lg text-xs font-bold transition-colors whitespace-nowrap cursor-pointer"
                 >
                   Kunci

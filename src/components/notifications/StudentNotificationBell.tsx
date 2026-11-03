@@ -1,0 +1,369 @@
+"use client";
+
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import Link from "next/link";
+import { createClient } from "@/utils/supabase/client";
+import {
+  FiBell,
+  FiCheckCircle,
+  FiXCircle,
+  FiClock,
+  FiFileText,
+  FiCheck,
+  FiArrowRight,
+  FiInfo,
+} from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion";
+
+export interface StudentNotification {
+  id: string | number;
+  article_id: string | null;
+  article_title: string;
+  action: string;
+  note: string | null;
+  created_at: string;
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1) return "Baru saja";
+  if (mins < 60) return `${mins} mnt lalu`;
+  if (hours < 24) return `${hours} jam lalu`;
+  if (days < 7) return `${days} hari lalu`;
+  return new Date(dateStr).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function getActionMeta(action: string) {
+  if (action === "status_published" || action === "revision_approved") {
+    return {
+      title: "Artikel Disetujui & Tayang 🎉",
+      icon: FiCheckCircle,
+      iconColor: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/20",
+      dot: "bg-emerald-500",
+    };
+  }
+  if (action === "status_rejected" || action === "revision_rejected") {
+    return {
+      title: "Artikel Ditolak / Perlu Revisi ⚠️",
+      icon: FiXCircle,
+      iconColor: "text-rose-500",
+      bg: "bg-rose-500/10",
+      border: "border-rose-500/20",
+      dot: "bg-rose-500",
+    };
+  }
+  if (action === "created_pending" || action === "revision_created_pending") {
+    return {
+      title: "Menunggu Review Admin ⏳",
+      icon: FiClock,
+      iconColor: "text-amber-500",
+      bg: "bg-amber-500/10",
+      border: "border-amber-500/20",
+      dot: "bg-amber-500",
+    };
+  }
+  return {
+    title: "Pembaruan Status Artikel 📝",
+    icon: FiFileText,
+    iconColor: "text-primary",
+    bg: "bg-primary/10",
+    border: "border-primary/20",
+    dot: "bg-primary",
+  };
+}
+
+export default function StudentNotificationBell({
+  isScrolled,
+  isHome,
+}: {
+  isScrolled?: boolean;
+  isHome?: boolean;
+}) {
+  const supabase = createClient();
+  const [notifications, setNotifications] = useState<StudentNotification[]>([]);
+  const [open, setOpen] = useState(false);
+  const [lastViewed, setLastViewed] = useState<string>("");
+  const [animating, setAnimating] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const prevCountRef = useRef(0);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("article_audit_log")
+        .select("id, article_id, article_title, action, note, created_at")
+        .eq("author_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) {
+        console.warn("[StudentNotificationBell] Failed to fetch audit log:", error.message);
+        return;
+      }
+
+      const list: StudentNotification[] = (data || []).map((item) => ({
+        id: item.id,
+        article_id: item.article_id,
+        article_title: item.article_title || "Artikel Mahasiswa",
+        action: item.action,
+        note: item.note,
+        created_at: item.created_at,
+      }));
+
+      const storedViewed = localStorage.getItem("student_notif_last_viewed") || "";
+      setLastViewed(storedViewed);
+
+      const unreadCount = list.filter(
+        (n) => !storedViewed || new Date(n.created_at) > new Date(storedViewed)
+      ).length;
+
+      if (unreadCount > prevCountRef.current && prevCountRef.current !== 0) {
+        setAnimating(true);
+        setTimeout(() => setAnimating(false), 1000);
+      }
+      prevCountRef.current = unreadCount;
+      setNotifications(list);
+    } catch (err) {
+      console.error("[StudentNotificationBell] Error:", err);
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    fetchNotifications();
+
+    // Dapatkan ID user untuk Realtime channel
+    let channel: any = null;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+
+      channel = supabase
+        .channel(`student_notif_${user.id}_${Date.now()}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "article_audit_log",
+            filter: `author_id=eq.${user.id}`,
+          },
+          () => {
+            fetchNotifications();
+          }
+        )
+        .subscribe();
+    });
+
+    const handleCustomRefresh = () => fetchNotifications();
+    window.addEventListener("student_articles_updated", handleCustomRefresh);
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+      window.removeEventListener("student_articles_updated", handleCustomRefresh);
+    };
+  }, [supabase, fetchNotifications]);
+
+  // Tutup dropdown jika klik di luar
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleMarkAllRead = () => {
+    const nowIso = new Date().toISOString();
+    localStorage.setItem("student_notif_last_viewed", nowIso);
+    setLastViewed(nowIso);
+  };
+
+  const handleOpen = () => {
+    setOpen((prev) => !prev);
+    if (!open) {
+      handleMarkAllRead();
+    }
+  };
+
+  const unreadItems = notifications.filter(
+    (n) => !lastViewed || new Date(n.created_at) > new Date(lastViewed)
+  );
+  const unreadCount = unreadItems.length;
+
+  // Animasi getar berkala jika ada notifikasi belum dibaca
+  useEffect(() => {
+    if (unreadCount === 0) return;
+    const interval = setInterval(() => {
+      setAnimating(true);
+      setTimeout(() => setAnimating(false), 800);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [unreadCount]);
+
+  const btnBase =
+    isScrolled || !isHome
+      ? "bg-surface border border-outline-variant/50 text-on-surface-variant hover:border-primary hover:text-primary shadow-sm"
+      : "bg-white/15 backdrop-blur-md border border-white/30 text-white hover:bg-white/25";
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      {/* Bell Button */}
+      <button
+        onClick={handleOpen}
+        type="button"
+        title="Notifikasi Artikel Saya"
+        aria-label="Notifikasi Artikel Mahasiswa"
+        className={`relative flex items-center justify-center w-9 h-9 rounded-full transition-all cursor-pointer ${
+          open
+            ? isScrolled || !isHome
+              ? "bg-primary/10 border border-primary/40 text-primary shadow-sm"
+              : "bg-white/25 border border-white/40 text-white backdrop-blur-md"
+            : btnBase
+        }`}
+      >
+        <span className={animating ? "animate-[wiggle_0.5s_ease-in-out]" : ""}>
+          <FiBell size={17} />
+        </span>
+
+        {/* Badge Hitungan */}
+        {unreadCount > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-extrabold leading-none px-1 shadow-md ring-2 ring-white dark:ring-surface pointer-events-none">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+
+        {/* Pulse effect */}
+        {unreadCount > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 w-[18px] h-[18px] rounded-full bg-red-400 opacity-50 animate-ping pointer-events-none" />
+        )}
+      </button>
+
+      {/* Dropdown Card */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="absolute -right-[75px] sm:right-0 top-14 sm:top-12 w-[320px] sm:w-[380px] bg-surface border border-outline-variant/30 rounded-2xl shadow-2xl z-[60] overflow-hidden"
+            style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.12)" }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/20 bg-surface-variant/20">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <FiBell size={14} />
+                </div>
+                <span className="text-sm font-bold text-on-surface">Notifikasi Artikel</span>
+                {notifications.length > 0 && (
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                    {notifications.length}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                className="text-xs text-on-surface-variant hover:text-primary font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                title="Tandai semua dibaca"
+              >
+                <FiCheck size={13} />
+                <span>Tandai dibaca</span>
+              </button>
+            </div>
+
+            {/* List Notifikasi */}
+            <div className="max-h-[380px] overflow-y-auto divide-y divide-outline-variant/10">
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 px-4 text-center text-on-surface-variant">
+                  <div className="w-12 h-12 rounded-2xl bg-surface-variant/40 flex items-center justify-center mb-2.5 text-primary">
+                    <FiCheckCircle size={24} />
+                  </div>
+                  <p className="text-sm font-semibold text-on-surface">Belum ada notifikasi</p>
+                  <p className="text-xs text-on-surface-variant/80 mt-0.5">
+                    Pemberitahuan persetujuan atau catatan moderasi artikel Anda akan muncul di sini.
+                  </p>
+                </div>
+              ) : (
+                notifications.map((item) => {
+                  const meta = getActionMeta(item.action);
+                  const Icon = meta.icon;
+                  const isItemUnread =
+                    !lastViewed || new Date(item.created_at) > new Date(lastViewed);
+
+                  return (
+                    <Link
+                      key={item.id}
+                      href="/dashboard/artikel"
+                      onClick={() => setOpen(false)}
+                      className={`block p-3.5 hover:bg-surface-variant/30 transition-colors group ${
+                        isItemUnread ? "bg-primary/[0.03]" : ""
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`w-9 h-9 rounded-xl ${meta.bg} ${meta.border} border flex items-center justify-center shrink-0 mt-0.5`}
+                        >
+                          <Icon size={16} className={meta.iconColor} />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1 mb-0.5">
+                            <span className="text-[11px] font-bold text-on-surface leading-tight">
+                              {meta.title}
+                            </span>
+                            <span className="text-[10px] text-on-surface-variant/70 shrink-0">
+                              {timeAgo(item.created_at)}
+                            </span>
+                          </div>
+
+                          <p className="text-xs font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
+                            {item.article_title}
+                          </p>
+
+                          {item.note && (
+                            <p className="text-[11px] text-on-surface-variant/90 line-clamp-2 mt-1 bg-surface-variant/30 rounded-lg p-1.5 border border-outline-variant/20 italic">
+                              "{item.note}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-2.5 border-t border-outline-variant/20 bg-surface-variant/10 text-center">
+              <Link
+                href="/dashboard/artikel"
+                onClick={() => setOpen(false)}
+                className="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1.5 py-1"
+              >
+                <span>Buka Dashboard Artikel Saya</span>
+                <FiArrowRight size={13} />
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+

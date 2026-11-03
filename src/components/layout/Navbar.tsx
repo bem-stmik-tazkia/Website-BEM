@@ -10,6 +10,7 @@ import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
+import StudentNotificationBell from "@/components/notifications/StudentNotificationBell";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import SafeLottie from "@/components/ui/SafeLottie";
 
@@ -193,6 +194,9 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
             <LanguageSwitcher />
             {userProfile && userProfile.role === 'admin' && (
               <AdminNotificationBell isScrolled={isScrolled} isHome={isHome} />
+            )}
+            {userProfile && userProfile.role === 'mahasiswa' && (
+              <StudentNotificationBell isScrolled={isScrolled} isHome={isHome} />
             )}
             {userProfile ? (
               <div className="relative" ref={profileMenuRef}>

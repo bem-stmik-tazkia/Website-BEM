@@ -11,6 +11,12 @@ export default function MasukPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Bersihkan hash fragment dari URL (mis. #error=server_error dari Supabase)
+    // agar tidak terlihat di address bar dan tidak bisa dibaca JS lain
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+
     const params = new URLSearchParams(window.location.search);
     const hasError = params.has("error") || params.has("error_code");
 
