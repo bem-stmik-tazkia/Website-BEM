@@ -166,8 +166,8 @@ export default function BeritaDetailPage() {
         setLikeCount(detailData.likes || 0);
 
         // Check authenticated user
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id || null;
+        const { data: { user } } = await supabase.auth.getUser();
+        const userId = user?.id || null;
 
         // Anti-Spam View & Likes Tracking (Universal Identity)
         const deviceId = getDeviceId();
@@ -233,8 +233,8 @@ export default function BeritaDetailPage() {
 
     try {
       const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id || null;
+      const { data: { user } } = await supabase.auth.getUser();
+        const userId = user?.id || null;
       const deviceId = getDeviceId();
 
       const { data: isNowLiked, error } = await supabase.rpc('toggle_berita_like', {

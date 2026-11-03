@@ -47,8 +47,8 @@ export async function toggleLike(
   }
 
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id || null;
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id || null;
 
   // 3. Gunakan RPC SECURITY DEFINER (Multi-User Safe & Anti-Cheat)
   // Untuk Berita: toggle_berita_like

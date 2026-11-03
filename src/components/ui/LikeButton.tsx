@@ -34,8 +34,8 @@ export default function LikeButton({
     async function checkLiked() {
       try {
         const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        const userId = session?.user?.id || null;
+        const { data: { user } } = await supabase.auth.getUser();
+        const userId = user?.id || null;
         const deviceId = getDeviceId();
 
         const rpcName = table === 'articles' ? 'check_article_liked' : 'check_berita_liked';

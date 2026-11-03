@@ -67,3 +67,4 @@ export async function notifyMaintenanceMode(payload: MaintenanceModePayload) {
     return { ok: false, error: err.message };
   }
 }
+
