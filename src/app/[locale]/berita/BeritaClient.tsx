@@ -12,7 +12,8 @@ import {
   FiClock,
   FiBell,
   FiShare2,
-  FiCheck
+  FiCheck,
+  FiEdit2
 } from "react-icons/fi";
 import { SiInstagram, SiDiscord } from "react-icons/si";
 import { useTranslations, useLocale } from "next-intl";
@@ -359,36 +360,28 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
 
         {/* CTA Banner: Ajak Mahasiswa Menulis Artikel */}
         <section className="mb-8">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-secondary border border-primary/30 shadow-md px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Decorative blobs */}
-            <div className="absolute -top-6 -left-6 w-28 h-28 rounded-full bg-white/10 blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-6 -right-6 w-28 h-28 rounded-full bg-secondary/30 blur-2xl pointer-events-none" />
-            <div className="flex items-center gap-3 relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 text-white text-xl">
-                ✍️
+          <div className="rounded-2xl border border-outline-variant/40 bg-surface px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <FiEdit2 size={17} />
               </div>
               <div>
-                <p className="text-[10px] sm:text-xs font-bold text-white/80 uppercase tracking-wider mb-0.5">
+                <p className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-0.5">
                   {locale === "id" ? "Portal Penulis Mahasiswa" : "Student Writer Portal"}
                 </p>
-                <p className="font-extrabold text-white text-sm sm:text-base leading-tight">
+                <p className="font-bold text-on-surface text-sm leading-snug">
                   {locale === "id"
-                    ? "Punya ide, opini, atau karya inovatif?"
-                    : "Have an idea, opinion, or innovative work?"}
-                </p>
-                <p className="text-white/80 text-[11px] sm:text-xs mt-0.5 font-light">
-                  {locale === "id"
-                    ? "Tulis & kirim artikel—tim BEM akan me-review dan menerbitkannya."
-                    : "Write & submit an article—the BEM team will review and publish it."}
+                    ? "Punya ide atau opini? Kirim artikel ke BEM."
+                    : "Have an idea or opinion? Submit an article to BEM."}
                 </p>
               </div>
             </div>
             <a
               href="/dashboard/artikel/baru"
-              className="relative z-10 shrink-0 inline-flex items-center gap-2 bg-white text-primary font-extrabold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-md hover:bg-primary-container transition-all duration-300 hover:scale-105 active:scale-95 whitespace-nowrap"
+              className="shrink-0 inline-flex items-center gap-1.5 bg-primary text-white font-semibold text-xs px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors whitespace-nowrap"
             >
-              <span>+ {locale === "id" ? "Tulis Artikel" : "Write Article"}</span>
-              <FiArrowRight size={14} />
+              {locale === "id" ? "Tulis Artikel" : "Write Article"}
+              <FiArrowRight size={13} />
             </a>
           </div>
         </section>
