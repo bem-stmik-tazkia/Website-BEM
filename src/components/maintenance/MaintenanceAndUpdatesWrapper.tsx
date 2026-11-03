@@ -435,8 +435,8 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
             )}
           </AnimatePresence>
 
-          {/* Floating Pill Status Bypass Maintenance / Akses Admin */}
-          {konamiUnlocked && (
+          {/* Floating Pill Status Bypass Maintenance / Akses Admin (Hanya pada halaman publik) */}
+          {konamiUnlocked && !pathname?.includes('/dashboard') && !pathname?.includes('/admin') && (
             <aside
               aria-label={maintenanceMode ? "Status Bypass Maintenance" : "Akses Admin Terbuka"}
               className="fixed bottom-20 md:bottom-6 left-4 md:left-6 z-[9999] bg-amber-500/95 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-amber-300/40 flex items-center gap-3 text-xs md:text-sm animate-fade-in"

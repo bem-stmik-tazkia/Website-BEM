@@ -9,9 +9,10 @@ interface ImageUploadProps {
   value?: string;
   onChange: (url: string) => void;
   className?: string;
+  folder?: string;
 }
 
-export default function ImageUpload({ value, onChange, className = "" }: ImageUploadProps) {
+export default function ImageUpload({ value, onChange, className = "", folder = "kabinet" }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +45,7 @@ export default function ImageUpload({ value, onChange, className = "" }: ImageUp
       // Create unique filename
       const fileExt = compressedFile.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `kabinet/${fileName}`;
+      const filePath = `${folder}/${fileName}`;
 
       // Upload to supabase
       const { data, error: uploadError } = await supabase.storage

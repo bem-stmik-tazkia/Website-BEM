@@ -149,7 +149,7 @@ export default function LanguageSwitcher({
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isPending}
-        className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 lg:px-4 lg:py-2.5 rounded-full bg-surface shadow-md lg:shadow-xl lg:border-2 lg:border-primary border border-outline-variant/30 text-xs sm:text-sm font-medium transition-all duration-300 ${
+        className={`flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3.5 py-1 sm:py-2 lg:px-4 lg:py-2.5 rounded-full bg-surface shadow-md lg:shadow-xl lg:border-2 lg:border-primary border border-outline-variant/30 text-xs sm:text-sm font-medium transition-all duration-300 ${
           isPending ? "opacity-80 cursor-wait" : "hover:bg-surface-variant lg:hover:scale-105"
         }`}
         aria-label="Pilih Bahasa"
@@ -162,11 +162,11 @@ export default function LanguageSwitcher({
         <span className="hidden lg:inline-block font-bold text-on-surface whitespace-nowrap">
           {currentLanguage.label}
         </span>
-        <span className="lg:hidden uppercase text-xs font-bold text-on-surface">
+        <span className="hidden sm:inline-block lg:hidden uppercase text-xs font-bold text-on-surface">
           {currentLanguage.code}
         </span>
         <FiChevronDown
-          className={`transition-transform duration-200 text-on-surface-variant shrink-0 ${
+          className={`hidden sm:inline-block transition-transform duration-200 text-on-surface-variant shrink-0 ${
             isOpen ? "rotate-180" : ""
           }`}
           size={16}

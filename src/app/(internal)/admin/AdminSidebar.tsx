@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { FiHome, FiFileText, FiBriefcase, FiCalendar, FiChevronLeft, FiChevronRight, FiUsers, FiAward, FiImage, FiMessageSquare, FiSettings, FiTool } from "react-icons/fi";
+import { FiHome, FiFileText, FiBriefcase, FiCalendar, FiChevronLeft, FiChevronRight, FiUsers, FiAward, FiImage, FiMessageSquare, FiSettings, FiTool, FiBookOpen } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 
 const mainNavItems = [
   { name: "Dashboard", href: "/admin", icon: FiHome },
   { name: "Profil Kabinet", href: "/admin/kabinet", icon: FiAward },
+  { name: "Moderasi Artikel", href: "/admin/artikel", icon: FiBookOpen },
   { name: "Kelola Berita", href: "/admin/berita", icon: FiFileText },
   { name: "Kelola Kegiatan", href: "/admin/kegiatan", icon: FiCalendar },
   { name: "Kelola Dokumentasi", href: "/admin/dokumentasi", icon: FiImage },

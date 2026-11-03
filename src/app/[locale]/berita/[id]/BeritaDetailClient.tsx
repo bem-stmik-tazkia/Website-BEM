@@ -185,7 +185,7 @@ export default function BeritaDetailPage() {
 
         // Anti-Spam View Tracking: localStorage (24h) sebagai fast guard,
         // DB-level cooldown sebagai fallback jika localStorage dihapus user.
-        const viewKey = `viewed_berita_${detailData.id}`;
+        const viewKey = userId ? `viewed_berita_${detailData.id}_${userId}` : `viewed_berita_${detailData.id}`;
         const lastViewedAt = localStorage.getItem(viewKey);
         const cooldownMs = 24 * 60 * 60 * 1000; // 24 jam
         const now = Date.now();

@@ -112,6 +112,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
     { name: t("home"), path: "/" },
     { name: t("agenda"), path: "/agenda" },
     { name: t("news"), path: "/berita" },
+    { name: t("articles") || "Artikel", path: "/artikel" },
     { name: t("documentation"), path: "/dokumentasi" },
     { name: t("menuCab"), path: "/kabinet" },
     { name: t("menuFeedback"), path: "/#saran" },

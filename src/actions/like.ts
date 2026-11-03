@@ -4,8 +4,13 @@ import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { checkPostgresRateLimit } from "@/lib/rateLimit";
 
-export async function toggleLike(table: 'berita', id: string, increment: boolean, deviceId?: string) {
-  if (table !== 'berita' || !id) {
+export async function toggleLike(
+  table: 'berita' | 'articles',
+  id: string,
+  _increment?: boolean,
+  deviceId?: string
+): Promise<boolean> {
+  if (!id || (table !== 'berita' && table !== 'articles')) {
     return false;
   }
 
@@ -37,19 +42,34 @@ export async function toggleLike(table: 'berita', id: string, increment: boolean
   const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id || null;
 
-  // 3. Gunakan RPC SECURITY DEFINER toggle_berita_like
-  // Di DB: Dilindungi constraint UNIQUE(berita_id, device_id).
-  // 1 perangkat hanya bisa like 1 kali. Klik lagi = unlike.
-  const { data: isLiked, error } = await supabase.rpc('toggle_berita_like', {
-    p_berita_id: id,
-    p_device_id: cleanDeviceId,
-    p_user_id: userId,
-  });
+  // 3. Gunakan RPC SECURITY DEFINER (Multi-User Safe & Anti-Cheat)
+  // Untuk Berita: toggle_berita_like
+  // Untuk Artikel: toggle_article_like
+  if (table === 'berita') {
+    const { data: isLiked, error } = await supabase.rpc('toggle_berita_like', {
+      p_berita_id: id,
+      p_device_id: cleanDeviceId,
+      p_user_id: userId,
+    });
 
-  if (error) {
-    console.error("[toggleLike] RPC error:", error.message);
-    return false;
+    if (error) {
+      console.error("[toggleLike] Berita RPC error:", error.message);
+      return false;
+    }
+
+    return isLiked ?? false;
+  } else {
+    const { data: isLiked, error } = await supabase.rpc('toggle_article_like', {
+      p_article_id: id,
+      p_device_id: cleanDeviceId,
+      p_user_id: userId,
+    });
+
+    if (error) {
+      console.error("[toggleLike] Article RPC error:", error.message);
+      return false;
+    }
+
+    return isLiked ?? false;
   }
-
-  return isLiked ?? false;
 }

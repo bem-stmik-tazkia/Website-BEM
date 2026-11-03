@@ -5,17 +5,17 @@ import { headers } from "next/headers";
 import { checkPostgresRateLimit } from "@/lib/rateLimit";
 
 /**
- * Record a view for a berita article.
- * Uses DB-level 24-hour cooldown per device_id via `record_berita_view` RPC.
+ * Record a view for a berita or artikel.
+ * Uses DB-level 24-hour cooldown per user_id (if authenticated) or device_id (if anon) via RPC.
  * Returns true if view was counted, false if still in cooldown.
  */
 export async function recordView(
-  table: 'berita' | 'agendas',
+  table: 'berita' | 'articles' | 'agendas',
   id: string,
   deviceId: string,
   cooldownHours: number = 24
 ): Promise<boolean> {
-  if (table !== 'berita' || !id) {
+  if (!id || (table !== 'berita' && table !== 'articles')) {
     return false;
   }
 
@@ -44,18 +44,34 @@ export async function recordView(
 
   const supabase = await createClient();
 
-  // 3. Gunakan RPC SECURITY DEFINER dengan Cooldown 24 Jam di DB
-  // Nilai cooldown dipaksa minimal 12 jam di DB sehingga caller tidak bisa bypass dengan 0.
-  const { data: counted, error } = await supabase.rpc('record_berita_view', {
-    p_berita_id: id,
-    p_device_id: cleanDeviceId,
-    p_cooldown_hours: Math.max(12, cooldownHours),
-  });
+  // 3. Gunakan RPC SECURITY DEFINER dengan Cooldown di DB (Multi-User Safe)
+  const safeCooldown = Math.max(12, cooldownHours);
 
-  if (error) {
-    console.error('[recordView] RPC error:', error.message);
-    return false;
+  if (table === 'berita') {
+    const { data: counted, error } = await supabase.rpc('record_berita_view', {
+      p_berita_id: id,
+      p_device_id: cleanDeviceId,
+      p_cooldown_hours: safeCooldown,
+    });
+
+    if (error) {
+      console.error('[recordView] Berita RPC error:', error.message);
+      return false;
+    }
+
+    return counted ?? false;
+  } else {
+    const { data: counted, error } = await supabase.rpc('record_article_view', {
+      p_article_id: id,
+      p_device_id: cleanDeviceId,
+      p_cooldown_hours: safeCooldown,
+    });
+
+    if (error) {
+      console.error('[recordView] Article RPC error:', error.message);
+      return false;
+    }
+
+    return counted ?? false;
   }
-
-  return counted ?? false;
 }
