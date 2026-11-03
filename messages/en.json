@@ -1121,7 +1121,8 @@
     "modNoteTitle": "Previous Admin Moderation Note:",
     "modNoteTips": "Tip: Address the points mentioned above before clicking Submit for Moderation.",
     "previewPlaceholderTitle": "Article Title Will Appear Here",
-    "previewReadTime": "{min} min read"
+    "previewReadTime": "{min} min read",
+    "autoSavedDraft": "Draft auto-saved"
   },
   "ArticleDetail": {
     "backToArticles": "Back to News & Articles",

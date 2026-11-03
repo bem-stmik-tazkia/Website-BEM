@@ -1119,7 +1119,8 @@
     "modNoteTitle": "ملاحظات الإشراف السابقة من المشرف:",
     "modNoteTips": "نصيحة: يرجى معالجة النقاط المذكورة أعلاه قبل الضغط على تقديم للمراجعة.",
     "previewPlaceholderTitle": "سيظهر عنوان المقال هنا",
-    "previewReadTime": "{min} دقائق قراءة"
+    "previewReadTime": "{min} دقائق قراءة",
+    "autoSavedDraft": "يتم حفظ المسودة تلقائياً"
   },
   "ArticleDetail": {
     "backToArticles": "العودة إلى الأخبار والمقالات",

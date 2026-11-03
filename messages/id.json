@@ -1121,7 +1121,8 @@
     "modNoteTitle": "Catatan Moderasi Admin Sebelumnya:",
     "modNoteTips": "Tips: Perbaiki poin-poin yang diminta di atas sebelum mengklik Ajukan untuk Moderasi.",
     "previewPlaceholderTitle": "Judul Artikel Akan Ditampilkan di Sini",
-    "previewReadTime": "{min} menit baca"
+    "previewReadTime": "{min} menit baca",
+    "autoSavedDraft": "Draf tersimpan otomatis"
   },
   "ArticleDetail": {
     "backToArticles": "Kembali ke Berita & Artikel",

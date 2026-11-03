@@ -1119,7 +1119,8 @@
     "modNoteTitle": "Remarque précédente de modération :",
     "modNoteTips": "Conseil : Corrigez les points demandés ci-dessus avant de cliquer sur Soumettre pour modération.",
     "previewPlaceholderTitle": "Le titre de l'article apparaîtra ici",
-    "previewReadTime": "{min} min de lecture"
+    "previewReadTime": "{min} min de lecture",
+    "autoSavedDraft": "Brouillon enregistré automatiquement"
   },
   "ArticleDetail": {
     "backToArticles": "Retour aux actualités et articles",

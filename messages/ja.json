@@ -1119,7 +1119,8 @@
     "modNoteTitle": "前回の管理者モデレーションメモ：",
     "modNoteTips": "ヒント：モデレーションに提出する前に、上記の指摘事項を修正してください。",
     "previewPlaceholderTitle": "記事のタイトルがここに表示されます",
-    "previewReadTime": "{min}分で読める"
+    "previewReadTime": "{min}分で読める",
+    "autoSavedDraft": "下書きは自動保存されています"
   },
   "ArticleDetail": {
     "backToArticles": "ニュース・記事一覧に戻る",

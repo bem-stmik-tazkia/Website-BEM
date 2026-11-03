@@ -82,6 +82,45 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
   const [pendingTargetUrl, setPendingTargetUrl] = useState<string | null>(null);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
 
+  // Kunci penyimpanan draf di browser (agar tidak hilang saat ganti bahasa atau refresh)
+  const DRAFT_STORAGE_KEY = isNew ? "bem_article_draft_new" : `bem_article_draft_${initialData?.id || "edit"}`;
+
+  // Pulihkan draf dari localStorage saat komponen dimuat
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.title && !initialData?.title) setTitle(parsed.title);
+        if (parsed.content && !initialData?.content) setContent(parsed.content);
+        if (parsed.coverUrl && !initialData?.cover_url) setCoverUrl(parsed.coverUrl);
+      }
+    } catch (e) {
+      console.warn("[ArticleForm] Gagal memulihkan draf lokal:", e);
+    }
+  }, [DRAFT_STORAGE_KEY, initialData]);
+
+  // Simpan otomatis ke localStorage saat user mengetik
+  useEffect(() => {
+    if (typeof window === "undefined" || isSubmitting) return;
+    if (title.trim() || content.trim() || coverUrl.trim()) {
+      try {
+        localStorage.setItem(
+          DRAFT_STORAGE_KEY,
+          JSON.stringify({
+            title,
+            content,
+            coverUrl,
+            savedAt: Date.now(),
+          })
+        );
+      } catch (e) {
+        console.warn("[ArticleForm] Gagal menyimpan draf lokal:", e);
+      }
+    }
+  }, [title, content, coverUrl, isSubmitting, DRAFT_STORAGE_KEY]);
+
   // Periksa apakah user yang sedang aktif memiliki role admin
   useEffect(() => {
     async function checkAdminStatus() {
@@ -163,6 +202,9 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
   };
 
   const handleLeave = () => {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {}
     setIsSubmitting(true);
     setShowLeaveModal(false);
 
@@ -290,6 +332,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           }).catch((err) => console.warn("[Telegram] Gagal kirim notif revisi:", err));
         }
 
+        try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
         toast(targetStatus === "pending" ? t("toastRevisionSubmitted") : t("toastDraftSaved"), "success");
         router.push("/dashboard/artikel");
         router.refresh();
@@ -337,6 +380,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           }).catch((err) => console.warn("[Telegram] Gagal kirim notif pengajuan:", err));
         }
 
+        try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
         toast(targetStatus === "published" ? t("toastDirectPublished") : targetStatus === "pending" ? t("toastSubmitted") : t("toastDraftSaved"), "success");
         router.push(targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel");
         router.refresh();
@@ -432,8 +476,16 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           <span>{t("backToDashboard")}</span>
         </button>
 
-        <div className="text-xs text-on-surface-variant font-medium">
-          {t("readingTimeEstimate", { min: readingTime, words: wordCount })}
+        <div className="flex items-center gap-3">
+          {isDirty && (
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>{t("autoSavedDraft")}</span>
+            </span>
+          )}
+          <div className="text-xs text-on-surface-variant font-medium">
+            {t("readingTimeEstimate", { min: readingTime, words: wordCount })}
+          </div>
         </div>
       </div>
 
