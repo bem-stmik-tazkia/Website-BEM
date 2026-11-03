@@ -355,3 +355,4 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
     </div>
   );
 }
+

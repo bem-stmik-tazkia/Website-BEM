@@ -152,7 +152,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 className={`font-bold leading-none text-xs sm:text-base md:text-xl transition-colors duration-300 ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"
                   }`}
               >
-                BEM <span className="hidden sm:inline">STMIK</span>
+                BEM STMIK
               </span>
               <span
                 className={`font-bold leading-none text-xs sm:text-base md:text-xl transition-colors duration-300 ${isScrolled ? "text-secondary" : isHome ? "text-white" : "text-secondary"

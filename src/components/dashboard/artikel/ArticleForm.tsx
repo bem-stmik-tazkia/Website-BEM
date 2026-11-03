@@ -619,3 +619,4 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
     </div>
   );
 }
+

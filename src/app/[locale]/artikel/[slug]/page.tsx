@@ -117,3 +117,4 @@ export default async function ArtikelDetailPage({
 
   return <ArtikelDetailClient article={article} relatedArticles={related} />;
 }
+
