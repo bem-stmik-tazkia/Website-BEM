@@ -194,7 +194,19 @@
     "categoryAchievement": "إنجاز",
     "likes": "إعجابات",
     "prevPage": "الصفحة السابقة",
-    "nextPage": "الصفحة التالية"
+    "nextPage": "الصفحة التالية",
+    "writerPortalBadge": "بوابة الكاتب الطلابي",
+    "writerPortalTitle": "هل لديك أفكار، أبحاث، أو آراء نقدية؟",
+    "writerPortalDesc": "انشر مقالاتك على البوابة الرسمية لمجلس STMIK Tazkia لتصل إلى مجتمع الحرم الجامعي بأكمله.",
+    "writerPortalBtn": "ابدأ الكتابة",
+    "share": "مشاركة",
+    "shareNews": "مشاركة الخبر",
+    "shareSuccess": "تم نسخ رابط الخبر بنجاح!",
+    "popularSuffix": "الأكثر شعبية",
+    "officialChannels": "القنوات الرسمية للمجلس",
+    "officialChannelsSubtitle": "تحديثات الحرم الجامعي والمنح الدراسية",
+    "officialChannelsDesc": "احصل على آخر الأخبار والمنح الدراسية وأجندة فعاليات مجلس STMIK Tazkia مباشرة.",
+    "minRead": "{min} دقيقة للقراءة"
   },
   "ProjectCard": {
     "projectShowcase": "معرض المشاريع",

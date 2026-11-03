@@ -194,7 +194,19 @@
     "categoryAchievement": "実績",
     "likes": "いいね",
     "prevPage": "前のページ",
-    "nextPage": "次のページ"
+    "nextPage": "次のページ",
+    "writerPortalBadge": "学生ライターポータル",
+    "writerPortalTitle": "アイデア、研究、または建設的な意見をお持ちですか？",
+    "writerPortalDesc": "BEM STMIK Tazkiaの公式ポータルで作品を公開し、キャンパス全体に届けましょう。",
+    "writerPortalBtn": "執筆を始める",
+    "share": "共有",
+    "shareNews": "ニュースを共有",
+    "shareSuccess": "ニュースのリンクをクリップボードにコピーしました！",
+    "popularSuffix": "人気",
+    "officialChannels": "BEM公式チャンネル",
+    "officialChannelsSubtitle": "奨学金、コンペ、キャンパス情報",
+    "officialChannelsDesc": "最新のニュース、奨学金情報、BEM STMIK Tazkiaのイベント情報を直接受け取りましょう。",
+    "minRead": "{min} 分で読める"
   },
   "ProjectCard": {
     "projectShowcase": "プロジェクトショーケース",

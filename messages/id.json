@@ -194,7 +194,19 @@
     "categoryAchievement": "Prestasi",
     "likes": "Suka",
     "prevPage": "Halaman Sebelumnya",
-    "nextPage": "Halaman Selanjutnya"
+    "nextPage": "Halaman Selanjutnya",
+    "writerPortalBadge": "Portal Penulis Mahasiswa",
+    "writerPortalTitle": "Punya Ide, Riset, atau Opini Kritis?",
+    "writerPortalDesc": "Publikasikan karya tulismu di portal resmi BEM STMIK Tazkia. Tulisan terpilih akan tayang ke seluruh kampus.",
+    "writerPortalBtn": "Mulai Menulis",
+    "share": "Bagikan",
+    "shareNews": "Bagikan berita",
+    "shareSuccess": "Tautan berita berhasil disalin!",
+    "popularSuffix": "Terpopuler",
+    "officialChannels": "Saluran Resmi BEM",
+    "officialChannelsSubtitle": "Info beasiswa, lomba & agenda kampus",
+    "officialChannelsDesc": "Dapatkan notifikasi berita terkini, info beasiswa, dan agenda kegiatan BEM STMIK Tazkia langsung di genggamanmu.",
+    "minRead": "{min} mnt baca"
   },
   "ProjectCard": {
     "projectShowcase": "Pameran Proyek",

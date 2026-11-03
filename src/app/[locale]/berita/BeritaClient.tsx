@@ -145,10 +145,10 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
 
   // Estimasi waktu baca untuk menaikkan minat klik (Click-Through Rate)
   const calculateReadingTime = (text?: string) => {
-    if (!text) return locale === "id" ? "2 mnt baca" : "2 min read";
+    if (!text) return t("minRead", { min: 2 });
     const words = text.trim().split(/\s+/).length;
     const minutes = Math.max(2, Math.ceil(words / 35));
-    return locale === "id" ? `${minutes} mnt baca` : `${minutes} min read`;
+    return t("minRead", { min: minutes });
   };
 
   // Robust Clipboard Copy Fallback
@@ -202,7 +202,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
 
     const copied = await copyToClipboard(url);
     if (copied) {
-      setCopyNotice(locale === "id" ? "Tautan berita berhasil disalin!" : "News link copied to clipboard!");
+      setCopyNotice(t("shareSuccess"));
       setTimeout(() => setCopyNotice(null), 2500);
     }
   };
@@ -383,17 +383,13 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 <div className="space-y-1.5 flex-1">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-[10px] sm:text-xs font-bold text-white tracking-wide uppercase">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>{locale === "id" ? "Portal Penulis Mahasiswa" : "Student Writer Portal"}</span>
+                    <span>{t("writerPortalBadge")}</span>
                   </div>
                   <h3 className="font-extrabold text-white text-base sm:text-lg md:text-xl tracking-tight leading-snug">
-                    {locale === "id"
-                      ? "Punya Ide, Riset, atau Opini Kritis?"
-                      : "Have Ideas, Research, or Critical Insights?"}
+                    {t("writerPortalTitle")}
                   </h3>
                   <p className="text-white/80 text-xs sm:text-sm font-light leading-relaxed max-w-xl">
-                    {locale === "id"
-                      ? "Publikasikan karya tulismu di portal resmi BEM STMIK Tazkia. Tulisan terpilih akan tayang ke seluruh kampus."
-                      : "Publish your writing on the official BEM STMIK Tazkia portal. Selected articles reach the entire campus."}
+                    {t("writerPortalDesc")}
                   </p>
                 </div>
               </div>
@@ -403,7 +399,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 href="/dashboard/artikel/baru"
                 className="shrink-0 inline-flex items-center gap-2 bg-white text-primary hover:bg-slate-100 font-extrabold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 group whitespace-nowrap self-stretch sm:self-center justify-center"
               >
-                <span>{locale === "id" ? "Mulai Menulis" : "Start Writing"}</span>
+                <span>{t("writerPortalBtn")}</span>
                 <FiArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -461,11 +457,11 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                     <button
                       type="button"
                       onClick={(e) => handleUniversalShare(e, featuredNews.title, featuredNews.slug)}
-                      title={locale === "id" ? "Bagikan berita" : "Share news"}
+                      title={t("shareNews")}
                       className="pointer-events-auto relative z-30 inline-flex items-center gap-1.5 bg-white/20 hover:bg-primary text-white backdrop-blur-md px-3.5 py-2.5 rounded-full text-xs font-semibold shadow-md transition-all duration-300 border border-white/20 hover:scale-105 active:scale-95 cursor-pointer"
                     >
                       <FiShare2 size={14} />
-                      <span className="hidden sm:inline">{locale === "id" ? "Bagikan" : "Share"}</span>
+                      <span className="hidden sm:inline">{t("share")}</span>
                     </button>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-white/90">
@@ -572,7 +568,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                           <button
                             type="button"
                             onClick={(e) => handleUniversalShare(e, news.title, news.slug)}
-                            title={locale === "id" ? "Bagikan berita" : "Share news"}
+                            title={t("shareNews")}
                             className="pointer-events-auto relative z-30 p-2.5 rounded-full bg-white/15 hover:bg-primary text-white backdrop-blur-md transition-all duration-300 border border-white/20 hover:scale-110 active:scale-95 shadow-xs cursor-pointer"
                           >
                             <FiShare2 size={13} />
@@ -655,7 +651,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
               <span className="w-2.5 h-4 bg-secondary rounded-full inline-block"></span>
               {selectedCategory === "Semua" || selectedCategory.toLowerCase() === "all"
                 ? t("sidebarTitle")
-                : `${translateCategory(selectedCategory)} ${locale === "id" ? "Terpopuler" : "Popular"}`}
+                : `${translateCategory(selectedCategory)} ${t("popularSuffix")}`}
             </h3>
 
             {/* Popular News Cards with Hover Lift */}
@@ -724,7 +720,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                         <button
                           type="button"
                           onClick={(e) => handleUniversalShare(e, item.title, item.slug)}
-                          title={locale === "id" ? "Bagikan berita" : "Share news"}
+                          title={t("shareNews")}
                           className="pointer-events-auto relative z-30 p-1.5 rounded-full bg-white/15 hover:bg-primary text-white backdrop-blur-sm transition-all duration-300 border border-white/20 hover:scale-110 active:scale-95 shadow-xs cursor-pointer"
                         >
                           <FiShare2 size={11} />
@@ -744,17 +740,15 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
                 </span>
                 <div>
                   <h4 className="text-sm font-bold text-primary">
-                    {locale === "id" ? "Saluran Resmi BEM" : "Official BEM Channels"}
+                    {t("officialChannels")}
                   </h4>
                   <p className="text-[11px] text-on-surface-variant font-light">
-                    {locale === "id" ? "Info beasiswa, lomba & agenda kampus" : "Campus updates & scholarships"}
+                    {t("officialChannelsSubtitle")}
                   </p>
                 </div>
               </div>
               <p className="text-xs text-on-surface-variant leading-relaxed">
-                {locale === "id"
-                  ? "Dapatkan notifikasi berita terkini, info beasiswa, dan agenda kegiatan BEM STMIK Tazkia langsung di genggamanmu."
-                  : "Get instant campus news, competition alerts, and agenda updates straight to your social apps."}
+                {t("officialChannelsDesc")}
               </p>
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <a

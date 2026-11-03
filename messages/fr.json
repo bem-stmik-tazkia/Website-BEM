@@ -194,7 +194,19 @@
     "categoryAchievement": "Réussite",
     "likes": "J'aime",
     "prevPage": "Page Précédente",
-    "nextPage": "Page Suivante"
+    "nextPage": "Page Suivante",
+    "writerPortalBadge": "Portail des Auteurs Étudiants",
+    "writerPortalTitle": "Des idées, des recherches ou des opinions critiques ?",
+    "writerPortalDesc": "Publiez vos écrits sur le portail officiel du BEM STMIK Tazkia. Les articles sélectionnés seront diffusés sur tout le campus.",
+    "writerPortalBtn": "Commencer à Écrire",
+    "share": "Partager",
+    "shareNews": "Partager l'actualité",
+    "shareSuccess": "Lien de l'actualité copié avec succès !",
+    "popularSuffix": "Les plus populaires",
+    "officialChannels": "Canaux Officiels du BEM",
+    "officialChannelsSubtitle": "Bourses, concours et agenda du campus",
+    "officialChannelsDesc": "Recevez les dernières actualités, informations sur les bourses et événements du BEM STMIK Tazkia directement sur vos applications.",
+    "minRead": "{min} min de lecture"
   },
   "ProjectCard": {
     "projectShowcase": "Vitrine de projets",

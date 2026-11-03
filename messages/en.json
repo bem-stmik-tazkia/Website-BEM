@@ -212,7 +212,19 @@
     "categoryAchievement": "Achievement",
     "likes": "Likes",
     "prevPage": "Previous Page",
-    "nextPage": "Next Page"
+    "nextPage": "Next Page",
+    "writerPortalBadge": "Student Writer Portal",
+    "writerPortalTitle": "Have Ideas, Research, or Critical Insights?",
+    "writerPortalDesc": "Publish your writing on the official BEM STMIK Tazkia portal. Selected articles reach the entire campus.",
+    "writerPortalBtn": "Start Writing",
+    "share": "Share",
+    "shareNews": "Share news",
+    "shareSuccess": "News link copied to clipboard!",
+    "popularSuffix": "Popular",
+    "officialChannels": "Official BEM Channels",
+    "officialChannelsSubtitle": "Campus updates & scholarships",
+    "officialChannelsDesc": "Get instant campus news, competition alerts, and agenda updates straight to your social apps.",
+    "minRead": "{min} min read"
   },
   "ProjectCard": {
     "projectShowcase": "Project Showcase",
