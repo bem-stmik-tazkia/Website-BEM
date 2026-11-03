@@ -439,7 +439,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
           {konamiUnlocked && (
             <aside
               aria-label={maintenanceMode ? "Status Bypass Maintenance" : "Akses Admin Terbuka"}
-              className="fixed bottom-20 md:bottom-6 right-4 z-[9999] bg-amber-500/95 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-amber-300/40 flex items-center gap-3 text-xs md:text-sm animate-fade-in"
+              className="fixed bottom-20 md:bottom-6 left-4 md:left-6 z-[9999] bg-amber-500/95 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-amber-300/40 flex items-center gap-3 text-xs md:text-sm animate-fade-in"
             >
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />

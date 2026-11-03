@@ -2,13 +2,22 @@
 
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FiX } from "react-icons/fi";
 import SafeLottie from "@/components/ui/SafeLottie";
 
 export default function FloatingKaryaPrompt() {
   const t = useTranslations("Footer");
   const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isBypassed =
+        sessionStorage.getItem("_bk") === "1" ||
+        document.cookie.includes("maintenance_bypass=");
+      if (isBypassed) setIsVisible(false);
+    }
+  }, []);
 
   if (!isVisible) return null;
 
