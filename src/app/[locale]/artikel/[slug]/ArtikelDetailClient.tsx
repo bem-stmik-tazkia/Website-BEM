@@ -202,7 +202,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
               {article.author?.avatar_url ? (
                 <img src={article.author.avatar_url} alt={article.author?.full_name || "Author"} className="w-full h-full object-cover" />
               ) : isBemAdmin ? (
-                <img src="/images/logo.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-1.5" />
+                <img src="/images/logo2.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-1.5" />
               ) : (
                 <span className="text-base">{article.author?.full_name?.charAt(0) || "M"}</span>
               )}
@@ -297,7 +297,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
           {article.author?.avatar_url ? (
             <img src={article.author.avatar_url} alt={article.author?.full_name || "Author"} className="w-full h-full object-cover" />
           ) : isBemAdmin ? (
-            <img src="/images/logo.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-2" />
+            <img src="/images/logo2.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-2" />
           ) : (
             <span>{article.author?.full_name?.charAt(0) || "M"}</span>
           )}
