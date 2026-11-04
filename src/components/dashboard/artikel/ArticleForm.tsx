@@ -85,6 +85,14 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
   const isFromAdmin = fromParam === "admin" || isAdmin;
   const returnUrl = isFromAdmin ? "/admin/artikel" : "/dashboard/artikel";
 
+  const navigateTo = (url: string) => {
+    if (url.startsWith("/admin")) {
+      window.location.href = url;
+    } else {
+      router.push(url);
+    }
+  };
+
   // State untuk popup konfirmasi draf belum disimpan
   const [pendingTargetUrl, setPendingTargetUrl] = useState<string | null>(null);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -216,20 +224,8 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
     setIsSubmitting(true);
     setShowLeaveModal(false);
 
-    if (pendingTargetUrl) {
-      try {
-        const targetUrl = new URL(pendingTargetUrl, window.location.origin);
-        if (targetUrl.origin === window.location.origin) {
-          router.push(targetUrl.pathname + targetUrl.search);
-        } else {
-          window.location.href = pendingTargetUrl;
-        }
-      } catch {
-        window.location.href = pendingTargetUrl;
-      }
-    } else {
-      router.push(returnUrl);
-    }
+    const dest = pendingTargetUrl || returnUrl;
+    navigateTo(dest);
   };
 
   // Auto-generate slug dari judul jika belum manual diubah
@@ -343,7 +339,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         setIsSubmitted(true);
         try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
         toast(targetStatus === "pending" ? t("toastRevisionSubmitted") : t("toastDraftSaved"), "success");
-        router.push(returnUrl);
+        navigateTo(returnUrl);
       } else if (isEdit && initialData) {
         // Alur Update Artikel Draf atau Rejected
         const updatePayload: Record<string, any> = {
@@ -391,7 +387,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         setIsSubmitted(true);
         try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
         toast(targetStatus === "published" ? t("toastDirectPublished") : targetStatus === "pending" ? t("toastSubmitted") : t("toastDraftSaved"), "success");
-        router.push(isFromAdmin ? "/admin/artikel" : (targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel"));
+        navigateTo(isFromAdmin ? "/admin/artikel" : (targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel"));
       } else {
         // Alur Buat Artikel Baru
         const baseSlug = slugify(title);
@@ -442,7 +438,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         setIsSubmitted(true);
         try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
         toast(targetStatus === "published" ? t("toastDirectPublished") : targetStatus === "pending" ? t("toastSubmitted") : t("toastDraftSaved"), "success");
-        router.push(isFromAdmin ? "/admin/artikel" : (targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel"));
+        navigateTo(isFromAdmin ? "/admin/artikel" : (targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel"));
       }
     } catch (err: any) {
       setIsSubmitting(false);
@@ -476,7 +472,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
               setPendingTargetUrl(returnUrl);
               setShowLeaveModal(true);
             } else {
-              router.push(returnUrl);
+              navigateTo(returnUrl);
             }
           }}
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
@@ -771,7 +767,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 setPendingTargetUrl(returnUrl);
                 setShowLeaveModal(true);
               } else {
-                router.push(returnUrl);
+                navigateTo(returnUrl);
               }
             }}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-outline-variant/40 text-on-surface hover:bg-surface-variant/30 text-xs sm:text-sm font-bold transition-colors text-center cursor-pointer"
