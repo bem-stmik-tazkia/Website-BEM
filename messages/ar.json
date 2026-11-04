@@ -9,9 +9,9 @@
     "documentation": "التوثيق",
     "cabinet": "ملف BEM",
     "menuNews": "الأخبار",
-    "menuNewsDesc": "معلومات وإعلانات",
+    "menuNewsDesc": "الأخبار والإعلانات الرسمية",
     "menuDoc": "التوثيق",
-    "menuDocDesc": "الصور والمعرض",
+    "menuDocDesc": "معرض الصور والتوثيق",
     "menuCab": "مجلس الطلاب",
     "menuCabDesc": "الملف الشخصي والهيكل",
     "menuFeedback": "صندوق الملاحظات",
@@ -34,7 +34,9 @@
     "roleAdmin": "مسؤول",
     "activities": "الأنشطة",
     "studentArticles": "المقالات",
-    "profileSettings": "إعدادات الملف الشخصي"
+    "profileSettings": "إعدادات الملف الشخصي",
+    "menuArticlesDesc": "آراء وأبحاث الطلاب",
+    "menuAgendaDesc": "الفعاليات ومعلومات التطوع"
   },
   "Footer": {
     "description": "نحن رواد BEM مبتكرون ومتعاونون واستباقيون في التعبير عن التطلعات وتطوير إمكانات طلاب STMIK Tazkia.",

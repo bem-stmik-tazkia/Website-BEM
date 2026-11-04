@@ -9,9 +9,9 @@
     "documentation": "Documentation",
     "cabinet": "Profil BEM",
     "menuNews": "Nouvelles",
-    "menuNewsDesc": "Info & Annonces",
+    "menuNewsDesc": "Actualités et annonces officielles",
     "menuDoc": "Documentation",
-    "menuDocDesc": "Photos & Galerie",
+    "menuDocDesc": "Galerie photos et documentation",
     "menuCab": "Cabinet BEM",
     "menuCabDesc": "Profil & Structure",
     "menuFeedback": "Boîte à suggestions",
@@ -34,7 +34,9 @@
     "roleAdmin": "Administrateur",
     "activities": "Activités",
     "studentArticles": "Articles",
-    "profileSettings": "Paramètres du profil"
+    "profileSettings": "Paramètres du profil",
+    "menuArticlesDesc": "Opinions et recherches étudiantes",
+    "menuAgendaDesc": "Événements et bénévolat"
   },
   "Footer": {
     "description": "Devenir un pionnier du BEM innovant, collaboratif et proactif dans l'expression des aspirations et le développement du potentiel des étudiants de STMIK Tazkia.",

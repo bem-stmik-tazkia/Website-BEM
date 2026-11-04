@@ -141,8 +141,8 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
       id: "activities",
       name: t("activities"),
       items: [
-        { name: t("agenda"), path: "/agenda", desc: "Info kegiatan & volunteer" },
-        { name: t("documentation"), path: "/dokumentasi", desc: "Galeri & dokumentasi" },
+        { name: t("agenda"), path: "/agenda", desc: t("menuAgendaDesc") },
+        { name: t("documentation"), path: "/dokumentasi", desc: t("menuDocDesc") },
       ],
     },
     {
@@ -150,8 +150,8 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
       id: "publications",
       name: t("publications"),
       items: [
-        { name: t("news"), path: "/berita", desc: "Kabar resmi & pengumuman BEM" },
-        { name: t("studentArticles"), path: "/artikel", desc: "Opini & riset mahasiswa" },
+        { name: t("news"), path: "/berita", desc: t("menuNewsDesc") },
+        { name: t("studentArticles"), path: "/artikel", desc: t("menuArticlesDesc") },
       ],
     },
     { type: "link", name: t("menuFeedback"), path: "/#saran" },

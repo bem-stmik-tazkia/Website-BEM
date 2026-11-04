@@ -3,10 +3,11 @@
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { checkPostgresRateLimit } from "@/lib/rateLimit";
+import { getServiceRoleClient } from "@/lib/auth";
 
 /**
  * Record a view for a berita or artikel.
- * Uses DB-level 24-hour cooldown per user_id (if authenticated) or device_id (if anon) via RPC.
+ * Uses DB-level cooldown per user_id / device_id via RPC with service role fallback.
  * Returns true if view was counted, false if still in cooldown.
  */
 export async function recordView(
@@ -43,8 +44,6 @@ export async function recordView(
   }
 
   const supabase = await createClient();
-
-  // 3. Gunakan RPC SECURITY DEFINER dengan Cooldown di DB (Multi-User Safe)
   const safeCooldown = Math.max(12, cooldownHours);
 
   if (table === 'berita') {
@@ -55,23 +54,55 @@ export async function recordView(
     });
 
     if (error) {
-      console.error('[recordView] Berita RPC error:', error.message);
+      try {
+        const service = getServiceRoleClient();
+        const { data: bData } = await service.from('berita').select('views').eq('id', id).single();
+        if (bData) {
+          await service.from('berita').update({ views: (bData.views || 0) + 1 }).eq('id', id);
+          return true;
+        }
+      } catch (fErr) {
+        console.error('[recordView] Berita fallback error:', fErr);
+      }
       return false;
     }
 
     return counted ?? false;
   } else {
+    // 1. Coba RPC record_article_view via client
     const { data: counted, error } = await supabase.rpc('record_article_view', {
       p_article_id: id,
       p_device_id: cleanDeviceId,
       p_cooldown_hours: safeCooldown,
     });
 
-    if (error) {
-      console.error('[recordView] Article RPC error:', error.message);
-      return false;
+    if (!error && typeof counted === 'boolean') {
+      return counted;
     }
 
-    return counted ?? false;
+    // 2. Fallback service role client jika RPC belum aktif di Supabase
+    try {
+      const service = getServiceRoleClient();
+      const { data: servCounted, error: servRpcErr } = await service.rpc('record_article_view', {
+        p_article_id: id,
+        p_device_id: cleanDeviceId,
+        p_cooldown_hours: safeCooldown,
+      });
+
+      if (!servRpcErr && typeof servCounted === 'boolean') {
+        return servCounted;
+      }
+
+      // Update langsung views artikel via service role
+      const { data: art } = await service.from('articles').select('views').eq('id', id).single();
+      if (art) {
+        await service.from('articles').update({ views: (art.views || 0) + 1 }).eq('id', id);
+        return true;
+      }
+    } catch (fallbackErr) {
+      console.error('[recordView] Article service fallback error:', fallbackErr);
+    }
+
+    return false;
   }
 }

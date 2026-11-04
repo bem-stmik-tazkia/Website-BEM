@@ -20,6 +20,7 @@ import { getDeviceId } from "@/utils/identity";
 import { toggleLike } from "@/actions/like";
 import { recordView } from "@/actions/view";
 import { useToast } from "@/components/ui/Toast";
+import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 import { PublishedArticleItem } from "../ArtikelClient";
 
 interface Props {
@@ -32,6 +33,16 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
   const locale = useLocale();
   const { toast } = useToast();
   const supabase = createClient();
+
+  // Terjemahkan hanya JUDUL artikel sesuai bahasa yang dipilih (isi konten tetap 100% asli)
+  const { data: displayArticle } = useTranslatedContent(
+    article,
+    "articles",
+    locale,
+    ["title"]
+  );
+
+  const articleTitle = displayArticle?.title || article.title;
 
   const [views, setViews] = useState(article.views || 0);
   const [likes, setLikes] = useState(article.likes || 0);
@@ -57,7 +68,19 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
         const userId = user?.id || null;
         const deviceId = getDeviceId();
 
-        // 1. Periksa status like secara aman (Multi-User Safe)
+        // 1. Ambil data views & likes terbaru langsung dari database (bypass cache)
+        const { data: freshStats } = await supabase
+          .from("articles")
+          .select("views, likes")
+          .eq("id", article.id)
+          .maybeSingle();
+
+        if (freshStats && isMounted) {
+          setViews(freshStats.views || 0);
+          setLikes(freshStats.likes || 0);
+        }
+
+        // 2. Periksa status like secara aman (Multi-User Safe)
         const { data: likedStatus, error: likeError } = await supabase.rpc(
           "check_article_liked",
           {
@@ -67,11 +90,11 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
           }
         );
 
-        if (!likeError && isMounted) {
-          setIsLiked(Boolean(likedStatus));
+        if (!likeError && isMounted && typeof likedStatus === "boolean") {
+          setIsLiked(likedStatus);
         }
 
-        // 2. Multi-User View Tracking (dengan isolasi user di localStorage)
+        // 3. Multi-User View Tracking (dengan isolasi user di localStorage)
         const viewKey = userId
           ? `viewed_art_${article.id}_${userId}`
           : `viewed_art_${article.id}`;
@@ -85,8 +108,6 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
           const counted = await recordView("articles", article.id, deviceId, 12);
           if (counted && isMounted) {
             setViews((prev) => prev + 1);
-            localStorage.setItem(viewKey, String(now));
-          } else if (!lastViewedAt) {
             localStorage.setItem(viewKey, String(now));
           }
         }
@@ -150,13 +171,13 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
     }
   };
 
-  const handleShareNative = async () => {
+  const handleShare = async () => {
     const url = getShareUrl();
     if (navigator.share) {
       try {
         await navigator.share({
-          title: article.title,
-          text: `Baca tulisan menarik "${article.title}" oleh mahasiswa STMIK Tazkia:`,
+          title: articleTitle,
+          text: `Baca artikel "${articleTitle}" oleh ${article.author?.full_name || "Mahasiswa"} di Portal Intelektual BEM STMIK Tazkia.`,
           url: url,
         });
       } catch (err: any) {
@@ -168,7 +189,6 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
       handleCopyLink();
     }
   };
-
 
   return (
     <div className="min-h-screen bg-background pt-24 sm:pt-28 pb-28 sm:pb-24 px-3.5 sm:px-6 lg:px-8 max-w-4xl mx-auto">
@@ -192,7 +212,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
       {/* Article Header */}
       <div className="space-y-4 mb-8">
         <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-on-surface leading-tight tracking-tight break-words [overflow-wrap:anywhere]">
-          {article.title}
+          {articleTitle}
         </h1>
 
         {/* Author Bio & Date Bar */}
@@ -240,13 +260,13 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
         <div className="rounded-3xl overflow-hidden mb-10 shadow-sm border border-outline-variant/30 max-h-[480px]">
           <img
             src={article.cover_url}
-            alt={article.title}
+            alt={articleTitle}
             className="w-full h-full object-cover"
           />
         </div>
       )}
 
-      {/* Main Content Body */}
+      {/* Main Content Body (Pure 100% Konten Asli Penulis) */}
       <article className="prose dark:prose-invert max-w-none mb-12 overflow-hidden">
         <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-base sm:text-lg text-on-surface/90 font-normal space-y-4">
           {article.content}
@@ -279,45 +299,54 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
           </div>
         </div>
 
-        {/* Share Button (Native Mobile ShareSheet with Copy Fallback) */}
-        <button
-          type="button"
-          onClick={handleShareNative}
-          title={copied ? t("copied") : t("share")}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-surface-variant/40 hover:bg-surface-variant text-on-surface text-xs sm:text-sm font-bold border border-outline-variant/30 transition-all cursor-pointer shadow-xs active:scale-95"
-        >
-          {copied ? <FiCheck className="text-emerald-500" size={16} /> : <FiShare2 size={16} />}
-          <span>{copied ? t("copied") : t("share")}</span>
-        </button>
+        {/* Share Button */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-xs sm:text-sm font-bold text-on-surface transition-all cursor-pointer"
+            title="Bagikan Tautan Artikel"
+          >
+            {copied ? <FiCheck size={16} className="text-emerald-500" /> : <FiShare2 size={16} />}
+            <span className="hidden sm:inline">{copied ? "Tersalin!" : "Bagikan"}</span>
+          </button>
+        </div>
       </div>
 
-      {/* Author Card Footer */}
-      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-surface-variant/20 border border-outline-variant/20 mb-8 sm:mb-12 flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden shrink-0 border border-primary/20 text-xl shadow-xs">
-          {article.author?.avatar_url ? (
-            <img src={article.author.avatar_url} alt={article.author?.full_name || "Author"} className="w-full h-full object-cover" />
-          ) : isBemAdmin ? (
-            <img src="/images/logo2.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-2" />
-          ) : (
-            <span>{article.author?.full_name?.charAt(0) || "M"}</span>
-          )}
-        </div>
-        <div className="flex-1">
-          <span className="text-[11px] font-bold text-primary uppercase tracking-wider">{t("aboutAuthor")}</span>
-          <h3 className="text-lg font-black text-on-surface mt-0.5">
-            {article.author?.full_name || t("defaultAuthor")}
-          </h3>
-          <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-            {article.author?.bio || t("curationNotice")}
-          </p>
+      {/* Author Bio Box */}
+      <div className="p-6 rounded-3xl bg-surface border border-outline-variant/30 mb-12 shadow-xs">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden shrink-0 border border-primary/20">
+            {article.author?.avatar_url ? (
+              <img src={article.author.avatar_url} alt={article.author?.full_name || "Author"} className="w-full h-full object-cover" />
+            ) : isBemAdmin ? (
+              <img src="/images/logo2.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-2" />
+            ) : (
+              <span className="text-xl">{article.author?.full_name?.charAt(0) || "M"}</span>
+            )}
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+              {t("aboutAuthor")}
+            </span>
+            <h3 className="text-base font-bold text-on-surface mt-1">
+              {article.author?.full_name || t("defaultAuthor")}
+            </h3>
+            <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
+              {article.author?.bio || t("defaultBio")}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Related Articles */}
-      {relatedArticles.length > 0 && (
-        <div className="border-t border-outline-variant/20 pt-10">
-          <h2 className="text-xl font-bold text-on-surface mb-6">{t("relatedArticles")}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+      {relatedArticles && relatedArticles.length > 0 && (
+        <div className="pt-8 border-t border-outline-variant/20">
+          <h2 className="text-lg sm:text-xl font-bold text-on-surface mb-6">
+            {t("relatedArticles")}
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {relatedArticles.map((rel) => (
               <Link
                 key={rel.id}
@@ -325,21 +354,21 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
                 className="group p-4 rounded-2xl bg-surface border border-outline-variant/30 hover:border-primary/40 transition-all flex gap-3.5"
               >
                 {rel.cover_url && (
-                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-surface-variant/30 shrink-0">
-                    <img src={rel.cover_url} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-surface-variant/40 shrink-0">
+                    <img src={rel.cover_url} alt={rel.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <span className="text-[10px] font-bold text-primary">{rel.category || "Artikel"}</span>
-                  <h4 className="font-bold text-sm text-on-surface group-hover:text-primary transition-colors line-clamp-2 mt-1">
+                  <span className="text-[10px] font-bold text-primary">{rel.category}</span>
+                  <h4 className="text-xs sm:text-sm font-bold text-on-surface group-hover:text-primary transition-colors line-clamp-2 mt-0.5">
                     {rel.title}
                   </h4>
-                  <span className="text-[11px] text-on-surface-variant mt-2 block">
+                  <p className="text-[11px] text-on-surface-variant mt-1">
                     {new Date(rel.published_at || rel.created_at).toLocaleDateString(locale, {
                       day: "numeric",
                       month: "short",
                     })}
-                  </span>
+                  </p>
                 </div>
               </Link>
             ))}
@@ -349,4 +378,3 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
     </div>
   );
 }
-

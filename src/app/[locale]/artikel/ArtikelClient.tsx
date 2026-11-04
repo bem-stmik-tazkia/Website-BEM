@@ -7,9 +7,7 @@ import {
   FiSearch,
   FiClock,
   FiEye,
-  FiHeart,
   FiCalendar,
-  FiTag,
   FiArrowRight,
   FiTrendingUp,
   FiEdit3,
@@ -18,6 +16,9 @@ import {
   FiChevronRight,
 } from "react-icons/fi";
 import { useLocale, useTranslations } from "next-intl";
+import LikeButton from "@/components/ui/LikeButton";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { createClient } from "@/utils/supabase/client";
 
 export interface PublishedArticleItem {
   id: string;
@@ -59,10 +60,41 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
   const locale = useLocale();
   const t = useTranslations("ArticleList");
 
+  const [articlesData, setArticlesData] = useState<PublishedArticleItem[]>(initialArticles);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [sortBy, setSortBy] = useState<"newest" | "popular">("newest");
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Fetch real-time stats (views & likes) to bypass Next.js static cache
+  useEffect(() => {
+    if (initialArticles.length === 0) return;
+    const fetchLatestStats = async () => {
+      try {
+        const supabase = createClient();
+        const ids = initialArticles.map((a) => a.id);
+        const { data } = await supabase
+          .from("articles")
+          .select("id, views, likes")
+          .in("id", ids);
+
+        if (data && data.length > 0) {
+          const map = new Map(data.map((d: any) => [d.id, d]));
+          setArticlesData((prev) =>
+            prev.map((art) => {
+              const fresh = map.get(art.id);
+              return fresh
+                ? { ...art, views: fresh.views ?? art.views, likes: fresh.likes ?? art.likes }
+                : art;
+            })
+          );
+        }
+      } catch (err) {
+        console.error("[ArtikelClient] Error fetching live stats:", err);
+      }
+    };
+    fetchLatestStats();
+  }, [initialArticles]);
 
   // Helper untuk menerjemahkan nama kategori secara dinamis
   const translateCategory = (cat?: string | null) => {
@@ -99,7 +131,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
 
   // Filtering and sorting
   const filteredArticles = useMemo(() => {
-    let result = [...initialArticles];
+    let result = [...articlesData];
 
     if (selectedCategory !== "Semua") {
       result = result.filter(
@@ -128,20 +160,26 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
     }
 
     return result;
-  }, [initialArticles, selectedCategory, searchQuery, sortBy]);
+  }, [articlesData, selectedCategory, searchQuery, sortBy]);
+
+  // Terjemahkan hanya JUDUL artikel sesuai bahasa yang dipilih (isi artikel tetap asli 100%)
+  const { data: translatedArticles } = useTranslatedList(
+    filteredArticles,
+    "articles",
+    locale,
+    ["title"]
+  );
 
   // Pagination calculation
-  // Jika tab 'Semua' dan tanpa pencarian di page 1: Artikel pertama dijadikan Featured Card
   const hasFeatured = selectedCategory === "Semua" && !searchQuery.trim() && currentPage === 1;
-  const featuredArticle = hasFeatured && filteredArticles.length > 0 ? filteredArticles[0] : null;
+  const featuredArticle = hasFeatured && translatedArticles.length > 0 ? translatedArticles[0] : null;
 
-  // Sisa artikel yang masuk ke grid pada halaman aktif
   const gridSourceArticles = useMemo(() => {
     if (hasFeatured) {
-      return filteredArticles.slice(1);
+      return translatedArticles.slice(1);
     }
-    return filteredArticles;
-  }, [filteredArticles, hasFeatured]);
+    return translatedArticles;
+  }, [translatedArticles, hasFeatured]);
 
   const totalPages = Math.max(1, Math.ceil(gridSourceArticles.length / ITEMS_PER_PAGE));
   const paginatedGridArticles = useMemo(() => {
@@ -268,7 +306,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
       </div>
 
       {/* Empty State */}
-      {filteredArticles.length === 0 ? (
+      {translatedArticles.length === 0 ? (
         <div className="bg-surface border border-outline-variant/30 rounded-3xl p-12 text-center max-w-md mx-auto my-12 shadow-xs">
           <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center mb-4">
             <FiBookOpen size={26} />
@@ -290,14 +328,14 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Featured Article Card (Proporsional, responsif, dan rapi) */}
+          {/* Featured Article Card */}
           {featuredArticle && (
-            <Link
-              href={`/artikel/${featuredArticle.slug}`}
-              className="group block bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all"
-            >
+            <div className="group block bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-                <div className="lg:col-span-7 relative h-52 sm:h-64 lg:h-80 max-h-[340px] bg-surface-variant/40 overflow-hidden">
+                <Link
+                  href={`/artikel/${featuredArticle.slug}`}
+                  className="lg:col-span-7 relative h-52 sm:h-64 lg:h-80 max-h-[340px] bg-surface-variant/40 overflow-hidden block"
+                >
                   {featuredArticle.cover_url ? (
                     <img
                       src={featuredArticle.cover_url}
@@ -314,7 +352,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                       {translateCategory(featuredArticle.category)}
                     </div>
                   )}
-                </div>
+                </Link>
 
                 <div className="lg:col-span-5 p-5 sm:p-7 flex flex-col justify-between">
                   <div>
@@ -328,9 +366,11 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                       </span>
                     </div>
 
-                    <h2 className="text-lg sm:text-2xl font-black text-on-surface group-hover:text-primary transition-colors leading-snug mb-2.5 line-clamp-2">
-                      {featuredArticle.title}
-                    </h2>
+                    <Link href={`/artikel/${featuredArticle.slug}`} className="block">
+                      <h2 className="text-lg sm:text-2xl font-black text-on-surface group-hover:text-primary transition-colors leading-snug mb-2.5 line-clamp-2">
+                        {featuredArticle.title}
+                      </h2>
+                    </Link>
 
                     <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed line-clamp-2 sm:line-clamp-3 mb-4">
                       {featuredArticle.content.replace(/<[^>]*>?/gm, "").replace(/[#*_`]/g, "").slice(0, 180)}...
@@ -350,39 +390,42 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                           <span>{featuredArticle.author?.full_name?.charAt(0) || "M"}</span>
                         )}
                       </div>
-                      <span className="text-xs font-bold text-on-surface truncate max-w-[160px]">
+                      <span className="text-xs font-bold text-on-surface truncate max-w-[140px]">
                         {featuredArticle.author?.full_name || "Mahasiswa Tazkia"}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-3 text-xs text-on-surface-variant">
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1" title="Views">
                         <FiEye size={13} />
                         <span>{featuredArticle.views || 0}</span>
                       </span>
-                      <span className="flex items-center gap-1">
-                        <FiHeart size={13} className="text-rose-500" />
-                        <span>{featuredArticle.likes || 0}</span>
-                      </span>
+                      <div className="flex items-center">
+                        <LikeButton
+                          initialLikes={featuredArticle.likes || 0}
+                          id={featuredArticle.id}
+                          table="articles"
+                          size={14}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </Link>
+            </div>
           )}
 
-          {/* Grid of Articles (Maksimal 6 per halaman agar rapi & ringan) */}
+          {/* Grid of Articles */}
           {paginatedGridArticles.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedGridArticles.map((art) => {
                 const avatar = getAuthorAvatar(art.author);
                 return (
-                  <Link
+                  <div
                     key={art.id}
-                    href={`/artikel/${art.slug}`}
                     className="group bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col"
                   >
-                    <div className="relative h-44 bg-surface-variant/40 overflow-hidden">
+                    <Link href={`/artikel/${art.slug}`} className="relative h-44 bg-surface-variant/40 overflow-hidden block">
                       {art.cover_url ? (
                         <img
                           src={art.cover_url}
@@ -399,7 +442,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                           {translateCategory(art.category)}
                         </span>
                       )}
-                    </div>
+                    </Link>
 
                     <div className="p-5 flex-1 flex flex-col justify-between">
                       <div>
@@ -414,9 +457,11 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                           </span>
                         </div>
 
-                        <h3 className="font-bold text-base text-on-surface group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-2">
-                          {art.title}
-                        </h3>
+                        <Link href={`/artikel/${art.slug}`} className="block">
+                          <h3 className="font-bold text-base text-on-surface group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-2">
+                            {art.title}
+                          </h3>
+                        </Link>
 
                         <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-4">
                           {art.content.replace(/<[^>]*>?/gm, "").replace(/[#*_`]/g, "").slice(0, 130)}...
@@ -432,30 +477,34 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                               <span>{art.author?.full_name?.charAt(0) || "M"}</span>
                             )}
                           </div>
-                          <span className="text-xs text-on-surface font-medium truncate max-w-[120px]">
+                          <span className="text-xs text-on-surface font-medium truncate max-w-[110px]">
                             {art.author?.full_name || "Mahasiswa"}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2.5 text-xs text-on-surface-variant shrink-0">
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1" title="Views">
                             <FiEye size={12} />
                             <span>{art.views || 0}</span>
                           </span>
-                          <span className="flex items-center gap-1">
-                            <FiHeart size={12} className="text-rose-500" />
-                            <span>{art.likes || 0}</span>
-                          </span>
+                          <div className="flex items-center">
+                            <LikeButton
+                              initialLikes={art.likes || 0}
+                              id={art.id}
+                              table="articles"
+                              size={12}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>
           )}
 
-          {/* Kontrol Pagination (Halaman & Navigasi Rapi) */}
+          {/* Kontrol Pagination */}
           {totalPages > 1 && (
             <div className="pt-8 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4">
               <span className="text-xs text-on-surface-variant font-medium order-2 sm:order-1">
@@ -474,7 +523,6 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                   <span className="hidden sm:inline">{t("prevPage")}</span>
                 </button>
 
-                {/* Page Number Pills */}
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
                   const isCurrent = page === currentPage;
                   return (
