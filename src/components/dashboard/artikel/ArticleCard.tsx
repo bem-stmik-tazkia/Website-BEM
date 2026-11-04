@@ -70,7 +70,7 @@ export default function ArticleCard({
     .slice(0, 160);
 
   return (
-    <div className="bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-2xl p-4 sm:p-5 transition-all shadow-sm flex flex-col md:flex-row gap-4 sm:gap-5 group">
+    <div className="bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-2xl p-4 sm:p-5 transition-all shadow-sm flex flex-col md:flex-row gap-4 sm:gap-5 group min-w-0 overflow-hidden">
       {/* Cover Thumbnail */}
       <div className="relative w-full md:w-48 h-36 sm:h-40 md:h-auto rounded-xl overflow-hidden bg-surface-variant/40 shrink-0 border border-outline-variant/20">
         {article.cover_url ? (
@@ -93,7 +93,7 @@ export default function ArticleCard({
       </div>
 
       {/* Main Details */}
-      <div className="flex-1 flex flex-col justify-between">
+      <div className="flex-1 min-w-0 flex flex-col justify-between">
         <div>
           {/* Header Row: Category & Status */}
           <div className="hidden md:flex items-center justify-between gap-2 mb-2">
@@ -118,12 +118,12 @@ export default function ArticleCard({
           </div>
 
           {/* Title */}
-          <h3 className="font-bold text-base sm:text-lg text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-2 mb-2">
+          <h3 className="font-bold text-base sm:text-lg text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-2 mb-2 break-words [overflow-wrap:anywhere]">
             {article.title}
           </h3>
 
           {/* Snippet */}
-          <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-2 sm:line-clamp-3 mb-3">
+          <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-2 sm:line-clamp-3 mb-3 break-words [overflow-wrap:anywhere]">
             {contentSnippet || t("emptySnippet")}
           </p>
 

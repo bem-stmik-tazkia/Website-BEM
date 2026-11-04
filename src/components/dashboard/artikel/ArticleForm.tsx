@@ -604,7 +604,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         </div>
 
         {/* Konten Artikel */}
-        <div className="bg-surface border border-outline-variant/30 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div className="bg-surface border border-outline-variant/30 rounded-2xl p-5 sm:p-6 shadow-sm min-w-0 overflow-hidden">
           {/* Header Editor: Tabs & Status */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-3 pb-3 border-b border-outline-variant/20">
             <div className="flex items-center gap-1 bg-surface-variant/30 p-1 rounded-xl">
@@ -724,13 +724,13 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             </div>
           ) : (
             /* Live Markdown / Article Preview */
-            <div className="p-4 sm:p-6 rounded-xl bg-surface-variant/10 border border-outline-variant/30 min-h-[320px] prose dark:prose-invert max-w-none">
+            <div className="p-4 sm:p-6 rounded-xl bg-surface-variant/10 border border-outline-variant/30 min-h-[320px] prose dark:prose-invert max-w-none break-words overflow-hidden">
               {coverUrl && (
                 <div className="mb-6 rounded-xl overflow-hidden max-h-80 border border-outline-variant/30">
                   <img src={coverUrl} alt="Preview Cover" className="w-full h-full object-cover" />
                 </div>
               )}
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface mb-4">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface mb-4 break-words [overflow-wrap:anywhere]">
                 {title || t("previewPlaceholderTitle")}
               </h1>
               <div className="text-xs text-on-surface-variant flex items-center gap-3 pb-4 mb-6 border-b border-outline-variant/20">
@@ -740,7 +740,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 <span>•</span>
                 <span>{t("previewReadTime", { min: readingTime })}</span>
               </div>
-              <div className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base text-on-surface space-y-4">
+              <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-sm sm:text-base text-on-surface space-y-4">
                 {content ? (
                   content
                 ) : (

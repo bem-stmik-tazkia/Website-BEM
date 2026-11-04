@@ -190,7 +190,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
 
       {/* Article Header */}
       <div className="space-y-4 mb-8">
-        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-on-surface leading-tight tracking-tight">
+        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-on-surface leading-tight tracking-tight break-words [overflow-wrap:anywhere]">
           {article.title}
         </h1>
 
@@ -244,8 +244,8 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
       )}
 
       {/* Main Content Body */}
-      <article className="prose dark:prose-invert max-w-none mb-12">
-        <div className="whitespace-pre-wrap leading-relaxed text-base sm:text-lg text-on-surface/90 font-normal space-y-4">
+      <article className="prose dark:prose-invert max-w-none mb-12 overflow-hidden">
+        <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-base sm:text-lg text-on-surface/90 font-normal space-y-4">
           {article.content}
         </div>
       </article>

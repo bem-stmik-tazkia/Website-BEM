@@ -333,30 +333,30 @@ export default function ArticleModerationModal({
           {isRevisionItem && revisionViewMode === "diff" && articleItem ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Kolom Kiri: Artikel Asli */}
-              <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+              <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 overflow-hidden">
                 <div className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider mb-2 pb-2 border-b border-amber-500/20">
                   Artikel Saat Ini (Live di Publik)
                 </div>
-                <h3 className="font-bold text-sm text-on-surface mb-2">{articleItem.title}</h3>
-                <div className="text-xs text-on-surface-variant whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto">
+                <h3 className="font-bold text-sm text-on-surface mb-2 break-words [overflow-wrap:anywhere]">{articleItem.title}</h3>
+                <div className="text-xs text-on-surface-variant whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed max-h-96 overflow-y-auto">
                   {articleItem.content}
                 </div>
               </div>
 
               {/* Kolom Kanan: Revisi Baru */}
-              <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20">
+              <div className="p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20 overflow-hidden">
                 <div className="text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider mb-2 pb-2 border-b border-purple-500/20">
                   Ajuan Revisi Mahasiswa (Menunggu Persetujuan)
                 </div>
-                <h3 className="font-bold text-sm text-on-surface mb-2">{item.title}</h3>
-                <div className="text-xs text-on-surface whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto font-medium">
+                <h3 className="font-bold text-sm text-on-surface mb-2 break-words [overflow-wrap:anywhere]">{item.title}</h3>
+                <div className="text-xs text-on-surface whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed max-h-96 overflow-y-auto font-medium">
                   {item.content}
                 </div>
               </div>
             </div>
           ) : (
             /* Regular Content Renderer */
-            <div className="p-5 sm:p-6 rounded-2xl bg-surface-variant/10 border border-outline-variant/20 whitespace-pre-wrap leading-relaxed text-sm sm:text-base text-on-surface">
+            <div className="p-5 sm:p-6 rounded-2xl bg-surface-variant/10 border border-outline-variant/20 whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-sm sm:text-base text-on-surface overflow-hidden">
               {item.content}
             </div>
           )}

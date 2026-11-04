@@ -48,11 +48,11 @@ export default function ReviewNoteModal({ isOpen, onClose, title, note }: Props)
           </div>
 
           {/* Note Content */}
-          <div className="bg-surface-variant/30 border border-outline-variant/20 rounded-xl p-4 mb-5">
+          <div className="bg-surface-variant/30 border border-outline-variant/20 rounded-xl p-4 mb-5 overflow-hidden">
             <p className="text-xs text-on-surface-variant uppercase font-bold tracking-wider mb-1.5">
               {t("adminNote")}
             </p>
-            <p className="text-sm text-on-surface leading-relaxed whitespace-pre-wrap">
+            <p className="text-sm text-on-surface leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
               {note || t("adminNoteDefault")}
             </p>
           </div>
