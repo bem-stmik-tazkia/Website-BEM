@@ -3,12 +3,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
-import { FiBell, FiUpload, FiEdit2, FiTrash2, FiMessageSquare, FiCheck, FiX } from "react-icons/fi";
+import { FiBell, FiMessageSquare, FiCheck, FiBookOpen } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
+import { fetchPendingArticlesForBell } from "@/app/(internal)/admin/artikel/actions";
 
 interface Notification {
   id: string;
-  type: "saran";
+  type: "saran" | "artikel";
   title: string;
   author: string;
   created_at: string;
@@ -26,15 +27,24 @@ function timeAgo(dateStr: string): string {
   return `${days} hari lalu`;
 }
 
-const TYPE_CONFIG = {
+const TYPE_CONFIG: Record<string, any> = {
   saran: {
-    label: "Kotak Saran Baru",
+    label: "Kotak Saran",
     icon: FiMessageSquare,
     bg: "bg-purple-50 dark:bg-purple-950/40",
     iconColor: "text-purple-500",
     badge: "bg-purple-500",
     border: "border-purple-100",
     dot: "bg-purple-400",
+  },
+  artikel: {
+    label: "Artikel Baru",
+    icon: FiBookOpen,
+    bg: "bg-blue-50 dark:bg-blue-950/40",
+    iconColor: "text-blue-500",
+    badge: "bg-blue-500",
+    border: "border-blue-100",
+    dot: "bg-blue-400",
   },
 };
 
@@ -48,39 +58,45 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
   const prevCountRef = useRef(0);
 
   const fetchNotifications = async () => {
-    // 2. Fetch Unread Saran
-    const lastViewedSaran = typeof window !== "undefined"
-      ? (localStorage.getItem("admin_saran_last_viewed") || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-      : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    try {
+      const lastViewedSaran = typeof window !== "undefined"
+        ? (localStorage.getItem("admin_saran_last_viewed") || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const { data: saranData } = await supabase
-      .from("saran_aduan")
-      .select("id, nama, kategori, pesan, subjek, created_at")
-      .gt("created_at", lastViewedSaran)
-      .order("created_at", { ascending: false })
-      .limit(20);
+      const [saranRes, artikelNotifs] = await Promise.all([
+        supabase
+          .from("saran_aduan")
+          .select("id, nama, kategori, pesan, subjek, created_at")
+          .gt("created_at", lastViewedSaran)
+          .order("created_at", { ascending: false })
+          .limit(20),
+        fetchPendingArticlesForBell(),
+      ]);
 
-    const mappedSaran: Notification[] = (saranData || []).map((s: any) => ({
-      id: s.id,
-      type: "saran",
-      title: `${s.kategori === 'aduan' ? 'Aduan' : 'Saran'}: ${s.pesan || s.subjek || ''}`,
-      author: s.nama || "Anonim",
-      created_at: s.created_at,
-      href: "/admin/saran-aduan",
-    }));
+      const mappedSaran: Notification[] = (saranRes.data || []).map((s: any) => ({
+        id: s.id,
+        type: "saran",
+        title: `${s.kategori === 'aduan' ? 'Aduan' : 'Saran'}: ${s.pesan || s.subjek || ''}`,
+        author: s.nama || "Anonim",
+        created_at: s.created_at,
+        href: "/admin/saran-aduan",
+      }));
 
-    const combined = [...mappedSaran].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+      const combined = [...mappedSaran, ...artikelNotifs].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
 
-    const newCount = combined.length;
-    if (newCount > prevCountRef.current && prevCountRef.current !== 0) {
-      setAnimating(true);
-      setTimeout(() => setAnimating(false), 1000);
-      setSeen(false);
+      const newCount = combined.length;
+      if (newCount > prevCountRef.current && prevCountRef.current !== 0) {
+        setAnimating(true);
+        setTimeout(() => setAnimating(false), 1000);
+        setSeen(false);
+      }
+      prevCountRef.current = newCount;
+      setNotifications(combined);
+    } catch (err) {
+      console.warn("[AdminNotificationBell] Error fetching notifications:", err);
     }
-    prevCountRef.current = newCount;
-    setNotifications(combined);
   };
 
   useEffect(() => {
@@ -93,14 +109,21 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
       })
       .subscribe();
 
+    const channelArticles = supabase
+      .channel(`notif_bell_articles_${Date.now()}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "articles" }, () => {
+        fetchNotifications();
+      })
+      .subscribe();
+
     const handleSaranRead = () => {
       fetchNotifications();
     };
     window.addEventListener("saran_read", handleSaranRead);
 
     return () => {
-
       supabase.removeChannel(channelSaran);
+      supabase.removeChannel(channelArticles);
       window.removeEventListener("saran_read", handleSaranRead);
     };
   }, []);

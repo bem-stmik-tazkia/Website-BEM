@@ -103,3 +103,47 @@ export async function fetchAdminArticlesData(): Promise<AdminArticlesResponse> {
   }
 }
 
+export interface AdminPendingArticleNotif {
+  id: string;
+  type: "artikel";
+  title: string;
+  author: string;
+  created_at: string;
+  href: string;
+}
+
+export async function fetchPendingArticlesForBell(): Promise<AdminPendingArticleNotif[]> {
+  try {
+    await requireAdmin();
+    const serviceClient = getServiceRoleClient();
+    const { data: articles, error } = await serviceClient
+      .from("articles")
+      .select(`
+        id,
+        title,
+        created_at,
+        author:profiles!articles_author_id_fkey(full_name)
+      `)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.warn("[actions:fetchPendingArticlesForBell] Error fetching:", error.message);
+      return [];
+    }
+
+    return (articles || []).map((a: any) => ({
+      id: a.id,
+      type: "artikel" as const,
+      title: a.title,
+      author: a.author?.full_name || "Mahasiswa",
+      created_at: a.created_at,
+      href: "/admin/artikel",
+    }));
+  } catch (err) {
+    console.warn("[actions:fetchPendingArticlesForBell] Error:", err);
+    return [];
+  }
+}
+
