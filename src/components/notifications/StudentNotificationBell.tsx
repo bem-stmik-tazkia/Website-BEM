@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
 import {
   FiBell,
@@ -23,25 +24,25 @@ export interface StudentNotification {
   created_at: string;
 }
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, locale: string, t: any): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  if (mins < 1) return "Baru saja";
-  if (mins < 60) return `${mins} mnt lalu`;
-  if (hours < 24) return `${hours} jam lalu`;
-  if (days < 7) return `${days} hari lalu`;
-  return new Date(dateStr).toLocaleDateString("id-ID", {
+  if (mins < 1) return t("timeJustNow");
+  if (mins < 60) return t("timeMinutesAgo", { minutes: mins });
+  if (hours < 24) return t("timeHoursAgo", { hours: hours });
+  if (days < 7) return t("timeDaysAgo", { days: days });
+  return new Date(dateStr).toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
   });
 }
 
-function getActionMeta(action: string) {
+function getActionMeta(action: string, t: any) {
   if (action === "status_published" || action === "revision_approved") {
     return {
-      title: "Artikel Disetujui & Tayang 🎉",
+      title: t("actionApproved"),
       icon: FiCheckCircle,
       iconColor: "text-emerald-500",
       bg: "bg-emerald-500/10",
@@ -51,7 +52,7 @@ function getActionMeta(action: string) {
   }
   if (action === "status_rejected" || action === "revision_rejected") {
     return {
-      title: "Artikel Ditolak / Perlu Revisi ⚠️",
+      title: t("actionRejected"),
       icon: FiXCircle,
       iconColor: "text-rose-500",
       bg: "bg-rose-500/10",
@@ -61,7 +62,7 @@ function getActionMeta(action: string) {
   }
   if (action === "created_pending" || action === "revision_created_pending") {
     return {
-      title: "Menunggu Review Admin ⏳",
+      title: t("actionPending"),
       icon: FiClock,
       iconColor: "text-amber-500",
       bg: "bg-amber-500/10",
@@ -70,13 +71,41 @@ function getActionMeta(action: string) {
     };
   }
   return {
-    title: "Pembaruan Status Artikel 📝",
+    title: t("actionDefault"),
     icon: FiFileText,
     iconColor: "text-primary",
     bg: "bg-primary/10",
     border: "border-primary/20",
     dot: "bg-primary",
   };
+}
+
+function getDisplayNote(action: string, rawNote: string | null, t: any): string | null {
+  if (!rawNote) {
+    if (action === "status_published" || action === "revision_approved") {
+      return t("approvedDefaultNote");
+    }
+    if (action === "status_rejected" || action === "revision_rejected") {
+      return t("rejectedDefaultNote");
+    }
+    return null;
+  }
+
+  // Jika note adalah string status sistem default, ganti dengan narasi terjemahan ramah pengguna
+  if (
+    rawNote.startsWith("Perubahan status") ||
+    rawNote.startsWith("Artikel dibuat") ||
+    rawNote.startsWith("Revisi dibuat")
+  ) {
+    if (action === "status_published" || action === "revision_approved") {
+      return t("approvedDefaultNote");
+    }
+    if (action === "status_rejected" || action === "revision_rejected") {
+      return t("rejectedDefaultNote");
+    }
+  }
+
+  return rawNote;
 }
 
 export default function StudentNotificationBell({
@@ -86,6 +115,8 @@ export default function StudentNotificationBell({
   isScrolled?: boolean;
   isHome?: boolean;
 }) {
+  const t = useTranslations("StudentArticleNotification");
+  const locale = useLocale();
   const supabase = createClient();
   const [notifications, setNotifications] = useState<StudentNotification[]>([]);
   const [open, setOpen] = useState(false);
@@ -271,14 +302,14 @@ export default function StudentNotificationBell({
                 <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                   <FiBell size={14} />
                 </div>
-                <span className="text-sm font-bold text-on-surface">Notifikasi Artikel</span>
+                <span className="text-sm font-bold text-on-surface">{t("title")}</span>
                 {unreadCount > 0 ? (
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse">
-                    {unreadCount} baru
+                    {t("newBadge", { count: unreadCount })}
                   </span>
                 ) : notifications.length > 0 ? (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                    Dibaca
+                    {t("readBadge")}
                   </span>
                 ) : null}
               </div>
@@ -291,10 +322,10 @@ export default function StudentNotificationBell({
                     ? "text-primary hover:text-primary/80 cursor-pointer hover:underline"
                     : "text-on-surface-variant/40 cursor-default"
                 }`}
-                title={unreadCount > 0 ? "Tandai semua dibaca" : "Semua notifikasi telah dibaca"}
+                title={unreadCount > 0 ? t("markAllReadTitle") : t("allReadTitle")}
               >
                 <FiCheck size={14} className={unreadCount === 0 ? "text-emerald-500" : ""} />
-                <span>{unreadCount > 0 ? "Tandai dibaca" : "Sudah dibaca"}</span>
+                <span>{unreadCount > 0 ? t("markAsRead") : t("alreadyRead")}</span>
               </button>
             </div>
 
@@ -305,17 +336,18 @@ export default function StudentNotificationBell({
                   <div className="w-12 h-12 rounded-2xl bg-surface-variant/40 flex items-center justify-center mb-2.5 text-primary">
                     <FiCheckCircle size={24} />
                   </div>
-                  <p className="text-sm font-semibold text-on-surface">Belum ada notifikasi baru</p>
+                  <p className="text-sm font-semibold text-on-surface">{t("emptyTitle")}</p>
                   <p className="text-xs text-on-surface-variant/80 mt-0.5 max-w-[260px] leading-relaxed">
-                    Notifikasi akan muncul saat artikel Anda disetujui untuk tayang atau memerlukan evaluasi/revisi admin.
+                    {t("emptyDesc")}
                   </p>
                 </div>
               ) : (
                 notifications.map((item) => {
-                  const meta = getActionMeta(item.action);
+                  const meta = getActionMeta(item.action, t);
                   const Icon = meta.icon;
                   const isItemUnread =
                     !lastViewed || new Date(item.created_at) > new Date(lastViewed);
+                  const noteToDisplay = getDisplayNote(item.action, item.note, t);
 
                   return (
                     <Link
@@ -339,7 +371,7 @@ export default function StudentNotificationBell({
                               {meta.title}
                             </span>
                             <span className="text-[10px] text-on-surface-variant/70 shrink-0">
-                              {timeAgo(item.created_at)}
+                              {timeAgo(item.created_at, locale, t)}
                             </span>
                           </div>
 
@@ -347,9 +379,9 @@ export default function StudentNotificationBell({
                             {item.article_title}
                           </p>
 
-                          {item.note && (
+                          {noteToDisplay && (
                             <p className="text-[11px] text-on-surface-variant/90 line-clamp-2 mt-1 bg-surface-variant/30 rounded-lg p-1.5 border border-outline-variant/20 italic">
-                              "{item.note}"
+                              "{noteToDisplay}"
                             </p>
                           )}
                         </div>
@@ -367,7 +399,7 @@ export default function StudentNotificationBell({
                 onClick={() => setOpen(false)}
                 className="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1.5 py-1"
               >
-                <span>Buka Dashboard Artikel Saya</span>
+                <span>{t("openDashboard")}</span>
                 <FiArrowRight size={13} />
               </Link>
             </div>

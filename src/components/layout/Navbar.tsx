@@ -222,7 +222,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                   <div className="hidden md:flex flex-col items-start max-w-[120px]">
                     <span className="text-xs font-bold truncate w-full block">{userProfile.full_name || 'User'}</span>
                     <span className={`text-[10px] uppercase font-bold tracking-wider ${isScrolled ? "text-primary" : isHome ? "text-white/70" : "text-primary"}`}>
-                      {userProfile.role || 'USER'}
+                      {userProfile.role === 'mahasiswa' ? t("roleMahasiswa") : userProfile.role === 'admin' ? t("roleAdmin") : (userProfile.role || 'USER')}
                     </span>
                   </div>
                   <FiChevronDown className={`transition-transform ${showProfileMenu ? 'rotate-180' : ''} text-xs sm:text-sm md:text-base`} />
@@ -242,7 +242,9 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                       <div className="px-4 py-3 border-b border-outline-variant/20 mb-2 md:hidden">
                         <p className="text-sm font-bold text-on-surface truncate">{userProfile.full_name || 'User'}</p>
                         <p className="text-xs text-on-surface-variant truncate">{userProfile.email}</p>
-                        <span className="inline-block mt-1 bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">{userProfile.role || 'USER'}</span>
+                        <span className="inline-block mt-1 bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">
+                          {userProfile.role === 'mahasiswa' ? t("roleMahasiswa") : userProfile.role === 'admin' ? t("roleAdmin") : (userProfile.role || 'USER')}
+                        </span>
                       </div>
                       <div className="hidden md:block px-4 py-3 border-b border-outline-variant/20 mb-2">
                         <p className="text-sm font-bold text-on-surface truncate">{userProfile.full_name}</p>
@@ -259,14 +261,14 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                           {t("dashboardAdmin")}
                         </NativeLink>
                       ) : (
-                        <NativeLink
+                        <Link
                           href="/dashboard/artikel"
                           onClick={() => setShowProfileMenu(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-on-surface hover:bg-primary/10 hover:text-primary transition-colors"
                         >
                           <FiEdit3 size={16} />
                           {t("myArticles")}
-                        </NativeLink>
+                        </Link>
                       )}
 
 

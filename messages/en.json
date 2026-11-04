@@ -29,7 +29,9 @@
     "cancel": "Cancel",
     "yesLogout": "Yes, Logout",
     "myArticles": "My Articles",
-    "articles": "Articles"
+    "articles": "Articles",
+    "roleMahasiswa": "Student",
+    "roleAdmin": "Administrator"
   },
   "Footer": {
     "description": "Becoming an innovative, collaborative, and proactive BEM pioneer in voicing aspirations and developing the potential of STMIK Tazkia students.",
@@ -1081,6 +1083,7 @@
     "coverDesc": "Upload high-resolution landscape image (max 2MB, JPG/PNG/WebP) or provide a direct image URL.",
     "coverRequired": "Required before submission",
     "typeBadge": "Type: Student Article",
+    "categoryArticle": "Article",
     "contentLabel": "Article Content",
     "tabWrite": "Write",
     "tabPreview": "Preview",
@@ -1203,6 +1206,29 @@
     "deleteModalDeleting": "Deleting...",
     "reviewModalTitle": "Admin Review & Feedback Note",
     "reviewModalClose": "Close",
-    "reviewModalEdit": "Edit & Revise Article"
+    "reviewModalEdit": "Edit & Revise Article",
+    "categoryArticle": "Article"
+  },
+  "StudentArticleNotification": {
+    "title": "Article Notifications",
+    "newBadge": "{count} new",
+    "readBadge": "Read",
+    "markAsRead": "Mark as read",
+    "alreadyRead": "All read",
+    "markAllReadTitle": "Mark all as read",
+    "allReadTitle": "All notifications are read",
+    "emptyTitle": "No new notifications",
+    "emptyDesc": "Notifications will appear when your article is approved for publication or requires admin review/revision.",
+    "openDashboard": "Open My Article Dashboard",
+    "actionApproved": "Article Approved & Published 🎉",
+    "actionRejected": "Article Needs Revision / Rejected ⚠️",
+    "actionPending": "Waiting for Admin Review ⏳",
+    "actionDefault": "Article Status Update 📝",
+    "approvedDefaultNote": "Your article has been approved and is now live for the public.",
+    "rejectedDefaultNote": "The article requires revision before it can be published.",
+    "timeJustNow": "Just now",
+    "timeMinutesAgo": "{minutes}m ago",
+    "timeHoursAgo": "{hours}h ago",
+    "timeDaysAgo": "{days}d ago"
   }
 }

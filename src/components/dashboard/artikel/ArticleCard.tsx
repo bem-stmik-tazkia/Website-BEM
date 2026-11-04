@@ -102,7 +102,7 @@ export default function ArticleCard({
               {article.category && (
                 <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md flex items-center gap-1">
                   <FiTag size={10} />
-                  <span>{article.category}</span>
+                  <span>{article.category === "Artikel" ? t("categoryArticle") : article.category}</span>
                 </span>
               )}
             </div>

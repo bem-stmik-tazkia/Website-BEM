@@ -29,7 +29,9 @@
     "cancel": "إلغاء",
     "yesLogout": "نعم، تسجيل الخروج",
     "myArticles": "مقالاتي",
-    "articles": "مقالات"
+    "articles": "مقالات",
+    "roleMahasiswa": "طالب",
+    "roleAdmin": "مسؤول"
   },
   "Footer": {
     "description": "نحن رواد BEM مبتكرون ومتعاونون واستباقيون في التعبير عن التطلعات وتطوير إمكانات طلاب STMIK Tazkia.",
@@ -1079,6 +1081,7 @@
     "coverDesc": "قم بتحميل صورة أفقية عالية الدقة (بحد أقصى 2 ميجابايت، JPG/PNG/WebP) أو أدخل رابط مباشر.",
     "coverRequired": "مطلوب قبل التقديم",
     "typeBadge": "النوع: مقال طلابي",
+    "categoryArticle": "مقال",
     "contentLabel": "محتوى المقال",
     "tabWrite": "كتابة",
     "tabPreview": "معاينة العرض",
@@ -1201,6 +1204,29 @@
     "deleteModalDeleting": "جارٍ الحذف...",
     "reviewModalTitle": "ملاحظات وتوجيهات المشرف",
     "reviewModalClose": "إغلاق",
-    "reviewModalEdit": "تعديل وتحسين المقال"
+    "reviewModalEdit": "تعديل وتحسين المقال",
+    "categoryArticle": "مقال"
+  },
+  "StudentArticleNotification": {
+    "title": "إشعارات المقالات",
+    "newBadge": "{count} جديد",
+    "readBadge": "مقروء",
+    "markAsRead": "تحديد كمقروء",
+    "alreadyRead": "تمت القراءة",
+    "markAllReadTitle": "تحديد الكل كمقروء",
+    "allReadTitle": "تمت قراءة جميع الإشعارات",
+    "emptyTitle": "لا توجد إشعارات جديدة",
+    "emptyDesc": "ستظهر الإشعارات عند الموافقة على مقالك للنشر أو عندما يتطلب مراجعة/تعديل من المسؤول.",
+    "openDashboard": "فتح لوحة تحكم مقالاتي",
+    "actionApproved": "تمت الموافقة على المقال ونشره 🎉",
+    "actionRejected": "المقال يحتاج إلى مراجعة / مرفوض ⚠️",
+    "actionPending": "في انتظار مراجعة المسؤول ⏳",
+    "actionDefault": "تحديث حالة المقال 📝",
+    "approvedDefaultNote": "تمت الموافقة على مقالك وهو متاح الآن للجمهور.",
+    "rejectedDefaultNote": "يتطلب المقال مراجعة تقييمية قبل أن يتم نشره.",
+    "timeJustNow": "الآن",
+    "timeMinutesAgo": "منذ {minutes} دقيقة",
+    "timeHoursAgo": "منذ {hours} ساعة",
+    "timeDaysAgo": "منذ {days} يوم"
   }
 }

@@ -29,7 +29,9 @@
     "cancel": "キャンセル",
     "yesLogout": "はい、ログアウトします",
     "myArticles": "私の記事",
-    "articles": "記事"
+    "articles": "記事",
+    "roleMahasiswa": "学生",
+    "roleAdmin": "管理者"
   },
   "Footer": {
     "description": "STMIK Tazkia の学生の可能性を開発し、願望を表明する上で革新的、協力的、そして積極的な BEM のパイオニアになること。",
@@ -1079,6 +1081,7 @@
     "coverDesc": "高解像度の横向き画像をアップロード（最大2MB、JPG/PNG/WebP）または直接画像URLを入力してください。",
     "coverRequired": "提出前に必須",
     "typeBadge": "タイプ：学生記事",
+    "categoryArticle": "記事",
     "contentLabel": "記事本文",
     "tabWrite": "執筆",
     "tabPreview": "プレビュー",
@@ -1201,6 +1204,29 @@
     "deleteModalDeleting": "削除中...",
     "reviewModalTitle": "管理者のレビュー＆フィードバックメモ",
     "reviewModalClose": "閉じる",
-    "reviewModalEdit": "編集して修正する"
+    "reviewModalEdit": "編集して修正する",
+    "categoryArticle": "記事"
+  },
+  "StudentArticleNotification": {
+    "title": "記事通知",
+    "newBadge": "{count}件の新規",
+    "readBadge": "既読",
+    "markAsRead": "既読にする",
+    "alreadyRead": "すべて既読",
+    "markAllReadTitle": "すべて既読にする",
+    "allReadTitle": "すべての通知が既読です",
+    "emptyTitle": "新しい通知はありません",
+    "emptyDesc": "記事の公開が承認された場合、または管理者のレビュー／修正が必要な場合に通知が表示されます。",
+    "openDashboard": "マイ記事ダッシュボードを開く",
+    "actionApproved": "記事が承認され公開されました 🎉",
+    "actionRejected": "記事が要修正／却下されました ⚠️",
+    "actionPending": "管理者レビュー待ち ⏳",
+    "actionDefault": "記事ステータスの更新 📝",
+    "approvedDefaultNote": "あなたの記事は承認され、現在一般公開されています。",
+    "rejectedDefaultNote": "公開前に記事の修正が必要です。",
+    "timeJustNow": "たった今",
+    "timeMinutesAgo": "{minutes}分前",
+    "timeHoursAgo": "{hours}時間前",
+    "timeDaysAgo": "{days}日前"
   }
 }

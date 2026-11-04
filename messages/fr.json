@@ -29,7 +29,9 @@
     "cancel": "Annuler",
     "yesLogout": "Oui, me déconnecter",
     "myArticles": "Mes Articles",
-    "articles": "Articles"
+    "articles": "Articles",
+    "roleMahasiswa": "Étudiant",
+    "roleAdmin": "Administrateur"
   },
   "Footer": {
     "description": "Devenir un pionnier du BEM innovant, collaboratif et proactif dans l'expression des aspirations et le développement du potentiel des étudiants de STMIK Tazkia.",
@@ -1079,6 +1081,7 @@
     "coverDesc": "Téléversez une image paysage haute résolution (max 2 Mo, JPG/PNG/WebP) ou entrez une URL directe.",
     "coverRequired": "Obligatoire avant soumission",
     "typeBadge": "Type : Article étudiant",
+    "categoryArticle": "Article",
     "contentLabel": "Contenu de l'article",
     "tabWrite": "Rédiger",
     "tabPreview": "Aperçu",
@@ -1201,6 +1204,29 @@
     "deleteModalDeleting": "Suppression...",
     "reviewModalTitle": "Commentaires et retours de l'administrateur",
     "reviewModalClose": "Fermer",
-    "reviewModalEdit": "Modifier et corriger l'article"
+    "reviewModalEdit": "Modifier et corriger l'article",
+    "categoryArticle": "Article"
+  },
+  "StudentArticleNotification": {
+    "title": "Notifications d'articles",
+    "newBadge": "{count} nouveau(x)",
+    "readBadge": "Lu",
+    "markAsRead": "Marquer comme lu",
+    "alreadyRead": "Déjà lu",
+    "markAllReadTitle": "Tout marquer comme lu",
+    "allReadTitle": "Toutes les notifications sont lues",
+    "emptyTitle": "Pas de nouvelles notifications",
+    "emptyDesc": "Les notifications apparaîtront lorsque votre article sera approuvé pour publication ou nécessitera une révision de l'administrateur.",
+    "openDashboard": "Ouvrir mon tableau de bord d'articles",
+    "actionApproved": "Article approuvé et publié 🎉",
+    "actionRejected": "Article rejeté / Révision requise ⚠️",
+    "actionPending": "En attente de révision de l'administrateur ⏳",
+    "actionDefault": "Mise à jour du statut de l'article 📝",
+    "approvedDefaultNote": "Votre article a été approuvé et est maintenant en ligne pour le public.",
+    "rejectedDefaultNote": "L'article nécessite une révision avant de pouvoir être publié.",
+    "timeJustNow": "À l'instant",
+    "timeMinutesAgo": "Il y a {minutes} min",
+    "timeHoursAgo": "Il y a {hours} h",
+    "timeDaysAgo": "Il y a {days} j"
   }
 }
