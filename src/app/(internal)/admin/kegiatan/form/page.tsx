@@ -440,9 +440,9 @@ export default function KegiatanFormPage() {
                       setFormErrors(prev => { const newErr = { ...prev }; delete newErr.image_url; return newErr; });
                     }
                   }}
+                  folder="kegiatan"
                   className="w-full"
                 />
-                <input type="text" name="image_url" value={formData.image_url || ""} onChange={handleChange} className={`w-full mt-2 bg-background border ${formErrors.image_url ? 'border-red-500 bg-red-50' : 'border-outline-variant/50'} rounded-xl px-3 py-2 text-xs focus:border-primary outline-none transition-colors`} placeholder="Atau paste link URL gambar" />
                 {formErrors.image_url && <p className="text-xs text-red-500 mt-1">{formErrors.image_url}</p>}
               </div>
 

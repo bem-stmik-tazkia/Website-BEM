@@ -366,24 +366,12 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
           <label className="text-sm font-bold text-on-surface">
             Gambar Banner <span className="text-red-500">*</span>
           </label>
-          <div className="flex flex-col sm:flex-row gap-4 items-start">
-            <ImageUpload
-              value={formData.image_url}
-              onChange={(url) => handleChange("image_url", url)}
-              className="shrink-0"
-            />
-            <div className="flex-1 space-y-2">
-              <p className="text-xs text-on-surface-variant">Atau paste URL gambar langsung:</p>
-              <input
-                type="text"
-                value={formData.image_url}
-                onChange={(e) => handleChange("image_url", e.target.value)}
-                className={`${inputClass("image_url")} text-xs`}
-                placeholder="https://..."
-              />
-              {formErrors.image_url && <p className="text-xs text-red-500 font-medium">{formErrors.image_url}</p>}
-            </div>
-          </div>
+          <ImageUpload
+            value={formData.image_url}
+            onChange={(url) => handleChange("image_url", url)}
+            folder="berita"
+          />
+          {formErrors.image_url && <p className="text-xs text-red-500 font-medium">{formErrors.image_url}</p>}
         </div>
 
         {/* Tags */}
