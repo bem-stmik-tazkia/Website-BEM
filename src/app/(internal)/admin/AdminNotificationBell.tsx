@@ -63,6 +63,10 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
         ? (localStorage.getItem("admin_saran_last_viewed") || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
+      const lastViewedArticles = typeof window !== "undefined"
+        ? (localStorage.getItem("admin_articles_last_viewed") || "")
+        : "";
+
       const [saranRes, artikelNotifs] = await Promise.all([
         supabase
           .from("saran_aduan")
@@ -73,6 +77,10 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
         fetchPendingArticlesForBell(),
       ]);
 
+      const filteredArticles = lastViewedArticles
+        ? (artikelNotifs || []).filter((a) => new Date(a.created_at) > new Date(lastViewedArticles))
+        : (artikelNotifs || []);
+
       const mappedSaran: Notification[] = (saranRes.data || []).map((s: any) => ({
         id: s.id,
         type: "saran",
@@ -82,7 +90,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
         href: "/admin/saran-aduan",
       }));
 
-      const combined = [...mappedSaran, ...artikelNotifs].sort(
+      const combined = [...mappedSaran, ...filteredArticles].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
@@ -142,6 +150,18 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
   const handleOpen = () => {
     setOpen((v) => !v);
     if (!open) setSeen(true);
+  };
+
+  const handleMarkAllRead = () => {
+    const nowIso = new Date().toISOString();
+    if (typeof window !== "undefined") {
+      localStorage.setItem("admin_saran_last_viewed", nowIso);
+      localStorage.setItem("admin_articles_last_viewed", nowIso);
+      window.dispatchEvent(new Event("saran_read"));
+    }
+    setNotifications([]);
+    setSeen(true);
+    prevCountRef.current = 0;
   };
 
   const unread = !seen && notifications.length > 0;
@@ -208,11 +228,25 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
                 <FiBell size={16} className="text-primary" />
                 <span className="text-sm font-bold text-on-surface">Notifikasi Masuk</span>
                 {count > 0 && (
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500 text-white">
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse">
                     {count}
                   </span>
                 )}
               </div>
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                disabled={count === 0}
+                className={`text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  count > 0
+                    ? "text-primary hover:text-primary/80 cursor-pointer hover:underline"
+                    : "text-on-surface-variant/40 cursor-default"
+                }`}
+                title={count > 0 ? "Tandai semua dibaca" : "Semua notifikasi telah dibaca"}
+              >
+                <FiCheck size={14} className={count === 0 ? "text-emerald-500" : ""} />
+                <span>{count > 0 ? "Tandai dibaca" : "Sudah dibaca"}</span>
+              </button>
             </div>
 
             {/* List */}
