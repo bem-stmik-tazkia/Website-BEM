@@ -11,7 +11,6 @@ import {
   FiFileText,
   FiCheck,
   FiArrowRight,
-  FiInfo,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -106,6 +105,12 @@ export default function StudentNotificationBell({
         .from("article_audit_log")
         .select("id, article_id, article_title, action, note, created_at")
         .eq("author_id", user.id)
+        .in("action", [
+          "status_published",
+          "revision_approved",
+          "status_rejected",
+          "revision_rejected",
+        ])
         .order("created_at", { ascending: false })
         .limit(20);
 
@@ -194,9 +199,6 @@ export default function StudentNotificationBell({
 
   const handleOpen = () => {
     setOpen((prev) => !prev);
-    if (!open) {
-      handleMarkAllRead();
-    }
   };
 
   const unreadItems = notifications.filter(
@@ -270,20 +272,29 @@ export default function StudentNotificationBell({
                   <FiBell size={14} />
                 </div>
                 <span className="text-sm font-bold text-on-surface">Notifikasi Artikel</span>
-                {notifications.length > 0 && (
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                    {notifications.length}
+                {unreadCount > 0 ? (
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse">
+                    {unreadCount} baru
                   </span>
-                )}
+                ) : notifications.length > 0 ? (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    Dibaca
+                  </span>
+                ) : null}
               </div>
               <button
                 type="button"
                 onClick={handleMarkAllRead}
-                className="text-xs text-on-surface-variant hover:text-primary font-medium flex items-center gap-1 transition-colors cursor-pointer"
-                title="Tandai semua dibaca"
+                disabled={unreadCount === 0}
+                className={`text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  unreadCount > 0
+                    ? "text-primary hover:text-primary/80 cursor-pointer hover:underline"
+                    : "text-on-surface-variant/40 cursor-default"
+                }`}
+                title={unreadCount > 0 ? "Tandai semua dibaca" : "Semua notifikasi telah dibaca"}
               >
-                <FiCheck size={13} />
-                <span>Tandai dibaca</span>
+                <FiCheck size={14} className={unreadCount === 0 ? "text-emerald-500" : ""} />
+                <span>{unreadCount > 0 ? "Tandai dibaca" : "Sudah dibaca"}</span>
               </button>
             </div>
 
@@ -294,9 +305,9 @@ export default function StudentNotificationBell({
                   <div className="w-12 h-12 rounded-2xl bg-surface-variant/40 flex items-center justify-center mb-2.5 text-primary">
                     <FiCheckCircle size={24} />
                   </div>
-                  <p className="text-sm font-semibold text-on-surface">Belum ada notifikasi</p>
-                  <p className="text-xs text-on-surface-variant/80 mt-0.5">
-                    Pemberitahuan persetujuan atau catatan moderasi artikel Anda akan muncul di sini.
+                  <p className="text-sm font-semibold text-on-surface">Belum ada notifikasi baru</p>
+                  <p className="text-xs text-on-surface-variant/80 mt-0.5 max-w-[260px] leading-relaxed">
+                    Notifikasi akan muncul saat artikel Anda disetujui untuk tayang atau memerlukan evaluasi/revisi admin.
                   </p>
                 </div>
               ) : (
