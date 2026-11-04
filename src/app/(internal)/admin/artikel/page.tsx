@@ -45,6 +45,7 @@ export default function AdminArtikelPage() {
   const loadData = useCallback(async () => {
     try {
       // 1. Ambil artikel lengkap beserta profil penulis
+      let loadedArticles: ModerationArticle[] = [];
       const { data: artData, error: artError } = await supabase
         .from("articles")
         .select(`
@@ -54,12 +55,32 @@ export default function AdminArtikelPage() {
         .order("created_at", { ascending: false });
 
       if (artError) {
-        console.error("[AdminArtikel] Error loading articles:", artError);
+        console.warn("[AdminArtikel] Join query error, falling back to manual join:", artError);
+        const { data: rawArticles } = await supabase
+          .from("articles")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (rawArticles && rawArticles.length > 0) {
+          const authorIds = Array.from(new Set(rawArticles.map((a: any) => a.author_id).filter(Boolean)));
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, full_name, email, avatar_url")
+            .in("id", authorIds);
+
+          const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+          loadedArticles = rawArticles.map((a: any) => ({
+            ...a,
+            author: profileMap.get(a.author_id) || null,
+          }));
+        }
       } else {
-        setArticles(artData || []);
+        loadedArticles = artData || [];
       }
+      setArticles(loadedArticles);
 
       // 2. Ambil revisi pending beserta profil penulis dan artikel induknya
+      let loadedRevisions: ModerationRevision[] = [];
       const { data: revData, error: revError } = await supabase
         .from("article_revisions")
         .select(`
@@ -70,10 +91,34 @@ export default function AdminArtikelPage() {
         .order("created_at", { ascending: false });
 
       if (revError) {
-        console.error("[AdminArtikel] Error loading revisions:", revError);
+        console.warn("[AdminArtikel] Revisions join error, falling back:", revError);
+        const { data: rawRevs } = await supabase
+          .from("article_revisions")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (rawRevs && rawRevs.length > 0) {
+          const artIds = Array.from(new Set(rawRevs.map((r: any) => r.article_id).filter(Boolean)));
+          const authorIds = Array.from(new Set(rawRevs.map((r: any) => r.author_id).filter(Boolean)));
+
+          const [artsRes, profsRes] = await Promise.all([
+            supabase.from("articles").select("*").in("id", artIds),
+            supabase.from("profiles").select("id, full_name, email, avatar_url").in("id", authorIds),
+          ]);
+
+          const artMap = new Map((artsRes.data || []).map((a: any) => [a.id, a]));
+          const profMap = new Map((profsRes.data || []).map((p: any) => [p.id, p]));
+
+          loadedRevisions = rawRevs.map((r: any) => ({
+            ...r,
+            article: artMap.get(r.article_id) || null,
+            author: profMap.get(r.author_id) || null,
+          }));
+        }
       } else {
-        setRevisions(revData || []);
+        loadedRevisions = revData || [];
       }
+      setRevisions(loadedRevisions);
     } catch (err) {
       console.error("[AdminArtikel] Unexpected error loading data:", err);
     } finally {
@@ -172,7 +217,7 @@ export default function AdminArtikelPage() {
 
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
           <Link
-            href="/dashboard/artikel/baru"
+            href="/dashboard/artikel/baru?from=admin"
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-primary/20 cursor-pointer"
           >
             <FiPlus size={16} />

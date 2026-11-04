@@ -115,7 +115,7 @@ export default async function AdminBeritaPage() {
                     </td>
                     <td className="p-4">
                       <span className="bg-surface-variant/30 text-on-surface-variant px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider">
-                        {item.category}
+                        {item.category === "Artikel" ? "Berita" : item.category}
                       </span>
                     </td>
                     <td className="p-4 text-center">

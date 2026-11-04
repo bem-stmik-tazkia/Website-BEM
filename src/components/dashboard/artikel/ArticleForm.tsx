@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, Link } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   FiArrowLeft,
@@ -75,8 +76,14 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
   const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const searchParams = useSearchParams();
+  const fromParam = searchParams ? searchParams.get("from") : null;
+  const isFromAdmin = fromParam === "admin" || isAdmin;
+  const returnUrl = isFromAdmin ? "/admin/artikel" : "/dashboard/artikel";
 
   // State untuk popup konfirmasi draf belum disimpan
   const [pendingTargetUrl, setPendingTargetUrl] = useState<string | null>(null);
@@ -137,6 +144,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
   // Cek apakah form memiliki data tulisan yang belum disimpan (Dirty state)
   const isCoverValid = coverUrl.trim().length > 0;
   const isDirty = (
+    !isSubmitted &&
     !isSubmitting &&
     (
       title.trim() !== (initialData?.title || "").trim() ||
@@ -188,13 +196,13 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
     const handlePopState = (e: PopStateEvent) => {
       e.preventDefault();
       window.history.pushState(null, "", window.location.href);
-      setPendingTargetUrl("/dashboard/artikel");
+      setPendingTargetUrl(returnUrl);
       setShowLeaveModal(true);
     };
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [isDirty, isSubmitting]);
+  }, [isDirty, isSubmitting, returnUrl]);
 
   const handleStay = () => {
     setPendingTargetUrl(null);
@@ -220,7 +228,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         window.location.href = pendingTargetUrl;
       }
     } else {
-      router.push("/dashboard/artikel");
+      router.push(returnUrl);
     }
   };
 
@@ -332,10 +340,10 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           }).catch((err) => console.warn("[Telegram] Gagal kirim notif revisi:", err));
         }
 
+        setIsSubmitted(true);
         try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
         toast(targetStatus === "pending" ? t("toastRevisionSubmitted") : t("toastDraftSaved"), "success");
-        router.push("/dashboard/artikel");
-        router.refresh();
+        router.push(returnUrl);
       } else if (isEdit && initialData) {
         // Alur Update Artikel Draf atau Rejected
         const updatePayload: Record<string, any> = {
@@ -380,10 +388,10 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           }).catch((err) => console.warn("[Telegram] Gagal kirim notif pengajuan:", err));
         }
 
+        setIsSubmitted(true);
         try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
         toast(targetStatus === "published" ? t("toastDirectPublished") : targetStatus === "pending" ? t("toastSubmitted") : t("toastDraftSaved"), "success");
-        router.push(targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel");
-        router.refresh();
+        router.push(isFromAdmin ? "/admin/artikel" : (targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel"));
       } else {
         // Alur Buat Artikel Baru
         const baseSlug = slugify(title);
@@ -431,11 +439,14 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           }).catch((err) => console.warn("[Telegram] Gagal kirim notif terbit admin:", err));
         }
 
+        setIsSubmitted(true);
+        try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
         toast(targetStatus === "published" ? t("toastDirectPublished") : targetStatus === "pending" ? t("toastSubmitted") : t("toastDraftSaved"), "success");
-        router.push(targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel");
-        router.refresh();
+        router.push(isFromAdmin ? "/admin/artikel" : (targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel"));
       }
     } catch (err: any) {
+      setIsSubmitting(false);
+      setIsSubmitted(false);
       console.error("[ArticleForm] Submit error:", err);
       const msg = err.message || "Terjadi kesalahan saat menyimpan artikel.";
       // Tangani pesan kuota dari PostgreSQL trigger
@@ -451,8 +462,6 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         setErrorMessage(msg);
       }
       toast("Gagal memproses artikel. Silakan periksa pesan kesalahan.", "error");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -464,16 +473,16 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           type="button"
           onClick={() => {
             if (isDirty) {
-              setPendingTargetUrl("/dashboard/artikel");
+              setPendingTargetUrl(returnUrl);
               setShowLeaveModal(true);
             } else {
-              router.push("/dashboard/artikel");
+              router.push(returnUrl);
             }
           }}
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
         >
           <FiArrowLeft size={16} />
-          <span>{t("backToDashboard")}</span>
+          <span>{isFromAdmin ? "Kembali ke Moderasi Artikel" : t("backToDashboard")}</span>
         </button>
 
         <div className="flex items-center gap-3">
@@ -759,10 +768,10 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             type="button"
             onClick={() => {
               if (isDirty) {
-                setPendingTargetUrl("/dashboard/artikel");
+                setPendingTargetUrl(returnUrl);
                 setShowLeaveModal(true);
               } else {
-                router.push("/dashboard/artikel");
+                router.push(returnUrl);
               }
             }}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-outline-variant/40 text-on-surface hover:bg-surface-variant/30 text-xs sm:text-sm font-bold transition-colors text-center cursor-pointer"

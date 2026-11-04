@@ -52,6 +52,7 @@ export const getCachedBerita = async () => {
 
   const normalizedBerita = (beritaData || []).map((b: any) => ({
     ...b,
+    category: b.category === 'Artikel' ? 'Berita' : (b.category || 'Berita'),
     type: 'berita',
     detailUrl: `/berita/${b.slug}`,
   }));

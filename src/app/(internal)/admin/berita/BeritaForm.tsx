@@ -23,7 +23,7 @@ const QUILL_MODULES = {
   ],
 };
 
-const CATEGORIES = ["Berita", "Artikel", "Kampus"];
+const CATEGORIES = ["Berita", "Kampus", "Pengumuman"];
 
 function generateSlug(title: string) {
   return title
@@ -47,7 +47,7 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     slug: initialData?.slug || "",
-    category: initialData?.category || "Berita",
+    category: (initialData?.category === "Artikel" ? "Berita" : initialData?.category) || "Berita",
     image_url: initialData?.image_url || "",
     tags: initialData?.tags?.join(", ") || "",
     excerpt: initialData?.excerpt || "",
@@ -349,7 +349,7 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
               Kategori <span className="text-red-500">*</span>
             </label>
             <select
-              value={formData.category}
+              value={formData.category === "Artikel" ? "Berita" : formData.category}
               onChange={(e) => handleChange("category", e.target.value)}
               className={inputClass("category")}
             >

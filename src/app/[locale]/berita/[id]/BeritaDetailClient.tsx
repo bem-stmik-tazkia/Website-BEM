@@ -159,6 +159,7 @@ export default function BeritaDetailPage() {
         // Proses HTML untuk memastikan formatting tampil dengan benar
         const processedData = {
           ...detailData,
+          category: detailData.category === 'Artikel' ? 'Berita' : detailData.category,
           content: processQuillHtml(detailData.content || '')
         };
         setNewsDetail(processedData);
