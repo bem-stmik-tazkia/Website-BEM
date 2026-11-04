@@ -387,7 +387,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         setIsSubmitted(true);
         try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
         toast(targetStatus === "published" ? t("toastDirectPublished") : targetStatus === "pending" ? t("toastSubmitted") : t("toastDraftSaved"), "success");
-        navigateTo(isFromAdmin ? "/admin/artikel" : (targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel"));
+        navigateTo(isFromAdmin ? (targetStatus === "draft" ? "/admin/artikel?tab=draft" : "/admin/artikel") : (targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel"));
       } else {
         // Alur Buat Artikel Baru
         const baseSlug = slugify(title);
@@ -438,7 +438,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         setIsSubmitted(true);
         try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch {}
         toast(targetStatus === "published" ? t("toastDirectPublished") : targetStatus === "pending" ? t("toastSubmitted") : t("toastDraftSaved"), "success");
-        navigateTo(isFromAdmin ? "/admin/artikel" : (targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel"));
+        navigateTo(isFromAdmin ? (targetStatus === "draft" ? "/admin/artikel?tab=draft" : "/admin/artikel") : (targetStatus === "published" ? "/admin/artikel" : "/dashboard/artikel"));
       }
     } catch (err: any) {
       setIsSubmitting(false);

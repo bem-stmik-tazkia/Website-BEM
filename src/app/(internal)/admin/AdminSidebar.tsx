@@ -27,6 +27,7 @@ export default function AdminSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const [unreadSaranCount, setUnreadSaranCount] = useState(0);
+  const [pendingModerationCount, setPendingModerationCount] = useState(0);
   const supabase = createClient();
 
   useEffect(() => {
@@ -51,7 +52,21 @@ export default function AdminSidebar() {
       }
     };
 
+    const fetchPendingModeration = async () => {
+      try {
+        const [artsRes, revsRes] = await Promise.all([
+          supabase.from("articles").select("*", { count: "exact", head: true }).eq("status", "pending"),
+          supabase.from("article_revisions").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        ]);
+        const total = (artsRes.count || 0) + (revsRes.count || 0);
+        setPendingModerationCount(total);
+      } catch (err) {
+        // Ignore network errors
+      }
+    };
+
     fetchUnreadSaran();
+    fetchPendingModeration();
 
     const channelSaran = supabase.channel(`saran_sb_${Date.now()}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'saran_aduan' }, () => {
@@ -59,14 +74,30 @@ export default function AdminSidebar() {
       })
       .subscribe();
 
+    const channelModeration = supabase.channel(`moderation_sb_${Date.now()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
+        fetchPendingModeration();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'article_revisions' }, () => {
+        fetchPendingModeration();
+      })
+      .subscribe();
+
     const handleSaranRead = () => {
       fetchUnreadSaran();
     };
+    const handleModerationUpdate = () => {
+      fetchPendingModeration();
+    };
+
     window.addEventListener("saran_read", handleSaranRead);
+    window.addEventListener("articles_moderation_updated", handleModerationUpdate);
 
     return () => {
       supabase.removeChannel(channelSaran);
+      supabase.removeChannel(channelModeration);
       window.removeEventListener("saran_read", handleSaranRead);
+      window.removeEventListener("articles_moderation_updated", handleModerationUpdate);
     };
   }, [supabase]);
 
@@ -141,11 +172,21 @@ export default function AdminSidebar() {
                         {unreadSaranCount}
                       </span>
                     )}
+
+                    {item.name === "Moderasi Artikel" && pendingModerationCount > 0 && (
+                      <span className="bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                        {pendingModerationCount}
+                      </span>
+                    )}
                   </span>
                 )}
 
                 {isCollapsed && item.name === "Kotak Saran" && unreadSaranCount > 0 && (
                   <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-purple-600 rounded-full border-2 border-[#f8fafc]"></span>
+                )}
+
+                {isCollapsed && item.name === "Moderasi Artikel" && pendingModerationCount > 0 && (
+                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-[#f8fafc]"></span>
                 )}
               </Link>
             );

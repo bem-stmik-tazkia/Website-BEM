@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   FiX,
+  FiEdit2,
   FiCheckCircle,
   FiXCircle,
   FiAlertTriangle,
@@ -413,6 +415,29 @@ export default function ArticleModerationModal({
           </button>
 
           <div className="flex flex-wrap items-center gap-2">
+            {/* Tombol Aksi jika artikel masih DRAF */}
+            {!isRevisionItem && item.status === "draft" && (
+              <>
+                <Link
+                  href={`/dashboard/artikel/${item.id}/edit?from=admin`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-variant hover:bg-surface-variant/80 text-on-surface border border-outline-variant/40 text-xs font-bold transition-all cursor-pointer"
+                >
+                  <FiEdit2 size={14} className="text-primary" />
+                  <span>Edit Draf Ini</span>
+                </Link>
+
+                <button
+                  type="button"
+                  disabled={isProcessing}
+                  onClick={handleApprove}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  <FiCheckCircle size={15} />
+                  <span>{isProcessing ? "Memproses..." : "Terbitkan Sekarang"}</span>
+                </button>
+              </>
+            )}
+
             {/* Tombol Unpublish jika artikel sudah tayang */}
             {!isRevisionItem && item.status === "published" && (
               <button

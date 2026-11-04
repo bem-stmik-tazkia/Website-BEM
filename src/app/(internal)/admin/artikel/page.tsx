@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   FiBookOpen,
   FiClock,
@@ -13,18 +14,31 @@ import {
   FiLayers,
   FiUser,
   FiPlus,
+  FiEdit2,
+  FiTrash2,
+  FiFileText,
 } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
+import { useToast } from "@/components/ui/Toast";
 import ArticleModerationModal, {
   ModerationArticle,
   ModerationRevision,
 } from "@/components/admin/artikel/ArticleModerationModal";
-import { fetchAdminArticlesData } from "./actions";
+import { fetchAdminArticlesData, deleteArticleAdmin } from "./actions";
+
+type TabType = "pending" | "revisions" | "draft" | "published" | "rejected" | "all";
 
 export default function AdminArtikelPage() {
   const supabase = createClient();
+  const searchParams = useSearchParams();
+  const initialTabParam = searchParams?.get("tab") as TabType | null;
+  const { toast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<"pending" | "revisions" | "all">("pending");
+  const [activeTab, setActiveTab] = useState<TabType>(
+    initialTabParam && ["pending", "revisions", "draft", "published", "rejected", "all"].includes(initialTabParam)
+      ? initialTabParam
+      : "pending"
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -32,6 +46,7 @@ export default function AdminArtikelPage() {
   const [revisions, setRevisions] = useState<ModerationRevision[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Modal review state
   const [selectedArticle, setSelectedArticle] = useState<ModerationArticle | null>(null);
@@ -46,6 +61,9 @@ export default function AdminArtikelPage() {
       }
       setArticles(res.articles || []);
       setRevisions(res.revisions || []);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("articles_moderation_updated"));
+      }
     } catch (err) {
       console.error("[AdminArtikel] Unexpected error loading data:", err);
     } finally {
@@ -73,6 +91,14 @@ export default function AdminArtikelPage() {
     };
   }, [loadData, supabase]);
 
+  // Update tab jika URL search param berubah
+  useEffect(() => {
+    const tabParam = searchParams?.get("tab") as TabType | null;
+    if (tabParam && ["pending", "revisions", "draft", "published", "rejected", "all"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
   // Statistik
   const pendingCount = useMemo(
     () => articles.filter((a) => a.status === "pending").length,
@@ -90,11 +116,19 @@ export default function AdminArtikelPage() {
     () => articles.filter((a) => a.status === "rejected").length,
     [articles]
   );
+  const draftCount = useMemo(
+    () => articles.filter((a) => a.status === "draft").length,
+    [articles]
+  );
 
   // Filter List Artikel
   const filteredArticles = useMemo(() => {
     return articles.filter((a) => {
       if (activeTab === "pending" && a.status !== "pending") return false;
+      if (activeTab === "published" && a.status !== "published") return false;
+      if (activeTab === "rejected" && a.status !== "rejected") return false;
+      if (activeTab === "draft" && a.status !== "draft") return false;
+
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesTitle = a.title.toLowerCase().includes(q);
@@ -128,6 +162,23 @@ export default function AdminArtikelPage() {
     loadData();
   };
 
+  const handleDeleteArticle = async (id: string, title: string) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus artikel "${title}" secara permanen?`)) {
+      return;
+    }
+    try {
+      setDeletingId(id);
+      const res = await deleteArticleAdmin(id);
+      if (res.error) throw new Error(res.error);
+      toast("Artikel berhasil dihapus.", "success");
+      loadData();
+    } catch (err: any) {
+      toast(err.message || "Gagal menghapus artikel.", "error");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Halaman */}
@@ -155,23 +206,24 @@ export default function AdminArtikelPage() {
             type="button"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface border border-outline-variant/40 hover:bg-surface-variant/30 text-xs sm:text-sm font-semibold transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-primary hover:border-primary/40 text-xs font-semibold transition-all shadow-sm cursor-pointer disabled:opacity-50"
+            title="Muat Ulang Data"
           >
-            <FiRefreshCw className={`text-primary ${refreshing ? "animate-spin" : ""}`} />
-            <span>{refreshing ? "Menyinkronkan..." : "Segarkan"}</span>
+            <FiRefreshCw size={14} className={refreshing ? "animate-spin text-primary" : ""} />
+            <span className="hidden sm:inline">Segarkan</span>
           </button>
         </div>
       </div>
 
-      {/* Grid Statistik Counter */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        {/* Antrean Baru */}
+      {/* Statistik Cards Grid (5 Status Lengkap) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        {/* Antrean Artikel Baru */}
         <div
           onClick={() => setActiveTab("pending")}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+          className={`p-4 rounded-2xl bg-surface border transition-all cursor-pointer ${
             activeTab === "pending"
-              ? "bg-amber-500/10 border-amber-500/50 shadow-md"
-              : "bg-surface border-outline-variant/30 hover:border-amber-500/30"
+              ? "border-amber-500 shadow-sm ring-2 ring-amber-500/20 bg-amber-500/[0.02]"
+              : "border-outline-variant/30 hover:border-amber-500/40"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -184,13 +236,13 @@ export default function AdminArtikelPage() {
           <p className="text-[11px] text-on-surface-variant mt-0.5">Perlu dimoderasi</p>
         </div>
 
-        {/* Antrean Revisi */}
+        {/* Antrean Revisi Tayang */}
         <div
           onClick={() => setActiveTab("revisions")}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+          className={`p-4 rounded-2xl bg-surface border transition-all cursor-pointer ${
             activeTab === "revisions"
-              ? "bg-purple-500/10 border-purple-500/50 shadow-md"
-              : "bg-surface border-outline-variant/30 hover:border-purple-500/30"
+              ? "border-purple-500 shadow-sm ring-2 ring-purple-500/20 bg-purple-500/[0.02]"
+              : "border-outline-variant/30 hover:border-purple-500/40"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -205,8 +257,12 @@ export default function AdminArtikelPage() {
 
         {/* Total Tayang */}
         <div
-          onClick={() => setActiveTab("all")}
-          className="p-4 rounded-2xl bg-surface border border-outline-variant/30 hover:border-emerald-500/30 transition-all cursor-pointer"
+          onClick={() => setActiveTab("published")}
+          className={`p-4 rounded-2xl bg-surface border transition-all cursor-pointer ${
+            activeTab === "published"
+              ? "border-emerald-500 shadow-sm ring-2 ring-emerald-500/20 bg-emerald-500/[0.02]"
+              : "border-outline-variant/30 hover:border-emerald-500/40"
+          }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-emerald-600">Artikel Tayang</span>
@@ -218,10 +274,14 @@ export default function AdminArtikelPage() {
           <p className="text-[11px] text-on-surface-variant mt-0.5">Dapat dibaca publik</p>
         </div>
 
-        {/* Ditolak */}
+        {/* Ditolak / Perlu Revisi */}
         <div
-          onClick={() => setActiveTab("all")}
-          className="p-4 rounded-2xl bg-surface border border-outline-variant/30 hover:border-rose-500/30 transition-all cursor-pointer"
+          onClick={() => setActiveTab("rejected")}
+          className={`p-4 rounded-2xl bg-surface border transition-all cursor-pointer ${
+            activeTab === "rejected"
+              ? "border-rose-500 shadow-sm ring-2 ring-rose-500/20 bg-rose-500/[0.02]"
+              : "border-outline-variant/30 hover:border-rose-500/40"
+          }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-rose-600">Perlu Revisi / Tolak</span>
@@ -232,17 +292,36 @@ export default function AdminArtikelPage() {
           <p className="text-2xl sm:text-3xl font-black text-on-surface mt-2">{rejectedCount}</p>
           <p className="text-[11px] text-on-surface-variant mt-0.5">Dikembalikan ke penulis</p>
         </div>
+
+        {/* Draf Artikel */}
+        <div
+          onClick={() => setActiveTab("draft")}
+          className={`p-4 rounded-2xl bg-surface border transition-all cursor-pointer ${
+            activeTab === "draft"
+              ? "border-slate-500 shadow-sm ring-2 ring-slate-500/20 bg-slate-500/[0.02]"
+              : "border-outline-variant/30 hover:border-slate-500/40"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Draf Artikel</span>
+            <span className="p-2 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-400">
+              <FiFileText size={16} />
+            </span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-black text-on-surface mt-2">{draftCount}</p>
+          <p className="text-[11px] text-on-surface-variant mt-0.5">Draf belum diajukan</p>
+        </div>
       </div>
 
       {/* Tabs & Controls Bar */}
       <div className="bg-surface border border-outline-variant/30 rounded-2xl p-4 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Filter Tabs */}
-          <div className="flex items-center gap-1.5 bg-surface-variant/30 p-1 rounded-xl">
+          <div className="flex items-center flex-wrap gap-1.5 bg-surface-variant/30 p-1 rounded-xl">
             <button
               type="button"
               onClick={() => setActiveTab("pending")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === "pending"
                   ? "bg-surface text-amber-600 shadow-sm"
                   : "text-on-surface-variant hover:text-on-surface"
@@ -259,7 +338,7 @@ export default function AdminArtikelPage() {
             <button
               type="button"
               onClick={() => setActiveTab("revisions")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === "revisions"
                   ? "bg-surface text-purple-600 shadow-sm"
                   : "text-on-surface-variant hover:text-on-surface"
@@ -275,14 +354,65 @@ export default function AdminArtikelPage() {
 
             <button
               type="button"
+              onClick={() => setActiveTab("draft")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === "draft"
+                  ? "bg-surface text-slate-700 dark:text-slate-200 shadow-sm"
+                  : "text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              <span>Draf</span>
+              {draftCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-500 text-white text-[10px]">
+                  {draftCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("published")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === "published"
+                  ? "bg-surface text-emerald-600 shadow-sm"
+                  : "text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              <span>Tayang</span>
+              {publishedCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-600 text-[10px]">
+                  {publishedCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("rejected")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === "rejected"
+                  ? "bg-surface text-rose-600 shadow-sm"
+                  : "text-on-surface-variant hover:text-on-surface"
+              }`}
+            >
+              <span>Perlu Revisi</span>
+              {rejectedCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-600 text-[10px]">
+                  {rejectedCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab("all")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "all"
                   ? "bg-surface text-primary shadow-sm"
                   : "text-on-surface-variant hover:text-on-surface"
               }`}
             >
-              Semua Artikel ({articles.length})
+              Semua ({articles.length})
             </button>
           </div>
 
@@ -360,19 +490,29 @@ export default function AdminArtikelPage() {
           </div>
         )
       ) : (
-        /* Tab Artikel Baru / Semua */
+        /* Tab Artikel Baru / Draf / Tayang / Perlu Revisi / Semua */
         filteredArticles.length === 0 ? (
           <div className="bg-surface border border-outline-variant/30 rounded-2xl p-12 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 mx-auto flex items-center justify-center mb-3">
+            <div className="w-12 h-12 rounded-2xl bg-surface-variant/40 text-on-surface-variant mx-auto flex items-center justify-center mb-3">
               <FiCheckCircle size={24} />
             </div>
             <h3 className="font-bold text-sm text-on-surface">
-              {activeTab === "pending" ? "Antrean Moderasi Bersih!" : "Tidak Ada Artikel Ditemukan"}
+              {activeTab === "pending"
+                ? "Antrean Moderasi Bersih!"
+                : activeTab === "draft"
+                ? "Belum Ada Draf Artikel"
+                : activeTab === "published"
+                ? "Belum Ada Artikel Tayang"
+                : activeTab === "rejected"
+                ? "Tidak Ada Artikel Perlu Revisi"
+                : "Tidak Ada Artikel Ditemukan"}
             </h3>
             <p className="text-xs text-on-surface-variant mt-1">
               {activeTab === "pending"
                 ? "Tidak ada artikel baru yang menunggu persetujuan admin."
-                : "Coba sesuaikan kata kunci pencarian Anda."}
+                : activeTab === "draft"
+                ? "Anda dapat menulis artikel baru atau menyimpan draf tulisan."
+                : "Coba sesuaikan kata kunci pencarian atau tab filter Anda."}
             </p>
           </div>
         ) : (
@@ -381,6 +521,8 @@ export default function AdminArtikelPage() {
               const isPending = article.status === "pending";
               const isPublished = article.status === "published";
               const isRejected = article.status === "rejected";
+              const isDraft = article.status === "draft";
+              const isDeleting = deletingId === article.id;
 
               return (
                 <div
@@ -409,10 +551,10 @@ export default function AdminArtikelPage() {
                               ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
                               : isRejected
                               ? "bg-rose-500/10 text-rose-600 border border-rose-500/20"
-                              : "bg-surface-variant/40 text-on-surface-variant"
+                              : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20"
                           }`}
                         >
-                          {article.status}
+                          {article.status === "draft" ? "DRAF" : article.status}
                         </span>
 
                         {article.category && (
@@ -446,11 +588,41 @@ export default function AdminArtikelPage() {
                   </div>
 
                   {/* Right Actions */}
-                  <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-outline-variant/20">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-outline-variant/20">
+                    {/* Tombol Edit untuk Draf / Penulis */}
+                    {(isDraft || isRejected) && (
+                      <Link
+                        href={`/dashboard/artikel/${article.id}/edit?from=admin`}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-surface-variant/40 hover:bg-surface-variant text-on-surface border border-outline-variant/40 text-xs font-semibold transition-all cursor-pointer"
+                        title="Edit / Lanjutkan Tulisan"
+                      >
+                        <FiEdit2 size={13} className="text-primary" />
+                        <span>Edit</span>
+                      </Link>
+                    )}
+
+                    {/* Tombol Hapus untuk Draf */}
+                    {isDraft && (
+                      <button
+                        type="button"
+                        disabled={isDeleting}
+                        onClick={() => handleDeleteArticle(article.id, article.title)}
+                        className="inline-flex items-center justify-center p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 text-xs transition-all cursor-pointer disabled:opacity-50"
+                        title="Hapus Draf"
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                    )}
+
+                    {/* Tombol Utama (Tinjau / Lihat Konten) */}
                     <button
                       type="button"
                       onClick={() => setSelectedArticle(article)}
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
+                        isPending
+                          ? "bg-primary hover:bg-primary/90 text-white shadow-primary/20"
+                          : "bg-surface-variant/50 hover:bg-surface-variant text-on-surface border border-outline-variant/30"
+                      }`}
                     >
                       <FiEye size={13} />
                       <span>{isPending ? "Tinjau & Putuskan" : "Lihat Konten"}</span>
@@ -485,4 +657,3 @@ export default function AdminArtikelPage() {
     </div>
   );
 }
-

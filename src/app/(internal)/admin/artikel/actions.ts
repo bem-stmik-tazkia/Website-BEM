@@ -147,3 +147,15 @@ export async function fetchPendingArticlesForBell(): Promise<AdminPendingArticle
   }
 }
 
+export async function deleteArticleAdmin(articleId: string): Promise<{ success?: boolean; error?: string }> {
+  try {
+    await requireAdmin();
+    const serviceClient = getServiceRoleClient();
+    const { error } = await serviceClient.from("articles").delete().eq("id", articleId);
+    if (error) throw error;
+    return { success: true };
+  } catch (err: any) {
+    console.error("[actions:deleteArticleAdmin] Error:", err);
+    return { error: err.message || "Gagal menghapus artikel" };
+  }
+}
