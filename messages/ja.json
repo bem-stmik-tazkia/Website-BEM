@@ -1235,6 +1235,9 @@
     "timeJustNow": "たった今",
     "timeMinutesAgo": "{minutes}分前",
     "timeHoursAgo": "{hours}時間前",
-    "timeDaysAgo": "{days}日前"
+    "timeDaysAgo": "{days}日前",
+    "clearAll": "すべて消去",
+    "clearAllTitle": "すべての通知を消去",
+    "dismissTitle": "この通知を削除"
   }
 }

@@ -1235,6 +1235,9 @@
     "timeJustNow": "الآن",
     "timeMinutesAgo": "منذ {minutes} دقيقة",
     "timeHoursAgo": "منذ {hours} ساعة",
-    "timeDaysAgo": "منذ {days} يوم"
+    "timeDaysAgo": "منذ {days} يوم",
+    "clearAll": "مسح الكل",
+    "clearAllTitle": "مسح جميع الإشعارات",
+    "dismissTitle": "حذف هذا الإشعار"
   }
 }

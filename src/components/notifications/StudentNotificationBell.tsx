@@ -12,6 +12,8 @@ import {
   FiFileText,
   FiCheck,
   FiArrowRight,
+  FiTrash2,
+  FiX,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -121,6 +123,8 @@ export default function StudentNotificationBell({
   const [notifications, setNotifications] = useState<StudentNotification[]>([]);
   const [open, setOpen] = useState(false);
   const [lastViewed, setLastViewed] = useState<string>("");
+  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
+  const [clearedAt, setClearedAt] = useState<string>("");
   const [animating, setAnimating] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(0);
@@ -160,10 +164,21 @@ export default function StudentNotificationBell({
       }));
 
       const storedViewed = localStorage.getItem("student_notif_last_viewed") || "";
+      let storedDismissed: string[] = [];
+      try {
+        storedDismissed = JSON.parse(localStorage.getItem("student_notif_dismissed_ids") || "[]");
+      } catch {}
+      const storedCleared = localStorage.getItem("student_notif_cleared_at") || "";
+
       setLastViewed(storedViewed);
+      setDismissedIds(storedDismissed);
+      setClearedAt(storedCleared);
 
       const unreadCount = list.filter(
-        (n) => !storedViewed || new Date(n.created_at) > new Date(storedViewed)
+        (n) =>
+          !storedDismissed.includes(String(n.id)) &&
+          (!storedCleared || new Date(n.created_at) > new Date(storedCleared)) &&
+          (!storedViewed || new Date(n.created_at) > new Date(storedViewed))
       ).length;
 
       if (unreadCount > prevCountRef.current && prevCountRef.current !== 0) {
@@ -228,11 +243,36 @@ export default function StudentNotificationBell({
     setLastViewed(nowIso);
   };
 
+  const handleClearAll = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nowIso = new Date().toISOString();
+    localStorage.setItem("student_notif_cleared_at", nowIso);
+    localStorage.setItem("student_notif_last_viewed", nowIso);
+    setClearedAt(nowIso);
+    setLastViewed(nowIso);
+  };
+
+  const handleDismissItem = (e: React.MouseEvent, id: string | number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const updated = Array.from(new Set([...dismissedIds, String(id)]));
+    try {
+      localStorage.setItem("student_notif_dismissed_ids", JSON.stringify(updated));
+    } catch {}
+    setDismissedIds(updated);
+  };
+
   const handleOpen = () => {
     setOpen((prev) => !prev);
   };
 
-  const unreadItems = notifications.filter(
+  const visibleNotifications = notifications.filter((n) => {
+    if (dismissedIds.includes(String(n.id))) return false;
+    if (clearedAt && new Date(n.created_at) <= new Date(clearedAt)) return false;
+    return true;
+  });
+
+  const unreadItems = visibleNotifications.filter(
     (n) => !lastViewed || new Date(n.created_at) > new Date(lastViewed)
   );
   const unreadCount = unreadItems.length;
@@ -307,31 +347,41 @@ export default function StudentNotificationBell({
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse">
                     {t("newBadge", { count: unreadCount })}
                   </span>
-                ) : notifications.length > 0 ? (
+                ) : visibleNotifications.length > 0 ? (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                     {t("readBadge")}
                   </span>
                 ) : null}
               </div>
-              <button
-                type="button"
-                onClick={handleMarkAllRead}
-                disabled={unreadCount === 0}
-                className={`text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  unreadCount > 0
-                    ? "text-primary hover:text-primary/80 cursor-pointer hover:underline"
-                    : "text-on-surface-variant/40 cursor-default"
-                }`}
-                title={unreadCount > 0 ? t("markAllReadTitle") : t("allReadTitle")}
-              >
-                <FiCheck size={14} className={unreadCount === 0 ? "text-emerald-500" : ""} />
-                <span>{unreadCount > 0 ? t("markAsRead") : t("alreadyRead")}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleMarkAllRead}
+                    className="text-xs font-semibold flex items-center gap-1 text-primary hover:text-primary/80 cursor-pointer hover:underline transition-all"
+                    title={t("markAllReadTitle")}
+                  >
+                    <FiCheck size={13} />
+                    <span>{t("markAsRead")}</span>
+                  </button>
+                )}
+                {visibleNotifications.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="text-xs font-semibold flex items-center gap-1 text-on-surface-variant/60 hover:text-rose-500 cursor-pointer transition-colors"
+                    title={t("clearAllTitle")}
+                  >
+                    <FiTrash2 size={13} />
+                    <span>{t("clearAll")}</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* List Notifikasi */}
             <div className="max-h-[380px] overflow-y-auto divide-y divide-outline-variant/10">
-              {notifications.length === 0 ? (
+              {visibleNotifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 px-4 text-center text-on-surface-variant">
                   <div className="w-12 h-12 rounded-2xl bg-surface-variant/40 flex items-center justify-center mb-2.5 text-primary">
                     <FiCheckCircle size={24} />
@@ -342,7 +392,7 @@ export default function StudentNotificationBell({
                   </p>
                 </div>
               ) : (
-                notifications.map((item) => {
+                visibleNotifications.map((item) => {
                   const meta = getActionMeta(item.action, t);
                   const Icon = meta.icon;
                   const isItemUnread =
@@ -350,43 +400,54 @@ export default function StudentNotificationBell({
                   const noteToDisplay = getDisplayNote(item.action, item.note, t);
 
                   return (
-                    <Link
-                      key={item.id}
-                      href="/dashboard/artikel"
-                      onClick={() => setOpen(false)}
-                      className={`block p-3.5 hover:bg-surface-variant/30 transition-colors group ${
-                        isItemUnread ? "bg-primary/[0.03]" : ""
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`w-9 h-9 rounded-xl ${meta.bg} ${meta.border} border flex items-center justify-center shrink-0 mt-0.5`}
-                        >
-                          <Icon size={16} className={meta.iconColor} />
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1 mb-0.5">
-                            <span className="text-[11px] font-bold text-on-surface leading-tight">
-                              {meta.title}
-                            </span>
-                            <span className="text-[10px] text-on-surface-variant/70 shrink-0">
-                              {timeAgo(item.created_at, locale, t)}
-                            </span>
+                    <div key={item.id} className="relative group">
+                      <Link
+                        href="/dashboard/artikel"
+                        onClick={() => setOpen(false)}
+                        className={`block p-3.5 pr-8 hover:bg-surface-variant/30 transition-colors ${
+                          isItemUnread ? "bg-primary/[0.03]" : ""
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`w-9 h-9 rounded-xl ${meta.bg} ${meta.border} border flex items-center justify-center shrink-0 mt-0.5`}
+                          >
+                            <Icon size={16} className={meta.iconColor} />
                           </div>
 
-                          <p className="text-xs font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
-                            {item.article_title}
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1 mb-0.5 pr-4">
+                              <span className="text-[11px] font-bold text-on-surface leading-tight">
+                                {meta.title}
+                              </span>
+                              <span className="text-[10px] text-on-surface-variant/70 shrink-0">
+                                {timeAgo(item.created_at, locale, t)}
+                              </span>
+                            </div>
 
-                          {noteToDisplay && (
-                            <p className="text-[11px] text-on-surface-variant/90 line-clamp-2 mt-1 bg-surface-variant/30 rounded-lg p-1.5 border border-outline-variant/20 italic">
-                              "{noteToDisplay}"
+                            <p className="text-xs font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
+                              {item.article_title}
                             </p>
-                          )}
+
+                            {noteToDisplay && (
+                              <p className="text-[11px] text-on-surface-variant/90 line-clamp-2 mt-1 bg-surface-variant/30 rounded-lg p-1.5 border border-outline-variant/20 italic">
+                                "{noteToDisplay}"
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleDismissItem(e, item.id)}
+                        className="absolute top-3 right-2.5 w-6 h-6 rounded-md flex items-center justify-center text-on-surface-variant/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all opacity-70 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
+                        title={t("dismissTitle")}
+                        aria-label={t("dismissTitle")}
+                      >
+                        <FiX size={14} />
+                      </button>
+                    </div>
                   );
                 })
               )}

@@ -1237,6 +1237,9 @@
     "timeJustNow": "Baru saja",
     "timeMinutesAgo": "{minutes} mnt lalu",
     "timeHoursAgo": "{hours} jam lalu",
-    "timeDaysAgo": "{days} hari lalu"
+    "timeDaysAgo": "{days} hari lalu",
+    "clearAll": "Bersihkan",
+    "clearAllTitle": "Bersihkan semua notifikasi",
+    "dismissTitle": "Hapus notifikasi ini"
   }
 }

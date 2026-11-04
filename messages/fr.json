@@ -1235,6 +1235,9 @@
     "timeJustNow": "À l'instant",
     "timeMinutesAgo": "Il y a {minutes} min",
     "timeHoursAgo": "Il y a {hours} h",
-    "timeDaysAgo": "Il y a {days} j"
+    "timeDaysAgo": "Il y a {days} j",
+    "clearAll": "Tout effacer",
+    "clearAllTitle": "Effacer toutes les notifications",
+    "dismissTitle": "Supprimer cette notification"
   }
 }

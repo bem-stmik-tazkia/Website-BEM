@@ -1237,6 +1237,9 @@
     "timeJustNow": "Just now",
     "timeMinutesAgo": "{minutes}m ago",
     "timeHoursAgo": "{hours}h ago",
-    "timeDaysAgo": "{days}d ago"
+    "timeDaysAgo": "{days}d ago",
+    "clearAll": "Clear all",
+    "clearAllTitle": "Clear all notifications",
+    "dismissTitle": "Dismiss this notification"
   }
 }
