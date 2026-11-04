@@ -1134,7 +1134,7 @@
     "pendingReviewDesc": "المقال \"{title}\" قيد المراجعة حالياً من قبل الإدارة. لا يمكن تعديله أثناء المراجعة."
   },
   "ArticleDetail": {
-    "backToArticles": "العودة إلى الأخبار والمقالات",
+    "backToArticles": "العودة إلى دليل المقالات",
     "studentAuthor": "كاتب المقال (طالب)",
     "minRead": "{min} دقائق قراءة",
     "likes": "{count} إعجاب",
@@ -1148,7 +1148,9 @@
     "readArticle": "قراءة المقال",
     "notFound": "المقال غير موجود",
     "notFoundDesc": "المقال الذي تبحث عنه قد تم حذفه أو نقله أو لم يتم نشره بعد.",
-    "shareFail": "فشل نسخ الرابط."
+    "shareFail": "فشل نسخ الرابط.",
+    "linkCopied": "تم نسخ رابط المقال بنجاح!",
+    "defaultAuthor": "طالب STMIK Tazkia"
   },
   "ArticleList": {
     "pageTitle": "مقالات الطلاب",

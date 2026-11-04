@@ -15,7 +15,6 @@ import {
   FiCheck,
   FiBookmark,
 } from "react-icons/fi";
-import { SiWhatsapp } from "react-icons/si";
 import { createClient } from "@/utils/supabase/client";
 import { getDeviceId } from "@/utils/identity";
 import { toggleLike } from "@/actions/like";
@@ -42,6 +41,11 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
 
   const wordCount = article.content ? article.content.trim().split(/\s+/).length : 0;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+  const isBemAdmin = Boolean(
+    article.author?.full_name?.toLowerCase().includes("bem") ||
+    article.author?.full_name?.toLowerCase().includes("admin")
+  );
 
   // Multi-User View & Like initial setup
   useEffect(() => {
@@ -139,7 +143,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
     try {
       await navigator.clipboard.writeText(getShareUrl());
       setCopied(true);
-      toast("Tautan artikel berhasil disalin!", "success");
+      toast(t("linkCopied"), "success");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast(t("shareFail"), "error");
@@ -165,20 +169,17 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
     }
   };
 
-  const whatsappShareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
-    `*${article.title}*\n\nBaca artikel karya mahasiswa STMIK Tazkia di:\n${getShareUrl()}`
-  )}`;
 
   return (
-    <div className="min-h-screen bg-background pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background pt-24 sm:pt-28 pb-28 sm:pb-24 px-3.5 sm:px-6 lg:px-8 max-w-4xl mx-auto">
       {/* Breadcrumb Navigation */}
-      <div className="flex items-center justify-between gap-4 mb-6">
+      <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6">
         <Link
           href="/artikel"
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors"
         >
           <FiArrowLeft size={16} />
-          <span>Kembali ke Katalog Artikel</span>
+          <span>{t("backToArticles")}</span>
         </Link>
 
         {article.category && (
@@ -199,14 +200,16 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden shrink-0 border border-primary/20 shadow-xs">
               {article.author?.avatar_url ? (
-                <img src={article.author.avatar_url} alt="Author" className="w-full h-full object-cover" />
+                <img src={article.author.avatar_url} alt={article.author?.full_name || "Author"} className="w-full h-full object-cover" />
+              ) : isBemAdmin ? (
+                <img src="/images/logo.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-1.5" />
               ) : (
                 <span className="text-base">{article.author?.full_name?.charAt(0) || "M"}</span>
               )}
             </div>
             <div>
               <p className="font-bold text-sm text-on-surface leading-tight">
-                {article.author?.full_name || "Mahasiswa STMIK Tazkia"}
+                {article.author?.full_name || t("defaultAuthor")}
               </p>
               <p className="text-[11px] text-on-surface-variant mt-0.5">{t("studentAuthor")}</p>
             </div>
@@ -251,7 +254,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
       </article>
 
       {/* Interactive Engagement Bar (Likes & Views & Share) */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-surface border border-outline-variant/30 shadow-sm mb-12 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-surface border border-outline-variant/30 shadow-sm mb-8 sm:mb-12 flex flex-row items-center justify-between gap-3">
         {/* Like and Views Count */}
         <div className="flex items-center gap-4 w-full sm:w-auto">
           {/* Like Button */}
@@ -276,45 +279,33 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
           </div>
         </div>
 
-        {/* Share Buttons */}
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <span className="text-xs text-on-surface-variant font-medium mr-1 hidden sm:inline">{t("shareLabel")}</span>
-
-          <a
-            href={whatsappShareUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Bagikan ke WhatsApp"
-            className="p-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 transition-colors"
-          >
-            <SiWhatsapp size={16} />
-          </a>
-
-          <button
-            type="button"
-            onClick={handleShareNative}
-            title="Bagikan atau Salin Tautan"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-variant/40 hover:bg-surface-variant text-on-surface text-xs font-bold border border-outline-variant/30 transition-colors cursor-pointer"
-          >
-            {copied ? <FiCheck className="text-emerald-500" size={15} /> : <FiShare2 size={15} />}
-            <span>{copied ? t("copied") : t("share")}</span>
-          </button>
-        </div>
+        {/* Share Button (Native Mobile ShareSheet with Copy Fallback) */}
+        <button
+          type="button"
+          onClick={handleShareNative}
+          title={copied ? t("copied") : t("share")}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-surface-variant/40 hover:bg-surface-variant text-on-surface text-xs sm:text-sm font-bold border border-outline-variant/30 transition-all cursor-pointer shadow-xs active:scale-95"
+        >
+          {copied ? <FiCheck className="text-emerald-500" size={16} /> : <FiShare2 size={16} />}
+          <span>{copied ? t("copied") : t("share")}</span>
+        </button>
       </div>
 
       {/* Author Card Footer */}
-      <div className="p-6 rounded-3xl bg-surface-variant/20 border border-outline-variant/20 mb-12 flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+      <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-surface-variant/20 border border-outline-variant/20 mb-8 sm:mb-12 flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
         <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden shrink-0 border border-primary/20 text-xl shadow-xs">
           {article.author?.avatar_url ? (
-            <img src={article.author.avatar_url} alt="Author" className="w-full h-full object-cover" />
+            <img src={article.author.avatar_url} alt={article.author?.full_name || "Author"} className="w-full h-full object-cover" />
+          ) : isBemAdmin ? (
+            <img src="/images/logo.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-2" />
           ) : (
             <span>{article.author?.full_name?.charAt(0) || "M"}</span>
           )}
         </div>
-        <div>
+        <div className="flex-1">
           <span className="text-[11px] font-bold text-primary uppercase tracking-wider">{t("aboutAuthor")}</span>
           <h3 className="text-lg font-black text-on-surface mt-0.5">
-            {article.author?.full_name || "Mahasiswa STMIK Tazkia"}
+            {article.author?.full_name || t("defaultAuthor")}
           </h3>
           <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
             {t("curationNotice")}

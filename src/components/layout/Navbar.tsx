@@ -53,6 +53,13 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           } catch {
             // Biarkan fallback ke profile?.role jika RPC offline
           }
+          // Auto-sinkronisasi avatar akun ke public.profiles jika belum tersimpan
+          const userAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+          if (userAvatar && profile && (!profile.avatar_url || profile.avatar_url !== userAvatar)) {
+            await supabase.from('profiles').update({ avatar_url: userAvatar }).eq('id', user.id);
+            profile.avatar_url = userAvatar;
+          }
+
           setUserProfile({ ...user, ...profile, role: effectiveRole });
         } else {
           setUserProfile(null);

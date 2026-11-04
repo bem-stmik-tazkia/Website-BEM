@@ -1134,7 +1134,7 @@
     "pendingReviewDesc": "記事「{title}」は現在BEM管理者の審査待ちです。審査中は編集できません。"
   },
   "ArticleDetail": {
-    "backToArticles": "ニュース・記事一覧に戻る",
+    "backToArticles": "記事カタログに戻る",
     "studentAuthor": "学生著者",
     "minRead": "約{min}分で読める",
     "likes": "{count} いいね",
@@ -1148,7 +1148,9 @@
     "readArticle": "記事を読む",
     "notFound": "記事が見つかりません",
     "notFoundDesc": "お探しの記事は削除されたか、移動したか、またはまだ公開されていない可能性があります。",
-    "shareFail": "リンクのコピーに失敗しました。"
+    "shareFail": "リンクのコピーに失敗しました。",
+    "linkCopied": "記事のリンクをコピーしました！",
+    "defaultAuthor": "STMIKタズキア学生"
   },
   "ArticleList": {
     "pageTitle": "学生記事",

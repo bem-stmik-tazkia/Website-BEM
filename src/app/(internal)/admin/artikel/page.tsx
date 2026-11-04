@@ -26,7 +26,7 @@ import ArticleModerationModal, {
 } from "@/components/admin/artikel/ArticleModerationModal";
 import { fetchAdminArticlesData, deleteArticleAdmin } from "./actions";
 
-type TabType = "pending" | "revisions" | "draft" | "published" | "rejected" | "all";
+type TabType = "pending" | "revisions" | "draft" | "published" | "all";
 
 export default function AdminArtikelPage() {
   const supabase = createClient();
@@ -35,7 +35,7 @@ export default function AdminArtikelPage() {
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<TabType>(
-    initialTabParam && ["pending", "revisions", "draft", "published", "rejected", "all"].includes(initialTabParam)
+    initialTabParam && ["pending", "revisions", "draft", "published", "all"].includes(initialTabParam)
       ? initialTabParam
       : "pending"
   );
@@ -94,7 +94,7 @@ export default function AdminArtikelPage() {
   // Update tab jika URL search param berubah
   useEffect(() => {
     const tabParam = searchParams?.get("tab") as TabType | null;
-    if (tabParam && ["pending", "revisions", "draft", "published", "rejected", "all"].includes(tabParam)) {
+    if (tabParam && ["pending", "revisions", "draft", "published", "all"].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -126,7 +126,6 @@ export default function AdminArtikelPage() {
     return articles.filter((a) => {
       if (activeTab === "pending" && a.status !== "pending") return false;
       if (activeTab === "published" && a.status !== "published") return false;
-      if (activeTab === "rejected" && a.status !== "rejected") return false;
       if (activeTab === "draft" && a.status !== "draft") return false;
 
       if (searchQuery.trim()) {
@@ -215,8 +214,8 @@ export default function AdminArtikelPage() {
         </div>
       </div>
 
-      {/* Statistik Cards Grid (5 Status Lengkap) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      {/* Statistik Cards Grid (4 Status: Antrean, Revisi, Draf, Tayang) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Antrean Artikel Baru */}
         <div
           onClick={() => setActiveTab("pending")}
@@ -255,6 +254,25 @@ export default function AdminArtikelPage() {
           <p className="text-[11px] text-on-surface-variant mt-0.5">Revisi artikel aktif</p>
         </div>
 
+        {/* Draf Artikel */}
+        <div
+          onClick={() => setActiveTab("draft")}
+          className={`p-4 rounded-2xl bg-surface border transition-all cursor-pointer ${
+            activeTab === "draft"
+              ? "border-slate-500 shadow-sm ring-2 ring-slate-500/20 bg-slate-500/[0.02]"
+              : "border-outline-variant/30 hover:border-slate-500/40"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Draf Artikel</span>
+            <span className="p-2 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-400">
+              <FiFileText size={16} />
+            </span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-black text-on-surface mt-2">{draftCount}</p>
+          <p className="text-[11px] text-on-surface-variant mt-0.5">Draf tersimpan</p>
+        </div>
+
         {/* Total Tayang */}
         <div
           onClick={() => setActiveTab("published")}
@@ -272,44 +290,6 @@ export default function AdminArtikelPage() {
           </div>
           <p className="text-2xl sm:text-3xl font-black text-on-surface mt-2">{publishedCount}</p>
           <p className="text-[11px] text-on-surface-variant mt-0.5">Dapat dibaca publik</p>
-        </div>
-
-        {/* Ditolak / Perlu Revisi */}
-        <div
-          onClick={() => setActiveTab("rejected")}
-          className={`p-4 rounded-2xl bg-surface border transition-all cursor-pointer ${
-            activeTab === "rejected"
-              ? "border-rose-500 shadow-sm ring-2 ring-rose-500/20 bg-rose-500/[0.02]"
-              : "border-outline-variant/30 hover:border-rose-500/40"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-rose-600">Perlu Revisi / Tolak</span>
-            <span className="p-2 rounded-xl bg-rose-500/10 text-rose-600">
-              <FiXCircle size={16} />
-            </span>
-          </div>
-          <p className="text-2xl sm:text-3xl font-black text-on-surface mt-2">{rejectedCount}</p>
-          <p className="text-[11px] text-on-surface-variant mt-0.5">Dikembalikan ke penulis</p>
-        </div>
-
-        {/* Draf Artikel */}
-        <div
-          onClick={() => setActiveTab("draft")}
-          className={`p-4 rounded-2xl bg-surface border transition-all cursor-pointer ${
-            activeTab === "draft"
-              ? "border-slate-500 shadow-sm ring-2 ring-slate-500/20 bg-slate-500/[0.02]"
-              : "border-outline-variant/30 hover:border-slate-500/40"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Draf Artikel</span>
-            <span className="p-2 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-400">
-              <FiFileText size={16} />
-            </span>
-          </div>
-          <p className="text-2xl sm:text-3xl font-black text-on-surface mt-2">{draftCount}</p>
-          <p className="text-[11px] text-on-surface-variant mt-0.5">Draf belum diajukan</p>
         </div>
       </div>
 
@@ -386,22 +366,7 @@ export default function AdminArtikelPage() {
               )}
             </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab("rejected")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === "rejected"
-                  ? "bg-surface text-rose-600 shadow-sm"
-                  : "text-on-surface-variant hover:text-on-surface"
-              }`}
-            >
-              <span>Perlu Revisi</span>
-              {rejectedCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-600 text-[10px]">
-                  {rejectedCount}
-                </span>
-              )}
-            </button>
+
 
             <button
               type="button"
@@ -503,8 +468,6 @@ export default function AdminArtikelPage() {
                 ? "Belum Ada Draf Artikel"
                 : activeTab === "published"
                 ? "Belum Ada Artikel Tayang"
-                : activeTab === "rejected"
-                ? "Tidak Ada Artikel Perlu Revisi"
                 : "Tidak Ada Artikel Ditemukan"}
             </h3>
             <p className="text-xs text-on-surface-variant mt-1">

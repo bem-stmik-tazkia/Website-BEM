@@ -1136,7 +1136,7 @@
     "pendingReviewDesc": "The article \"{title}\" is currently in the BEM admin review queue. It cannot be edited while under review."
   },
   "ArticleDetail": {
-    "backToArticles": "Back to News & Articles",
+    "backToArticles": "Back to Article Catalog",
     "studentAuthor": "Student Author",
     "minRead": "{min} min read",
     "likes": "{count} Likes",
@@ -1150,7 +1150,9 @@
     "readArticle": "Read Article",
     "notFound": "Article Not Found",
     "notFoundDesc": "The article you are looking for may have been removed, moved, or is not yet published.",
-    "shareFail": "Failed to copy link."
+    "shareFail": "Failed to copy link.",
+    "linkCopied": "Article link copied to clipboard!",
+    "defaultAuthor": "STMIK Tazkia Student"
   },
   "ArticleList": {
     "pageTitle": "Student Articles",

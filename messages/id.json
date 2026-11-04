@@ -1136,7 +1136,7 @@
     "pendingReviewDesc": "Artikel \"{title}\" saat ini sedang berada di antrean moderasi admin BEM. Tulisan tidak dapat diedit selama proses peninjauan berlangsung."
   },
   "ArticleDetail": {
-    "backToArticles": "Kembali ke Berita & Artikel",
+    "backToArticles": "Kembali ke Katalog Artikel",
     "studentAuthor": "Penulis Mahasiswa",
     "minRead": "{min} menit baca",
     "likes": "{count} Suka",
@@ -1150,7 +1150,9 @@
     "readArticle": "Baca Artikel",
     "notFound": "Artikel Tidak Ditemukan",
     "notFoundDesc": "Artikel yang Anda cari mungkin telah dihapus, dipindahkan, atau belum dipublikasikan.",
-    "shareFail": "Gagal menyalin tautan."
+    "shareFail": "Gagal menyalin tautan.",
+    "linkCopied": "Tautan artikel berhasil disalin!",
+    "defaultAuthor": "Mahasiswa STMIK Tazkia"
   },
   "ArticleList": {
     "pageTitle": "Artikel Mahasiswa",

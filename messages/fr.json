@@ -1134,7 +1134,7 @@
     "pendingReviewDesc": "L'article \"{title}\" est actuellement dans la file d'attente d'examen de l'administrateur. Il ne peut pas être modifié pendant l'examen."
   },
   "ArticleDetail": {
-    "backToArticles": "Retour aux actualités et articles",
+    "backToArticles": "Retour au catalogue d'articles",
     "studentAuthor": "Auteur étudiant",
     "minRead": "{min} min de lecture",
     "likes": "{count} J'aime",
@@ -1148,7 +1148,9 @@
     "readArticle": "Lire l'article",
     "notFound": "Article non trouvé",
     "notFoundDesc": "L'article que vous recherchez a peut-être été supprimé, déplacé ou n'est pas encore publié.",
-    "shareFail": "Échec de la copie du lien."
+    "shareFail": "Échec de la copie du lien.",
+    "linkCopied": "Lien de l'article copié !",
+    "defaultAuthor": "Étudiant STMIK Tazkia"
   },
   "ArticleList": {
     "pageTitle": "Articles étudiants",

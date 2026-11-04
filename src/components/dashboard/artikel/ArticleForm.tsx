@@ -297,6 +297,10 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
       }
     }
 
+    // Keamanan Berlapis: Hanya admin yang berhak mempublikasikan artikel secara langsung
+    const effectiveStatus: "draft" | "pending" | "published" =
+      (!isAdmin && targetStatus === "published") ? "pending" : targetStatus;
+
     try {
       setIsSubmitting(true);
       const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -318,7 +322,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             content: content.trim(),
             cover_url: coverUrl || null,
             category: category,
-            status: targetStatus === "published" ? "pending" : targetStatus,
+            status: effectiveStatus === "published" ? "pending" : effectiveStatus,
             submitted_at: new Date().toISOString(),
           });
 
@@ -347,11 +351,11 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           content: content.trim(),
           cover_url: coverUrl || null,
           category: category,
-          status: targetStatus,
+          status: effectiveStatus,
           updated_at: new Date().toISOString(),
         };
 
-        if (targetStatus === "published") {
+        if (effectiveStatus === "published") {
           updatePayload.published_at = new Date().toISOString();
           updatePayload.review_note = null;
         } else if (targetStatus === "pending") {
@@ -401,11 +405,11 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           content: content.trim(),
           cover_url: coverUrl || null,
           category: category,
-          status: targetStatus,
-          submitted_at: targetStatus === "pending" ? new Date().toISOString() : null,
+          status: effectiveStatus,
+          submitted_at: effectiveStatus === "pending" ? new Date().toISOString() : null,
         };
 
-        if (targetStatus === "published") {
+        if (effectiveStatus === "published") {
           insertPayload.published_at = new Date().toISOString();
         }
 
