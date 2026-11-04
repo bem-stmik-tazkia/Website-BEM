@@ -161,20 +161,22 @@ export default function AdminArtikelPage() {
     loadData();
   };
 
-  const handleDeleteArticle = async (id: string, title: string) => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus artikel "${title}" secara permanen?`)) {
-      return;
-    }
+  const [articleToDelete, setArticleToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [isDeletingTarget, setIsDeletingTarget] = useState(false);
+
+  const confirmDeleteArticle = async () => {
+    if (!articleToDelete) return;
     try {
-      setDeletingId(id);
-      const res = await deleteArticleAdmin(id);
+      setIsDeletingTarget(true);
+      const res = await deleteArticleAdmin(articleToDelete.id);
       if (res.error) throw new Error(res.error);
-      toast("Artikel berhasil dihapus.", "success");
+      toast("Artikel berhasil dihapus secara permanen.", "success");
+      setArticleToDelete(null);
       loadData();
     } catch (err: any) {
       toast(err.message || "Gagal menghapus artikel.", "error");
     } finally {
-      setDeletingId(null);
+      setIsDeletingTarget(false);
     }
   };
 
@@ -564,14 +566,13 @@ export default function AdminArtikelPage() {
                       </Link>
                     )}
 
-                    {/* Tombol Hapus untuk Draf */}
-                    {isDraft && (
+                    {/* Tombol Hapus Artikel */}
+                    {!isPending && (
                       <button
                         type="button"
-                        disabled={isDeleting}
-                        onClick={() => handleDeleteArticle(article.id, article.title)}
-                        className="inline-flex items-center justify-center p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 text-xs transition-all cursor-pointer disabled:opacity-50"
-                        title="Hapus Draf"
+                        onClick={() => setArticleToDelete({ id: article.id, title: article.title })}
+                        className="inline-flex items-center justify-center p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 text-xs transition-all cursor-pointer"
+                        title="Hapus Artikel"
                       >
                         <FiTrash2 size={14} />
                       </button>
@@ -616,6 +617,39 @@ export default function AdminArtikelPage() {
           onClose={() => setSelectedRevision(null)}
           onSuccess={loadData}
         />
+      )}
+
+      {/* Modal Popup Konfirmasi Hapus In-App (Bebas dari window.confirm) */}
+      {articleToDelete && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-surface border border-outline-variant/40 rounded-3xl p-6 max-w-md w-full shadow-2xl animate-scale-up">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mb-4">
+              <FiTrash2 size={24} />
+            </div>
+            <h3 className="text-lg font-black text-on-surface">Hapus Artikel Permanen</h3>
+            <p className="text-xs sm:text-sm text-on-surface-variant mt-2 leading-relaxed">
+              Apakah Anda yakin ingin menghapus artikel <strong>"{articleToDelete.title}"</strong> secara permanen? Data yang sudah dihapus tidak dapat dipulihkan.
+            </p>
+            <div className="flex items-center justify-end gap-2.5 mt-6">
+              <button
+                type="button"
+                disabled={isDeletingTarget}
+                onClick={() => setArticleToDelete(null)}
+                className="px-4 py-2 rounded-xl border border-outline-variant/40 text-xs sm:text-sm font-bold text-on-surface hover:bg-surface-variant/40 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingTarget}
+                onClick={confirmDeleteArticle}
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-rose-600/20 transition-all disabled:opacity-50 cursor-pointer"
+              >
+                {isDeletingTarget ? "Menghapus..." : "Ya, Hapus Permanen"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -159,3 +159,41 @@ export async function deleteArticleAdmin(articleId: string): Promise<{ success?:
     return { error: err.message || "Gagal menghapus artikel" };
   }
 }
+
+export async function unpublishArticleAdmin(articleId: string): Promise<{ success?: boolean; error?: string }> {
+  try {
+    await requireAdmin();
+    const serviceClient = getServiceRoleClient();
+
+    // 1. Update status artikel ke draft
+    const { error: artErr } = await serviceClient
+      .from("articles")
+      .update({
+        status: "draft",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", articleId);
+
+    if (artErr) throw artErr;
+
+    // 2. Reject pending/draft revisions jika ada
+    try {
+      await serviceClient
+        .from("article_revisions")
+        .update({
+          status: "rejected",
+          review_note: "Revisi ditutup otomatis karena artikel induk diturunkan dari publik oleh admin.",
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("article_id", articleId)
+        .in("status", ["draft", "pending"]);
+    } catch (revErr) {
+      console.warn("[actions:unpublishArticleAdmin] Warning updating revisions:", revErr);
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("[actions:unpublishArticleAdmin] Error:", err);
+    return { error: err.message || "Gagal menurunkan artikel" };
+  }
+}

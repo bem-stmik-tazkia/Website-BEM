@@ -128,7 +128,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
   const featuredNews = sortedNews.length > 0 ? sortedNews[0] : null;
 
   // Categories list
-  const categories = ["Semua", "Berita", "Artikel", "Kampus"];
+  const categories = ["Semua", "Berita", "Kampus"];
 
   const translateCategory = (cat?: string) => {
     if (!cat) return "";
