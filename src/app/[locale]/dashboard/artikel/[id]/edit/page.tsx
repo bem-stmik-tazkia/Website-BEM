@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Link, useRouter } from "@/i18n/routing";
+import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { FiArrowLeft, FiAlertTriangle } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
@@ -12,7 +12,6 @@ import { ArticleItem } from "@/components/dashboard/artikel/ArticleCard";
 export default function EditArticlePage() {
   const t = useTranslations("ArticlePortal");
   const params = useParams();
-  const router = useRouter();
   const articleId = params?.id as string;
   const supabase = createClient();
 
@@ -55,7 +54,7 @@ export default function EditArticlePage() {
     return (
       <div className="max-w-4xl mx-auto py-16 flex flex-col items-center justify-center text-center">
         <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin mb-4" />
-        <p className="text-sm font-semibold text-on-surface-variant">Memuat data artikel...</p>
+        <p className="text-sm font-semibold text-on-surface-variant">{t("loadingArticle")}</p>
       </div>
     );
   }
@@ -66,9 +65,9 @@ export default function EditArticlePage() {
         <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 mx-auto flex items-center justify-center mb-4">
           <FiAlertTriangle size={28} />
         </div>
-        <h2 className="text-xl font-bold text-on-surface mb-2">Artikel Tidak Ditemukan</h2>
+        <h2 className="text-xl font-bold text-on-surface mb-2">{t("notFoundTitle")}</h2>
         <p className="text-xs sm:text-sm text-on-surface-variant mb-6 leading-relaxed">
-          Artikel ini mungkin telah dihapus atau Anda tidak memiliki hak akses kepemilikan atas tulisan ini.
+          {t("notFoundDesc")}
         </p>
         <Link
           href="/dashboard/artikel"
@@ -88,9 +87,9 @@ export default function EditArticlePage() {
         <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-600 mx-auto flex items-center justify-center mb-4">
           <span className="material-symbols-outlined text-3xl">hourglass_top</span>
         </div>
-        <h2 className="text-xl font-bold text-on-surface mb-2">Artikel Sedang Dalam Peninjauan</h2>
+        <h2 className="text-xl font-bold text-on-surface mb-2">{t("pendingReviewTitle")}</h2>
         <p className="text-xs sm:text-sm text-on-surface-variant mb-6 leading-relaxed">
-          Artikel <strong>"{article.title}"</strong> saat ini sedang berada di antrean moderasi admin BEM. Tulisan tidak dapat diedit selama proses peninjauan berlangsung.
+          {t("pendingReviewDesc", { title: article.title })}
         </p>
         <Link
           href="/dashboard/artikel"

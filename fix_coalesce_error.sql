@@ -7,3 +7,4 @@ DROP FUNCTION IF EXISTS pg_catalog.coalesce(uuid, uuid);
 DROP FUNCTION IF EXISTS pg_catalog.coalesce(uuid, uuid, uuid);
 DROP FUNCTION IF EXISTS public.coalesce(uuid, uuid);
 DROP FUNCTION IF EXISTS public.coalesce(uuid, uuid, uuid);
+

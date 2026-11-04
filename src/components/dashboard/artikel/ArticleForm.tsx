@@ -302,7 +302,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
 
       if (authError || !user) {
-        toast("Sesi masuk Anda telah berakhir. Silakan login kembali.", "error");
+        toast(t("sessionExpired"), "error");
         router.push("/masuk");
         return;
       }
@@ -457,7 +457,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
       } else {
         setErrorMessage(msg);
       }
-      toast("Gagal memproses artikel. Silakan periksa pesan kesalahan.", "error");
+      toast(t("genericError"), "error");
     }
   };
 
@@ -478,7 +478,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
         >
           <FiArrowLeft size={16} />
-          <span>{isFromAdmin ? "Kembali ke Moderasi Artikel" : t("backToDashboard")}</span>
+          <span>{isFromAdmin ? t("backToAdmin") : t("backToDashboard")}</span>
         </button>
 
         <div className="flex items-center gap-3">

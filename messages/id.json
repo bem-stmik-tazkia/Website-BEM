@@ -1125,7 +1125,15 @@
     "modNoteTips": "Tips: Perbaiki poin-poin yang diminta di atas sebelum mengklik Ajukan untuk Moderasi.",
     "previewPlaceholderTitle": "Judul Artikel Akan Ditampilkan di Sini",
     "previewReadTime": "{min} menit baca",
-    "autoSavedDraft": "Draf tersimpan otomatis"
+    "autoSavedDraft": "Draf tersimpan otomatis",
+    "sessionExpired": "Sesi masuk Anda telah berakhir. Silakan login kembali.",
+    "genericError": "Gagal memproses artikel. Silakan periksa pesan kesalahan.",
+    "backToAdmin": "Kembali ke Moderasi Artikel",
+    "loadingArticle": "Memuat data artikel...",
+    "notFoundTitle": "Artikel Tidak Ditemukan",
+    "notFoundDesc": "Artikel ini mungkin telah dihapus atau Anda tidak memiliki hak akses kepemilikan atas tulisan ini.",
+    "pendingReviewTitle": "Artikel Sedang Dalam Peninjauan",
+    "pendingReviewDesc": "Artikel \"{title}\" saat ini sedang berada di antrean moderasi admin BEM. Tulisan tidak dapat diedit selama proses peninjauan berlangsung."
   },
   "ArticleDetail": {
     "backToArticles": "Kembali ke Berita & Artikel",

@@ -1125,7 +1125,15 @@
     "modNoteTips": "Tip: Address the points mentioned above before clicking Submit for Moderation.",
     "previewPlaceholderTitle": "Article Title Will Appear Here",
     "previewReadTime": "{min} min read",
-    "autoSavedDraft": "Draft auto-saved"
+    "autoSavedDraft": "Draft auto-saved",
+    "sessionExpired": "Your session has expired. Please log in again.",
+    "genericError": "Failed to process article. Please check the error messages.",
+    "backToAdmin": "Back to Article Moderation",
+    "loadingArticle": "Loading article data...",
+    "notFoundTitle": "Article Not Found",
+    "notFoundDesc": "This article may have been deleted or you do not have permission to access it.",
+    "pendingReviewTitle": "Article Under Review",
+    "pendingReviewDesc": "The article \"{title}\" is currently in the BEM admin review queue. It cannot be edited while under review."
   },
   "ArticleDetail": {
     "backToArticles": "Back to News & Articles",
