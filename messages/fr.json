@@ -31,7 +31,10 @@
     "myArticles": "Mes Articles",
     "articles": "Articles",
     "roleMahasiswa": "Étudiant",
-    "roleAdmin": "Administrateur"
+    "roleAdmin": "Administrateur",
+    "activities": "Activités",
+    "studentArticles": "Articles",
+    "profileSettings": "Paramètres du profil"
   },
   "Footer": {
     "description": "Devenir un pionnier du BEM innovant, collaboratif et proactif dans l'expression des aspirations et le développement du potentiel des étudiants de STMIK Tazkia.",

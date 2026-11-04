@@ -4,7 +4,7 @@
     "projects": "プロジェクト",
     "students": "学生",
     "agenda": "アジェンダ",
-    "publications": "出版物",
+    "publications": "広報・出版",
     "news": "ニュース",
     "documentation": "ドキュメンテーション",
     "cabinet": "BEM プロフィール",
@@ -31,7 +31,10 @@
     "myArticles": "私の記事",
     "articles": "記事",
     "roleMahasiswa": "学生",
-    "roleAdmin": "管理者"
+    "roleAdmin": "管理者",
+    "activities": "活動",
+    "studentArticles": "学生記事",
+    "profileSettings": "プロフィール設定"
   },
   "Footer": {
     "description": "STMIK Tazkia の学生の可能性を開発し、願望を表明する上で革新的、協力的、そして積極的な BEM のパイオニアになること。",

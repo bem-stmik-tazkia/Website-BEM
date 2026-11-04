@@ -1,5 +1,7 @@
 "use client";
 
+import SafeLottie from "@/components/ui/SafeLottie";
+
 import React, { useState, useMemo } from "react";
 import { Link } from "@/i18n/routing";
 import NativeLink from "next/link";
@@ -34,6 +36,7 @@ export interface PublishedArticleItem {
     id: string;
     full_name: string | null;
     avatar_url: string | null;
+    bio?: string | null;
   } | null;
 }
 
@@ -92,8 +95,8 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
 
   return (
     <div className="min-h-screen bg-background pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      {/* Hero Header */}
-      <div className="relative rounded-3xl bg-gradient-to-br from-primary/10 via-surface to-secondary/10 border border-outline-variant/30 p-6 sm:p-10 mb-10 overflow-hidden shadow-sm">
+      {/* Hero Header dengan Animasi Maskot Orange Cat */}
+      <div className="relative rounded-3xl bg-gradient-to-br from-primary/10 via-surface to-secondary/10 border border-outline-variant/30 p-6 sm:p-10 mb-10 overflow-hidden shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-3 border border-primary/20">
             <FiBookOpen size={13} />
@@ -122,6 +125,17 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
               <FiArrowRight size={14} />
             </a>
           </div>
+        </div>
+
+        {/* Lottie Animation: Orange Cat Mascot */}
+        <div className="relative w-44 h-44 sm:w-52 sm:h-52 md:w-56 md:h-56 shrink-0 flex items-center justify-center">
+          <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+          <SafeLottie
+            src="/animations/orangeCat.lottie"
+            loop
+            autoplay
+            className="w-full h-full object-contain drop-shadow-md"
+          />
         </div>
       </div>
 

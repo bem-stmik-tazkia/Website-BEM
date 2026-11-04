@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import { FiHome, FiLogOut } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "./AdminNotificationBell";
+import ProfileSettingsModal from "@/components/profile/ProfileSettingsModal";
 
 export default function AdminTopbar({ user }: { user?: any }) {
   const router = useRouter();
   const supabase = createClient();
   const [imgError, setImgError] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -25,17 +27,24 @@ export default function AdminTopbar({ user }: { user?: any }) {
   return (
     <header className="w-full bg-surface border-b border-outline-variant/30 shadow-sm px-6 py-4 flex items-center justify-end gap-6 sticky top-0 z-40 transition-colors duration-300">
       
-      {/* Profile Card */}
-      <div className="flex items-center gap-3">
+      {/* Profile Card (Klik untuk Ubah Profil) */}
+      <div 
+        onClick={() => setShowSettings(true)}
+        className="flex items-center gap-3 cursor-pointer hover:opacity-85 transition-opacity"
+        title="Klik untuk ubah profil"
+      >
         <div className="text-right hidden sm:block">
           <p className="text-sm font-bold text-on-surface leading-tight">{fullName}</p>
-          <p className="text-xs text-on-surface-variant">Administrator</p>
+          <p className="text-xs text-on-surface-variant flex items-center justify-end gap-1">
+            <span>Administrator</span>
+            <span className="text-[10px] text-primary underline">Edit</span>
+          </p>
         </div>
         {avatarUrl && !imgError ? (
           <img 
             src={avatarUrl} 
             alt="Avatar" 
-            className="w-10 h-10 rounded-full border border-outline-variant/50 shrink-0 object-cover" 
+            className="w-10 h-10 rounded-full border border-outline-variant/50 shrink-0 object-cover shadow-xs" 
             onError={() => setImgError(true)}
           />
         ) : (
@@ -70,6 +79,24 @@ export default function AdminTopbar({ user }: { user?: any }) {
         </button>
       </div>
 
+      {/* Modal Pengaturan Profil Admin */}
+      <ProfileSettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        userProfile={user}
+        onProfileUpdated={() => {
+          router.refresh();
+        }}
+      />
+      {/* Modal Pengaturan Profil Admin */}
+      <ProfileSettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        userProfile={user}
+        onProfileUpdated={() => {
+          router.refresh();
+        }}
+      />
     </header>
   );
 }

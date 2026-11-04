@@ -17,12 +17,24 @@ async function getArticleBySlug(slug: string): Promise<PublishedArticleItem | nu
       return null;
     }
 
-    // Ambil author profile dari author_profiles view
-    const { data: author } = await supabase
+    // Ambil author profile dari author_profiles view (dengan toleransi jika bio baru dimigrasi)
+    let author: any = null;
+    const { data: authorWithBio, error: bioErr } = await supabase
       .from("author_profiles")
-      .select("id, full_name, avatar_url")
+      .select("id, full_name, avatar_url, bio")
       .eq("id", article.author_id)
       .maybeSingle();
+
+    if (!bioErr && authorWithBio) {
+      author = authorWithBio;
+    } else {
+      const { data: basicAuthor } = await supabase
+        .from("author_profiles")
+        .select("id, full_name, avatar_url")
+        .eq("id", article.author_id)
+        .maybeSingle();
+      author = basicAuthor || null;
+    }
 
     return {
       ...article,

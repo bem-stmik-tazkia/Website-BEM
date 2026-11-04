@@ -13,6 +13,8 @@ import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell"
 import StudentNotificationBell from "@/components/notifications/StudentNotificationBell";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import SafeLottie from "@/components/ui/SafeLottie";
+import ProfileSettingsModal from "@/components/profile/ProfileSettingsModal";
+import { FiSettings } from "react-icons/fi";
 
 export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -20,6 +22,12 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+
+
   const [hideProfileTooltip, setHideProfileTooltip] = useState(true);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -53,13 +61,20 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           } catch {
             // Biarkan fallback ke profile?.role jika RPC offline
           }
-          // Auto-sinkronisasi avatar akun ke public.profiles jika belum tersimpan
-          const userAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
-          if (userAvatar && profile && (!profile.avatar_url || profile.avatar_url !== userAvatar)) {
-            await supabase.from('profiles').update({ avatar_url: userAvatar }).eq('id', user.id);
-            profile.avatar_url = userAvatar;
-          }
-
+          // Auto-sinkronisasi avatar akun ke public.profiles jika belum tersimpan
+
+          const userAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+
+          if (userAvatar && profile && (!profile.avatar_url || profile.avatar_url !== userAvatar)) {
+
+            await supabase.from('profiles').update({ avatar_url: userAvatar }).eq('id', user.id);
+
+            profile.avatar_url = userAvatar;
+
+          }
+
+
+
           setUserProfile({ ...user, ...profile, role: effectiveRole });
         } else {
           setUserProfile(null);
@@ -82,11 +97,14 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
 
 
 
-  // Handle click outside for profile dropdown
+  // Handle click outside for profile dropdown & nav dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
         setShowProfileMenu(false);
+      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenDropdown(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -115,14 +133,28 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
 
   const t = useTranslations("Navigation");
 
-  const navLinks = [
-    { name: t("home"), path: "/" },
-    { name: t("agenda"), path: "/agenda" },
-    { name: t("news"), path: "/berita" },
-
-    { name: t("documentation"), path: "/dokumentasi" },
-    { name: t("menuCab"), path: "/kabinet" },
-    { name: t("menuFeedback"), path: "/#saran" },
+  const navItems = [
+    { type: "link", name: t("home"), path: "/" },
+    { type: "link", name: t("menuCab"), path: "/kabinet" },
+    {
+      type: "dropdown",
+      id: "activities",
+      name: t("activities"),
+      items: [
+        { name: t("agenda"), path: "/agenda", desc: "Info kegiatan & volunteer" },
+        { name: t("documentation"), path: "/dokumentasi", desc: "Galeri & dokumentasi" },
+      ],
+    },
+    {
+      type: "dropdown",
+      id: "publications",
+      name: t("publications"),
+      items: [
+        { name: t("news"), path: "/berita", desc: "Kabar resmi & pengumuman BEM" },
+        { name: t("studentArticles"), path: "/artikel", desc: "Opini & riset mahasiswa" },
+      ],
+    },
+    { type: "link", name: t("menuFeedback"), path: "/#saran" },
   ];
 
   return (
@@ -170,14 +202,75 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
             </div>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <div className="hidden lg:flex lg:gap-4 xl:gap-8 items-center font-semibold text-sm">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.path;
+          {/* Desktop Nav Links dengan Dropdown Menu Rapi */}
+          <div ref={dropdownRef} className="hidden lg:flex lg:gap-4 xl:gap-7 items-center font-semibold text-sm">
+            {navItems.map((item) => {
+              if (item.type === "dropdown") {
+                const isAnyChildActive = item.items?.some((sub) => pathname.startsWith(sub.path));
+                const isOpen = openDropdown === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    className="relative"
+                    onMouseEnter={() => setOpenDropdown(item.id || null)}
+                    onMouseLeave={() => setOpenDropdown(null)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenDropdown(isOpen ? null : (item.id || null))}
+                      className={`relative py-2 transition-colors duration-300 flex items-center gap-1.5 cursor-pointer after:absolute after:bottom-[-4px] after:left-0 after:h-1 after:rounded-full after:transition-all after:duration-300 ${
+                        isAnyChildActive
+                          ? `font-bold after:w-full after:bg-secondary ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"}`
+                          : isScrolled
+                          ? "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
+                          : isHome
+                          ? "text-white/80 after:w-0 hover:after:w-full after:bg-surface hover:text-white"
+                          : "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
+                      }`}
+                    >
+                      <span>{item.name}</span>
+                      <FiChevronDown className={`transition-transform duration-200 text-xs ${isOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute left-0 mt-1 w-56 bg-surface rounded-2xl shadow-xl border border-outline-variant/30 overflow-hidden p-2 z-50"
+                        >
+                          {item.items?.map((sub) => {
+                            const isSubActive = pathname.startsWith(sub.path);
+                            return (
+                              <Link
+                                key={sub.path}
+                                href={sub.path}
+                                onClick={() => setOpenDropdown(null)}
+                                className={`block px-3.5 py-2.5 rounded-xl transition-colors ${
+                                  isSubActive
+                                    ? "bg-primary/10 text-primary font-bold"
+                                    : "hover:bg-surface-variant/40 text-on-surface"
+                                }`}
+                              >
+                                <p className="text-xs font-bold leading-tight">{sub.name}</p>
+                                <p className="text-[10px] text-on-surface-variant mt-0.5 line-clamp-1">{sub.desc}</p>
+                              </Link>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              }
+
+              const isActive = pathname === item.path;
               return (
                 <Link
-                  key={link.name}
-                  href={link.path!}
+                  key={item.name}
+                  href={item.path!}
                   className={`relative py-2 transition-colors duration-300 after:absolute after:bottom-[-4px] after:left-0 after:h-1 after:rounded-full after:transition-all after:duration-300 ${isActive
                     ? `font-bold after:w-full after:bg-secondary ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"}`
                     : isScrolled
@@ -187,12 +280,10 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                         : "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
                     }`}
                 >
-                  {link.name}
+                  {item.name}
                 </Link>
               );
             })}
-            
-            {/* CTA Portal Karya Removed in favor of FloatingKaryaPrompt */}
           </div>
 
           {/* Action Button (Mobile, Tablet, Desktop) */}
@@ -278,6 +369,18 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                         </Link>
                       )}
 
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          setShowProfileSettings(true);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-on-surface hover:bg-primary/10 hover:text-primary transition-colors text-left cursor-pointer"
+                      >
+                        <FiSettings size={16} />
+                        <span>{t("profileSettings")}</span>
+                      </button>
+
 
                       <div className="h-px bg-outline-variant/20 my-1 mx-4"></div>
 
@@ -348,12 +451,12 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
             </Link>
 
             <Link
-              href="/dokumentasi"
-              onClick={() => { setPendingPath("/dokumentasi"); setActiveBottomSheet(null); }}
-              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/dokumentasi") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+              href="/artikel"
+              onClick={() => { setPendingPath("/artikel"); setActiveBottomSheet(null); }}
+              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/artikel") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
             >
-              <span className={`material-symbols-outlined text-[20px] ${currentPath.startsWith("/dokumentasi") ? "text-secondary" : ""}`}>photo_library</span>
-              <span className="text-[9px] font-bold">{t("menuDoc")}</span>
+              <FiEdit3 size={20} className={currentPath.startsWith("/artikel") ? "fill-secondary/20" : ""} />
+              <span className="text-[9px] font-bold">{t("studentArticles")}</span>
             </Link>
 
             <Link
@@ -367,6 +470,16 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           </nav>
         </>
 
+
+            {/* Modal Pengaturan Profil Pengguna */}
+      <ProfileSettingsModal
+        isOpen={showProfileSettings}
+        onClose={() => setShowProfileSettings(false)}
+        userProfile={userProfile}
+        onProfileUpdated={(updated) => {
+          setUserProfile((prev: any) => ({ ...prev, ...updated }));
+        }}
+      />
 
       {/* Logout Confirmation Modal */}
       <AnimatePresence>

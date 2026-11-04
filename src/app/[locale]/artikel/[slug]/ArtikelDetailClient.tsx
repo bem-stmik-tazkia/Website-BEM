@@ -308,7 +308,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
             {article.author?.full_name || t("defaultAuthor")}
           </h3>
           <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
-            {t("curationNotice")}
+            {article.author?.bio || t("curationNotice")}
           </p>
         </div>
       </div>
