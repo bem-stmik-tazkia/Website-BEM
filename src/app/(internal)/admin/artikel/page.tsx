@@ -569,13 +569,13 @@ export default function AdminArtikelPage() {
                       </Link>
                     )}
 
-                    {/* Tombol Hapus Artikel HANYA untuk artikel milik admin itu sendiri */}
-                    {article.author_id === currentUserId && !isPending && (
+                    {/* Tombol Hapus Artikel (Khusus jika artikel ingin dihapus langsung oleh admin) */}
+                    {!isPending && (
                       <button
                         type="button"
                         onClick={() => setArticleToDelete({ id: article.id, title: article.title })}
                         className="inline-flex items-center justify-center p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 border border-rose-500/20 text-xs transition-all cursor-pointer"
-                        title="Hapus Artikel"
+                        title="Hapus Artikel Secara Permanen"
                       >
                         <FiTrash2 size={14} />
                       </button>
@@ -635,6 +635,9 @@ export default function AdminArtikelPage() {
             <p className="text-xs sm:text-sm text-on-surface-variant mt-2 leading-relaxed">
               Apakah Anda yakin ingin menghapus artikel <strong>"{articleToDelete.title}"</strong> secara permanen? Data yang sudah dihapus tidak dapat dipulihkan.
             </p>
+            <div className="mt-3.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed text-left">
+              💡 <strong>Panduan:</strong> Gunakan tindakan hapus permanen ini jika artikel terindikasi spam bot, promosi judi online, atau pelanggaran fatal. Data yang terhapus tidak dapat dipulihkan.
+            </div>
             <div className="flex items-center justify-end gap-2.5 mt-6">
               <button
                 type="button"

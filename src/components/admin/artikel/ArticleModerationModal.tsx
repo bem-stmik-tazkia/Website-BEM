@@ -450,17 +450,17 @@ export default function ArticleModerationModal({
                 Tutup
               </button>
 
-              {/* Tombol Hapus Permanen - HANYA jika artikel milik admin itu sendiri */}
-              {!isRevisionItem && currentUserId && item.author_id === currentUserId && (
+              {/* Tombol Hapus Permanen (Khusus Admin untuk Spam, Judol, atau Pelanggaran Fatal) */}
+              {!isRevisionItem && (
                 <button
                   type="button"
                   disabled={isProcessing}
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
-                  title="Hapus Artikel Secara Permanen"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                  title="Hapus permanen artikel spam, judi online, atau pelanggaran fatal"
                 >
-                  <FiTrash2 size={14} />
-                  <span>Hapus</span>
+                  <FiTrash2 size={13} />
+                  <span>Hapus (Spam / Pelanggaran)</span>
                 </button>
               )}
             </div>
@@ -576,6 +576,9 @@ export default function ArticleModerationModal({
             <p className="text-xs sm:text-sm text-on-surface-variant mt-2 leading-relaxed">
               Apakah Anda yakin ingin menghapus artikel <strong>"{item.title}"</strong> secara permanen? Data yang sudah dihapus tidak dapat dipulihkan.
             </p>
+            <div className="mt-3.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed text-left">
+              💡 <strong>Panduan Moderasi:</strong> Jika artikel hanya memerlukan perbaikan tulisan atau tata bahasa, gunakan <strong>"Tolak / Minta Revisi"</strong> agar mahasiswa dapat memperbaikinya. Gunakan <strong>"Hapus Permanen"</strong> jika artikel merupakan spam bot, promosi judi online, konten SARA, atau injeksi berbahaya.
+            </div>
             <div className="flex items-center justify-end gap-2.5 mt-6">
               <button
                 type="button"
