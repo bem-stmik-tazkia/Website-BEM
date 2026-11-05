@@ -68,7 +68,6 @@ function KategoriChip({ kategori }: { kategori: string }) {
 }
 
 import Link from "next/link";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import DokumentasiTourClient from "@/components/dokumentasi/DokumentasiTourClient";
 
 function DocCard({ item }: { item: any }) {

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import SafeLottie from "@/components/ui/SafeLottie";
 import { FiHome, FiArrowLeft } from "react-icons/fi";
 import { useTranslations } from "next-intl";
 
@@ -29,11 +29,10 @@ export default function NotFound() {
           <div className="relative z-10 w-full bg-surface rounded-[calc(1.5rem-3px)] p-8 sm:p-12 text-center flex flex-col items-center">
             {/* Lottie Animation 404 */}
             <div className="w-72 h-72 sm:w-80 sm:h-80 relative -my-4">
-              <DotLottieReact
+              <SafeLottie
                 src="/animations/404 error.lottie"
                 loop
                 autoplay
-                renderConfig={{ devicePixelRatio: 2 }}
               />
             </div>
 

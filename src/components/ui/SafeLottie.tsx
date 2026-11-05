@@ -88,7 +88,7 @@ export default function SafeLottie({
           ...style,
         }}
       >
-        {fallback || <CalendarFallback />}
+        {fallback !== undefined ? fallback : (src.toLowerCase().includes("calendar") ? <CalendarFallback /> : null)}
       </div>
     );
   }

@@ -18,8 +18,8 @@ import {
   FiTwitter,
   FiLinkedin
 } from "react-icons/fi";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { SiWhatsapp } from "react-icons/si";
+import SafeLottie from "@/components/ui/SafeLottie";
 import { toggleLike } from "@/actions/like";
 import { recordView } from "@/actions/view";
 import { createClient } from "@/utils/supabase/client";
@@ -304,7 +304,7 @@ export default function BeritaDetailPage() {
             >
               <div className="w-6 h-6 flex items-center justify-center -ml-1 -mr-1 shrink-0">
                 {liked ? (
-                  <DotLottieReact src="/animations/Heart Animated.lottie" autoplay loop={false} />
+                  <SafeLottie src="/animations/Heart Animated.lottie" autoplay loop={false} className="w-full h-full" />
                 ) : (
                   <FiHeart className="text-on-surface-variant/70 hover:text-red-500 transition-colors" size={20} />
                 )}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { FiHeart } from "react-icons/fi";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import SafeLottie from "@/components/ui/SafeLottie";
 import { toggleLike } from "@/actions/like";
 import { getDeviceId } from "@/utils/identity";
 import { createClient } from "@/utils/supabase/client";
@@ -86,7 +86,7 @@ export default function LikeButton({
     >
       <div className="flex items-center justify-center shrink-0" style={{ width: size + 8, height: size + 8, marginLeft: -4, marginRight: -2 }}>
         {liked ? (
-          <DotLottieReact src="/animations/Heart Animated.lottie" autoplay loop={false} />
+          <SafeLottie src="/animations/Heart Animated.lottie" autoplay loop={false} className="w-full h-full" />
         ) : (
           <FiHeart size={size} />
         )}

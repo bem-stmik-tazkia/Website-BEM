@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import SafeLottie from "@/components/ui/SafeLottie";
 import { FiHome, FiArrowLeft } from "react-icons/fi";
 
 const i18n: Record<string, { title: string; desc: string; back: string; home: string; footer: string }> = {
@@ -249,11 +249,10 @@ export default function RootNotFound() {
           <div className="nf-spinner" />
           <div className="nf-card">
             <div className="nf-lottie">
-              <DotLottieReact
+              <SafeLottie
                 src="/animations/404 error.lottie"
                 loop
                 autoplay
-                renderConfig={{ devicePixelRatio: 2 }}
                 style={{ width: "100%", height: "100%" }}
               />
             </div>

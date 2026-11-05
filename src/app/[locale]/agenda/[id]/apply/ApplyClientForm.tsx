@@ -8,7 +8,7 @@ import { FiArrowLeft, FiAlertCircle } from "react-icons/fi";
 import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo } from "@/utils/dateFormatter";
 import { useToast } from "@/components/ui/Toast";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import SafeLottie from "@/components/ui/SafeLottie";
 import { useTranslations } from "next-intl";
 
 export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false }: { agenda: AgendaKegiatan, isClosed: boolean, isQuotaFull?: boolean }) {
@@ -176,7 +176,7 @@ export default function ApplyClientForm({ agenda, isClosed, isQuotaFull = false 
     return (
       <div className="max-w-3xl mx-auto px-4 py-8 text-center">
         <div className="w-48 h-48 mx-auto mb-2">
-          <DotLottieReact
+          <SafeLottie
             src="/animations/Succes.lottie"
             autoplay
           />

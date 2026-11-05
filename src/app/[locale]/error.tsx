@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import SafeLottie from "@/components/ui/SafeLottie";
 import { FiHome, FiRefreshCw } from "react-icons/fi";
 import Navbar from "@/components/layout/Navbar";
 import { useTranslations } from "next-intl";
@@ -32,7 +32,7 @@ export default function ErrorBoundary({
           
           {/* 404/Error lottie */}
           <div className="w-48 h-48 sm:w-56 sm:h-56 relative -my-4 mb-2">
-            <DotLottieReact
+            <SafeLottie
               src="/animations/404 error.lottie"
               loop
               autoplay
