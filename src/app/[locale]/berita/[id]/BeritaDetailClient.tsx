@@ -236,31 +236,24 @@ export default function BeritaDetailPage() {
     if (!newsDetail || isLiking) return;
     setIsLiking(true);
 
+    const prevLiked = liked;
+    const prevCount = likeCount;
+
     // Optimistic UI Update
-    setLiked(!liked);
-    setLikeCount(prev => liked ? Math.max(0, prev - 1) : prev + 1);
+    setLiked(!prevLiked);
+    setLikeCount(prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1);
 
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-        const userId = user?.id || null;
       const deviceId = getDeviceId();
+      const isNowLiked = await toggleLike('berita', newsDetail.id, !prevLiked, deviceId);
 
-      const { data: isNowLiked, error } = await supabase.rpc('toggle_berita_like', {
-        p_berita_id: newsDetail.id,
-        p_device_id: deviceId || 'unknown',
-        p_user_id: userId
-      });
-
-      if (error) throw error;
-
-      // Sync with actual DB result just in case
+      // Sync with actual DB result
       setLiked(isNowLiked);
     } catch (err) {
-      console.error(err);
+      console.error("[BeritaDetail] Toggle like error:", err);
       // Revert optimistic update on error
-      setLiked(liked);
-      setLikeCount(prev => liked ? prev + 1 : Math.max(0, prev - 1));
+      setLiked(prevLiked);
+      setLikeCount(prevCount);
     } finally {
       setIsLiking(false);
     }

@@ -65,12 +65,39 @@ export async function toggleLike(
 
     try {
       const service = getServiceRoleClient();
+      let logQuery = service.from('berita_like_logs').select('id').eq('berita_id', id);
+      if (userId) {
+        logQuery = logQuery.eq('user_id', userId);
+      } else {
+        logQuery = logQuery.eq('device_id', cleanDeviceId).is('user_id', null);
+      }
+
+      const { data: existingLog } = await logQuery.maybeSingle();
       const { data: bData } = await service.from('berita').select('likes').eq('id', id).single();
-      const nextLikes = _increment ? (bData?.likes || 0) + 1 : Math.max(0, (bData?.likes || 0) - 1);
-      await service.from('berita').update({ likes: nextLikes }).eq('id', id);
-      return Boolean(_increment);
+      const currentLikes = bData?.likes || 0;
+
+      if (existingLog) {
+        await service.from('berita_like_logs').delete().eq('id', existingLog.id);
+        await service.from('berita').update({ likes: Math.max(0, currentLikes - 1) }).eq('id', id);
+        return false;
+      } else {
+        await service.from('berita_like_logs').insert({
+          berita_id: id,
+          device_id: cleanDeviceId,
+          user_id: userId,
+        });
+        await service.from('berita').update({ likes: currentLikes + 1 }).eq('id', id);
+        return true;
+      }
     } catch (fErr) {
       console.error('[toggleLike] Berita fallback error:', fErr);
+      try {
+        const service = getServiceRoleClient();
+        const { data: bData } = await service.from('berita').select('likes').eq('id', id).single();
+        const nextLikes = _increment ? (bData?.likes || 0) + 1 : Math.max(0, (bData?.likes || 0) - 1);
+        await service.from('berita').update({ likes: nextLikes }).eq('id', id);
+        return Boolean(_increment);
+      } catch {}
       return false;
     }
   } else {
