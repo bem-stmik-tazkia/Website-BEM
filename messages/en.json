@@ -1190,6 +1190,7 @@
     "catOther": "Others"
   },
   "DashboardArtikel": {
+    "portalBadge": "Student Author Portal",
     "pageTitle": "Student Article Dashboard",
     "pageSubtitle": "Manage, track moderation progress, and publish your writings.",
     "btnWriteNew": "Write New Article",
@@ -1266,5 +1267,26 @@
     "clearAll": "Clear all",
     "clearAllTitle": "Clear all notifications",
     "dismissTitle": "Dismiss this notification"
+  },
+  "ProfileSettingsModal": {
+    "title": "Profile Settings",
+    "subtitle": "Customize your identity, profile photo, and author bio",
+    "avatarLabel": "Account Profile Photo",
+    "resetToGoogle": "Use Google Account Photo",
+    "resetSuccess": "Profile photo restored to Google account.",
+    "changeAvatar": "Change Profile Photo",
+    "fullNameLabel": "Display Name / Author",
+    "fullNamePlaceholder": "Enter your display name",
+    "fullNameRequired": "Full name cannot be empty.",
+    "bioLabel": "Short Author Bio",
+    "bioPlaceholder": "Example: Information Systems Student 2024 • AI & Web Development Enthusiast",
+    "bioHint": "This bio will automatically appear on the \"About the Author\" card of each of your articles.",
+    "roleAdmin": "Administrator",
+    "roleMahasiswa": "Student",
+    "cancel": "Cancel",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "saveSuccess": "Profile updated successfully!",
+    "saveError": "Failed to update profile: "
   }
 }

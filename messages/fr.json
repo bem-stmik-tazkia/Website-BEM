@@ -1188,6 +1188,7 @@
     "catOther": "Autres"
   },
   "DashboardArtikel": {
+    "portalBadge": "Portail des Auteurs Étudiants",
     "pageTitle": "Tableau de bord des articles étudiants",
     "pageSubtitle": "Gérez, suivez la modération et publiez vos écrits.",
     "btnWriteNew": "Écrire un nouvel article",
@@ -1264,5 +1265,26 @@
     "clearAll": "Tout effacer",
     "clearAllTitle": "Effacer toutes les notifications",
     "dismissTitle": "Supprimer cette notification"
+  },
+  "ProfileSettingsModal": {
+    "title": "Paramètres du profil",
+    "subtitle": "Personnalisez votre identité, photo de profil et bio d'auteur",
+    "avatarLabel": "Photo de profil du compte",
+    "resetToGoogle": "Utiliser la photo du compte Google",
+    "resetSuccess": "Photo de profil restaurée depuis le compte Google.",
+    "changeAvatar": "Changer la photo de profil",
+    "fullNameLabel": "Nom d'affichage / Auteur",
+    "fullNamePlaceholder": "Entrez votre nom d'affichage",
+    "fullNameRequired": "Le nom complet ne peut pas être vide.",
+    "bioLabel": "Courte bio de l'auteur",
+    "bioPlaceholder": "Exemple : Étudiant en Systèmes d'Information 2024 • Passionné d'IA et de développement Web",
+    "bioHint": "Cette biographie apparaîtra automatiquement sur la carte « À propos de l'auteur » de chacun de vos articles.",
+    "roleAdmin": "Administrateur",
+    "roleMahasiswa": "Étudiant",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "saveSuccess": "Profil mis à jour avec succès !",
+    "saveError": "Échec de la mise à jour du profil : "
   }
 }

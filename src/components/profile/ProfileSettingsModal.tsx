@@ -6,6 +6,7 @@ import { FiX, FiUser, FiCheck, FiMail, FiShield, FiFileText, FiRefreshCw } from 
 import ImageUpload from "@/components/ui/ImageUpload";
 import { updateMyProfile } from "@/actions/profile";
 import { useToast } from "@/components/ui/Toast";
+import { useTranslations } from "next-intl";
 
 interface ProfileSettingsModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function ProfileSettingsModal({
   onProfileUpdated,
 }: ProfileSettingsModalProps) {
   const { toast } = useToast();
+  const t = useTranslations("ProfileSettingsModal");
 
   const [fullName, setFullName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -46,14 +48,14 @@ export default function ProfileSettingsModal({
   const handleResetToGoogle = () => {
     if (googleAvatar) {
       setAvatarUrl(googleAvatar);
-      toast("Foto profil dikembalikan ke akun Google.", "info");
+      toast(t("resetSuccess"), "info");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim()) {
-      toast("Nama lengkap tidak boleh kosong.", "error");
+      toast(t("fullNameRequired"), "error");
       return;
     }
 
@@ -69,13 +71,13 @@ export default function ProfileSettingsModal({
         throw new Error(res.error);
       }
 
-      toast("Profil Anda berhasil diperbarui!", "success");
+      toast(t("saveSuccess"), "success");
       if (onProfileUpdated && res.profile) {
         onProfileUpdated(res.profile);
       }
       onClose();
     } catch (err: any) {
-      toast(err.message || "Gagal memperbarui profil.", "error");
+      toast(`${t("saveError")}${err.message || ""}`, "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -107,9 +109,9 @@ export default function ProfileSettingsModal({
                 <FiUser size={18} />
               </div>
               <div>
-                <h2 className="text-base font-black text-on-surface">Pengaturan Profil</h2>
+                <h2 className="text-base font-black text-on-surface">{t("title")}</h2>
                 <p className="text-[11px] text-on-surface-variant">
-                  Kustomisasi identitas, foto profil, dan bio penulis Anda
+                  {t("subtitle")}
                 </p>
               </div>
             </div>
@@ -127,7 +129,7 @@ export default function ProfileSettingsModal({
             {/* Foto Profil */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-on-surface">Foto Profil Akun</label>
+                <label className="text-xs font-bold text-on-surface">{t("avatarLabel")}</label>
                 {googleAvatar && avatarUrl !== googleAvatar && (
                   <button
                     type="button"
@@ -135,7 +137,7 @@ export default function ProfileSettingsModal({
                     className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline cursor-pointer"
                   >
                     <FiRefreshCw size={11} />
-                    <span>Gunakan Foto Akun Google</span>
+                    <span>{t("resetToGoogle")}</span>
                   </button>
                 )}
               </div>
@@ -143,14 +145,14 @@ export default function ProfileSettingsModal({
                 value={avatarUrl}
                 onChange={(url) => setAvatarUrl(url)}
                 folder="avatars"
-                label="Ganti Foto Profil"
+                label={t("changeAvatar")}
               />
             </div>
 
             {/* Nama Lengkap */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-on-surface flex items-center justify-between">
-                <span>Nama Tampilan / Penulis <span className="text-rose-500">*</span></span>
+                <span>{t("fullNameLabel")} <span className="text-rose-500">*</span></span>
                 <span className="text-[10px] text-on-surface-variant font-normal">{fullName.length}/80</span>
               </label>
               <input
@@ -159,7 +161,7 @@ export default function ProfileSettingsModal({
                 onChange={(e) => setFullName(e.target.value)}
                 maxLength={80}
                 required
-                placeholder="Masukkan nama tampilan Anda"
+                placeholder={t("fullNamePlaceholder")}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-surface-variant/20 border border-outline-variant/40 focus:border-primary focus:ring-2 focus:ring-primary/20 text-on-surface text-xs sm:text-sm outline-none transition-all placeholder:text-on-surface-variant/40"
               />
             </div>
@@ -169,7 +171,7 @@ export default function ProfileSettingsModal({
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-on-surface flex items-center gap-1">
                   <FiFileText size={13} className="text-primary" />
-                  <span>Bio Singkat Penulis</span>
+                  <span>{t("bioLabel")}</span>
                 </label>
                 <span className="text-[10px] text-on-surface-variant font-normal">{bio.length}/250</span>
               </div>
@@ -178,11 +180,11 @@ export default function ProfileSettingsModal({
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={250}
                 rows={3}
-                placeholder="Contoh: Mahasiswa Sistem Informasi 2024 • Peminat Kecerdasan Buatan & Web Development"
+                placeholder={t("bioPlaceholder")}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-surface-variant/20 border border-outline-variant/40 focus:border-primary focus:ring-2 focus:ring-primary/20 text-on-surface text-xs sm:text-sm outline-none transition-all placeholder:text-on-surface-variant/40 resize-none leading-relaxed"
               />
               <p className="text-[10px] text-on-surface-variant/70">
-                Bio ini akan otomatis ditampilkan di kartu "Tentang Penulis" pada setiap artikel karya Anda.
+                {t("bioHint")}
               </p>
             </div>
 
@@ -194,7 +196,7 @@ export default function ProfileSettingsModal({
               </div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-extrabold uppercase tracking-wider">
                 <FiShield size={11} />
-                <span>{userProfile?.role === "admin" ? "Administrator" : "Mahasiswa"}</span>
+                <span>{userProfile?.role === "admin" ? t("roleAdmin") : t("roleMahasiswa")}</span>
               </div>
             </div>
 
@@ -206,7 +208,7 @@ export default function ProfileSettingsModal({
                 disabled={isSubmitting}
                 className="px-4 py-2 rounded-xl border border-outline-variant/40 text-on-surface hover:bg-surface-variant/30 text-xs font-bold transition-colors cursor-pointer"
               >
-                Batal
+                {t("cancel")}
               </button>
               <button
                 type="submit"
@@ -214,7 +216,7 @@ export default function ProfileSettingsModal({
                 className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-md shadow-primary/20 transition-all cursor-pointer disabled:opacity-50"
               >
                 <FiCheck size={14} />
-                <span>{isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}</span>
+                <span>{isSubmitting ? t("saving") : t("save")}</span>
               </button>
             </div>
           </form>

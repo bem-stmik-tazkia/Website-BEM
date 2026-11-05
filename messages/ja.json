@@ -1188,6 +1188,7 @@
     "catOther": "その他"
   },
   "DashboardArtikel": {
+    "portalBadge": "学生執筆者ポータル",
     "pageTitle": "学生記事ダッシュボード",
     "pageSubtitle": "記事の管理、審査ステータスの確認、公開手続きを行います。",
     "btnWriteNew": "新しい記事を書く",
@@ -1264,5 +1265,26 @@
     "clearAll": "すべて消去",
     "clearAllTitle": "すべての通知を消去",
     "dismissTitle": "この通知を削除"
+  },
+  "ProfileSettingsModal": {
+    "title": "プロフィール設定",
+    "subtitle": "アカウント情報、プロフィール写真、執筆者自己紹介をカスタマイズ",
+    "avatarLabel": "プロフィール写真",
+    "resetToGoogle": "Googleアカウントの写真を使用",
+    "resetSuccess": "プロフィール写真をGoogleアカウントの写真に戻しました。",
+    "changeAvatar": "プロフィール画像を変更",
+    "fullNameLabel": "表示名 / 著者名",
+    "fullNamePlaceholder": "表示名を入力してください",
+    "fullNameRequired": "氏名を入力してください。",
+    "bioLabel": "執筆者の短い自己紹介",
+    "bioPlaceholder": "例：情報システム科2024年度生 • AI＆Web開発に興味があります",
+    "bioHint": "この自己紹介は、あなたのすべての記事の「著者について」カードに自動表示されます。",
+    "roleAdmin": "管理者",
+    "roleMahasiswa": "学生",
+    "cancel": "キャンセル",
+    "save": "変更を保存",
+    "saving": "保存中...",
+    "saveSuccess": "プロフィールが更新されました！",
+    "saveError": "プロフィールの更新に失敗しました: "
   }
 }

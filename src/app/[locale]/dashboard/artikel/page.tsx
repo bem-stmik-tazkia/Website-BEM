@@ -156,7 +156,7 @@ export default function DashboardArtikelPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-bold text-primary tracking-wide uppercase bg-primary/10 px-2.5 py-0.5 rounded-md">
-              Portal Penulis Mahasiswa
+              {t("portalBadge")}
             </span>
             <button
               onClick={handleManualRefresh}

@@ -1190,6 +1190,7 @@
     "catOther": "Lainnya"
   },
   "DashboardArtikel": {
+    "portalBadge": "Portal Penulis Mahasiswa",
     "pageTitle": "Dashboard Artikel Mahasiswa",
     "pageSubtitle": "Kelola, pantau proses moderasi, dan terbitkan karya tulis Anda.",
     "btnWriteNew": "Tulis Artikel Baru",
@@ -1266,5 +1267,26 @@
     "clearAll": "Bersihkan",
     "clearAllTitle": "Bersihkan semua notifikasi",
     "dismissTitle": "Hapus notifikasi ini"
+  },
+  "ProfileSettingsModal": {
+    "title": "Pengaturan Profil",
+    "subtitle": "Kustomisasi identitas, foto profil, dan bio penulis Anda",
+    "avatarLabel": "Foto Profil Akun",
+    "resetToGoogle": "Gunakan Foto Akun Google",
+    "resetSuccess": "Foto profil dikembalikan ke akun Google.",
+    "changeAvatar": "Ganti Foto Profil",
+    "fullNameLabel": "Nama Tampilan / Penulis",
+    "fullNamePlaceholder": "Masukkan nama tampilan Anda",
+    "fullNameRequired": "Nama lengkap tidak boleh kosong.",
+    "bioLabel": "Bio Singkat Penulis",
+    "bioPlaceholder": "Contoh: Mahasiswa Sistem Informasi 2024 • Peminat Kecerdasan Buatan & Web Development",
+    "bioHint": "Bio ini akan otomatis ditampilkan di kartu \"Tentang Penulis\" pada setiap artikel karya Anda.",
+    "roleAdmin": "Administrator",
+    "roleMahasiswa": "Mahasiswa",
+    "cancel": "Batal",
+    "save": "Simpan Perubahan",
+    "saving": "Menyimpan...",
+    "saveSuccess": "Profil berhasil diperbarui!",
+    "saveError": "Gagal memperbarui profil: "
   }
 }
