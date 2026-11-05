@@ -127,8 +127,18 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
   // Compute featured news dynamically (hanya aktif pada kategori Semua dan tanpa pencarian)
   const featuredNews = sortedNews.length > 0 ? sortedNews[0] : null;
 
-  // Categories list
-  const categories = ["Semua", "Berita", "Kampus"];
+  // Categories list - Dinamis mendeteksi kategori yang ada di database berita
+  const categories = useMemo(() => {
+    const rawCategories = Array.from(new Set(allNews.map((n) => n.category).filter(Boolean)));
+    const merged = new Set(["Semua", "Berita", "Kampus"]);
+    rawCategories.forEach((cat) => {
+      if (cat.toLowerCase() !== "artikel" && cat.toLowerCase() !== "article") {
+        const normalized = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
+        merged.add(normalized);
+      }
+    });
+    return Array.from(merged);
+  }, [allNews]);
 
   const translateCategory = (cat?: string) => {
     if (!cat) return "";
@@ -252,27 +262,14 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
       const pool = sortedNews.filter((n) => (featuredNews && sortedNews.length >= 4) ? n.id !== featuredNews.id : true);
       return [...pool].sort((a, b) => getEngagementScore(b) - getEngagementScore(a)).slice(0, 3);
     } else {
-      // Kategori Spesifik (misal: "Artikel", "Berita", "Kampus"):
-      // 1. Ambil berita yang sesuai kategori yang dipilih
+      // Kategori Spesifik (misal: "Kampus", "Berita"):
+      // HANYA ambil berita yang sesuai kategori yang dipilih (murni, konsisten, tidak mencampur kategori lain)
       const categoryNews = sortedNews.filter(
         (n) => n.category.toLowerCase() === selectedCategory.toLowerCase()
       );
-      const sortedCategoryNews = [...categoryNews].sort(
-        (a, b) => getEngagementScore(b) - getEngagementScore(a)
-      );
-
-      // 2. Jika kategori tersebut memiliki >= 3 berita, langsung ambil top 3
-      if (sortedCategoryNews.length >= 3) {
-        return sortedCategoryNews.slice(0, 3);
-      }
-
-      // 3. Fallback cerdas: jika berita dalam kategori < 3, lengkapi sisanya dengan berita terpopuler global
-      const selectedIds = new Set(sortedCategoryNews.map((n) => n.id));
-      const fallbackNews = sortedNews
-        .filter((n) => !selectedIds.has(n.id) && (featuredNews ? n.id !== featuredNews.id : true))
-        .sort((a, b) => getEngagementScore(b) - getEngagementScore(a));
-
-      return [...sortedCategoryNews, ...fallbackNews].slice(0, 3);
+      return [...categoryNews]
+        .sort((a, b) => getEngagementScore(b) - getEngagementScore(a))
+        .slice(0, 3);
     }
   }, [sortedNews, featuredNews, selectedCategory]);
 
@@ -436,7 +433,9 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
           <div id="tour-berita-grid" className="lg:col-span-8 flex flex-col gap-6 md:gap-8 order-1 lg:order-1">
             <h3 className="text-base md:text-lg font-bold text-primary pb-2.5 border-b border-outline-variant/30 flex items-center gap-2 uppercase tracking-wide">
               <span className="w-2.5 h-4 bg-primary rounded-full inline-block"></span>
-              {t("categoryNews")}
+              {selectedCategory === "Semua" || selectedCategory.toLowerCase() === "all"
+                ? t("categoryNews")
+                : translateCategory(selectedCategory)}
             </h3>
             {isLoading || isSearching || isTranslatingNews ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
@@ -608,82 +607,88 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
             </h3>
 
             {/* Popular News Cards with Hover Lift */}
-            <div className="flex flex-row overflow-x-auto gap-4 pb-4 w-full lg:flex-col lg:overflow-visible lg:pb-0 scrollbar-none snap-x snap-mandatory flex-nowrap lg:flex-wrap">
-              {popularNews.map((item, index) => (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
-                  whileHover={{ y: -5, scale: 1.01 }}
-                  key={item.id}
-                  className="w-[280px] sm:w-[320px] lg:w-auto shrink-0 lg:shrink snap-start"
-                >
-                  <div
-                    className="group relative rounded-3xl overflow-hidden shadow-md h-[210px] flex flex-col justify-end transition-all duration-500 hover:shadow-xl hover:shadow-primary/15 w-full border border-outline-variant/15 hover:border-primary/40 bg-slate-900"
+            {popularNews.length > 0 ? (
+              <div className="flex flex-row overflow-x-auto gap-4 pb-4 w-full lg:flex-col lg:overflow-visible lg:pb-0 scrollbar-none snap-x snap-mandatory flex-nowrap lg:flex-wrap">
+                {popularNews.map((item, index) => (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.05 }}
+                    whileHover={{ y: -5, scale: 1.01 }}
+                    key={item.id}
+                    className="w-[280px] sm:w-[320px] lg:w-auto shrink-0 lg:shrink snap-start"
                   >
-                    {/* Background Image with Zoom */}
                     <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110 pointer-events-none"
-                      style={{ backgroundImage: `url('${item.image_url}')` }}
-                    ></div>
+                      className="group relative rounded-3xl overflow-hidden shadow-md h-[210px] flex flex-col justify-end transition-all duration-500 hover:shadow-xl hover:shadow-primary/15 w-full border border-outline-variant/15 hover:border-primary/40 bg-slate-900"
+                    >
+                      {/* Background Image with Zoom */}
+                      <div
+                        className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-110 pointer-events-none"
+                        style={{ backgroundImage: `url('${item.image_url}')` }}
+                      ></div>
 
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/20 transition-opacity duration-300 group-hover:opacity-95 pointer-events-none"></div>
-                    <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 via-50% to-slate-950/20 transition-opacity duration-300 group-hover:opacity-95 pointer-events-none"></div>
+                      <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
 
-                    {/* Full-card link at z-10 */}
-                    <Link
-                      href={(item as any).detailUrl || `/berita/${item.slug}`}
-                      className="absolute inset-0 z-10 cursor-pointer"
-                      aria-label={item.title}
-                    />
+                      {/* Full-card link at z-10 */}
+                      <Link
+                        href={(item as any).detailUrl || `/berita/${item.slug}`}
+                        className="absolute inset-0 z-10 cursor-pointer"
+                        aria-label={item.title}
+                      />
 
-                    {/* Content at z-20 pointer-events-none */}
-                    <div className="relative z-20 p-4 sm:p-5 flex flex-col items-start text-white w-full pointer-events-none">
-                      <div className="flex items-center justify-between w-full gap-2 mb-2">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {/* Ranking Badge #1, #2, #3 */}
-                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs flex items-center gap-0.5 tracking-wider ${
-                            index === 0
-                              ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-amber-500/25 ring-1 ring-amber-300/40"
-                              : index === 1
-                              ? "bg-gradient-to-r from-slate-200 to-slate-400 text-slate-950 shadow-slate-400/25 ring-1 ring-slate-200/40"
-                              : "bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-amber-700/25 ring-1 ring-amber-500/30"
-                          }`}>
-                            #{index + 1}
-                          </span>
-                          <span className="bg-secondary text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-xs uppercase tracking-wider transition-transform duration-300 group-hover:scale-105">
-                            {translateCategory(item.category)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[9px] text-white/90 font-medium shrink-0">
-                          <span className="flex items-center gap-0.5"><FiEye size={10} /> {item.views}</span>
-                          <div className="pointer-events-auto relative z-30">
-                            <LikeButton initialLikes={item.likes} id={item.id} table={(item as any).type === 'article' ? 'articles' : 'berita'} size={10} />
+                      {/* Content at z-20 pointer-events-none */}
+                      <div className="relative z-20 p-4 sm:p-5 flex flex-col items-start text-white w-full pointer-events-none">
+                        <div className="flex items-center justify-between w-full gap-2 mb-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {/* Ranking Badge #1, #2, #3 */}
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs flex items-center gap-0.5 tracking-wider ${
+                              index === 0
+                                ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-amber-500/25 ring-1 ring-amber-300/40"
+                                : index === 1
+                                ? "bg-gradient-to-r from-slate-200 to-slate-400 text-slate-950 shadow-slate-400/25 ring-1 ring-slate-200/40"
+                                : "bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-amber-700/25 ring-1 ring-amber-500/30"
+                            }`}>
+                              #{index + 1}
+                            </span>
+                            <span className="bg-secondary text-white text-[9px] font-bold px-2 py-0.5 rounded-md shadow-xs uppercase tracking-wider transition-transform duration-300 group-hover:scale-105">
+                              {translateCategory(item.category)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[9px] text-white/90 font-medium shrink-0">
+                            <span className="flex items-center gap-0.5"><FiEye size={10} /> {item.views}</span>
+                            <div className="pointer-events-auto relative z-30">
+                              <LikeButton initialLikes={item.likes} id={item.id} table={(item as any).type === 'article' ? 'articles' : 'berita'} size={10} />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <h4 className="text-sm font-bold leading-snug text-white group-hover:text-secondary-container transition-colors duration-300 line-clamp-2 drop-shadow-md">
-                        {item.title}
-                      </h4>
-                      <div className="flex items-center justify-between w-full mt-2.5">
-                        <span className="flex items-center gap-1 text-[10px] text-white/85 font-medium drop-shadow-xs bg-white/10 backdrop-blur-xs px-2 py-0.5 rounded border border-white/10">
-                          <FiCalendar size={10} className="text-white/80 shrink-0" /> {formatDateLocalized(item.created_at, locale)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={(e) => handleUniversalShare(e, item.title, item.slug)}
-                          title={t("shareNews")}
-                          className="pointer-events-auto relative z-30 p-1.5 rounded-full bg-white/15 hover:bg-primary text-white backdrop-blur-sm transition-all duration-300 border border-white/20 hover:scale-110 active:scale-95 shadow-xs cursor-pointer"
-                        >
-                          <FiShare2 size={11} />
-                        </button>
+                        <h4 className="text-sm font-bold leading-snug text-white group-hover:text-secondary-container transition-colors duration-300 line-clamp-2 drop-shadow-md">
+                          {item.title}
+                        </h4>
+                        <div className="flex items-center justify-between w-full mt-2.5">
+                          <span className="flex items-center gap-1 text-[10px] text-white/85 font-medium drop-shadow-xs bg-white/10 backdrop-blur-xs px-2 py-0.5 rounded border border-white/10">
+                            <FiCalendar size={10} className="text-white/80 shrink-0" /> {formatDateLocalized(item.created_at, locale)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleUniversalShare(e, item.title, item.slug)}
+                            title={t("shareNews")}
+                            className="pointer-events-auto relative z-30 p-1.5 rounded-full bg-white/15 hover:bg-primary text-white backdrop-blur-sm transition-all duration-300 border border-white/20 hover:scale-110 active:scale-95 shadow-xs cursor-pointer"
+                          >
+                            <FiShare2 size={11} />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white border border-outline-variant/30 rounded-3xl p-6 text-center text-on-surface-variant text-sm shadow-xs">
+                {t("noNewsEmptyDesc")}
+              </div>
+            )}
 
             {/* Community Retention Widget: Saluran Resmi BEM STMIK Tazkia */}
             <div className="mt-2 bg-gradient-to-br from-primary/10 via-surface to-secondary/10 border border-primary/20 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col gap-3 relative overflow-hidden transition-all duration-300 hover:shadow-md">
