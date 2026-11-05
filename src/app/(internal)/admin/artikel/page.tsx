@@ -44,6 +44,7 @@ export default function AdminArtikelPage() {
 
   const [articles, setArticles] = useState<ModerationArticle[]>([]);
   const [revisions, setRevisions] = useState<ModerationRevision[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -61,6 +62,9 @@ export default function AdminArtikelPage() {
       }
       setArticles(res.articles || []);
       setRevisions(res.revisions || []);
+      if (res.currentUserId) {
+        setCurrentUserId(res.currentUserId);
+      }
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("articles_moderation_updated"));
       }
@@ -553,8 +557,8 @@ export default function AdminArtikelPage() {
 
                   {/* Right Actions */}
                   <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-outline-variant/20">
-                    {/* Tombol Edit untuk Draf / Penulis */}
-                    {(isDraft || isRejected) && (
+                    {/* Tombol Edit HANYA untuk draf milik admin itu sendiri */}
+                    {article.author_id === currentUserId && (isDraft || isRejected) && (
                       <Link
                         href={`/dashboard/artikel/${article.id}/edit?from=admin`}
                         className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-surface-variant/40 hover:bg-surface-variant text-on-surface border border-outline-variant/40 text-xs font-semibold transition-all cursor-pointer"
@@ -565,8 +569,8 @@ export default function AdminArtikelPage() {
                       </Link>
                     )}
 
-                    {/* Tombol Hapus Artikel */}
-                    {!isPending && (
+                    {/* Tombol Hapus Artikel HANYA untuk artikel milik admin itu sendiri */}
+                    {article.author_id === currentUserId && !isPending && (
                       <button
                         type="button"
                         onClick={() => setArticleToDelete({ id: article.id, title: article.title })}
@@ -603,6 +607,7 @@ export default function AdminArtikelPage() {
         <ArticleModerationModal
           item={selectedArticle}
           isRevisionItem={false}
+          currentUserId={currentUserId}
           onClose={() => setSelectedArticle(null)}
           onSuccess={loadData}
         />
@@ -613,6 +618,7 @@ export default function AdminArtikelPage() {
         <ArticleModerationModal
           item={selectedRevision}
           isRevisionItem={true}
+          currentUserId={currentUserId}
           onClose={() => setSelectedRevision(null)}
           onSuccess={loadData}
         />

@@ -9,12 +9,13 @@ import {
 export interface AdminArticlesResponse {
   articles: ModerationArticle[];
   revisions: ModerationRevision[];
+  currentUserId?: string;
   error?: string | null;
 }
 
 export async function fetchAdminArticlesData(): Promise<AdminArticlesResponse> {
   try {
-    await requireAdmin();
+    const { user } = await requireAdmin();
     const serviceClient = getServiceRoleClient();
 
     // 1. Ambil artikel lengkap beserta author profile
@@ -49,6 +50,16 @@ export async function fetchAdminArticlesData(): Promise<AdminArticlesResponse> {
         }));
       }
     }
+
+    // Filter privasi penting: Draf milik mahasiswa TIDAK BOLEH tampil di meja moderasi admin.
+    // Draf mahasiswa adalah privat di dashboard mereka sampai diajukan resmi (pending).
+    // Tab draf di admin hanya boleh menampilkan draf yang ditulis oleh admin itu sendiri.
+    const sanitizedArticles = loadedArticles.filter((a) => {
+      if (a.status === "draft") {
+        return a.author_id === user.id;
+      }
+      return true;
+    });
 
     // 2. Ambil revisi pending beserta artikel dan author
     const { data: revData, error: revError } = await serviceClient
@@ -90,8 +101,9 @@ export async function fetchAdminArticlesData(): Promise<AdminArticlesResponse> {
     }
 
     return {
-      articles: loadedArticles,
+      articles: sanitizedArticles,
       revisions: loadedRevisions,
+      currentUserId: user.id,
     };
   } catch (err: any) {
     console.error("[actions:fetchAdminArticlesData] Error:", err);

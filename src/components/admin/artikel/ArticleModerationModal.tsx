@@ -71,6 +71,7 @@ export interface ModerationRevision {
 interface Props {
   item: ModerationArticle | ModerationRevision | null;
   isRevisionItem?: boolean;
+  currentUserId?: string | null;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -78,6 +79,7 @@ interface Props {
 export default function ArticleModerationModal({
   item,
   isRevisionItem = false,
+  currentUserId,
   onClose,
   onSuccess,
 }: Props) {
@@ -448,8 +450,8 @@ export default function ArticleModerationModal({
                 Tutup
               </button>
 
-              {/* Tombol Hapus Permanen */}
-              {!isRevisionItem && (
+              {/* Tombol Hapus Permanen - HANYA jika artikel milik admin itu sendiri */}
+              {!isRevisionItem && currentUserId && item.author_id === currentUserId && (
                 <button
                   type="button"
                   disabled={isProcessing}
@@ -464,8 +466,8 @@ export default function ArticleModerationModal({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              {/* Tombol Aksi jika artikel masih DRAF */}
-              {!isRevisionItem && item.status === "draft" && (
+              {/* Tombol Aksi jika artikel masih DRAF dan dibuat oleh admin sendiri */}
+              {!isRevisionItem && item.status === "draft" && currentUserId && item.author_id === currentUserId && (
                 <>
                   <Link
                     href={`/dashboard/artikel/${item.id}/edit?from=admin`}
