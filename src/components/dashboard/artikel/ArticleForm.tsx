@@ -534,7 +534,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           <div className="mt-4 p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 flex items-start gap-2.5 text-xs">
             <FiInfo className="text-blue-600 text-sm shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">Mode Revisi Terproteksi (PRD 6.1):</p>
+              <p className="font-bold">Mode Revisi Terproteksi</p>
               <p className="mt-0.5 text-blue-600/90 leading-relaxed">
                 Perubahan pada halaman ini tidak akan langsung menimpa artikel tayang. Admin akan memeriksa revisi ini sebelum memperbarui artikel secara publik.
               </p>
@@ -586,22 +586,16 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           </div>
         </div>
 
-        {/* Gambar Sampul (Cover Image) dengan Badge Tipe Artikel Tunggal */}
+        {/* Gambar Sampul (Cover Image) */}
         <div className="bg-surface border border-outline-variant/30 rounded-2xl p-5 sm:p-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-            <div>
-              <label className="text-xs sm:text-sm font-bold text-on-surface flex items-center gap-1.5">
-                <FiImage className="text-primary" />
-                <span>{t("coverLabel")} <span className="text-rose-500">*</span></span>
-              </label>
-              <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                {t("coverDesc")}
-              </p>
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold self-start sm:self-center shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>{t("typeBadge")}</span>
-            </div>
+          <div className="mb-3">
+            <label className="text-xs sm:text-sm font-bold text-on-surface flex items-center gap-1.5">
+              <FiImage className="text-primary" />
+              <span>{t("coverLabel")} <span className="text-rose-500">*</span></span>
+            </label>
+            <p className="text-[11px] text-on-surface-variant leading-relaxed">
+              {t("coverDesc")}
+            </p>
           </div>
 
           <ImageUpload

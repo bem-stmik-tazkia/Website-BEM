@@ -123,6 +123,9 @@ export default function DashboardArtikelPage() {
       // Optimistic update
       setArticles((prev) => prev.filter((a) => a.id !== selectedDeleteArticle.id));
       setSelectedDeleteArticle(null);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("student_articles_updated"));
+      }
     } catch (err) {
       console.error("[DashboardArtikel] Delete failed:", err);
     } finally {

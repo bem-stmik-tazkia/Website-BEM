@@ -136,32 +136,44 @@ export default function StudentNotificationBell({
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from("article_audit_log")
-        .select("id, article_id, article_title, action, note, created_at")
-        .eq("author_id", user.id)
-        .in("action", [
-          "status_published",
-          "revision_approved",
-          "status_rejected",
-          "revision_rejected",
-        ])
-        .order("created_at", { ascending: false })
-        .limit(20);
+      // Ambil riwayat audit log dan daftar artikel aktif milik user secara bersamaan
+      const [auditRes, articlesRes] = await Promise.all([
+        supabase
+          .from("article_audit_log")
+          .select("id, article_id, article_title, action, note, created_at")
+          .eq("author_id", user.id)
+          .in("action", [
+            "status_published",
+            "revision_approved",
+            "status_rejected",
+            "revision_rejected",
+          ])
+          .order("created_at", { ascending: false })
+          .limit(20),
+        supabase
+          .from("articles")
+          .select("id")
+          .eq("author_id", user.id),
+      ]);
 
-      if (error) {
-        console.warn("[StudentNotificationBell] Failed to fetch audit log:", error.message);
+      if (auditRes.error) {
+        console.warn("[StudentNotificationBell] Failed to fetch audit log:", auditRes.error.message);
         return;
       }
 
-      const list: StudentNotification[] = (data || []).map((item) => ({
-        id: item.id,
-        article_id: item.article_id,
-        article_title: item.article_title || "Artikel Mahasiswa",
-        action: item.action,
-        note: item.note,
-        created_at: item.created_at,
-      }));
+      // Pastikan artikel yang sudah dihapus tidak muncul lagi dalam daftar notifikasi
+      const existingArticleIds = new Set((articlesRes.data || []).map((a: any) => a.id));
+
+      const list: StudentNotification[] = (auditRes.data || [])
+        .filter((item) => item.article_id && existingArticleIds.has(item.article_id))
+        .map((item) => ({
+          id: item.id,
+          article_id: item.article_id,
+          article_title: item.article_title || "Artikel Mahasiswa",
+          action: item.action,
+          note: item.note,
+          created_at: item.created_at,
+        }));
 
       const storedViewed = localStorage.getItem("student_notif_last_viewed") || "";
       let storedDismissed: string[] = [];

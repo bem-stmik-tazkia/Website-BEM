@@ -8,7 +8,8 @@ import { getPublicMaintenanceSettings } from "@/actions/public-settings";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiTool, FiClock, FiRefreshCw,
-  FiCheckCircle, FiX, FiStar, FiArrowRight, FiUnlock
+  FiCheckCircle, FiX, FiStar, FiArrowRight, FiUnlock,
+  FiChevronUp, FiMinus
 } from "react-icons/fi";
 import { Link } from "@/i18n/routing";
 import NativeLink from "next/link";
@@ -143,6 +144,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
   const [isBypassChecked, setIsBypassChecked] = useState(false);
   const [showBypassNotice, setShowBypassNotice] = useState(false);
   const [bypassAdminPath, setBypassAdminPath] = useState<string>("/login");
+  const [isBannerMinimized, setIsBannerMinimized] = useState(false);
 
   useEffect(() => {
     if (showBypassNotice) {
@@ -439,35 +441,59 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
           {konamiUnlocked && !pathname?.includes('/dashboard') && !pathname?.includes('/admin') && (
             <aside
               aria-label={maintenanceMode ? "Status Bypass Maintenance" : "Akses Admin Terbuka"}
-              className="fixed bottom-20 md:bottom-6 left-4 md:left-6 z-[9999] bg-amber-500/95 backdrop-blur-md text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-amber-300/40 flex items-center gap-3 text-xs md:text-sm animate-fade-in"
+              className="fixed bottom-24 md:bottom-6 left-3 md:left-6 z-[9999] bg-amber-500/95 backdrop-blur-md text-white shadow-2xl border border-amber-300/40 animate-fade-in transition-all max-w-[calc(100vw-1.5rem)] rounded-2xl"
             >
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <div>
-                  <p className="font-bold leading-tight">
-                    {maintenanceMode ? "Bypass Maintenance Aktif" : "Akses Admin Terbuka"}
-                  </p>
-                  <p className="text-[11px] text-amber-100 hidden sm:block">
-                    {maintenanceMode ? "Website terbuka tanpa login." : "Klik Masuk Admin untuk login."}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 border-l border-white/20 pl-2.5">
-                <NativeLink
-                  href={bypassAdminPath}
-                  className="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
-                >
-                  Masuk Admin
-                </NativeLink>
+              {isBannerMinimized ? (
                 <button
                   type="button"
-                  onClick={handleExitBypass}
-                  title={maintenanceMode ? "Kunci kembali dan aktifkan layar maintenance" : "Kunci kembali akses admin"}
-                  className="px-2 py-1 bg-black/20 hover:bg-black/40 rounded-lg text-xs font-bold transition-colors whitespace-nowrap cursor-pointer"
+                  onClick={() => setIsBannerMinimized(false)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold cursor-pointer hover:bg-white/10 rounded-2xl"
+                  title="Perluas status bypass maintenance"
                 >
-                  Kunci
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="whitespace-nowrap">{maintenanceMode ? "Bypass Aktif" : "Admin Terbuka"}</span>
+                  <FiChevronUp size={14} className="opacity-80" />
                 </button>
-              </div>
+              ) : (
+                <div className="px-3.5 py-2 sm:px-4 sm:py-2.5 flex items-center gap-2.5 sm:gap-3 text-xs md:text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <div>
+                      <p className="font-bold leading-tight whitespace-nowrap">
+                        {maintenanceMode ? "Bypass Aktif" : "Akses Admin Terbuka"}
+                      </p>
+                      <p className="text-[11px] text-amber-100 hidden sm:block">
+                        {maintenanceMode ? "Website terbuka tanpa login." : "Klik Masuk Admin untuk login."}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 border-l border-white/20 pl-2">
+                    <NativeLink
+                      href={bypassAdminPath}
+                      className="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bold transition-colors whitespace-nowrap"
+                    >
+                      Masuk Admin
+                    </NativeLink>
+                    <button
+                      type="button"
+                      onClick={handleExitBypass}
+                      title={maintenanceMode ? "Kunci kembali dan aktifkan layar maintenance" : "Kunci kembali akses admin"}
+                      className="px-2 py-1 bg-black/20 hover:bg-black/40 rounded-lg text-xs font-bold transition-colors whitespace-nowrap cursor-pointer"
+                    >
+                      Kunci
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsBannerMinimized(true)}
+                      title="Ciutkan tampilan banner"
+                      className="p-1 hover:bg-white/20 rounded-md text-white/80 hover:text-white transition-colors cursor-pointer"
+                      aria-label="Ciutkan banner"
+                    >
+                      <FiMinus size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </aside>
           )}
 

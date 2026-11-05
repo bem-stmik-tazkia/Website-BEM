@@ -30,9 +30,27 @@ interface Props {
 
 export default function ArtikelDetailClient({ article, relatedArticles }: Props) {
   const t = useTranslations("ArticleDetail");
+  const tList = useTranslations("ArticleList");
   const locale = useLocale();
   const { toast } = useToast();
   const supabase = createClient();
+
+  // Helper untuk menerjemahkan nama kategori secara dinamis
+  const translateCategory = (cat?: string | null) => {
+    if (!cat) return "";
+    const c = cat.toLowerCase().trim();
+    if (c === "semua" || c === "all") return tList("catAll");
+    if (c.includes("opini") || c.includes("opinion") || c.includes("esai") || c.includes("essay")) return tList("catOpinion");
+    if (c.includes("teknologi") || c.includes("tech") || c.includes("ai")) return tList("catTech");
+    if (c.includes("akademik") || c.includes("academic") || c.includes("riset") || c.includes("research")) return tList("catAcademic");
+    if (c.includes("prestasi") || c.includes("achievement")) return tList("catAchievement");
+    if (c.includes("kegiatan") || c.includes("kampus") || c.includes("campus") || c.includes("activity")) return tList("catCampus");
+    if (c.includes("tips") || c.includes("karir") || c.includes("career")) return tList("catCareer");
+    if (c.includes("seni") || c.includes("budaya") || c.includes("art")) return tList("catArts");
+    if (c.includes("lain") || c.includes("other")) return tList("catOther");
+    if (c === "artikel" || c === "article") return tList("pageTitle");
+    return cat;
+  };
 
   // Terjemahkan hanya JUDUL artikel sesuai bahasa yang dipilih (isi konten tetap 100% asli)
   const { data: displayArticle } = useTranslatedContent(
@@ -46,7 +64,13 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
 
   const [views, setViews] = useState(article.views || 0);
   const [likes, setLikes] = useState(article.likes || 0);
-  const [isLiked, setIsLiked] = useState(false);
+  // Inisialisasi status like instan dari cache lokal (0ms delay)
+  const [isLiked, setIsLiked] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(`liked_art_${article.id}`) === "true";
+    }
+    return false;
+  });
   const [isLiking, setIsLiking] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -58,26 +82,29 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
     article.author?.full_name?.toLowerCase().includes("admin")
   );
 
-  // Multi-User View & Like initial setup
+  // Multi-User View & Like initial setup + Realtime Updates
   useEffect(() => {
     let isMounted = true;
 
     async function initViewsAndLikes() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        const userId = user?.id || null;
         const deviceId = getDeviceId();
 
-        // 1. Ambil data views & likes terbaru langsung dari database (bypass cache)
-        const { data: freshStats } = await supabase
-          .from("articles")
-          .select("views, likes")
-          .eq("id", article.id)
-          .maybeSingle();
+        // 1. Eksekusi paralel: Ambil user auth & stats terbaru dari DB (bypass cache)
+        const [authRes, statsRes] = await Promise.all([
+          supabase.auth.getUser(),
+          supabase
+            .from("articles")
+            .select("views, likes")
+            .eq("id", article.id)
+            .maybeSingle(),
+        ]);
 
-        if (freshStats && isMounted) {
-          setViews(freshStats.views || 0);
-          setLikes(freshStats.likes || 0);
+        const userId = authRes.data?.user?.id || null;
+
+        if (statsRes.data && isMounted) {
+          setViews(statsRes.data.views || 0);
+          setLikes(statsRes.data.likes || 0);
         }
 
         // 2. Periksa status like secara aman (Multi-User Safe)
@@ -92,9 +119,10 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
 
         if (!likeError && isMounted && typeof likedStatus === "boolean") {
           setIsLiked(likedStatus);
+          localStorage.setItem(`liked_art_${article.id}`, String(likedStatus));
         }
 
-        // 3. Multi-User View Tracking (dengan isolasi user di localStorage)
+        // 3. Multi-User View Tracking (dengan optimasi instan tanpa menunggu network)
         const viewKey = userId
           ? `viewed_art_${article.id}_${userId}`
           : `viewed_art_${article.id}`;
@@ -108,14 +136,17 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
         );
 
         if (!isStillInCooldown) {
-          const counted = await recordView("articles", article.id, deviceId, 12);
-          if (counted && isMounted) {
-            setViews((prev) => prev + 1);
-            localStorage.setItem(viewKey, String(now));
-            if (userId) {
-              localStorage.setItem(`viewed_art_${article.id}`, String(now));
-            }
+          // Update tampilan views secara instan (Optimistic UI 0ms)
+          setViews((prev) => prev + 1);
+          localStorage.setItem(viewKey, String(now));
+          if (userId) {
+            localStorage.setItem(`viewed_art_${article.id}`, String(now));
           }
+
+          // Catat ke server secara asinkron tanpa menahan UI
+          recordView("articles", article.id, deviceId, 12).catch((err) => {
+            console.warn("[ArtikelDetail] View record async error:", err);
+          });
         }
       } catch (err) {
         console.error("[ArtikelDetail] Init view/like error:", err);
@@ -124,12 +155,33 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
 
     initViewsAndLikes();
 
+    // Subscribe ke pembaruan realtime likes & views artikel
+    const channel = supabase
+      .channel(`article_live_${article.id}_${Date.now()}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "articles",
+          filter: `id=eq.${article.id}`,
+        },
+        (payload: any) => {
+          if (payload.new && isMounted) {
+            if (typeof payload.new.views === "number") setViews(payload.new.views);
+            if (typeof payload.new.likes === "number") setLikes(payload.new.likes);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       isMounted = false;
+      supabase.removeChannel(channel);
     };
   }, [article.id, supabase]);
 
-  // Handler Like Toggle (Multi-User Safe)
+  // Handler Like Toggle (Optimistic Instan & Multi-User Safe)
   const handleToggleLike = async () => {
     if (isLiking) return;
 
@@ -137,22 +189,25 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
       setIsLiking(true);
       const prevLiked = isLiked;
       const prevCount = likes;
+      const nextLiked = !prevLiked;
 
-      // Optimistic UI update
-      setIsLiked(!prevLiked);
+      // Optimistic UI update instan (0ms)
+      setIsLiked(nextLiked);
       setLikes(prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1);
+      localStorage.setItem(`liked_art_${article.id}`, String(nextLiked));
 
       const deviceId = getDeviceId();
-      const newStatus = await toggleLike("articles", article.id, !prevLiked, deviceId);
+      const newStatus = await toggleLike("articles", article.id, nextLiked, deviceId);
 
       setIsLiked(newStatus);
-      if (newStatus !== !prevLiked) {
+      localStorage.setItem(`liked_art_${article.id}`, String(newStatus));
+      if (newStatus !== nextLiked) {
         // Rollback jika server berbeda
         setLikes(prevCount);
       }
     } catch (err) {
       console.error("[ArtikelDetail] Like error:", err);
-      toast("Gagal memperbarui like.", "error");
+      toast(t("shareFail"), "error");
     } finally {
       setIsLiking(false);
     }
@@ -210,7 +265,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
 
         {article.category && (
           <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-            {article.category}
+            {translateCategory(article.category)}
           </span>
         )}
       </div>
@@ -310,11 +365,11 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
           <button
             type="button"
             onClick={handleShare}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-xs sm:text-sm font-bold text-on-surface transition-all cursor-pointer"
-            title="Bagikan Tautan Artikel"
+            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-xs sm:text-sm font-bold text-on-surface transition-all cursor-pointer"
+            title={t("share")}
           >
             {copied ? <FiCheck size={16} className="text-emerald-500" /> : <FiShare2 size={16} />}
-            <span className="hidden sm:inline">{copied ? "Tersalin!" : "Bagikan"}</span>
+            <span>{copied ? t("copied") : t("share")}</span>
           </button>
         </div>
       </div>

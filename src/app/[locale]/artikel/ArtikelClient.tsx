@@ -66,12 +66,13 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
   const [sortBy, setSortBy] = useState<"newest" | "popular">("newest");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch real-time stats (views & likes) to bypass Next.js static cache
+  // Fetch real-time stats (views & likes) to bypass Next.js static cache & subscribe to live updates
   useEffect(() => {
     if (initialArticles.length === 0) return;
+    const supabase = createClient();
+
     const fetchLatestStats = async () => {
       try {
-        const supabase = createClient();
         const ids = initialArticles.map((a) => a.id);
         const { data } = await supabase
           .from("articles")
@@ -93,7 +94,40 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
         console.error("[ArtikelClient] Error fetching live stats:", err);
       }
     };
+
     fetchLatestStats();
+
+    // Subscribe to live changes in articles (views & likes)
+    const channel = supabase
+      .channel(`articles_public_stats_${Date.now()}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "articles",
+        },
+        (payload: any) => {
+          if (payload.new && payload.new.id) {
+            setArticlesData((prev) =>
+              prev.map((art) =>
+                art.id === payload.new.id
+                  ? {
+                      ...art,
+                      views: payload.new.views ?? art.views,
+                      likes: payload.new.likes ?? art.likes,
+                    }
+                  : art
+              )
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [initialArticles]);
 
   // Helper untuk menerjemahkan nama kategori secara dinamis
@@ -196,31 +230,31 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
   };
 
   return (
-    <div className="min-h-screen bg-background pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background pt-24 sm:pt-28 pb-20 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Hero Header dengan Animasi Maskot Orange Cat */}
-      <div className="relative rounded-3xl bg-gradient-to-br from-primary/10 via-surface to-secondary/10 border border-outline-variant/30 p-6 sm:p-10 mb-10 overflow-hidden shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="relative z-10 max-w-2xl">
+      <div className="relative rounded-3xl bg-gradient-to-br from-primary/10 via-surface to-secondary/10 border border-outline-variant/30 p-5 sm:p-10 mb-8 sm:mb-10 overflow-hidden shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="relative z-10 max-w-2xl w-full">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-3 border border-primary/20">
             <FiBookOpen size={13} />
             <span>{t("heroBadge")}</span>
           </div>
-          <h1 className="text-2xl sm:text-4xl font-black text-on-surface leading-tight tracking-tight">
+          <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-on-surface leading-tight tracking-tight">
             {t("heroTitle")}
           </h1>
           <p className="text-xs sm:text-base text-on-surface-variant mt-2.5 leading-relaxed">
             {t("heroSubtitle")}
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 mt-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 mt-5 sm:mt-6 w-full sm:w-auto">
             <Link
               href="/dashboard/artikel/baru"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 transition-all cursor-pointer w-full sm:w-auto"
             >
               <span>{t("writeArticle")}</span>
             </Link>
             <a
               href="#katalog"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 hover:bg-surface-variant/30 text-on-surface text-xs sm:text-sm font-bold transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 hover:bg-surface-variant/30 text-on-surface text-xs sm:text-sm font-bold transition-colors w-full sm:w-auto"
             >
               <span>{t("exploreArticles")}</span>
               <FiArrowRight size={14} />
@@ -229,7 +263,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
         </div>
 
         {/* Lottie Animation: Orange Cat Mascot */}
-        <div className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-52 md:h-52 shrink-0 flex items-center justify-center">
+        <div className="relative w-32 h-32 sm:w-48 sm:h-48 md:w-52 md:h-52 shrink-0 flex items-center justify-center">
           <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
           <SafeLottie
             src="/animations/orangeCat.lottie"
