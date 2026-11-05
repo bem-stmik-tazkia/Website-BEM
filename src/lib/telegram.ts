@@ -586,6 +586,61 @@ export async function sendArticleSubmittedNotification(
   return await sendTelegramMessage(message, { inlineButtons });
 }
 
+export interface ArticleWithdrawnPayload {
+  title: string;
+  category?: string;
+  authorName?: string;
+  authorEmail?: string;
+}
+
+/**
+ * Mengirim notifikasi ke Telegram ketika mahasiswa menarik pengajuan artikel kembali ke draf.
+ */
+export async function sendArticleWithdrawnNotification(
+  payload: ArticleWithdrawnPayload
+): Promise<{ ok: boolean; error?: string }> {
+  const config = await getTelegramConfig();
+  if (!config.isConfigured || !config.notifEnabled) {
+    return { ok: false, error: "Notifikasi Telegram tidak aktif atau belum dikonfigurasi." };
+  }
+
+  const siteUrl = getBaseSiteUrl();
+  const safeTitle = escapeHtml(payload.title);
+  const safeCategory = escapeHtml(payload.category || "Artikel Mahasiswa");
+  const safeAuthor = escapeHtml(payload.authorName || "Mahasiswa STMIK Tazkia");
+  const safeEmail = payload.authorEmail ? escapeHtml(payload.authorEmail) : "";
+
+  const timeStr = new Date().toLocaleString("id-ID", {
+    timeZone: "Asia/Jakarta",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const message =
+    `↩️ <b>PENGAJUAN ARTIKEL DITARIK (KEMBALI KE DRAF)</b>\n\n` +
+    `Penulis telah menarik naskah artikelnya dari antrean moderasi untuk diperbaiki/diedit secara mandiri:\n\n` +
+    `📌 <b>Judul:</b> ${safeTitle}\n` +
+    `📂 <b>Kategori:</b> ${safeCategory}\n` +
+    `👤 <b>Penulis:</b> ${safeAuthor}${safeEmail ? ` (<code>${safeEmail}</code>)` : ""}\n` +
+    `📅 <b>Waktu:</b> ${timeStr} WIB\n\n` +
+    `ℹ️ <i>Artikel telah dikeluarkan dari antrean review dan kembali berstatus draf di dashboard penulis.</i>`;
+
+  const inlineButtons = [
+    [
+      {
+        text: "🛡️ Buka Panel Moderasi Artikel",
+        url: `${siteUrl}/admin/artikel`,
+      },
+    ],
+  ];
+
+  return await sendTelegramMessage(message, { inlineButtons });
+}
+
 export interface ArticleModeratedPayload {
   title: string;
   action: "approved" | "rejected" | "unpublished";

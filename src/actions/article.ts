@@ -2,10 +2,12 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { getServiceRoleClient } from "@/lib/auth";
+import { notifyArticleWithdrawn } from "@/actions/telegram-notifications";
 
 /**
  * Menarik pengajuan artikel yang sedang berstatus 'pending' kembali ke 'draft'.
- * Ini memungkinkan mahasiswa mengedit atau menghapus artikel sebelum diperiksa admin.
+ * Ini memungkinkan mahasiswa mengedit atau menghapus artikel sebelum diperiksa admin,
+ * sekaligus mengirimkan notifikasi audit ke Telegram pengurus BEM.
  */
 export async function withdrawArticleSubmission(articleId: string) {
   try {
@@ -19,20 +21,11 @@ export async function withdrawArticleSubmission(articleId: string) {
       return { success: false, error: "Sesi telah berakhir. Silakan login kembali." };
     }
 
-    // 1. Coba eksekusi melalui RPC Postgres terlebih dahulu
-    const { error: rpcError } = await supabase.rpc("withdraw_article_submission", {
-      p_article_id: articleId,
-    });
-
-    if (!rpcError) {
-      return { success: true };
-    }
-
-    // 2. Jika RPC belum terpasang atau fallback, verifikasi kepemilikan
+    // Ambil data artikel untuk verifikasi dan notifikasi Telegram
     const service = getServiceRoleClient();
     const { data: article, error: fetchErr } = await service
       .from("articles")
-      .select("id, author_id, status")
+      .select("id, author_id, status, title, category")
       .eq("id", articleId)
       .single();
 
@@ -51,24 +44,49 @@ export async function withdrawArticleSubmission(articleId: string) {
       };
     }
 
-    // Eksekusi update status ke draft
-    const { error: updateErr } = await service
-      .from("articles")
-      .update({
-        status: "draft",
-        submitted_at: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", articleId);
+    // 1. Coba eksekusi melalui RPC Postgres terlebih dahulu
+    let updateSuccess = false;
+    const { error: rpcError } = await supabase.rpc("withdraw_article_submission", {
+      p_article_id: articleId,
+    });
 
-    if (updateErr) {
-      return {
-        success: false,
-        error: updateErr.message || "Gagal mengubah status artikel ke draf.",
-      };
+    if (!rpcError) {
+      updateSuccess = true;
+    } else {
+      // 2. Fallback update via service role client
+      const { error: updateErr } = await service
+        .from("articles")
+        .update({
+          status: "draft",
+          submitted_at: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", articleId);
+
+      if (updateErr) {
+        return {
+          success: false,
+          error: updateErr.message || "Gagal mengubah status artikel ke draf.",
+        };
+      }
+      updateSuccess = true;
     }
 
-    return { success: true };
+    if (updateSuccess) {
+      // Kirim notifikasi Telegram ke bot admin BEM di latar belakang (non-blocking)
+      notifyArticleWithdrawn({
+        title: article.title,
+        category: article.category || "Artikel Mahasiswa",
+        authorName: user.user_metadata?.full_name,
+        authorEmail: user.email,
+      }).catch((err) => {
+        console.error("[withdrawArticleSubmission] Telegram notify error:", err);
+      });
+
+      return { success: true };
+    }
+
+    return { success: false, error: "Gagal memproses penarikan artikel." };
   } catch (err: any) {
     return {
       success: false,
@@ -76,4 +94,3 @@ export async function withdrawArticleSubmission(articleId: string) {
     };
   }
 }
-

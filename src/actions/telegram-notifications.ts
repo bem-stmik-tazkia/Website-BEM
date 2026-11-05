@@ -2,9 +2,11 @@
 
 import {
   sendArticleSubmittedNotification,
+  sendArticleWithdrawnNotification,
   sendArticleModeratedNotification,
   sendMaintenanceModeNotification,
   ArticleSubmittedPayload,
+  ArticleWithdrawnPayload,
   ArticleModeratedPayload,
   MaintenanceModePayload,
 } from "@/lib/telegram";
@@ -32,6 +34,33 @@ export async function notifyArticleSubmitted(payload: ArticleSubmittedPayload) {
     });
   } catch (err: any) {
     console.error("[notifyArticleSubmitted] Exception:", err);
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
+ * Notifikasi saat artikel ditarik kembali ke draf oleh mahasiswa (batal diajukan).
+ */
+export async function notifyArticleWithdrawn(payload: ArticleWithdrawnPayload) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    let authorName = payload.authorName || user?.user_metadata?.full_name;
+    if ((!authorName || authorName.includes("@")) && user?.id) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profile?.full_name) authorName = profile.full_name;
+    }
+    return await sendArticleWithdrawnNotification({
+      ...payload,
+      authorName: authorName || "Mahasiswa STMIK Tazkia",
+      authorEmail: payload.authorEmail || user?.email,
+    });
+  } catch (err: any) {
+    console.error("[notifyArticleWithdrawn] Exception:", err);
     return { ok: false, error: err.message };
   }
 }
