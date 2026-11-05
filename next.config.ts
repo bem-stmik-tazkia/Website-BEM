@@ -9,7 +9,7 @@ const ContentSecurityPolicy = `
   default-src 'self';
   script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' https://challenges.cloudflare.com https://va.vercel-scripts.com https://cdn.jsdelivr.net https://unpkg.com blob:;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  img-src 'self' data: blob: https://picsum.photos https://images.unsplash.com https://*.supabase.co https://lh3.googleusercontent.com https://*.googleusercontent.com https://challenges.cloudflare.com https://api.qrserver.com;
+  img-src 'self' data: blob: https:;
   font-src 'self' https://fonts.gstatic.com data:;
   connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://date.nager.at https://translate.googleapis.com https://lottie.host https://va.vercel-scripts.com https://cdn.jsdelivr.net https://unpkg.com blob: data: ${isDev ? 'ws: http: localhost:*' : ''};
   media-src 'self' blob: data: https://*.supabase.co https://drive.google.com;

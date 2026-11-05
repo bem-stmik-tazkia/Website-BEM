@@ -18,7 +18,7 @@ export default function UnsavedChangesModal({ isOpen, onStay, onLeave }: Props) 
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
         <motion.div
           initial={{ opacity: 0, scale: 0.92, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
