@@ -1078,6 +1078,8 @@
     "newSubtitle": "Partagez vos réflexions, analyses technologiques, opinions ou activités du campus Tazkia avec le public.",
     "editTitle": "Modifier le brouillon de l'article",
     "revisionTitle": "Réviser la soumission de l'article",
+    "protectedRevisionTitle": "Mode Révision Protégée",
+    "protectedRevisionDesc": "Les modifications effectuées sur cette page n'écraseront pas immédiatement l'article publié. Les administrateurs examineront cette révision avant de la publier.",
     "titleLabel": "Titre de l'article",
     "titleRequired": "Obligatoire (10 - 120 caractères)",
     "titlePlaceholder": "Exemple : Développer des agents intelligents d'IA sur le campus STMIK Tazkia",

@@ -73,7 +73,7 @@ export default function LayoutClientWrapper({
       {!hideLayout && (
         <>
           {!isDashboardPage && <FloatingKaryaPrompt />}
-          <FloatingActionMenu />
+          {!isDashboardPage && !isAdminPage && <FloatingActionMenu />}
           <Footer />
         </>
       )}

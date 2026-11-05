@@ -254,8 +254,8 @@ export default function ImageUpload({
     <div className={`space-y-3 ${className}`}>
       {/* Jika sudah ada gambar terpilih, tampilkan Thumbnail Preview */}
       {value ? (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="relative group rounded-xl overflow-hidden border border-outline-variant/30 aspect-video w-full max-w-[200px] bg-surface-variant/30 flex items-center justify-center shadow-xs">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full min-w-0 overflow-hidden">
+          <div className="relative group rounded-xl overflow-hidden border border-outline-variant/30 aspect-video w-full max-w-[200px] bg-surface-variant/30 flex items-center justify-center shadow-xs shrink-0">
             {imageLoadError ? (
               <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-rose-500/10 text-rose-500 gap-1.5">
                 <FiAlertTriangle size={22} />
@@ -284,7 +284,7 @@ export default function ImageUpload({
             </div>
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 w-full min-w-0 overflow-hidden">
             <span
               className={`text-xs font-bold flex items-center gap-1.5 ${
                 imageLoadError
@@ -303,11 +303,11 @@ export default function ImageUpload({
                   : t("successAttached")}
               </span>
             </span>
-            <p className="text-[11px] text-on-surface-variant/70 truncate max-w-xs sm:max-w-md font-mono">
+            <p className="text-[11px] text-on-surface-variant/70 truncate w-full max-w-full font-mono bg-surface-variant/20 px-2 py-0.5 rounded border border-outline-variant/20" title={value}>
               {value}
             </p>
             {imageLoadError && (
-              <p className="text-[11px] text-rose-500 leading-relaxed max-w-xs sm:max-w-md">
+              <p className="text-[11px] text-rose-500 leading-relaxed w-full max-w-full">
                 {t("errImageFailedHint")}
               </p>
             )}

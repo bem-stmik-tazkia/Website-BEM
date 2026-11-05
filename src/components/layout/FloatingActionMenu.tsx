@@ -62,6 +62,11 @@ export default function FloatingActionMenu() {
 
   const showSpinner = !pathname.includes("/tools/acak-nama");
 
+  // Jangan tampilkan Floating Action Menu / Tools di seluruh halaman dashboard (mahasiswa & admin)
+  if (pathname?.includes("/dashboard") || pathname?.includes("/admin")) {
+    return null;
+  }
+
   const itemVariants = {
     hidden: { opacity: 0, y: 20, scale: 0.8 },
     visible: { opacity: 1, y: 0, scale: 1 },

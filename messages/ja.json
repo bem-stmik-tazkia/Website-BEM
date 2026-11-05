@@ -1078,6 +1078,8 @@
     "newSubtitle": "あなたの考え、技術的洞察、意見、またはタズキアキャンパスの活動を公開して共有しましょう。",
     "editTitle": "記事の下書きを編集",
     "revisionTitle": "記事提出の修正",
+    "protectedRevisionTitle": "保護された改訂モード",
+    "protectedRevisionDesc": "このページでの変更は、公開中の記事にすぐには上書きされません。管理者が審査した後に公開記事が更新されます。",
     "titleLabel": "記事のタイトル",
     "titleRequired": "必須 (10〜120文字)",
     "titlePlaceholder": "例：STMIKタズキアキャンパスでのAIインテリジェントエージェントの開発",

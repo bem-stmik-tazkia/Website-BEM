@@ -1080,6 +1080,8 @@
     "newSubtitle": "Share your thoughts, tech insights, opinions, or Tazkia campus activities with the public.",
     "editTitle": "Edit Article Draft",
     "revisionTitle": "Revise Article Submission",
+    "protectedRevisionTitle": "Protected Revision Mode",
+    "protectedRevisionDesc": "Changes made on this page will not immediately overwrite the live published article. Admins will review this revision before updating the article publicly.",
     "titleLabel": "Article Title",
     "titleRequired": "Required (10 - 120 characters)",
     "titlePlaceholder": "Example: Developing AI Intelligent Agents in STMIK Tazkia Campus",

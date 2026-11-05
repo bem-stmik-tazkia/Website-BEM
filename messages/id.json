@@ -1080,6 +1080,8 @@
     "newSubtitle": "Bagikan karya pemikiran, wawasan teknologi, opini, atau kegiatan kampus Tazkia ke publik.",
     "editTitle": "Edit Draf Artikel",
     "revisionTitle": "Revisi Karya Tulis Artikel",
+    "protectedRevisionTitle": "Mode Revisi Terproteksi",
+    "protectedRevisionDesc": "Perubahan pada halaman ini tidak akan langsung menimpa artikel tayang. Admin akan memeriksa revisi ini sebelum memperbarui artikel secara publik.",
     "titleLabel": "Judul Artikel",
     "titleRequired": "Wajib diisi (10 - 120 karakter)",
     "titlePlaceholder": "Contoh: Mengembangkan Agen Cerdas AI di Lingkungan Kampus STMIK Tazkia",

@@ -534,9 +534,9 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           <div className="mt-4 p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 flex items-start gap-2.5 text-xs">
             <FiInfo className="text-blue-600 text-sm shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">Mode Revisi Terproteksi</p>
+              <p className="font-bold">{t("protectedRevisionTitle")}</p>
               <p className="mt-0.5 text-blue-600/90 leading-relaxed">
-                Perubahan pada halaman ini tidak akan langsung menimpa artikel tayang. Admin akan memeriksa revisi ini sebelum memperbarui artikel secara publik.
+                {t("protectedRevisionDesc")}
               </p>
             </div>
           </div>
@@ -578,9 +578,9 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           />
 
           {/* Info Tautan Publik Otomatis */}
-          <div className="mt-3 pt-2.5 border-t border-outline-variant/15 flex items-center justify-between text-xs text-on-surface-variant">
-            <span className="font-medium text-on-surface-variant/70">{t("autoUrlLabel")}</span>
-            <span className="font-mono text-primary text-[11px] sm:text-xs">
+          <div className="mt-3 pt-2.5 border-t border-outline-variant/15 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-on-surface-variant min-w-0">
+            <span className="font-medium text-on-surface-variant/70 shrink-0">{t("autoUrlLabel")}</span>
+            <span className="font-mono text-primary text-[11px] sm:text-xs break-all bg-surface-variant/30 sm:bg-transparent px-2 sm:px-0 py-1 sm:py-0 rounded-lg sm:rounded-none border border-outline-variant/20 sm:border-0 sm:text-right max-w-full">
               /artikel/{slugify(title) || t("slugPlaceholderTitle")}-{isNew ? t("slugPlaceholderHash") : (initialData?.slug?.split('-').pop() || "id")}
             </span>
           </div>
