@@ -216,7 +216,6 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
               href="/dashboard/artikel/baru"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 transition-all cursor-pointer"
             >
-              <FiEdit3 size={15} />
               <span>{t("writeArticle")}</span>
             </Link>
             <a
@@ -307,9 +306,14 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
 
       {/* Empty State */}
       {translatedArticles.length === 0 ? (
-        <div className="bg-surface border border-outline-variant/30 rounded-3xl p-12 text-center max-w-md mx-auto my-12 shadow-xs">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center mb-4">
-            <FiBookOpen size={26} />
+        <div className="bg-surface border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center max-w-md mx-auto my-12 shadow-xs">
+          <div className="w-36 h-36 sm:w-44 sm:h-44 mx-auto -mt-2 mb-3 flex items-center justify-center">
+            <SafeLottie
+              src="/animations/No Data.lottie"
+              loop
+              autoplay
+              className="w-full h-full object-contain"
+            />
           </div>
           <h3 className="text-lg font-bold text-on-surface">{t("emptyTitle")}</h3>
           <p className="text-xs sm:text-sm text-on-surface-variant mt-1.5 leading-relaxed">

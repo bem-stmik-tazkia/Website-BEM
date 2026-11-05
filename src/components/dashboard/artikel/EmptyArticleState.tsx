@@ -2,8 +2,9 @@
 
 import React from "react";
 import { Link } from "@/i18n/routing";
-import { FiEdit3, FiFileText } from "react-icons/fi";
+import { FiEdit3 } from "react-icons/fi";
 import { useTranslations } from "next-intl";
+import SafeLottie from "@/components/ui/SafeLottie";
 
 interface Props {
   hasFilter: boolean;
@@ -16,8 +17,13 @@ export default function EmptyArticleState({ hasFilter, onResetFilter }: Props) {
   if (hasFilter) {
     return (
       <div className="flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-surface border border-outline-variant/30 rounded-2xl">
-        <div className="w-14 h-14 rounded-2xl bg-surface-variant/40 flex items-center justify-center text-on-surface-variant mb-3">
-          <FiFileText size={28} />
+        <div className="w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center mb-2">
+          <SafeLottie
+            src="/animations/No Data.lottie"
+            loop
+            autoplay
+            className="w-full h-full object-contain"
+          />
         </div>
         <h4 className="font-bold text-base text-on-surface">{t("emptyFilteredTitle")}</h4>
         <p className="text-xs text-on-surface-variant mt-1 max-w-xs">
