@@ -1138,7 +1138,19 @@
     "notFoundTitle": "Article Not Found",
     "notFoundDesc": "This article may have been deleted or you do not have permission to access it.",
     "pendingReviewTitle": "Article Under Review",
-    "pendingReviewDesc": "The article \"{title}\" is currently in the BEM admin review queue. It cannot be edited while under review."
+    "pendingReviewDesc": "The article \"{title}\" is currently in the BEM admin review queue. It cannot be edited while under review.",
+    "slugPlaceholderTitle": "article-title",
+    "slugPlaceholderHash": "[random-hash]",
+    "attention": "Attention",
+    "emptyPreview": "No article text yet. Type in the \"Write\" tab to see a preview here.",
+    "toolBold": "Bold",
+    "toolItalic": "Italic",
+    "toolHeading": "Subheading (H3)",
+    "toolList": "Bullet List",
+    "toolQuote": "Quote",
+    "toolCode": "Inline Code",
+    "toolLink": "Insert Link",
+    "toolLinkText": "Link Text"
   },
   "ArticleDetail": {
     "backToArticles": "Back to Article Catalog",
@@ -1288,5 +1300,23 @@
     "saving": "Saving...",
     "saveSuccess": "Profile updated successfully!",
     "saveError": "Failed to update profile: "
+  },
+  "ImageUpload": {
+    "tabUpload": "Upload Photo",
+    "tabUrl": "URL Link",
+    "uploading": "Uploading...",
+    "urlInputLabel": "Enter Direct Image URL:",
+    "urlInputPlaceholder": "https://images.unsplash.com/... or https://...",
+    "btnApply": "Apply",
+    "urlTip": "Tip: Link must start with https:// and point to a valid public image (JPG/PNG/WebP).",
+    "successAttached": "Cover image attached successfully",
+    "changeOrRemove": "Change / Remove Photo",
+    "deleteTitle": "Remove image",
+    "errMax2MB": "Max file size is 2MB",
+    "errInvalidType": "Only JPG, PNG, or WebP image files are allowed",
+    "errUploadFailed": "Failed to upload image.",
+    "errEmptyUrl": "Please enter an image URL link.",
+    "errHttpRequired": "Invalid link. Please use a URL starting with https:// or http://",
+    "errProtocolBlocked": "Link protocol is not allowed for security reasons."
   }
 }

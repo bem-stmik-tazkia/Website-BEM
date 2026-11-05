@@ -1136,7 +1136,19 @@
     "notFoundTitle": "Article introuvable",
     "notFoundDesc": "Cet article a peut-être été supprimé ou vous n'avez pas l'autorisation d'y accéder.",
     "pendingReviewTitle": "Article en cours d'examen",
-    "pendingReviewDesc": "L'article \"{title}\" est actuellement dans la file d'attente d'examen de l'administrateur. Il ne peut pas être modifié pendant l'examen."
+    "pendingReviewDesc": "L'article \"{title}\" est actuellement dans la file d'attente d'examen de l'administrateur. Il ne peut pas être modifié pendant l'examen.",
+    "slugPlaceholderTitle": "titre-article",
+    "slugPlaceholderHash": "[hash-aleatoire]",
+    "attention": "Attention",
+    "emptyPreview": "Aucun texte d'article pour le moment. Tapez dans l'onglet « Rédiger » pour voir un aperçu ici.",
+    "toolBold": "Gras (Bold)",
+    "toolItalic": "Italique (Italic)",
+    "toolHeading": "Sous-titre (H3)",
+    "toolList": "Liste à puces",
+    "toolQuote": "Citation (Quote)",
+    "toolCode": "Code en ligne",
+    "toolLink": "Insérer un lien",
+    "toolLinkText": "Texte du lien"
   },
   "ArticleDetail": {
     "backToArticles": "Retour au catalogue d'articles",
@@ -1286,5 +1298,23 @@
     "saving": "Enregistrement...",
     "saveSuccess": "Profil mis à jour avec succès !",
     "saveError": "Échec de la mise à jour du profil : "
+  },
+  "ImageUpload": {
+    "tabUpload": "Télécharger une photo",
+    "tabUrl": "Lien URL",
+    "uploading": "Téléchargement...",
+    "urlInputLabel": "Entrez l'URL directe de l'image :",
+    "urlInputPlaceholder": "https://images.unsplash.com/... ou https://...",
+    "btnApply": "Appliquer",
+    "urlTip": "Astuce : Le lien doit commencer par https:// et pointer vers une image publique valide (JPG/PNG/WebP).",
+    "successAttached": "Image de couverture attachée avec succès",
+    "changeOrRemove": "Modifier / Supprimer la photo",
+    "deleteTitle": "Supprimer l'image",
+    "errMax2MB": "Taille maximale du fichier : 2 Mo",
+    "errInvalidType": "Seuls les fichiers JPG, PNG ou WebP sont autorisés",
+    "errUploadFailed": "Échec du téléchargement de l'image.",
+    "errEmptyUrl": "Veuillez entrer une URL d'image.",
+    "errHttpRequired": "Lien invalide. Veuillez utiliser une URL commençant par https:// ou http://",
+    "errProtocolBlocked": "Protocole de lien non autorisé pour des raisons de sécurité."
   }
 }

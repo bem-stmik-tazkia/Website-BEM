@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { FiX, FiImage, FiLoader, FiUpload, FiLink, FiCheck } from "react-icons/fi";
 import { compressImage } from "@/lib/imageCompression";
+import { useTranslations } from "next-intl";
 
 interface ImageUploadProps {
   value?: string;
@@ -19,6 +20,7 @@ export default function ImageUpload({
   folder = "kabinet",
   label,
 }: ImageUploadProps) {
+  const t = useTranslations("ImageUpload");
   const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
   const [urlInput, setUrlInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -32,13 +34,13 @@ export default function ImageUpload({
 
     // Validate size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      setError("Ukuran file maksimal 2MB");
+      setError(t("errMax2MB"));
       return;
     }
 
     // Validate type
     if (!file.type.startsWith("image/") || file.type.includes("svg")) {
-      setError("Hanya file gambar JPG, PNG, atau WebP yang diperbolehkan");
+      setError(t("errInvalidType"));
       return;
     }
 
@@ -62,13 +64,13 @@ export default function ImageUpload({
 
       const result = await res.json();
       if (!res.ok || !result.publicUrl) {
-        throw new Error(result.error || "Gagal mengunggah gambar.");
+        throw new Error(result.error || t("errUploadFailed"));
       }
 
       onChange(result.publicUrl);
     } catch (err: any) {
       console.error("Upload error:", err);
-      setError(err.message || "Gagal mengunggah gambar");
+      setError(err.message || t("errUploadFailed"));
     } finally {
       setIsUploading(false);
       // Reset input
@@ -81,18 +83,18 @@ export default function ImageUpload({
   const handleApplyUrl = () => {
     const trimmed = urlInput.trim();
     if (!trimmed) {
-      setError("Silakan masukkan tautan URL gambar.");
+      setError(t("errEmptyUrl"));
       return;
     }
 
     // Validasi URL aman (wajib diawali http/https, cegah skema javascript/data)
     if (!/^https?:\/\//i.test(trimmed)) {
-      setError("Tautan tidak valid. Harap gunakan alamat URL yang diawali https:// atau http://");
+      setError(t("errHttpRequired"));
       return;
     }
 
     if (/^(javascript|vbscript|data):/i.test(trimmed)) {
-      setError("Protokol tautan tidak diizinkan demi alasan keamanan.");
+      setError(t("errProtocolBlocked"));
       return;
     }
 
@@ -146,7 +148,7 @@ export default function ImageUpload({
               <button
                 onClick={handleRemove}
                 className="w-8 h-8 bg-rose-600 hover:bg-rose-700 rounded-full text-white flex items-center justify-center hover:scale-110 transition-transform shadow-md cursor-pointer"
-                title="Hapus gambar"
+                title={t("deleteTitle")}
                 type="button"
               >
                 <FiX />
@@ -157,7 +159,7 @@ export default function ImageUpload({
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold text-on-surface flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
               <FiCheck size={14} />
-              <span>Gambar sampul berhasil terpasang</span>
+              <span>{t("successAttached")}</span>
             </span>
             <p className="text-[11px] text-on-surface-variant/70 truncate max-w-xs sm:max-w-md font-mono">
               {value}
@@ -167,7 +169,7 @@ export default function ImageUpload({
               onClick={handleRemove}
               className="text-xs font-semibold text-rose-500 hover:text-rose-600 text-left mt-1 hover:underline cursor-pointer"
             >
-              Ganti / Hapus Foto
+              {t("changeOrRemove")}
             </button>
           </div>
         </div>
@@ -189,7 +191,7 @@ export default function ImageUpload({
               }`}
             >
               <FiUpload size={13} />
-              <span>{label || "Upload Foto"}</span>
+              <span>{label || t("tabUpload")}</span>
             </button>
             <button
               type="button"
@@ -204,7 +206,7 @@ export default function ImageUpload({
               }`}
             >
               <FiLink size={13} />
-              <span>Tautan URL</span>
+              <span>{t("tabUrl")}</span>
             </button>
           </div>
 
@@ -243,13 +245,13 @@ export default function ImageUpload({
                 {isUploading ? (
                   <div className="flex flex-col items-center gap-1">
                     <FiLoader className="animate-spin text-xl text-primary" />
-                    <span className="text-[10px] font-bold text-primary">Mengunggah...</span>
+                    <span className="text-[10px] font-bold text-primary">{t("uploading")}</span>
                   </div>
                 ) : (
                   <>
                     <FiImage className="text-2xl opacity-70" />
                     <span className="text-[10px] font-bold px-2 text-center leading-tight">
-                      {label || "Upload Foto"}
+                      {label || t("tabUpload")}
                     </span>
                   </>
                 )}
@@ -261,7 +263,7 @@ export default function ImageUpload({
           {uploadMode === "url" && (
             <div className="max-w-md space-y-2 p-3.5 rounded-2xl bg-surface-variant/20 border border-outline-variant/30">
               <label className="text-xs font-semibold text-on-surface block">
-                Masukkan URL Gambar Langsung:
+                {t("urlInputLabel")}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -277,7 +279,7 @@ export default function ImageUpload({
                       handleApplyUrl();
                     }
                   }}
-                  placeholder="https://images.unsplash.com/... atau https://..."
+                  placeholder={t("urlInputPlaceholder")}
                   className="flex-1 px-3 py-2 rounded-xl bg-surface border border-outline-variant/40 text-on-surface text-xs focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-on-surface-variant/40"
                 />
                 <button
@@ -285,11 +287,11 @@ export default function ImageUpload({
                   onClick={handleApplyUrl}
                   className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
                 >
-                  Terapkan
+                  {t("btnApply")}
                 </button>
               </div>
               <p className="text-[11px] text-on-surface-variant/70 leading-relaxed">
-                Tips: Tautan wajib diawali dengan <code>https://</code> dan merujuk ke gambar publik yang valid (JPG/PNG/WebP).
+                {t("urlTip")}
               </p>
             </div>
           )}

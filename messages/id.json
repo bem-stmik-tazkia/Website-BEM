@@ -1138,7 +1138,19 @@
     "notFoundTitle": "Artikel Tidak Ditemukan",
     "notFoundDesc": "Artikel ini mungkin telah dihapus atau Anda tidak memiliki hak akses kepemilikan atas tulisan ini.",
     "pendingReviewTitle": "Artikel Sedang Dalam Peninjauan",
-    "pendingReviewDesc": "Artikel \"{title}\" saat ini sedang berada di antrean moderasi admin BEM. Tulisan tidak dapat diedit selama proses peninjauan berlangsung."
+    "pendingReviewDesc": "Artikel \"{title}\" saat ini sedang berada di antrean moderasi admin BEM. Tulisan tidak dapat diedit selama proses peninjauan berlangsung.",
+    "slugPlaceholderTitle": "judul-artikel",
+    "slugPlaceholderHash": "[hash-acak]",
+    "attention": "Perhatian",
+    "emptyPreview": "Belum ada teks artikel. Ketik di tab \"Tulis\" untuk melihat pratinjau di sini.",
+    "toolBold": "Tebal (Bold)",
+    "toolItalic": "Miring (Italic)",
+    "toolHeading": "Subjudul (Heading 3)",
+    "toolList": "Daftar Poin (List)",
+    "toolQuote": "Kutipan (Quote)",
+    "toolCode": "Kode Singkat",
+    "toolLink": "Sisipkan Tautan (Link)",
+    "toolLinkText": "Teks Tautan"
   },
   "ArticleDetail": {
     "backToArticles": "Kembali ke Katalog Artikel",
@@ -1288,5 +1300,23 @@
     "saving": "Menyimpan...",
     "saveSuccess": "Profil berhasil diperbarui!",
     "saveError": "Gagal memperbarui profil: "
+  },
+  "ImageUpload": {
+    "tabUpload": "Upload Foto",
+    "tabUrl": "Tautan URL",
+    "uploading": "Mengunggah...",
+    "urlInputLabel": "Masukkan URL Gambar Langsung:",
+    "urlInputPlaceholder": "https://images.unsplash.com/... atau https://...",
+    "btnApply": "Terapkan",
+    "urlTip": "Tips: Tautan wajib diawali dengan https:// dan merujuk ke gambar publik yang valid (JPG/PNG/WebP).",
+    "successAttached": "Gambar sampul berhasil terpasang",
+    "changeOrRemove": "Ganti / Hapus Foto",
+    "deleteTitle": "Hapus gambar",
+    "errMax2MB": "Ukuran file maksimal 2MB",
+    "errInvalidType": "Hanya file gambar JPG, PNG, atau WebP yang diperbolehkan",
+    "errUploadFailed": "Gagal mengunggah gambar.",
+    "errEmptyUrl": "Silakan masukkan tautan URL gambar.",
+    "errHttpRequired": "Tautan tidak valid. Harap gunakan alamat URL yang diawali https:// atau http://",
+    "errProtocolBlocked": "Protokol tautan tidak diizinkan demi alasan keamanan."
   }
 }

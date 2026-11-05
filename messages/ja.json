@@ -1136,7 +1136,19 @@
     "notFoundTitle": "記事が見つかりません",
     "notFoundDesc": "この記事は削除されたか、アクセス権がありません。",
     "pendingReviewTitle": "記事はレビュー中です",
-    "pendingReviewDesc": "記事「{title}」は現在BEM管理者の審査待ちです。審査中は編集できません。"
+    "pendingReviewDesc": "記事「{title}」は現在BEM管理者の審査待ちです。審査中は編集できません。",
+    "slugPlaceholderTitle": "article-title",
+    "slugPlaceholderHash": "[random-hash]",
+    "attention": "注意",
+    "emptyPreview": "記事の本文がまだありません。「執筆」タブで入力するとここにプレビューが表示されます。",
+    "toolBold": "太字 (Bold)",
+    "toolItalic": "斜体 (Italic)",
+    "toolHeading": "小見出し (H3)",
+    "toolList": "箇条書きリスト",
+    "toolQuote": "引用 (Quote)",
+    "toolCode": "インラインコード",
+    "toolLink": "リンクを挿入",
+    "toolLinkText": "リンクテキスト"
   },
   "ArticleDetail": {
     "backToArticles": "記事カタログに戻る",
@@ -1286,5 +1298,23 @@
     "saving": "保存中...",
     "saveSuccess": "プロフィールが更新されました！",
     "saveError": "プロフィールの更新に失敗しました: "
+  },
+  "ImageUpload": {
+    "tabUpload": "写真をアップロード",
+    "tabUrl": "URLリンク",
+    "uploading": "アップロード中...",
+    "urlInputLabel": "直接画像URLを入力:",
+    "urlInputPlaceholder": "https://images.unsplash.com/... または https://...",
+    "btnApply": "適用",
+    "urlTip": "ヒント: リンクはhttps://で始まり、有効な公開画像（JPG/PNG/WebP）を参照している必要があります。",
+    "successAttached": "カバー画像が正常に設定されました",
+    "changeOrRemove": "写真を変更 / 削除",
+    "deleteTitle": "画像を削除",
+    "errMax2MB": "ファイルサイズは最大2MBです",
+    "errInvalidType": "JPG、PNG、WebP画像ファイルのみ許可されています",
+    "errUploadFailed": "画像のアップロードに失敗しました。",
+    "errEmptyUrl": "画像URLリンクを入力してください。",
+    "errHttpRequired": "無効なリンクです。https://またはhttp://で始まるURLを使用してください。",
+    "errProtocolBlocked": "セキュリティ上の理由から、このプロトコルは許可されていません。"
   }
 }

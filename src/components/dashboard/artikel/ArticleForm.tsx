@@ -548,7 +548,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 flex items-start gap-3 text-xs sm:text-sm animate-shake">
           <FiAlertCircle className="text-rose-600 text-base shrink-0 mt-0.5" />
           <div className="flex-1">
-            <span className="font-bold">Perhatian: </span>
+            <span className="font-bold">{t("attention")}: </span>
             <span>{errorMessage}</span>
           </div>
         </div>
@@ -581,7 +581,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           <div className="mt-3 pt-2.5 border-t border-outline-variant/15 flex items-center justify-between text-xs text-on-surface-variant">
             <span className="font-medium text-on-surface-variant/70">{t("autoUrlLabel")}</span>
             <span className="font-mono text-primary text-[11px] sm:text-xs">
-              /artikel/{slugify(title) || "judul-artikel"}-{isNew ? "[hash-acak]" : (initialData?.slug?.split('-').pop() || "id")}
+              /artikel/{slugify(title) || t("slugPlaceholderTitle")}-{isNew ? t("slugPlaceholderHash") : (initialData?.slug?.split('-').pop() || "id")}
             </span>
           </div>
         </div>
@@ -664,7 +664,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 <button
                   type="button"
                   onClick={() => insertFormatting("**", "**")}
-                  title="Tebal (Bold)"
+                  title={t("toolBold")}
                   className="p-1.5 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs flex items-center gap-1"
                 >
                   <FiBold size={13} />
@@ -672,7 +672,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 <button
                   type="button"
                   onClick={() => insertFormatting("*", "*")}
-                  title="Miring (Italic)"
+                  title={t("toolItalic")}
                   className="p-1.5 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs flex items-center gap-1"
                 >
                   <FiItalic size={13} />
@@ -680,7 +680,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 <button
                   type="button"
                   onClick={() => insertFormatting("### ", "")}
-                  title="Subjudul (Heading 3)"
+                  title={t("toolHeading")}
                   className="p-1.5 px-2 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs font-bold"
                 >
                   H3
@@ -688,7 +688,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 <button
                   type="button"
                   onClick={() => insertFormatting("- ", "")}
-                  title="Daftar Poin (List)"
+                  title={t("toolList")}
                   className="p-1.5 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs flex items-center gap-1"
                 >
                   <FiList size={13} />
@@ -696,7 +696,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 <button
                   type="button"
                   onClick={() => insertFormatting("> ", "")}
-                  title="Kutipan (Quote)"
+                  title={t("toolQuote")}
                   className="p-1.5 px-2 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs font-serif italic"
                 >
                   “Quote”
@@ -704,15 +704,15 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 <button
                   type="button"
                   onClick={() => insertFormatting("`", "`")}
-                  title="Kode Singkat"
+                  title={t("toolCode")}
                   className="p-1.5 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs flex items-center gap-1 font-mono"
                 >
                   <FiCode size={13} />
                 </button>
                 <button
                   type="button"
-                  onClick={() => insertFormatting("[Teks Tautan](", ")")}
-                  title="Sisipkan Tautan (Link)"
+                  onClick={() => insertFormatting(`[${t("toolLinkText")}](`, ")")}
+                  title={t("toolLink")}
                   className="p-1.5 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs flex items-center gap-1"
                 >
                   <FiLink size={13} />
@@ -754,7 +754,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                   content
                 ) : (
                   <p className="italic text-on-surface-variant/50">
-                    Belum ada teks artikel. Ketik di tab "Tulis" untuk melihat pratinjau di sini.
+                    {t("emptyPreview")}
                   </p>
                 )}
               </div>

@@ -1136,7 +1136,19 @@
     "notFoundTitle": "المقال غير موجود",
     "notFoundDesc": "ربما تم حذف هذا المقال أو ليس لديك إذن بالوصول إليه.",
     "pendingReviewTitle": "المقال قيد المراجعة",
-    "pendingReviewDesc": "المقال \"{title}\" قيد المراجعة حالياً من قبل الإدارة. لا يمكن تعديله أثناء المراجعة."
+    "pendingReviewDesc": "المقال \"{title}\" قيد المراجعة حالياً من قبل الإدارة. لا يمكن تعديله أثناء المراجعة.",
+    "slugPlaceholderTitle": "عنوان-المقال",
+    "slugPlaceholderHash": "[رمز-عشوائي]",
+    "attention": "تنبيه",
+    "emptyPreview": "لا يوجد نص للمقال بعد. اكتب في علامة تبويب \"كتابة\" لمعاينة المقال هنا.",
+    "toolBold": "غامق (Bold)",
+    "toolItalic": "مائل (Italic)",
+    "toolHeading": "عنوان فرعي (H3)",
+    "toolList": "قائمة نقطية",
+    "toolQuote": "اقتباس (Quote)",
+    "toolCode": "رمز برمجي",
+    "toolLink": "إدراج رابط",
+    "toolLinkText": "نص الرابط"
   },
   "ArticleDetail": {
     "backToArticles": "العودة إلى دليل المقالات",
@@ -1286,5 +1298,23 @@
     "saving": "جارٍ الحفظ...",
     "saveSuccess": "تم تحديث الملف الشخصي بنجاح!",
     "saveError": "فشل تحديث الملف الشخصي: "
+  },
+  "ImageUpload": {
+    "tabUpload": "تحميل الصورة",
+    "tabUrl": "رابط URL",
+    "uploading": "جارٍ التحميل...",
+    "urlInputLabel": "أدخل رابط الصورة المباشر:",
+    "urlInputPlaceholder": "https://images.unsplash.com/... أو https://...",
+    "btnApply": "تطبيق",
+    "urlTip": "ملاحظة: يجب أن يبدأ الرابط بـ https:// ويشير إلى صورة عامة صالحة (JPG/PNG/WebP).",
+    "successAttached": "تم تعيين صورة الغلاف بنجاح",
+    "changeOrRemove": "تغيير / حذف الصورة",
+    "deleteTitle": "حذف الصورة",
+    "errMax2MB": "الحد الأقصى لحجم الملف هو 2 ميجابايت",
+    "errInvalidType": "يُسمح فقط بملفات صور JPG أو PNG أو WebP",
+    "errUploadFailed": "فشل تحميل الصورة.",
+    "errEmptyUrl": "يرجى إدخال رابط الصورة.",
+    "errHttpRequired": "رابط غير صالح. يرجى استخدام عنوان يبدأ بـ https:// أو http://",
+    "errProtocolBlocked": "بروتوكول الرابط غير مسموح به لأسباب أمنية."
   }
 }
