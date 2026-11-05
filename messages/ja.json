@@ -1318,7 +1318,8 @@
     "urlInputLabel": "直接画像URLを入力:",
     "urlInputPlaceholder": "https://images.unsplash.com/... または https://...",
     "btnApply": "適用",
-    "urlTip": "ヒント: リンクはhttps://で始まり、有効な公開画像（JPG/PNG/WebP）を参照している必要があります。",
+    "validating": "検証中...",
+    "urlTip": "ヒント: GoogleやBingのアドレスバーのURLをコピーしないでください。画像を右クリックし、「画像アドレスをコピー」を選択して直接のJPG/PNG/WebPリンクを取得してください。",
     "successAttached": "カバー画像が正常に設定されました",
     "changeOrRemove": "写真を変更 / 削除",
     "deleteTitle": "画像を削除",
@@ -1327,6 +1328,9 @@
     "errUploadFailed": "画像のアップロードに失敗しました。",
     "errEmptyUrl": "画像URLリンクを入力してください。",
     "errHttpRequired": "無効なリンクです。https://またはhttp://で始まるURLを使用してください。",
-    "errProtocolBlocked": "セキュリティ上の理由から、このプロトコルは許可されていません。"
+    "errProtocolBlocked": "セキュリティ上の理由から、このプロトコルは許可されていません。",
+    "errNotDirectImage": "画像の読み込みに失敗しました。このURLは直接の画像ファイルではないか、提供元によりアクセスが制限されています。画像を右クリックして「画像アドレスをコピー」してください。",
+    "errImageFailedToLoad": "画像を読み込めません",
+    "errImageFailedHint": "入力されたURLは直接の画像ファイルではない（例: Google検索結果ページ）か、提供元によってブロックされています。"
   }
 }

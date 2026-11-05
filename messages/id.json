@@ -1320,7 +1320,8 @@
     "urlInputLabel": "Masukkan URL Gambar Langsung:",
     "urlInputPlaceholder": "https://images.unsplash.com/... atau https://...",
     "btnApply": "Terapkan",
-    "urlTip": "Tips: Tautan wajib diawali dengan https:// dan merujuk ke gambar publik yang valid (JPG/PNG/WebP).",
+    "validating": "Memvalidasi...",
+    "urlTip": "Tips: Jangan salin URL dari address bar Google/Bing. Klik kanan pada gambar, lalu pilih 'Salin Alamat Gambar' (Copy image address) yang merujuk langsung ke file JPG/PNG/WebP.",
     "successAttached": "Gambar sampul berhasil terpasang",
     "changeOrRemove": "Ganti / Hapus Foto",
     "deleteTitle": "Hapus gambar",
@@ -1329,6 +1330,9 @@
     "errUploadFailed": "Gagal mengunggah gambar.",
     "errEmptyUrl": "Silakan masukkan tautan URL gambar.",
     "errHttpRequired": "Tautan tidak valid. Harap gunakan alamat URL yang diawali https:// atau http://",
-    "errProtocolBlocked": "Protokol tautan tidak diizinkan demi alasan keamanan."
+    "errProtocolBlocked": "Protokol tautan tidak diizinkan demi alasan keamanan.",
+    "errNotDirectImage": "Gambar gagal dimuat. URL ini bukan file gambar langsung atau dibatasi oleh server asalnya. Silakan klik kanan gambar lalu pilih 'Salin Alamat Gambar'.",
+    "errImageFailedToLoad": "Gambar tidak dapat dimuat",
+    "errImageFailedHint": "Tautan ini bukan file gambar langsung (misal: halaman web/pencarian Google) atau diblokir oleh pemilik website aslinya."
   }
 }

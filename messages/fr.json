@@ -1318,7 +1318,8 @@
     "urlInputLabel": "Entrez l'URL directe de l'image :",
     "urlInputPlaceholder": "https://images.unsplash.com/... ou https://...",
     "btnApply": "Appliquer",
-    "urlTip": "Astuce : Le lien doit commencer par https:// et pointer vers une image publique valide (JPG/PNG/WebP).",
+    "validating": "Validation...",
+    "urlTip": "Astuce : Ne copiez pas l'URL de la barre d'adresse Google/Bing. Faites un clic droit sur l'image et sélectionnez 'Copier l'adresse de l'image' pointant directement vers un fichier JPG/PNG/WebP.",
     "successAttached": "Image de couverture attachée avec succès",
     "changeOrRemove": "Modifier / Supprimer la photo",
     "deleteTitle": "Supprimer l'image",
@@ -1327,6 +1328,9 @@
     "errUploadFailed": "Échec du téléchargement de l'image.",
     "errEmptyUrl": "Veuillez entrer une URL d'image.",
     "errHttpRequired": "Lien invalide. Veuillez utiliser une URL commençant par https:// ou http://",
-    "errProtocolBlocked": "Protocole de lien non autorisé pour des raisons de sécurité."
+    "errProtocolBlocked": "Protocole de lien non autorisé pour des raisons de sécurité.",
+    "errNotDirectImage": "Échec du chargement de l'image. Cette URL n'est pas un fichier image direct ou est restreinte. Veuillez faire un clic droit sur l'image et choisir 'Copier l'adresse de l'image'.",
+    "errImageFailedToLoad": "Impossible de charger l'image",
+    "errImageFailedHint": "L'URL n'est pas un fichier image direct (ex. page de recherche Google) ou est bloquée par le site hébergeur."
   }
 }

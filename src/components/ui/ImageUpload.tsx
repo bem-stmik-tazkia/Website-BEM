@@ -1,7 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { FiX, FiImage, FiLoader, FiUpload, FiLink, FiCheck } from "react-icons/fi";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  FiX,
+  FiImage,
+  FiLoader,
+  FiUpload,
+  FiLink,
+  FiCheck,
+  FiAlertTriangle,
+} from "react-icons/fi";
 import { compressImage } from "@/lib/imageCompression";
 import { useTranslations } from "next-intl";
 
@@ -11,6 +19,62 @@ interface ImageUploadProps {
   className?: string;
   folder?: string;
   label?: string;
+}
+
+/**
+ * Ekstrak tautan file gambar langsung jika pengguna menempelkan URL halaman
+ * hasil pencarian gambar (seperti Google Images, Bing Images, Yahoo Images, dsb).
+ */
+export function extractDirectImageUrl(rawUrl: string): string {
+  try {
+    const trimmed = rawUrl.trim();
+    if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+      return trimmed;
+    }
+    const urlObj = new URL(trimmed);
+
+    // 1. Google Images (google.com/imgres?...&imgurl=https%3A%2F%2F...)
+    if (urlObj.hostname.includes("google.") && urlObj.searchParams.has("imgurl")) {
+      const imgurl = urlObj.searchParams.get("imgurl");
+      if (imgurl) {
+        return decodeURIComponent(imgurl);
+      }
+    }
+
+    // 2. Bing Images (bing.com/images/search?...&mediaurl=https%3A%2F%2F...)
+    if (urlObj.hostname.includes("bing.com") && urlObj.searchParams.has("mediaurl")) {
+      const mediaurl = urlObj.searchParams.get("mediaurl");
+      if (mediaurl) {
+        return decodeURIComponent(mediaurl);
+      }
+    }
+
+    // 3. Yahoo Images (images.search.yahoo.com/...imgurl=...)
+    if (urlObj.hostname.includes("yahoo.com") && urlObj.searchParams.has("imgurl")) {
+      const imgurl = urlObj.searchParams.get("imgurl");
+      if (imgurl) {
+        return decodeURIComponent(imgurl);
+      }
+    }
+
+    // 4. Google Drive share view link -> direct preview link
+    if (urlObj.hostname.includes("drive.google.com") && urlObj.pathname.includes("/file/d/")) {
+      const match = urlObj.pathname.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+      }
+    }
+
+    // 5. Dropbox share link -> raw image direct link
+    if (urlObj.hostname.includes("dropbox.com")) {
+      urlObj.searchParams.set("raw", "1");
+      return urlObj.toString();
+    }
+
+    return trimmed;
+  } catch {
+    return rawUrl.trim();
+  }
 }
 
 export default function ImageUpload({
@@ -24,9 +88,16 @@ export default function ImageUpload({
   const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
   const [urlInput, setUrlInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isValidatingUrl, setIsValidatingUrl] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset load error state jika value berubah
+  useEffect(() => {
+    setImageLoadError(false);
+  }, [value]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,6 +118,7 @@ export default function ImageUpload({
     try {
       setIsUploading(true);
       setError(null);
+      setImageLoadError(false);
 
       // Kompres file sebelum upload (max 1MB, 1920px)
       // Kompresi via HTML5 Canvas ini otomatis membuang payload EXIF / script jahat yang disisipkan
@@ -98,8 +170,52 @@ export default function ImageUpload({
       return;
     }
 
+    // Ekstrak URL gambar langsung jika dari Google Images / Bing Images / Google Drive
+    const directUrl = extractDirectImageUrl(trimmed);
+
+    // Pre-validasi: uji muat gambar dengan objek Image browser
+    setIsValidatingUrl(true);
     setError(null);
-    onChange(trimmed);
+
+    if (typeof window !== "undefined") {
+      const testImg = new window.Image();
+      let isHandled = false;
+
+      // Timeout 6 detik jika server luar sangat lambat
+      const timeoutId = setTimeout(() => {
+        if (!isHandled) {
+          isHandled = true;
+          setIsValidatingUrl(false);
+          setImageLoadError(false);
+          onChange(directUrl);
+        }
+      }, 6000);
+
+      testImg.onload = () => {
+        if (!isHandled) {
+          isHandled = true;
+          clearTimeout(timeoutId);
+          setIsValidatingUrl(false);
+          setImageLoadError(false);
+          setError(null);
+          onChange(directUrl);
+        }
+      };
+
+      testImg.onerror = () => {
+        if (!isHandled) {
+          isHandled = true;
+          clearTimeout(timeoutId);
+          setIsValidatingUrl(false);
+          setError(t("errNotDirectImage"));
+        }
+      };
+
+      testImg.src = directUrl;
+    } else {
+      setIsValidatingUrl(false);
+      onChange(directUrl);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -131,6 +247,7 @@ export default function ImageUpload({
     onChange("");
     setUrlInput("");
     setError(null);
+    setImageLoadError(false);
   };
 
   return (
@@ -139,11 +256,22 @@ export default function ImageUpload({
       {value ? (
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <div className="relative group rounded-xl overflow-hidden border border-outline-variant/30 aspect-video w-full max-w-[200px] bg-surface-variant/30 flex items-center justify-center shadow-xs">
-            <img
-              src={value}
-              alt="Preview Cover"
-              className="w-full h-full object-cover"
-            />
+            {imageLoadError ? (
+              <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-rose-500/10 text-rose-500 gap-1.5">
+                <FiAlertTriangle size={22} />
+                <span className="text-[10px] font-bold leading-tight">
+                  {t("errImageFailedToLoad")}
+                </span>
+              </div>
+            ) : (
+              <img
+                src={value}
+                alt="Preview Cover"
+                className="w-full h-full object-cover"
+                onError={() => setImageLoadError(true)}
+                onLoad={() => setImageLoadError(false)}
+              />
+            )}
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <button
                 onClick={handleRemove}
@@ -157,13 +285,32 @@ export default function ImageUpload({
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-bold text-on-surface flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-              <FiCheck size={14} />
-              <span>{t("successAttached")}</span>
+            <span
+              className={`text-xs font-bold flex items-center gap-1.5 ${
+                imageLoadError
+                  ? "text-rose-500"
+                  : "text-emerald-600 dark:text-emerald-400"
+              }`}
+            >
+              {imageLoadError ? (
+                <FiAlertTriangle size={14} />
+              ) : (
+                <FiCheck size={14} />
+              )}
+              <span>
+                {imageLoadError
+                  ? t("errImageFailedToLoad")
+                  : t("successAttached")}
+              </span>
             </span>
             <p className="text-[11px] text-on-surface-variant/70 truncate max-w-xs sm:max-w-md font-mono">
               {value}
             </p>
+            {imageLoadError && (
+              <p className="text-[11px] text-rose-500 leading-relaxed max-w-xs sm:max-w-md">
+                {t("errImageFailedHint")}
+              </p>
+            )}
             <button
               type="button"
               onClick={handleRemove}
@@ -279,15 +426,24 @@ export default function ImageUpload({
                       handleApplyUrl();
                     }
                   }}
+                  disabled={isValidatingUrl}
                   placeholder={t("urlInputPlaceholder")}
-                  className="flex-1 px-3 py-2 rounded-xl bg-surface border border-outline-variant/40 text-on-surface text-xs focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-on-surface-variant/40"
+                  className="flex-1 px-3 py-2 rounded-xl bg-surface border border-outline-variant/40 text-on-surface text-xs focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-on-surface-variant/40 disabled:opacity-60"
                 />
                 <button
                   type="button"
                   onClick={handleApplyUrl}
-                  className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
+                  disabled={isValidatingUrl}
+                  className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer disabled:opacity-60 flex items-center gap-1.5"
                 >
-                  {t("btnApply")}
+                  {isValidatingUrl ? (
+                    <>
+                      <FiLoader className="animate-spin text-xs" />
+                      <span>{t("validating")}</span>
+                    </>
+                  ) : (
+                    <span>{t("btnApply")}</span>
+                  )}
                 </button>
               </div>
               <p className="text-[11px] text-on-surface-variant/70 leading-relaxed">

@@ -1320,7 +1320,8 @@
     "urlInputLabel": "Enter Direct Image URL:",
     "urlInputPlaceholder": "https://images.unsplash.com/... or https://...",
     "btnApply": "Apply",
-    "urlTip": "Tip: Link must start with https:// and point to a valid public image (JPG/PNG/WebP).",
+    "validating": "Validating...",
+    "urlTip": "Tip: Do not copy the URL from Google/Bing address bar. Right-click the image and select 'Copy Image Address' pointing directly to a JPG/PNG/WebP file.",
     "successAttached": "Cover image attached successfully",
     "changeOrRemove": "Change / Remove Photo",
     "deleteTitle": "Remove image",
@@ -1329,6 +1330,9 @@
     "errUploadFailed": "Failed to upload image.",
     "errEmptyUrl": "Please enter an image URL link.",
     "errHttpRequired": "Invalid link. Please use a URL starting with https:// or http://",
-    "errProtocolBlocked": "Link protocol is not allowed for security reasons."
+    "errProtocolBlocked": "Link protocol is not allowed for security reasons.",
+    "errNotDirectImage": "Failed to load image. This URL is not a direct image file or is restricted. Please right-click the image and select 'Copy Image Address'.",
+    "errImageFailedToLoad": "Image failed to load",
+    "errImageFailedHint": "The URL is not a direct image file (e.g. Google search page) or is blocked by the host website."
   }
 }
