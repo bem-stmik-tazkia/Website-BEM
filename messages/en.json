@@ -1253,7 +1253,19 @@
     "reviewModalTitle": "Admin Review & Feedback Note",
     "reviewModalClose": "Close",
     "reviewModalEdit": "Edit & Revise Article",
-    "categoryArticle": "Article"
+    "categoryArticle": "Article",
+    "btnPreview": "Preview",
+    "btnCancelSubmission": "Withdraw to Draft",
+    "cancelSubmissionTitle": "Withdraw Submission to Draft?",
+    "cancelSubmissionDesc": "The article will be returned to draft status so you can edit the content or delete it before resubmitting to admin.",
+    "cancelSubmissionConfirm": "Yes, Withdraw to Draft",
+    "cancelSubmissionProcessing": "Withdrawing...",
+    "cancelSuccess": "Article successfully returned to draft.",
+    "cancelError": "Failed to withdraw article submission.",
+    "previewModalTitle": "Article Preview",
+    "previewNotice": "This is a preview of your article before being published publicly.",
+    "previewClose": "Close Preview",
+    "previewMinuteRead": "{min} min read"
   },
   "StudentArticleNotification": {
     "title": "Article Notifications",

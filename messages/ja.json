@@ -1251,7 +1251,19 @@
     "reviewModalTitle": "管理者のレビュー＆フィードバックメモ",
     "reviewModalClose": "閉じる",
     "reviewModalEdit": "編集して修正する",
-    "categoryArticle": "記事"
+    "categoryArticle": "記事",
+    "btnPreview": "プレビュー",
+    "btnCancelSubmission": "下書きに戻す",
+    "cancelSubmissionTitle": "申請を取り消して下書きに戻しますか？",
+    "cancelSubmissionDesc": "記事は下書き状態に戻るため、再提出する前に内容の編集や削除が可能になります。",
+    "cancelSubmissionConfirm": "はい、下書きに戻す",
+    "cancelSubmissionProcessing": "取り消し中...",
+    "cancelSuccess": "記事が下書きに戻されました。",
+    "cancelError": "記事の取り消しに失敗しました。",
+    "previewModalTitle": "記事のプレビュー",
+    "previewNotice": "これは一般公開前の記事プレビュー表示です。",
+    "previewClose": "プレビューを閉じる",
+    "previewMinuteRead": "読了目安 {min} 分"
   },
   "StudentArticleNotification": {
     "title": "記事通知",

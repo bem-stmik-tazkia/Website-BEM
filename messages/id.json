@@ -1253,7 +1253,19 @@
     "reviewModalTitle": "Catatan Review & Evaluasi Admin",
     "reviewModalClose": "Tutup",
     "reviewModalEdit": "Edit & Perbaiki Tulisan",
-    "categoryArticle": "Artikel"
+    "categoryArticle": "Artikel",
+    "btnPreview": "Pratinjau",
+    "btnCancelSubmission": "Tarik ke Draf",
+    "cancelSubmissionTitle": "Tarik Pengajuan ke Draf?",
+    "cancelSubmissionDesc": "Artikel akan dikembalikan ke status draf sehingga Anda dapat mengedit isinya atau menghapusnya sebelum diajukan kembali ke admin.",
+    "cancelSubmissionConfirm": "Ya, Tarik ke Draf",
+    "cancelSubmissionProcessing": "Menarik...",
+    "cancelSuccess": "Artikel berhasil dikembalikan ke draf.",
+    "cancelError": "Gagal menarik pengajuan artikel.",
+    "previewModalTitle": "Pratinjau Artikel",
+    "previewNotice": "Ini adalah pratinjau tampilan artikel Anda sebelum diterbitkan ke publik.",
+    "previewClose": "Tutup Pratinjau",
+    "previewMinuteRead": "{min} menit baca"
   },
   "StudentArticleNotification": {
     "title": "Notifikasi Artikel",

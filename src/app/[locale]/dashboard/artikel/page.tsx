@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "@/i18n/routing";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
 import {
   FiEdit3,
@@ -18,9 +18,14 @@ import ArticleCard, { ArticleItem } from "@/components/dashboard/artikel/Article
 import EmptyArticleState from "@/components/dashboard/artikel/EmptyArticleState";
 import ReviewNoteModal from "@/components/dashboard/artikel/ReviewNoteModal";
 import DeleteConfirmModal from "@/components/dashboard/artikel/DeleteConfirmModal";
+import ArticlePreviewModal from "@/components/dashboard/artikel/ArticlePreviewModal";
+import CancelSubmissionModal from "@/components/dashboard/artikel/CancelSubmissionModal";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import { withdrawArticleSubmission } from "@/actions/article";
 
 export default function DashboardArtikelPage() {
   const t = useTranslations("DashboardArtikel");
+  const locale = useLocale();
   const supabase = createClient();
   const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +36,18 @@ export default function DashboardArtikelPage() {
   // Modals state
   const [selectedNoteArticle, setSelectedNoteArticle] = useState<ArticleItem | null>(null);
   const [selectedDeleteArticle, setSelectedDeleteArticle] = useState<ArticleItem | null>(null);
+  const [selectedPreviewArticle, setSelectedPreviewArticle] = useState<ArticleItem | null>(null);
+  const [selectedCancelArticle, setSelectedCancelArticle] = useState<ArticleItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  // Auto-translate titles for active locale
+  const { data: displayArticles } = useTranslatedList(
+    articles,
+    "articles",
+    locale,
+    ["title"]
+  );
 
   const fetchArticles = useCallback(async () => {
     try {
@@ -114,6 +130,51 @@ export default function DashboardArtikelPage() {
     }
   };
 
+  const handleWithdrawSubmission = async () => {
+    if (!selectedCancelArticle) return;
+    setIsCancelling(true);
+
+    try {
+      // 1. Eksekusi server action
+      const res = await withdrawArticleSubmission(selectedCancelArticle.id);
+
+      if (!res.success) {
+        // Fallback: coba update langsung melalui Supabase client
+        const { error: clientErr } = await supabase
+          .from("articles")
+          .update({
+            status: "draft",
+            submitted_at: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", selectedCancelArticle.id);
+
+        if (clientErr) {
+          alert(`${t("cancelError")}: ${res.error || clientErr.message}`);
+          return;
+        }
+      }
+
+      // Optimistic update: kembalikan artikel ke draf
+      setArticles((prev) =>
+        prev.map((a) =>
+          a.id === selectedCancelArticle.id
+            ? { ...a, status: "draft", submitted_at: null, updated_at: new Date().toISOString() }
+            : a
+        )
+      );
+
+      setSelectedCancelArticle(null);
+      // Fetch ulang untuk sinkronisasi view
+      fetchArticles();
+    } catch (err: any) {
+      console.error("[DashboardArtikel] Withdraw failed:", err);
+      alert(`${t("cancelError")}: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   // Hitung jumlah untuk statistik dan filter tabs
   const counts = useMemo(() => {
     const published = articles.filter((a) => a.status === "published").length;
@@ -129,9 +190,9 @@ export default function DashboardArtikelPage() {
     };
   }, [articles]);
 
-  // Filter artikel berdasarkan tab dan search query
+  // Filter artikel berdasarkan tab dan search query (menggunakan displayArticles dengan judul terjemahan)
   const filteredArticles = useMemo(() => {
-    return articles.filter((article) => {
+    return displayArticles.filter((article) => {
       // 1. Tab filter
       if (activeTab !== "all" && article.status !== activeTab) {
         return false;
@@ -147,7 +208,7 @@ export default function DashboardArtikelPage() {
 
       return true;
     });
-  }, [articles, activeTab, searchQuery]);
+  }, [displayArticles, activeTab, searchQuery]);
 
   return (
     <div>
@@ -225,6 +286,8 @@ export default function DashboardArtikelPage() {
               article={article}
               onOpenReviewNote={setSelectedNoteArticle}
               onOpenDelete={setSelectedDeleteArticle}
+              onOpenPreview={setSelectedPreviewArticle}
+              onCancelSubmission={setSelectedCancelArticle}
             />
           ))}
         </div>
@@ -237,6 +300,23 @@ export default function DashboardArtikelPage() {
           }}
         />
       )}
+
+      {/* Modal Pratinjau Artikel */}
+      <ArticlePreviewModal
+        isOpen={Boolean(selectedPreviewArticle)}
+        onClose={() => setSelectedPreviewArticle(null)}
+        article={selectedPreviewArticle}
+        onWithdraw={(art) => setSelectedCancelArticle(art)}
+      />
+
+      {/* Modal Tarik Pengajuan ke Draf */}
+      <CancelSubmissionModal
+        isOpen={Boolean(selectedCancelArticle)}
+        onClose={() => setSelectedCancelArticle(null)}
+        onConfirm={handleWithdrawSubmission}
+        title={selectedCancelArticle?.title || ""}
+        isCancelling={isCancelling}
+      />
 
       {/* Modal Catatan Review */}
       <ReviewNoteModal
@@ -257,4 +337,3 @@ export default function DashboardArtikelPage() {
     </div>
   );
 }
-

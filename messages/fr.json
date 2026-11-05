@@ -1251,7 +1251,19 @@
     "reviewModalTitle": "Commentaires et retours de l'administrateur",
     "reviewModalClose": "Fermer",
     "reviewModalEdit": "Modifier et corriger l'article",
-    "categoryArticle": "Article"
+    "categoryArticle": "Article",
+    "btnPreview": "Aperçu",
+    "btnCancelSubmission": "Retirer vers brouillon",
+    "cancelSubmissionTitle": "Retirer la soumission vers le brouillon ?",
+    "cancelSubmissionDesc": "L'article sera remis au statut de brouillon afin que vous puissiez modifier le contenu ou le supprimer avant de le soumettre à nouveau à l'administrateur.",
+    "cancelSubmissionConfirm": "Oui, retirer vers brouillon",
+    "cancelSubmissionProcessing": "Retrait en cours...",
+    "cancelSuccess": "L'article a été remis au statut de brouillon avec succès.",
+    "cancelError": "Échec du retrait de la soumission de l'article.",
+    "previewModalTitle": "Aperçu de l'article",
+    "previewNotice": "Ceci est un aperçu de votre article avant publication publique.",
+    "previewClose": "Fermer l'aperçu",
+    "previewMinuteRead": "{min} min de lecture"
   },
   "StudentArticleNotification": {
     "title": "Notifications d'articles",

@@ -1251,7 +1251,19 @@
     "reviewModalTitle": "ملاحظات وتوجيهات المشرف",
     "reviewModalClose": "إغلاق",
     "reviewModalEdit": "تعديل وتحسين المقال",
-    "categoryArticle": "مقال"
+    "categoryArticle": "مقال",
+    "btnPreview": "معاينة",
+    "btnCancelSubmission": "سحب إلى المسودة",
+    "cancelSubmissionTitle": "هل تريد سحب التقديم إلى المسودة؟",
+    "cancelSubmissionDesc": "ستتم إعادة المقال إلى حالة المسودة حتى تتمكن من تعديل المحتوى أو حذفه قبل إعادة تقديمه إلى المشرف.",
+    "cancelSubmissionConfirm": "نعم، اسحب إلى المسودة",
+    "cancelSubmissionProcessing": "جارٍ السحب...",
+    "cancelSuccess": "تمت إعادة المقال إلى المسودة بنجاح.",
+    "cancelError": "فشل في سحب تقديم المقال.",
+    "previewModalTitle": "معاينة المقال",
+    "previewNotice": "هذه معاينة لمقالك قبل النشر العام.",
+    "previewClose": "إغلاق المعاينة",
+    "previewMinuteRead": "{min} دقائق للقراءة"
   },
   "StudentArticleNotification": {
     "title": "إشعارات المقالات",

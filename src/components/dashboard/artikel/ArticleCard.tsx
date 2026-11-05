@@ -10,9 +10,12 @@ import {
   FiCalendar,
   FiClock,
   FiTag,
+  FiEye,
+  FiRotateCcw,
 } from "react-icons/fi";
 import { useTranslations, useLocale } from "next-intl";
 import ArticleStatusBadge, { ArticleStatus } from "./ArticleStatusBadge";
+import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 
 export interface ArticleItem {
   id: string;
@@ -35,15 +38,28 @@ interface Props {
   article: ArticleItem;
   onOpenReviewNote: (article: ArticleItem) => void;
   onOpenDelete: (article: ArticleItem) => void;
+  onOpenPreview?: (article: ArticleItem) => void;
+  onCancelSubmission?: (article: ArticleItem) => void;
 }
 
 export default function ArticleCard({
   article,
   onOpenReviewNote,
   onOpenDelete,
+  onOpenPreview,
+  onCancelSubmission,
 }: Props) {
   const t = useTranslations("DashboardArtikel");
   const locale = useLocale();
+
+  // Terjemahkan judul dinamis jika bahasa target selain 'id'
+  const { data: displayArticle } = useTranslatedContent(
+    article,
+    "articles",
+    locale,
+    ["title"]
+  );
+  const displayTitle = displayArticle?.title || article.title;
 
   const isPublished = article.status === "published";
   const isPending = article.status === "pending";
@@ -70,33 +86,30 @@ export default function ArticleCard({
     .slice(0, 160);
 
   return (
-    <div className="bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-2xl p-4 sm:p-5 transition-all shadow-sm flex flex-col md:flex-row gap-4 sm:gap-5 group min-w-0 overflow-hidden">
-      {/* Cover Thumbnail */}
-      <div className="relative w-full md:w-48 h-36 sm:h-40 md:h-auto rounded-xl overflow-hidden bg-surface-variant/40 shrink-0 border border-outline-variant/20">
+    <div className="group bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 hover:border-primary/40 hover:shadow-md transition-all flex flex-col md:flex-row gap-4 sm:gap-5 overflow-hidden">
+      {/* Cover Image Thumbnail */}
+      <div className="w-full md:w-48 h-36 md:h-auto rounded-xl overflow-hidden bg-surface-variant/30 shrink-0 border border-outline-variant/20 relative group-hover:scale-[1.01] transition-transform">
         {article.cover_url ? (
           <img
             src={article.cover_url}
-            alt={article.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            alt={displayTitle}
+            className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-on-surface-variant/50 p-3 text-center">
-            <span className="material-symbols-outlined text-3xl">image</span>
-            <span className="text-[10px] mt-1">{t("noCover")}</span>
+          <div className="w-full h-full flex flex-col items-center justify-center text-on-surface-variant/40 gap-1 bg-surface-variant/10">
+            <FiTag size={24} />
+            <span className="text-[10px] uppercase font-bold tracking-wider">
+              {t("noCover")}
+            </span>
           </div>
         )}
-
-        {/* Floating status badge on mobile */}
-        <div className="absolute top-2.5 left-2.5 md:hidden">
-          <ArticleStatusBadge status={article.status} size="sm" />
-        </div>
       </div>
 
       {/* Main Details */}
-      <div className="flex-1 min-w-0 flex flex-col justify-between">
+      <div className="flex-1 flex flex-col justify-between min-w-0">
         <div>
-          {/* Header Row: Category & Status */}
-          <div className="hidden md:flex items-center justify-between gap-2 mb-2">
+          {/* Top Status & Date Row */}
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
               <ArticleStatusBadge status={article.status} size="sm" />
               {article.category && (
@@ -119,7 +132,7 @@ export default function ArticleCard({
 
           {/* Title */}
           <h3 className="font-bold text-base sm:text-lg text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-2 mb-2 break-words [overflow-wrap:anywhere]">
-            {article.title}
+            {displayTitle}
           </h3>
 
           {/* Snippet */}
@@ -167,6 +180,32 @@ export default function ArticleCard({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 ml-auto">
+            {/* Tombol Pratinjau (Preview) untuk semua artikel */}
+            {onOpenPreview && (
+              <button
+                type="button"
+                onClick={() => onOpenPreview(article)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-on-surface text-xs font-semibold transition-colors cursor-pointer"
+                title={t("btnPreview")}
+              >
+                <FiEye size={13} />
+                <span>{t("btnPreview")}</span>
+              </button>
+            )}
+
+            {/* Tombol Tarik Pengajuan ke Draf jika status pending */}
+            {isPending && onCancelSubmission && (
+              <button
+                type="button"
+                onClick={() => onCancelSubmission(article)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/25 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                title={t("btnCancelSubmission")}
+              >
+                <FiRotateCcw size={13} />
+                <span>{t("btnCancelSubmission")}</span>
+              </button>
+            )}
+
             {/* Tombol Lihat Publik jika Tayang */}
             {isPublished && (
               <Link
