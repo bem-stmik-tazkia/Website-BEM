@@ -98,17 +98,23 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
         const viewKey = userId
           ? `viewed_art_${article.id}_${userId}`
           : `viewed_art_${article.id}`;
-        const lastViewedAt = localStorage.getItem(viewKey);
+        const lastViewedAt = localStorage.getItem(viewKey) || localStorage.getItem(`viewed_art_${article.id}`);
         const cooldownMs = 12 * 60 * 60 * 1000; // 12 jam
         const now = Date.now();
-        const isStillInCooldown =
-          lastViewedAt && now - parseInt(lastViewedAt, 10) < cooldownMs;
+        const isStillInCooldown = Boolean(
+          lastViewedAt && 
+          now - parseInt(lastViewedAt, 10) < cooldownMs &&
+          ((article.views || 0) > 0)
+        );
 
         if (!isStillInCooldown) {
           const counted = await recordView("articles", article.id, deviceId, 12);
           if (counted && isMounted) {
             setViews((prev) => prev + 1);
             localStorage.setItem(viewKey, String(now));
+            if (userId) {
+              localStorage.setItem(`viewed_art_${article.id}`, String(now));
+            }
           }
         }
       } catch (err) {

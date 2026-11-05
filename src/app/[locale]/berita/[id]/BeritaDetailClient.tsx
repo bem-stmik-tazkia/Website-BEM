@@ -187,10 +187,15 @@ export default function BeritaDetailPage() {
         // Anti-Spam View Tracking: localStorage (24h) sebagai fast guard,
         // DB-level cooldown sebagai fallback jika localStorage dihapus user.
         const viewKey = userId ? `viewed_berita_${detailData.id}_${userId}` : `viewed_berita_${detailData.id}`;
-        const lastViewedAt = localStorage.getItem(viewKey);
+        const lastViewedAt = localStorage.getItem(viewKey) || localStorage.getItem(`viewed_berita_${detailData.id}`);
         const cooldownMs = 24 * 60 * 60 * 1000; // 24 jam
         const now = Date.now();
-        const isStillInCooldown = lastViewedAt && (now - parseInt(lastViewedAt, 10)) < cooldownMs;
+        // Jika views di DB masih 0, izinkan hit ke DB untuk memulihkan view yang sempat tertahan bug
+        const isStillInCooldown = Boolean(
+          lastViewedAt &&
+          (now - parseInt(lastViewedAt, 10)) < cooldownMs &&
+          (detailData.views > 0)
+        );
 
         if (!isStillInCooldown) {
           // Kirim ke DB — RPC `record_berita_view` juga cek cooldown 24 jam di DB
@@ -199,6 +204,9 @@ export default function BeritaDetailPage() {
             setViewCount(prev => prev + 1);
             // Simpan timestamp di localStorage sebagai fast guard
             localStorage.setItem(viewKey, String(now));
+            if (userId) {
+              localStorage.setItem(`viewed_berita_${detailData.id}`, String(now));
+            }
           } else if (!lastViewedAt) {
             // DB bilang masih cooldown padahal localStorage kosong (user hapus data),
             // update localStorage agar guard bekerja lagi ke depannya
