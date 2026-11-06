@@ -252,9 +252,9 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
   };
 
   return (
-    <div className="min-h-screen bg-background pt-24 sm:pt-28 pb-28 sm:pb-24 px-3.5 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background pt-24 sm:pt-28 pb-32 sm:pb-24 px-3.5 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full overflow-x-hidden">
       {/* Breadcrumb Navigation */}
-      <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6">
+      <div className="flex items-center justify-between gap-3 mb-4 sm:mb-6">
         <Link
           href="/artikel"
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors"
@@ -264,52 +264,52 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
         </Link>
 
         {article.category && (
-          <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+          <span className="text-[11px] sm:text-xs font-bold text-primary bg-primary/10 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-primary/20 shrink-0">
             {translateCategory(article.category)}
           </span>
         )}
       </div>
 
       {/* Article Header */}
-      <div className="space-y-4 mb-8">
-        <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-on-surface leading-tight tracking-tight break-words [overflow-wrap:anywhere]">
+      <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-on-surface leading-tight tracking-tight break-words [overflow-wrap:anywhere]">
           {articleTitle}
         </h1>
 
         {/* Author Bio & Date Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-y border-outline-variant/20">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden shrink-0 border border-primary/20 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 py-3 sm:py-4 border-y border-outline-variant/20">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden shrink-0 border border-primary/20 shadow-xs">
               {article.author?.avatar_url ? (
                 <img src={article.author.avatar_url} alt={article.author?.full_name || "Author"} className="w-full h-full object-cover" />
               ) : isBemAdmin ? (
                 <img src="/images/logo2.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-1.5" />
               ) : (
-                <span className="text-base">{article.author?.full_name?.charAt(0) || "M"}</span>
+                <span className="text-sm sm:text-base">{article.author?.full_name?.charAt(0) || "M"}</span>
               )}
             </div>
-            <div>
-              <p className="font-bold text-sm text-on-surface leading-tight">
+            <div className="min-w-0">
+              <p className="font-bold text-xs sm:text-sm text-on-surface leading-tight truncate">
                 {article.author?.full_name || t("defaultAuthor")}
               </p>
-              <p className="text-[11px] text-on-surface-variant mt-0.5">{t("studentAuthor")}</p>
+              <p className="text-[10px] sm:text-[11px] text-on-surface-variant mt-0.5">{t("studentAuthor")}</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-on-surface-variant">
+          <div className="flex items-center gap-2.5 sm:gap-3 text-xs text-on-surface-variant shrink-0">
             <span className="flex items-center gap-1.5">
-              <FiCalendar size={13} />
+              <FiCalendar size={13} className="shrink-0" />
               <span>
                 {new Date(article.published_at || article.created_at).toLocaleDateString(locale, {
                   day: "numeric",
-                  month: "long",
+                  month: "short",
                   year: "numeric",
                 })}
               </span>
             </span>
-            <span>•</span>
+            <span className="opacity-40">•</span>
             <span className="flex items-center gap-1.5">
-              <FiClock size={13} />
+              <FiClock size={13} className="shrink-0" />
               <span>{t("minRead", { min: readingTime })}</span>
             </span>
           </div>
@@ -318,7 +318,7 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
 
       {/* Cover Image */}
       {article.cover_url && (
-        <div className="rounded-3xl overflow-hidden mb-10 shadow-sm border border-outline-variant/30 max-h-[480px]">
+        <div className="rounded-2xl sm:rounded-3xl overflow-hidden mb-6 sm:mb-10 shadow-xs sm:shadow-sm border border-outline-variant/30 aspect-[16/9] sm:aspect-[21/9] max-h-64 sm:max-h-[420px] w-full bg-surface-variant/20">
           <img
             src={article.cover_url}
             alt={articleTitle}
@@ -328,69 +328,69 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
       )}
 
       {/* Main Content Body (Pure 100% Konten Asli Penulis) */}
-      <article className="prose dark:prose-invert max-w-none mb-12 overflow-hidden">
-        <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-base sm:text-lg text-on-surface/90 font-normal space-y-4">
+      <article className="prose dark:prose-invert max-w-none mb-8 sm:mb-12 overflow-hidden">
+        <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-sm sm:text-base md:text-lg text-on-surface/90 font-normal space-y-3 sm:space-y-4">
           {article.content}
         </div>
       </article>
 
       {/* Interactive Engagement Bar (Likes & Views & Share) */}
-      <div className="p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-surface border border-outline-variant/30 shadow-sm mb-8 sm:mb-12 flex flex-row items-center justify-between gap-3">
+      <div className="p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-3xl bg-surface border border-outline-variant/30 shadow-xs sm:shadow-sm mb-8 sm:mb-12 flex items-center justify-between gap-2.5 sm:gap-3">
         {/* Like and Views Count */}
-        <div className="flex items-center gap-4 w-full sm:w-auto">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Like Button */}
           <button
             type="button"
             onClick={handleToggleLike}
             disabled={isLiking}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all cursor-pointer shadow-xs ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-xs shrink-0 ${
               isLiked
                 ? "bg-rose-500 text-white shadow-rose-500/25 scale-105"
                 : "bg-surface-variant/40 hover:bg-rose-500/10 text-on-surface hover:text-rose-600 border border-outline-variant/30"
             }`}
           >
-            <FiHeart size={18} className={isLiked ? "fill-white" : ""} />
+            <FiHeart size={16} className={isLiked ? "fill-white" : ""} />
             <span>{t("likes", { count: likes })}</span>
           </button>
 
           {/* Views Badge */}
-          <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-medium px-3 py-2 rounded-xl bg-surface-variant/20 border border-outline-variant/20">
-            <FiEye size={14} />
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-on-surface-variant font-medium px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-surface-variant/20 border border-outline-variant/20 shrink-0">
+            <FiEye size={13} />
             <span>{t("readers", { count: views })}</span>
           </div>
         </div>
 
         {/* Share Button */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center shrink-0">
           <button
             type="button"
             onClick={handleShare}
-            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-xs sm:text-sm font-bold text-on-surface transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-xs sm:text-sm font-bold text-on-surface transition-all cursor-pointer shrink-0"
             title={t("share")}
           >
-            {copied ? <FiCheck size={16} className="text-emerald-500" /> : <FiShare2 size={16} />}
+            {copied ? <FiCheck size={15} className="text-emerald-500" /> : <FiShare2 size={15} />}
             <span>{copied ? t("copied") : t("share")}</span>
           </button>
         </div>
       </div>
 
       {/* Author Bio Box */}
-      <div className="p-6 rounded-3xl bg-surface border border-outline-variant/30 mb-12 shadow-xs">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden shrink-0 border border-primary/20">
+      <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-surface border border-outline-variant/30 mb-8 sm:mb-12 shadow-xs">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 sm:gap-4">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden shrink-0 border border-primary/20">
             {article.author?.avatar_url ? (
               <img src={article.author.avatar_url} alt={article.author?.full_name || "Author"} className="w-full h-full object-cover" />
             ) : isBemAdmin ? (
               <img src="/images/logo2.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-2" />
             ) : (
-              <span className="text-xl">{article.author?.full_name?.charAt(0) || "M"}</span>
+              <span className="text-lg sm:text-xl">{article.author?.full_name?.charAt(0) || "M"}</span>
             )}
           </div>
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-md">
               {t("aboutAuthor")}
             </span>
-            <h3 className="text-base font-bold text-on-surface mt-1">
+            <h3 className="text-sm sm:text-base font-bold text-on-surface mt-1">
               {article.author?.full_name || t("defaultAuthor")}
             </h3>
             <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
@@ -402,32 +402,33 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
 
       {/* Related Articles */}
       {relatedArticles && relatedArticles.length > 0 && (
-        <div className="pt-8 border-t border-outline-variant/20">
-          <h2 className="text-lg sm:text-xl font-bold text-on-surface mb-6">
+        <div className="pt-6 sm:pt-8 border-t border-outline-variant/20">
+          <h2 className="text-base sm:text-xl font-bold text-on-surface mb-4 sm:mb-6">
             {t("relatedArticles")}
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {relatedArticles.map((rel) => (
               <Link
                 key={rel.id}
                 href={`/artikel/${rel.slug}`}
-                className="group p-4 rounded-2xl bg-surface border border-outline-variant/30 hover:border-primary/40 transition-all flex gap-3.5"
+                className="group p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-surface border border-outline-variant/30 hover:border-primary/40 transition-all flex gap-3"
               >
                 {rel.cover_url && (
-                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-surface-variant/40 shrink-0">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-surface-variant/40 shrink-0">
                     <img src={rel.cover_url} alt={rel.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <span className="text-[10px] font-bold text-primary">{rel.category}</span>
-                  <h4 className="text-xs sm:text-sm font-bold text-on-surface group-hover:text-primary transition-colors line-clamp-2 mt-0.5">
+                  <span className="text-[10px] font-bold text-primary">{translateCategory(rel.category)}</span>
+                  <h4 className="text-xs sm:text-sm font-bold text-on-surface group-hover:text-primary transition-colors line-clamp-2 mt-0.5 break-words">
                     {rel.title}
                   </h4>
-                  <p className="text-[11px] text-on-surface-variant mt-1">
+                  <p className="text-[10px] sm:text-[11px] text-on-surface-variant mt-1">
                     {new Date(rel.published_at || rel.created_at).toLocaleDateString(locale, {
                       day: "numeric",
                       month: "short",
+                      year: "numeric",
                     })}
                   </p>
                 </div>
