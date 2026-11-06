@@ -167,7 +167,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           }`}
       >
         <div className="flex justify-between items-center h-20 md:h-24 px-2.5 sm:px-4 md:px-6 lg:px-8 max-w-7xl mx-auto gap-1.5 sm:gap-4">
-          <Link href="/" className="flex items-center gap-1.5 sm:gap-2 md:gap-3 group shrink min-w-0">
+          <Link href="/" className="flex items-center gap-1.5 sm:gap-2 md:gap-3 group shrink-0">
             <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
               <Image
                 alt="BEM STMIK Tazkia Logo 1"
@@ -186,15 +186,15 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 className="h-7 sm:h-9 md:h-12 lg:h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </div>
-            <div className="flex flex-col justify-center sm:flex-row sm:items-center sm:gap-1.5 shrink min-w-0 leading-tight">
+            <div className="flex flex-row items-center gap-1 sm:gap-1.5 shrink-0">
               <span
-                className={`font-bold leading-none text-xs sm:text-base md:text-xl transition-colors duration-300 ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"
+                className={`font-bold leading-none text-xs sm:text-base md:text-xl transition-colors duration-300 whitespace-nowrap ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"
                   }`}
               >
                 BEM STMIK
               </span>
               <span
-                className={`font-bold leading-none text-[10px] sm:text-base md:text-xl transition-colors duration-300 ${isScrolled ? "text-secondary" : isHome ? "text-white" : "text-secondary"
+                className={`font-bold leading-none text-xs sm:text-base md:text-xl transition-colors duration-300 whitespace-nowrap ${isScrolled ? "text-secondary" : isHome ? "text-white" : "text-secondary"
                   }`}
               >
                 Tazkia
