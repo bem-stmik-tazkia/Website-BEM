@@ -154,31 +154,44 @@ export default function LanguageSwitcher({
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isPending}
-        className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 lg:px-4 lg:py-2.5 rounded-full bg-surface shadow-md lg:shadow-xl lg:border-2 lg:border-primary border border-outline-variant/30 text-xs sm:text-sm font-medium transition-all duration-300 ${
+        className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 lg:px-4 lg:py-2.5 rounded-full bg-surface shadow-xs sm:shadow-md lg:shadow-xl lg:border-2 lg:border-primary border border-outline-variant/30 text-xs sm:text-sm font-medium transition-all duration-300 ${
           isPending ? "opacity-80 cursor-wait" : "hover:bg-surface-variant lg:hover:scale-105"
         }`}
         aria-label="Pilih Bahasa"
       >
         {isPending ? (
-          <div className="w-5 h-3.5 flex items-center justify-center shrink-0">
+          <div className="w-4 h-3 sm:w-5 sm:h-3.5 flex items-center justify-center shrink-0">
             <span className="w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin inline-block" />
           </div>
         ) : (
-          <CurrentFlag className="w-5 h-3.5 shrink-0" />
+          <CurrentFlag className="w-4 h-3 sm:w-5 sm:h-3.5 shrink-0" />
         )}
         <span className="hidden lg:inline-block font-bold text-on-surface whitespace-nowrap">
           {currentLanguage.label}
         </span>
-        <span className="lg:hidden uppercase text-[11px] sm:text-xs font-bold text-on-surface">
+        <span className="lg:hidden uppercase text-[10px] sm:text-xs font-bold text-on-surface">
           {currentLanguage.code}
         </span>
         <FiChevronDown
-          className={`transition-transform duration-200 text-on-surface-variant shrink-0 text-xs ${
+          className={`transition-transform duration-200 text-on-surface-variant shrink-0 text-[10px] sm:text-xs ${
             isOpen ? "rotate-180" : ""
           }`}
-          size={14}
+          size={12}
         />
       </button>
+
+      {/* Backdrop overlay on mobile */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-[1px] z-40 sm:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isOpen && (
@@ -191,7 +204,7 @@ export default function LanguageSwitcher({
               bottomNavMode ? "left-0 lg:left-auto lg:right-0" : "right-0"
             } ${
               floatingMode ? "bottom-full mb-2" : "lg:bottom-full lg:top-auto lg:mb-2 top-full mt-2"
-            } w-44 bg-surface border border-outline-variant/30 rounded-2xl shadow-2xl overflow-hidden z-50 py-1`}
+            } w-40 sm:w-44 max-w-[calc(100vw-24px)] bg-surface border border-outline-variant/30 rounded-2xl shadow-2xl overflow-hidden z-50 py-1`}
           >
             {LANGUAGES.map((lang) => {
               const Flag = lang.Flag;

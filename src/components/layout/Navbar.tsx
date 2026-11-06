@@ -166,8 +166,8 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           : "bg-transparent border-transparent"
           }`}
       >
-        <div className="flex justify-between items-center h-20 md:h-24 px-3 sm:px-4 md:px-6 lg:px-8 max-w-7xl mx-auto gap-2 sm:gap-4">
-          <Link href="/" className="flex items-center gap-1.5 sm:gap-2 md:gap-3 group shrink-0 min-w-0">
+        <div className="flex justify-between items-center h-20 md:h-24 px-2.5 sm:px-4 md:px-6 lg:px-8 max-w-7xl mx-auto gap-1.5 sm:gap-4">
+          <Link href="/" className="flex items-center gap-1.5 sm:gap-2 md:gap-3 group shrink min-w-0">
             <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
               <Image
                 alt="BEM STMIK Tazkia Logo 1"
@@ -186,7 +186,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 className="h-7 sm:h-9 md:h-12 lg:h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </div>
-            <div className="flex flex-row items-center gap-1 sm:gap-1.5 shrink min-w-0">
+            <div className="flex flex-col justify-center sm:flex-row sm:items-center sm:gap-1.5 shrink min-w-0 leading-tight">
               <span
                 className={`font-bold leading-none text-xs sm:text-base md:text-xl transition-colors duration-300 ${isScrolled ? "text-primary" : isHome ? "text-white" : "text-primary"
                   }`}
@@ -194,7 +194,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 BEM STMIK
               </span>
               <span
-                className={`font-bold leading-none text-xs sm:text-base md:text-xl transition-colors duration-300 ${isScrolled ? "text-secondary" : isHome ? "text-white" : "text-secondary"
+                className={`font-bold leading-none text-[10px] sm:text-base md:text-xl transition-colors duration-300 ${isScrolled ? "text-secondary" : isHome ? "text-white" : "text-secondary"
                   }`}
               >
                 Tazkia
@@ -287,7 +287,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           </div>
 
           {/* Action Button (Mobile, Tablet, Desktop) */}
-          <div id="tour-login-btn" className="flex items-center gap-2 sm:gap-2.5 md:gap-3 ml-auto lg:ml-0">
+          <div id="tour-login-btn" className="flex items-center gap-1.5 sm:gap-2.5 md:gap-3 ml-auto lg:ml-0 shrink-0">
             {/* CTA Portal Karya (Mobile) Removed in favor of FloatingKaryaPrompt */}
             
             <LanguageSwitcher />
@@ -298,10 +298,10 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
               <StudentNotificationBell isScrolled={isScrolled} isHome={isHome} />
             )}
             {userProfile ? (
-              <div className="relative" ref={profileMenuRef}>
+              <div className="relative shrink-0" ref={profileMenuRef}>
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className={`flex items-center gap-1.5 sm:gap-2 md:gap-3 p-1 sm:p-1.5 md:p-2 pr-2 sm:pr-3 md:pr-4 rounded-full border transition-all ${showProfileMenu
+                  className={`flex items-center gap-1 sm:gap-1.5 md:gap-3 p-0.5 sm:p-1.5 md:p-2 pr-1.5 sm:pr-2.5 md:pr-4 rounded-full border transition-all ${showProfileMenu
                     ? "bg-primary text-white border-primary shadow-lg shadow-primary/30"
                     : isScrolled
                       ? "bg-surface border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5 text-on-surface"
@@ -331,10 +331,21 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                       {userProfile.role === 'mahasiswa' ? t("roleMahasiswa") : userProfile.role === 'admin' ? t("roleAdmin") : (userProfile.role || 'USER')}
                     </span>
                   </div>
-                  <FiChevronDown className={`transition-transform ${showProfileMenu ? 'rotate-180' : ''} text-xs sm:text-sm md:text-base`} />
+                  <FiChevronDown className={`transition-transform ${showProfileMenu ? 'rotate-180' : ''} text-xs sm:text-sm md:text-base shrink-0`} />
                 </button>
 
-
+                {/* Mobile backdrop for profile menu */}
+                <AnimatePresence>
+                  {showProfileMenu && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 bg-black/20 backdrop-blur-[1px] z-40 sm:hidden"
+                      onClick={() => setShowProfileMenu(false)}
+                    />
+                  )}
+                </AnimatePresence>
 
                 <AnimatePresence>
                   {showProfileMenu && (
@@ -343,7 +354,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-3 w-56 bg-surface rounded-2xl shadow-xl border border-outline-variant/30 overflow-hidden py-2 z-50"
+                      className="absolute right-0 mt-2 sm:mt-3 w-56 max-w-[calc(100vw-24px)] bg-surface rounded-2xl shadow-xl border border-outline-variant/30 overflow-hidden py-2 z-50"
                     >
                       <div className="px-4 py-3 border-b border-outline-variant/20 mb-2 md:hidden">
                         <p className="text-sm font-bold text-on-surface truncate">{userProfile.full_name || 'User'}</p>

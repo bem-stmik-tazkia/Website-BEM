@@ -186,7 +186,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
       <button
         onClick={handleOpen}
         title="Notifikasi Pengajuan & Kotak Saran"
-        className={`relative flex items-center justify-center w-9 h-9 rounded-full transition-all ${
+        className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all ${
           open
             ? (isScrolled || !isHome
                 ? "bg-primary/10 border border-primary/40 text-primary shadow-sm"
