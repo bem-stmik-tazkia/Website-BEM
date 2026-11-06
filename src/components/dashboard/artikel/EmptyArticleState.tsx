@@ -16,8 +16,8 @@ export default function EmptyArticleState({ hasFilter, onResetFilter }: Props) {
 
   if (hasFilter) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-surface border border-outline-variant/30 rounded-2xl">
-        <div className="w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center mb-2">
+      <div className="flex flex-col items-center justify-center p-6 sm:p-12 text-center bg-surface border border-outline-variant/30 rounded-2xl">
+        <div className="w-28 h-28 sm:w-36 sm:h-36 flex items-center justify-center mb-2">
           <SafeLottie
             src="/animations/No Data.lottie"
             loop
@@ -25,7 +25,7 @@ export default function EmptyArticleState({ hasFilter, onResetFilter }: Props) {
             className="w-full h-full object-contain"
           />
         </div>
-        <h4 className="font-bold text-base text-on-surface">{t("emptyFilteredTitle")}</h4>
+        <h4 className="font-bold text-sm sm:text-base text-on-surface">{t("emptyFilteredTitle")}</h4>
         <p className="text-xs text-on-surface-variant mt-1 max-w-xs">
           {t("emptyFilteredDesc")}
         </p>
@@ -43,11 +43,11 @@ export default function EmptyArticleState({ hasFilter, onResetFilter }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 sm:p-16 text-center bg-surface border border-dashed border-outline-variant/50 rounded-3xl animate-fade-in">
-      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mb-4 shadow-inner">
-        <FiEdit3 size={32} />
+    <div className="flex flex-col items-center justify-center p-6 sm:p-12 md:p-16 text-center bg-surface border border-dashed border-outline-variant/50 rounded-2xl sm:rounded-3xl animate-fade-in">
+      <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-primary/10 text-primary flex items-center justify-center mb-3 sm:mb-4 shadow-inner">
+        <FiEdit3 size={28} className="sm:w-8 sm:h-8" />
       </div>
-      <h3 className="text-lg sm:text-xl font-bold text-on-surface">
+      <h3 className="text-base sm:text-xl font-bold text-on-surface">
         {t("emptyDashboardTitle")}
       </h3>
       <p className="text-xs sm:text-sm text-on-surface-variant mt-1.5 max-w-md leading-relaxed">
@@ -55,7 +55,7 @@ export default function EmptyArticleState({ hasFilter, onResetFilter }: Props) {
       </p>
       <Link
         href="/dashboard/artikel/baru"
-        className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs sm:text-sm shadow-md shadow-primary/25 transition-all hover:scale-[1.02]"
+        className="mt-5 sm:mt-6 inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs sm:text-sm shadow-md shadow-primary/25 transition-all hover:scale-[1.02] w-full sm:w-auto text-center"
       >
         <FiEdit3 size={16} />
         <span>{t("writeFirstArticle")}</span>

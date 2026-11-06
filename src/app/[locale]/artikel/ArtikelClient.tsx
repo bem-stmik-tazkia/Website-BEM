@@ -230,40 +230,40 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
   };
 
   return (
-    <div className="min-h-screen bg-background pt-24 sm:pt-28 pb-20 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background pt-24 sm:pt-28 pb-32 sm:pb-24 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full overflow-x-hidden">
       {/* Hero Header dengan Animasi Maskot Orange Cat */}
-      <div className="relative rounded-3xl bg-gradient-to-br from-primary/10 via-surface to-secondary/10 border border-outline-variant/30 p-5 sm:p-10 mb-8 sm:mb-10 overflow-hidden shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="relative z-10 max-w-2xl w-full">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-3 border border-primary/20">
+      <div className="relative rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary/10 via-surface to-secondary/10 border border-outline-variant/30 p-4 sm:p-8 md:p-10 mb-6 sm:mb-10 overflow-hidden shadow-xs sm:shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-5 md:gap-8">
+        <div className="relative z-10 w-full md:max-w-xl lg:max-w-2xl text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-2.5 sm:mb-3 border border-primary/20">
             <FiBookOpen size={13} />
             <span>{t("heroBadge")}</span>
           </div>
-          <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-on-surface leading-tight tracking-tight">
+          <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-on-surface leading-tight tracking-tight break-words [overflow-wrap:anywhere]">
             {t("heroTitle")}
           </h1>
-          <p className="text-xs sm:text-base text-on-surface-variant mt-2.5 leading-relaxed">
+          <p className="text-xs sm:text-base text-on-surface-variant mt-2 sm:mt-2.5 leading-relaxed max-w-xl break-words [overflow-wrap:anywhere]">
             {t("heroSubtitle")}
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 mt-5 sm:mt-6 w-full sm:w-auto">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 sm:gap-3 mt-4 sm:mt-6 w-full sm:w-auto">
             <Link
               href="/dashboard/artikel/baru"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 transition-all cursor-pointer w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 transition-all cursor-pointer text-center whitespace-nowrap"
             >
               <span>{t("writeArticle")}</span>
             </Link>
             <a
               href="#katalog"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 hover:bg-surface-variant/30 text-on-surface text-xs sm:text-sm font-bold transition-colors w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 hover:bg-surface-variant/30 text-on-surface text-xs sm:text-sm font-bold transition-colors text-center whitespace-nowrap"
             >
               <span>{t("exploreArticles")}</span>
-              <FiArrowRight size={14} />
+              <FiArrowRight size={14} className="shrink-0" />
             </a>
           </div>
         </div>
 
         {/* Lottie Animation: Orange Cat Mascot */}
-        <div className="relative w-32 h-32 sm:w-48 sm:h-48 md:w-52 md:h-52 shrink-0 flex items-center justify-center">
+        <div className="relative w-28 h-28 sm:w-44 sm:h-44 md:w-52 md:h-52 shrink-0 flex items-center justify-center self-center md:self-auto -mt-1 md:mt-0">
           <div className="absolute inset-0 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
           <SafeLottie
             src="/animations/orangeCat.lottie"
@@ -275,8 +275,8 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
       </div>
 
       {/* Filter, Search & Sort Bar */}
-      <div id="katalog" className="space-y-4 mb-8 scroll-mt-24">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div id="katalog" className="space-y-3 sm:space-y-4 mb-6 sm:mb-8 scroll-mt-24">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
           {/* Search Box */}
           <div className="relative w-full sm:w-80">
             <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant/60" size={15} />
@@ -285,13 +285,13 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("searchPlaceholder")}
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-surface border border-outline-variant/40 text-xs sm:text-sm text-on-surface outline-none focus:border-primary shadow-xs transition-all"
+              className="w-full pl-10 pr-4 py-2 sm:py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-xs sm:text-sm text-on-surface outline-none focus:border-primary shadow-xs transition-all placeholder:text-on-surface-variant/50"
             />
           </div>
 
           {/* Sort Selector */}
-          <div className="flex items-center gap-2 self-end sm:self-auto">
-            <span className="text-xs text-on-surface-variant font-medium">{t("sortByLabel")}</span>
+          <div className="flex items-center justify-between sm:justify-start gap-2">
+            <span className="text-xs text-on-surface-variant font-medium shrink-0">{t("sortByLabel")}</span>
             <div className="flex items-center bg-surface border border-outline-variant/40 rounded-xl p-1 text-xs font-bold">
               <button
                 type="button"
@@ -317,7 +317,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
         </div>
 
         {/* Categories Horizontal Scroll dengan terjemahan multi-bahasa */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 pt-0.5 -mx-3.5 px-3.5 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 scrollbar-none touch-pan-x">
           {CATEGORY_KEYS.map((cat) => {
             const isSelected = selectedCategory === cat.key;
             return (
@@ -325,7 +325,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                 key={cat.key}
                 type="button"
                 onClick={() => setSelectedCategory(cat.key)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                   isSelected
                     ? "bg-primary text-white shadow-xs"
                     : "bg-surface border border-outline-variant/30 text-on-surface-variant hover:border-primary/40 hover:text-on-surface"
@@ -340,8 +340,8 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
 
       {/* Empty State */}
       {translatedArticles.length === 0 ? (
-        <div className="bg-surface border border-outline-variant/30 rounded-3xl p-8 sm:p-12 text-center max-w-md mx-auto my-12 shadow-xs">
-          <div className="w-36 h-36 sm:w-44 sm:h-44 mx-auto -mt-2 mb-3 flex items-center justify-center">
+        <div className="bg-surface border border-outline-variant/30 rounded-2xl sm:rounded-3xl p-6 sm:p-12 text-center max-w-md mx-auto my-8 sm:my-12 shadow-xs">
+          <div className="w-32 h-32 sm:w-44 sm:h-44 mx-auto -mt-2 mb-3 flex items-center justify-center">
             <SafeLottie
               src="/animations/No Data.lottie"
               loop
@@ -349,7 +349,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
               className="w-full h-full object-contain"
             />
           </div>
-          <h3 className="text-lg font-bold text-on-surface">{t("emptyTitle")}</h3>
+          <h3 className="text-base sm:text-lg font-bold text-on-surface">{t("emptyTitle")}</h3>
           <p className="text-xs sm:text-sm text-on-surface-variant mt-1.5 leading-relaxed">
             {t("emptyDesc")}
           </p>
@@ -365,14 +365,14 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
           </button>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           {/* Featured Article Card */}
           {featuredArticle && (
-            <div className="group block bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <div className="group block bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
                 <Link
                   href={`/artikel/${featuredArticle.slug}`}
-                  className="lg:col-span-7 relative h-52 sm:h-64 lg:h-80 max-h-[340px] bg-surface-variant/40 overflow-hidden block"
+                  className="lg:col-span-7 relative h-48 sm:h-64 lg:h-80 max-h-[340px] bg-surface-variant/40 overflow-hidden block"
                 >
                   {featuredArticle.cover_url ? (
                     <img
@@ -382,20 +382,20 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-on-surface-variant/40">
-                      <FiBookOpen size={48} />
+                      <FiBookOpen size={44} />
                     </div>
                   )}
                   {featuredArticle.category && (
-                    <div className="absolute top-3.5 left-3.5 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                    <div className="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 bg-primary text-white text-[11px] sm:text-xs font-bold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-md">
                       {translateCategory(featuredArticle.category)}
                     </div>
                   )}
                 </Link>
 
-                <div className="lg:col-span-5 p-5 sm:p-7 flex flex-col justify-between">
+                <div className="lg:col-span-5 p-4 sm:p-6 lg:p-7 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center gap-2 text-xs text-on-surface-variant mb-2">
-                      <FiCalendar size={13} />
+                    <div className="flex items-center gap-2 text-[11px] sm:text-xs text-on-surface-variant mb-1.5 sm:mb-2">
+                      <FiCalendar size={12} />
                       <span>
                         {new Date(featuredArticle.published_at || featuredArticle.created_at).toLocaleDateString(
                           locale,
@@ -405,19 +405,19 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                     </div>
 
                     <Link href={`/artikel/${featuredArticle.slug}`} className="block">
-                      <h2 className="text-lg sm:text-2xl font-black text-on-surface group-hover:text-primary transition-colors leading-snug mb-2.5 line-clamp-2">
+                      <h2 className="text-base sm:text-xl lg:text-2xl font-black text-on-surface group-hover:text-primary transition-colors leading-snug mb-2 sm:mb-2.5 line-clamp-2 break-words [overflow-wrap:anywhere]">
                         {featuredArticle.title}
                       </h2>
                     </Link>
 
-                    <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed line-clamp-2 sm:line-clamp-3 mb-4">
+                    <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed line-clamp-2 sm:line-clamp-3 mb-3 sm:mb-4 break-words [overflow-wrap:anywhere]">
                       {featuredArticle.content.replace(/<[^>]*>?/gm, "").replace(/[#*_`]/g, "").slice(0, 180)}...
                     </p>
                   </div>
 
-                  <div className="pt-3.5 border-t border-outline-variant/20 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden text-xs shrink-0 ring-1 ring-outline-variant/20">
+                  <div className="pt-3 sm:pt-3.5 border-t border-outline-variant/20 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden text-[11px] sm:text-xs shrink-0 ring-1 ring-outline-variant/20">
                         {getAuthorAvatar(featuredArticle.author) ? (
                           <img
                             src={getAuthorAvatar(featuredArticle.author)!}
@@ -428,12 +428,12 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                           <span>{featuredArticle.author?.full_name?.charAt(0) || "M"}</span>
                         )}
                       </div>
-                      <span className="text-xs font-bold text-on-surface truncate max-w-[140px]">
+                      <span className="text-xs font-bold text-on-surface truncate max-w-[120px] sm:max-w-[140px]">
                         {featuredArticle.author?.full_name || "Mahasiswa Tazkia"}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-on-surface-variant">
+                    <div className="flex items-center gap-2.5 sm:gap-3 text-xs text-on-surface-variant shrink-0">
                       <span className="flex items-center gap-1" title="Views">
                         <FiEye size={13} />
                         <span>{featuredArticle.views || 0}</span>
@@ -455,7 +455,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
 
           {/* Grid of Articles */}
           {paginatedGridArticles.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {paginatedGridArticles.map((art) => {
                 const avatar = getAuthorAvatar(art.author);
                 return (
@@ -463,7 +463,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                     key={art.id}
                     className="group bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col"
                   >
-                    <Link href={`/artikel/${art.slug}`} className="relative h-44 bg-surface-variant/40 overflow-hidden block">
+                    <Link href={`/artikel/${art.slug}`} className="relative h-40 sm:h-44 bg-surface-variant/40 overflow-hidden block">
                       {art.cover_url ? (
                         <img
                           src={art.cover_url}
@@ -482,9 +482,9 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                       )}
                     </Link>
 
-                    <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
                       <div>
-                        <div className="flex items-center gap-2 text-[11px] text-on-surface-variant mb-2">
+                        <div className="flex items-center gap-2 text-[11px] text-on-surface-variant mb-1.5 sm:mb-2">
                           <FiCalendar size={11} />
                           <span>
                             {new Date(art.published_at || art.created_at).toLocaleDateString(locale, {
@@ -496,17 +496,17 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                         </div>
 
                         <Link href={`/artikel/${art.slug}`} className="block">
-                          <h3 className="font-bold text-base text-on-surface group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-2">
+                          <h3 className="font-bold text-sm sm:text-base text-on-surface group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-1.5 sm:mb-2 break-words [overflow-wrap:anywhere]">
                             {art.title}
                           </h3>
                         </Link>
 
-                        <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-4">
+                        <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-3 sm:mb-4 break-words [overflow-wrap:anywhere]">
                           {art.content.replace(/<[^>]*>?/gm, "").replace(/[#*_`]/g, "").slice(0, 130)}...
                         </p>
                       </div>
 
-                      <div className="pt-3 border-t border-outline-variant/20 flex items-center justify-between mt-auto">
+                      <div className="pt-3 border-t border-outline-variant/20 flex items-center justify-between mt-auto gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden text-[10px] shrink-0 ring-1 ring-outline-variant/20">
                             {avatar ? (
@@ -515,12 +515,12 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                               <span>{art.author?.full_name?.charAt(0) || "M"}</span>
                             )}
                           </div>
-                          <span className="text-xs text-on-surface font-medium truncate max-w-[110px]">
+                          <span className="text-xs text-on-surface font-medium truncate max-w-[100px] sm:max-w-[120px]">
                             {art.author?.full_name || "Mahasiswa"}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2.5 text-xs text-on-surface-variant shrink-0">
+                        <div className="flex items-center gap-2 text-xs text-on-surface-variant shrink-0">
                           <span className="flex items-center gap-1" title="Views">
                             <FiEye size={12} />
                             <span>{art.views || 0}</span>
@@ -544,17 +544,17 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
 
           {/* Kontrol Pagination */}
           {totalPages > 1 && (
-            <div className="pt-8 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="pt-6 sm:pt-8 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
               <span className="text-xs text-on-surface-variant font-medium order-2 sm:order-1">
                 {t("pageOf", { current: currentPage, total: totalPages })}
               </span>
 
-              <div className="flex items-center gap-1.5 order-1 sm:order-2">
+              <div className="flex items-center gap-1 sm:gap-1.5 order-1 sm:order-2 overflow-x-auto max-w-full pb-1 scrollbar-none">
                 <button
                   type="button"
                   disabled={currentPage <= 1}
                   onClick={() => handlePageChange(currentPage - 1)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-outline-variant/30 text-xs font-bold text-on-surface hover:bg-surface-variant/40 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl border border-outline-variant/30 text-xs font-bold text-on-surface hover:bg-surface-variant/40 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer shrink-0"
                   title="Halaman Sebelumnya"
                 >
                   <FiChevronLeft size={14} />
@@ -568,7 +568,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                       key={page}
                       type="button"
                       onClick={() => handlePageChange(page)}
-                      className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
                         isCurrent
                           ? "bg-primary text-white shadow-xs shadow-primary/20 ring-2 ring-primary/20"
                           : "border border-outline-variant/30 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/30"
@@ -583,7 +583,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                   type="button"
                   disabled={currentPage >= totalPages}
                   onClick={() => handlePageChange(currentPage + 1)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-outline-variant/30 text-xs font-bold text-on-surface hover:bg-surface-variant/40 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl border border-outline-variant/30 text-xs font-bold text-on-surface hover:bg-surface-variant/40 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer shrink-0"
                   title="Halaman Berikutnya"
                 >
                   <span className="hidden sm:inline">{t("nextPage")}</span>
