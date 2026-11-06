@@ -287,7 +287,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
           </div>
 
           {/* Action Button (Mobile, Tablet, Desktop) */}
-          <div id="tour-login-btn" className="flex items-center gap-1.5 sm:gap-2 md:gap-3 ml-auto lg:ml-0">
+          <div id="tour-login-btn" className="flex items-center gap-2 sm:gap-2.5 md:gap-3 ml-auto lg:ml-0">
             {/* CTA Portal Karya (Mobile) Removed in favor of FloatingKaryaPrompt */}
             
             <LanguageSwitcher />
@@ -310,16 +310,24 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                         : "bg-surface border-outline-variant/30 hover:border-primary/50 hover:bg-primary/5 text-on-surface"
                     }`}
                 >
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 overflow-hidden shadow-sm">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 overflow-hidden shadow-sm ring-1 ring-white/20">
                     {userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || userProfile.raw_user_meta_data?.avatar_url || userProfile.raw_user_meta_data?.picture ? (
                       <img src={userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || userProfile.raw_user_meta_data?.avatar_url || userProfile.raw_user_meta_data?.picture} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       userProfile.full_name ? userProfile.full_name.charAt(0).toUpperCase() : 'U'
                     )}
                   </div>
-                  <div className="hidden md:flex flex-col items-start max-w-[120px]">
+                  <div className="hidden md:flex flex-col items-start max-w-[120px] lg:max-w-[160px] leading-tight">
                     <span className="text-xs font-bold truncate w-full block">{userProfile.full_name || 'User'}</span>
-                    <span className={`text-[10px] uppercase font-bold tracking-wider ${isScrolled ? "text-primary" : isHome ? "text-white/70" : "text-primary"}`}>
+                    <span className={`text-[10px] uppercase font-bold tracking-wider transition-colors ${
+                      showProfileMenu
+                        ? "text-white/80"
+                        : isScrolled
+                          ? "text-primary"
+                          : isHome
+                            ? "text-white/70"
+                            : "text-primary"
+                    }`}>
                       {userProfile.role === 'mahasiswa' ? t("roleMahasiswa") : userProfile.role === 'admin' ? t("roleAdmin") : (userProfile.role || 'USER')}
                     </span>
                   </div>

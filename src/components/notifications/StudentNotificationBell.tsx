@@ -326,16 +326,29 @@ export default function StudentNotificationBell({
 
         {/* Badge Hitungan */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-extrabold leading-none px-1 shadow-md ring-2 ring-white dark:ring-surface pointer-events-none">
+          <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-extrabold leading-none px-1 shadow-md ring-2 ring-white dark:ring-surface pointer-events-none z-10">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
 
         {/* Pulse effect */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 w-[18px] h-[18px] rounded-full bg-red-400 opacity-50 animate-ping pointer-events-none" />
+          <span className="absolute -top-1 -right-1 w-[17px] h-[17px] rounded-full bg-red-400 opacity-40 animate-ping pointer-events-none" />
         )}
       </button>
+
+      {/* Backdrop overlay on mobile */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/25 backdrop-blur-[2px] z-[55] sm:hidden"
+            onClick={() => setOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Dropdown Card */}
       <AnimatePresence>
@@ -345,35 +358,35 @@ export default function StudentNotificationBell({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.96 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="absolute -right-[75px] sm:right-0 top-14 sm:top-12 w-[320px] sm:w-[380px] max-w-[calc(100vw-24px)] bg-surface border border-outline-variant/30 rounded-2xl shadow-2xl z-[60] overflow-hidden"
-            style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.12)" }}
+            className="fixed inset-x-3.5 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-[380px] max-w-full sm:max-w-[calc(100vw-24px)] bg-surface border border-outline-variant/30 rounded-2xl shadow-2xl z-[60] overflow-hidden"
+            style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.15)" }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/20 bg-surface-variant/20">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                  <FiBell size={14} />
+            <div className="flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 border-b border-outline-variant/20 bg-surface-variant/20">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <FiBell size={13} />
                 </div>
-                <span className="text-sm font-bold text-on-surface">{t("title")}</span>
+                <span className="text-xs sm:text-sm font-bold text-on-surface truncate">{t("title")}</span>
                 {unreadCount > 0 ? (
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse">
+                  <span className="text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full bg-red-500 text-white shrink-0 animate-pulse">
                     {t("newBadge", { count: unreadCount })}
                   </span>
                 ) : visibleNotifications.length > 0 ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <span className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
                     {t("readBadge")}
                   </span>
                 ) : null}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 {unreadCount > 0 && (
                   <button
                     type="button"
                     onClick={handleMarkAllRead}
-                    className="text-xs font-semibold flex items-center gap-1 text-primary hover:text-primary/80 cursor-pointer hover:underline transition-all"
+                    className="text-[11px] sm:text-xs font-semibold flex items-center gap-1 text-primary hover:text-primary/80 cursor-pointer hover:underline transition-all whitespace-nowrap"
                     title={t("markAllReadTitle")}
                   >
-                    <FiCheck size={13} />
+                    <FiCheck size={12} />
                     <span>{t("markAsRead")}</span>
                   </button>
                 )}
@@ -381,10 +394,10 @@ export default function StudentNotificationBell({
                   <button
                     type="button"
                     onClick={handleClearAll}
-                    className="text-xs font-semibold flex items-center gap-1 text-on-surface-variant/60 hover:text-rose-500 cursor-pointer transition-colors"
+                    className="text-[11px] sm:text-xs font-semibold flex items-center gap-1 text-on-surface-variant/60 hover:text-rose-500 cursor-pointer transition-colors whitespace-nowrap"
                     title={t("clearAllTitle")}
                   >
-                    <FiTrash2 size={13} />
+                    <FiTrash2 size={12} />
                     <span>{t("clearAll")}</span>
                   </button>
                 )}

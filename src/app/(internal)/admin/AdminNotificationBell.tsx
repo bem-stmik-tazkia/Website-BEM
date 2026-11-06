@@ -200,16 +200,29 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
 
         {/* Badge */}
         {count > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-extrabold leading-none px-1 shadow-md ring-2 ring-white pointer-events-none">
+          <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-extrabold leading-none px-1 shadow-md ring-2 ring-white pointer-events-none z-10">
             {count > 99 ? "99+" : count}
           </span>
         )}
 
         {/* Pulse for unread */}
         {unread && (
-          <span className="absolute -top-1.5 -right-1.5 w-[18px] h-[18px] rounded-full bg-red-400 opacity-50 animate-ping pointer-events-none" />
+          <span className="absolute -top-1 -right-1 w-[17px] h-[17px] rounded-full bg-red-400 opacity-40 animate-ping pointer-events-none" />
         )}
       </button>
+
+      {/* Backdrop overlay on mobile */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/25 backdrop-blur-[2px] z-[55] sm:hidden"
+            onClick={() => setOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Dropdown */}
       <AnimatePresence>
@@ -219,16 +232,16 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.96 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="absolute -right-[80px] sm:right-0 top-14 sm:top-12 w-[320px] sm:w-[360px] bg-surface border border-outline-variant/30 rounded-2xl shadow-2xl z-[60] overflow-hidden"
-            style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.12)" }}
+            className="fixed inset-x-3.5 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-[360px] max-w-full sm:max-w-[calc(100vw-24px)] bg-surface border border-outline-variant/30 rounded-2xl shadow-2xl z-[60] overflow-hidden"
+            style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.15)" }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/20 bg-surface-variant/20">
-              <div className="flex items-center gap-2">
-                <FiBell size={16} className="text-primary" />
-                <span className="text-sm font-bold text-on-surface">Notifikasi Masuk</span>
+            <div className="flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 border-b border-outline-variant/20 bg-surface-variant/20">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <FiBell size={15} className="text-primary shrink-0" />
+                <span className="text-xs sm:text-sm font-bold text-on-surface truncate">Notifikasi Masuk</span>
                 {count > 0 && (
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-500 text-white animate-pulse">
+                  <span className="text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full bg-red-500 text-white shrink-0 animate-pulse">
                     {count}
                   </span>
                 )}
@@ -237,15 +250,14 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
                 type="button"
                 onClick={handleMarkAllRead}
                 disabled={count === 0}
-                className={`text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  count > 0
-                    ? "text-primary hover:text-primary/80 cursor-pointer hover:underline"
-                    : "text-on-surface-variant/40 cursor-default"
+                className={`text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition-all shrink-0 whitespace-nowrap ${
+                  count === 0
+                    ? "text-on-surface-variant/40 cursor-not-allowed"
+                    : "text-primary hover:text-primary/80 cursor-pointer hover:underline"
                 }`}
-                title={count > 0 ? "Tandai semua dibaca" : "Semua notifikasi telah dibaca"}
               >
-                <FiCheck size={14} className={count === 0 ? "text-emerald-500" : ""} />
-                <span>{count > 0 ? "Tandai dibaca" : "Sudah dibaca"}</span>
+                <FiCheck size={13} />
+                <span>Tandai terbaca</span>
               </button>
             </div>
 

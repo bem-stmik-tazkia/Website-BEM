@@ -162,7 +162,7 @@ export default function ArticleCard({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-outline-variant/20 mt-auto">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-outline-variant/20 mt-auto">
           {/* Metadata info */}
           <div className="text-xs text-on-surface-variant flex items-center gap-3">
             {isPending && (
@@ -179,13 +179,13 @@ export default function ArticleCard({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-end">
             {/* Tombol Pratinjau (Preview) untuk semua artikel */}
             {onOpenPreview && (
               <button
                 type="button"
                 onClick={() => onOpenPreview(article)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-on-surface text-xs font-semibold transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-on-surface text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
                 title={t("btnPreview")}
               >
                 <FiEye size={13} />
@@ -198,7 +198,7 @@ export default function ArticleCard({
               <button
                 type="button"
                 onClick={() => onCancelSubmission(article)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/25 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/25 text-xs font-bold transition-all cursor-pointer shadow-xs whitespace-nowrap"
                 title={t("btnCancelSubmission")}
               >
                 <FiRotateCcw size={13} />
@@ -212,7 +212,7 @@ export default function ArticleCard({
                 href={`/artikel/${article.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-on-surface text-xs font-semibold transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-on-surface text-xs font-semibold transition-colors whitespace-nowrap"
                 title={t("viewPublic")}
               >
                 <FiExternalLink size={13} />
@@ -224,7 +224,7 @@ export default function ArticleCard({
             {(isDraft || isRejected) && (
               <Link
                 href={`/dashboard/artikel/${article.id}/edit`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-white hover:bg-primary/90 text-xs font-bold transition-all shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-primary text-white hover:bg-primary/90 text-xs font-bold transition-all shadow-sm whitespace-nowrap"
               >
                 <FiEdit2 size={13} />
                 <span>{t("editAndSubmit")}</span>
@@ -235,7 +235,7 @@ export default function ArticleCard({
             {isPublished && (
               <Link
                 href={`/dashboard/artikel/${article.id}/edit`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 text-xs font-bold transition-all"
+                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 text-xs font-bold transition-all whitespace-nowrap"
               >
                 <FiEdit2 size={13} />
                 <span>{t("requestRevision")}</span>
@@ -247,7 +247,7 @@ export default function ArticleCard({
               <button
                 type="button"
                 onClick={() => onOpenDelete(article)}
-                className="p-1.5 rounded-xl text-on-surface-variant hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl text-on-surface-variant hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
                 title={t("deleteArticle")}
               >
                 <FiTrash2 size={15} />
