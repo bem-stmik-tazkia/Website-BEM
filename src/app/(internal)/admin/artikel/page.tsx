@@ -525,12 +525,6 @@ export default function AdminArtikelPage() {
                           {article.status === "draft" ? "DRAF" : article.status}
                         </span>
 
-                        {article.category && (
-                          <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
-                            {article.category}
-                          </span>
-                        )}
-
                         <span className="text-[11px] text-on-surface-variant">
                           {new Date(article.created_at).toLocaleDateString("id-ID", {
                             day: "numeric",

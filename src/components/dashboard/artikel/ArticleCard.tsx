@@ -86,7 +86,11 @@ export default function ArticleCard({
     .slice(0, 160);
 
   return (
-    <div className="group bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 hover:border-primary/40 hover:shadow-md transition-all flex flex-col md:flex-row gap-4 sm:gap-5 overflow-hidden">
+    <div
+      onClick={() => onOpenPreview?.(article)}
+      className="group bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 hover:border-primary/40 hover:shadow-md transition-all flex flex-col md:flex-row gap-4 sm:gap-5 overflow-hidden cursor-pointer"
+      title={onOpenPreview ? t("btnPreview") : undefined}
+    >
       {/* Cover Image Thumbnail */}
       <div className="w-full md:w-48 h-36 md:h-auto rounded-xl overflow-hidden bg-surface-variant/30 shrink-0 border border-outline-variant/20 relative group-hover:scale-[1.01] transition-transform">
         {article.cover_url ? (
@@ -112,12 +116,6 @@ export default function ArticleCard({
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
               <ArticleStatusBadge status={article.status} size="sm" />
-              {article.category && (
-                <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md flex items-center gap-1">
-                  <FiTag size={10} />
-                  <span>{article.category === "Artikel" ? t("categoryArticle") : article.category}</span>
-                </span>
-              )}
             </div>
 
             <span className="text-xs text-on-surface-variant flex items-center gap-1">
@@ -142,7 +140,10 @@ export default function ArticleCard({
 
           {/* Rejection Alert Banner (Jika rejected) */}
           {isRejected && (
-            <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-3 flex items-start justify-between gap-3 mb-3">
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-3 flex items-start justify-between gap-3 mb-3"
+            >
               <div className="flex items-start gap-2 min-w-0">
                 <FiAlertCircle className="text-rose-500 text-sm shrink-0 mt-0.5" />
                 <p className="text-xs text-rose-600 dark:text-rose-400 line-clamp-2 leading-relaxed">
@@ -152,7 +153,10 @@ export default function ArticleCard({
               </div>
               <button
                 type="button"
-                onClick={() => onOpenReviewNote(article)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenReviewNote(article);
+                }}
                 className="text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline shrink-0 whitespace-nowrap cursor-pointer"
               >
                 {t("viewDetail")}
@@ -162,7 +166,10 @@ export default function ArticleCard({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-outline-variant/20 mt-auto">
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-outline-variant/20 mt-auto"
+        >
           {/* Metadata info */}
           <div className="text-xs text-on-surface-variant flex items-center gap-3">
             {isPending && (
@@ -184,7 +191,10 @@ export default function ArticleCard({
             {onOpenPreview && (
               <button
                 type="button"
-                onClick={() => onOpenPreview(article)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenPreview(article);
+                }}
                 className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-on-surface text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
                 title={t("btnPreview")}
               >
@@ -197,12 +207,31 @@ export default function ArticleCard({
             {isPending && onCancelSubmission && (
               <button
                 type="button"
-                onClick={() => onCancelSubmission(article)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancelSubmission(article);
+                }}
                 className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/25 text-xs font-bold transition-all cursor-pointer shadow-xs whitespace-nowrap"
                 title={t("btnCancelSubmission")}
               >
                 <FiRotateCcw size={13} />
                 <span>{t("btnCancelSubmission")}</span>
+              </button>
+            )}
+
+            {/* Tombol Tarik Artikel dari Publikasi jika status tayang (Unpublish to Draft) */}
+            {isPublished && onCancelSubmission && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancelSubmission(article);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/25 text-xs font-bold transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                title={t("btnRetractPublished")}
+              >
+                <FiRotateCcw size={13} />
+                <span>{t("btnRetractPublished")}</span>
               </button>
             )}
 
@@ -212,6 +241,7 @@ export default function ArticleCard({
                 href={`/artikel/${article.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
                 className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-surface-variant/40 hover:bg-surface-variant border border-outline-variant/30 text-on-surface text-xs font-semibold transition-colors whitespace-nowrap"
                 title={t("viewPublic")}
               >
@@ -224,6 +254,7 @@ export default function ArticleCard({
             {(isDraft || isRejected) && (
               <Link
                 href={`/dashboard/artikel/${article.id}/edit`}
+                onClick={(e) => e.stopPropagation()}
                 className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-primary text-white hover:bg-primary/90 text-xs font-bold transition-all shadow-sm whitespace-nowrap"
               >
                 <FiEdit2 size={13} />
@@ -231,22 +262,14 @@ export default function ArticleCard({
               </Link>
             )}
 
-            {/* Tombol Ajukan Revisi jika sudah published */}
-            {isPublished && (
-              <Link
-                href={`/dashboard/artikel/${article.id}/edit`}
-                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 text-xs font-bold transition-all whitespace-nowrap"
-              >
-                <FiEdit2 size={13} />
-                <span>{t("requestRevision")}</span>
-              </Link>
-            )}
-
             {/* Tombol Hapus (Hanya draf atau rejected) */}
             {(isDraft || isRejected) && (
               <button
                 type="button"
-                onClick={() => onOpenDelete(article)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenDelete(article);
+                }}
                 className="p-1.5 rounded-xl text-on-surface-variant hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
                 title={t("deleteArticle")}
               >

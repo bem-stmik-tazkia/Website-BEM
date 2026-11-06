@@ -3,11 +3,15 @@
 import { createClient } from "@/utils/supabase/server";
 import { getServiceRoleClient } from "@/lib/auth";
 import { notifyArticleWithdrawn } from "@/actions/telegram-notifications";
+import { revalidatePath } from "next/cache";
 
 /**
- * Menarik pengajuan artikel yang sedang berstatus 'pending' kembali ke 'draft'.
- * Ini memungkinkan mahasiswa mengedit atau menghapus artikel sebelum diperiksa admin,
- * sekaligus mengirimkan notifikasi audit ke Telegram pengurus BEM.
+ * Menarik artikel (baik berstatus 'pending' antrean moderasi maupun 'published' yang sedang tayang)
+ * kembali ke 'draft'.
+ * Ini memastikan alur terstruktur: artikel harus ditarik/diturunkan terlebih dahulu ke draf
+ * sebelum mahasiswa dapat mengedit isinya kembali atau menghapusnya.
+ * Tindakan ini sekaligus mengirimkan notifikasi audit ke Telegram pengurus BEM dan
+ * membersihkan cache halaman publik.
  */
 export async function withdrawArticleSubmission(articleId: string) {
   try {
@@ -25,7 +29,7 @@ export async function withdrawArticleSubmission(articleId: string) {
     const service = getServiceRoleClient();
     const { data: article, error: fetchErr } = await service
       .from("articles")
-      .select("id, author_id, status, title, category")
+      .select("id, author_id, status, title, category, slug")
       .eq("id", articleId)
       .single();
 
@@ -37,12 +41,14 @@ export async function withdrawArticleSubmission(articleId: string) {
       return { success: false, error: "Anda tidak memiliki izin untuk artikel ini." };
     }
 
-    if (article.status !== "pending") {
+    if (article.status !== "pending" && article.status !== "published") {
       return {
         success: false,
-        error: "Hanya artikel berstatus antrean (pending) yang dapat ditarik kembali ke draf.",
+        error: "Hanya artikel berstatus antrean (pending) atau tayang (published) yang dapat ditarik kembali ke draf.",
       };
     }
+
+    const wasPublished = article.status === "published";
 
     // 1. Coba eksekusi melalui RPC Postgres terlebih dahulu
     let updateSuccess = false;
@@ -54,13 +60,17 @@ export async function withdrawArticleSubmission(articleId: string) {
       updateSuccess = true;
     } else {
       // 2. Fallback update via service role client
+      const updatePayload: Record<string, any> = {
+        status: "draft",
+        updated_at: new Date().toISOString(),
+      };
+      if (article.status === "pending") {
+        updatePayload.submitted_at = null;
+      }
+
       const { error: updateErr } = await service
         .from("articles")
-        .update({
-          status: "draft",
-          submitted_at: null,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq("id", articleId);
 
       if (updateErr) {
@@ -73,6 +83,33 @@ export async function withdrawArticleSubmission(articleId: string) {
     }
 
     if (updateSuccess) {
+      // Revalidasi cache halaman artikel publik & detail jika sebelumnya berstatus tayang
+      try {
+        revalidatePath("/artikel");
+        revalidatePath("/dashboard/artikel");
+        if (article.slug) {
+          revalidatePath(`/artikel/${article.slug}`);
+        }
+      } catch (revErr) {
+        console.warn("[withdrawArticleSubmission] Revalidation warning:", revErr);
+      }
+
+      // Jika sebelumnya berstatus tayang, tutup revisi pending di tabel article_revisions agar tidak menggantung di antrean admin
+      if (wasPublished) {
+        try {
+          await service
+            .from("article_revisions")
+            .update({
+              status: "rejected",
+              review_note: "Revisi ditutup otomatis karena artikel induk ditarik kembali ke draf oleh penulis.",
+            })
+            .eq("article_id", articleId)
+            .in("status", ["draft", "pending"]);
+        } catch (revErr) {
+          console.warn("[withdrawArticleSubmission] Warning updating revisions:", revErr);
+        }
+      }
+
       // Kirim notifikasi Telegram ke bot admin BEM di latar belakang (non-blocking)
       notifyArticleWithdrawn({
         title: article.title,
@@ -83,7 +120,7 @@ export async function withdrawArticleSubmission(articleId: string) {
         console.error("[withdrawArticleSubmission] Telegram notify error:", err);
       });
 
-      return { success: true };
+      return { success: true, wasPublished };
     }
 
     return { success: false, error: "Gagal memproses penarikan artikel." };
@@ -94,3 +131,6 @@ export async function withdrawArticleSubmission(articleId: string) {
     };
   }
 }
+
+/** Alias untuk keterbacaan kode arsitektur */
+export const retractArticleToDraft = withdrawArticleSubmission;

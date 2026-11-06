@@ -129,16 +129,6 @@ export default function ArticlePreviewModal({
             {/* Title & Meta */}
             <div>
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-on-surface-variant mb-3">
-                {article.category && (
-                  <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-md flex items-center gap-1">
-                    <FiTag size={11} />
-                    <span>
-                      {article.category === "Artikel"
-                        ? t("categoryArticle")
-                        : article.category}
-                    </span>
-                  </span>
-                )}
                 <span className="flex items-center gap-1">
                   <FiClock size={12} />
                   <span>{t("previewMinuteRead", { min: readingTime })}</span>

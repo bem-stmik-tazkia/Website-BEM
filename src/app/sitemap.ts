@@ -8,24 +8,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Connect to Supabase to fetch published dynamic routes
   const supabase = await createClient();
   
-  // Fetch only published agendas and berita to prevent leaking unpublished drafts
-  const { data: agendas } = await supabase
-    .from("agendas")
-    .select("id, slug, created_at")
-    .eq("is_published", true);
-    
-  const { data: berita } = await supabase
-    .from("berita")
-    .select("slug, created_at")
-    .eq("is_published", true);
+  // Fetch only published agendas, berita, and articles to prevent leaking unpublished drafts
+  const [{ data: agendas }, { data: berita }, { data: articles }] = await Promise.all([
+    supabase
+      .from("agendas")
+      .select("id, slug, created_at")
+      .eq("is_published", true),
+    supabase
+      .from("berita")
+      .select("slug, created_at")
+      .eq("is_published", true),
+    supabase
+      .from("published_articles")
+      .select("slug, published_at, updated_at, created_at"),
+  ]);
 
   // Define static routes
   const staticRoutes = [
     '',
     '/kabinet',
     '/berita',
+    '/artikel',
     '/agenda',
-    '/publikasi/dokumentasi',
+    '/dokumentasi',
     '/tools/acak-nama',
   ];
 
@@ -89,6 +94,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: item.created_at ? new Date(item.created_at) : new Date(),
           changeFrequency: 'weekly',
           priority: 0.7,
+          alternates: {
+            languages,
+          },
+        });
+      });
+    }
+
+    // 4. Dynamic Routes: Artikel Mahasiswa (Hanya yang berstatus published / tayang aktif)
+    if (articles) {
+      articles.forEach((item) => {
+        if (!item.slug) return;
+        const languages: Record<string, string> = {};
+        routing.locales.forEach((altLocale) => {
+          languages[altLocale] = `${baseUrl}/${altLocale}/artikel/${item.slug}`;
+        });
+        languages['x-default'] = `${baseUrl}/${routing.defaultLocale}/artikel/${item.slug}`;
+
+        sitemapEntries.push({
+          url: `${baseUrl}/${locale}/artikel/${item.slug}`,
+          lastModified: item.updated_at
+            ? new Date(item.updated_at)
+            : item.published_at
+            ? new Date(item.published_at)
+            : new Date(item.created_at || Date.now()),
+          changeFrequency: 'weekly',
+          priority: 0.8,
           alternates: {
             languages,
           },

@@ -737,10 +737,6 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
                 {title || t("previewPlaceholderTitle")}
               </h1>
               <div className="text-xs text-on-surface-variant flex items-center gap-3 pb-4 mb-6 border-b border-outline-variant/20">
-                <span className="bg-primary/10 text-primary font-bold px-2.5 py-0.5 rounded-md">
-                  {category === "Artikel" ? t("categoryArticle") : category}
-                </span>
-                <span>•</span>
                 <span>{t("previewReadTime", { min: readingTime })}</span>
               </div>
               <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-sm sm:text-base text-on-surface space-y-4">

@@ -310,8 +310,8 @@ export default function StudentNotificationBell({
       <button
         onClick={handleOpen}
         type="button"
-        title="Notifikasi Artikel Saya"
-        aria-label="Notifikasi Artikel Mahasiswa"
+        title={t("title")}
+        aria-label={t("title")}
         className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all cursor-pointer ${
           open
             ? isScrolled || !isHome

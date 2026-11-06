@@ -302,12 +302,6 @@ export default function ArticleModerationModal({
               </div>
 
               <div className="flex flex-wrap items-center gap-3 text-xs text-on-surface-variant">
-                {item.category && (
-                  <span className="bg-primary/10 text-primary px-2.5 py-1 rounded-md font-semibold flex items-center gap-1">
-                    <FiTag size={11} />
-                    <span>{item.category}</span>
-                  </span>
-                )}
                 <span className="flex items-center gap-1">
                   <FiClock size={12} />
                   <span>{wordCount} kata (~{readingTime} mnt)</span>

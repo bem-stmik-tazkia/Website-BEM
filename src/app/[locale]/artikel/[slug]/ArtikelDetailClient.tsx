@@ -262,12 +262,6 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
           <FiArrowLeft size={16} />
           <span>{t("backToArticles")}</span>
         </Link>
-
-        {article.category && (
-          <span className="text-[11px] sm:text-xs font-bold text-primary bg-primary/10 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-primary/20 shrink-0">
-            {translateCategory(article.category)}
-          </span>
-        )}
       </div>
 
       {/* Article Header */}
@@ -420,7 +414,6 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <span className="text-[10px] font-bold text-primary">{translateCategory(rel.category)}</span>
                   <h4 className="text-xs sm:text-sm font-bold text-on-surface group-hover:text-primary transition-colors line-clamp-2 mt-0.5 break-words">
                     {rel.title}
                   </h4>

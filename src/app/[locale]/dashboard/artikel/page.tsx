@@ -116,7 +116,7 @@ export default function DashboardArtikelPage() {
         .eq("id", selectedDeleteArticle.id);
 
       if (error) {
-        alert(`Gagal menghapus artikel: ${error.message}`);
+        alert(`${t("deleteError")} ${error.message}`);
         return;
       }
 
@@ -312,13 +312,14 @@ export default function DashboardArtikelPage() {
         onWithdraw={(art) => setSelectedCancelArticle(art)}
       />
 
-      {/* Modal Tarik Pengajuan ke Draf */}
+      {/* Modal Tarik Pengajuan / Tarik Publikasi ke Draf */}
       <CancelSubmissionModal
         isOpen={Boolean(selectedCancelArticle)}
         onClose={() => setSelectedCancelArticle(null)}
         onConfirm={handleWithdrawSubmission}
         title={selectedCancelArticle?.title || ""}
         isCancelling={isCancelling}
+        isPublished={selectedCancelArticle?.status === "published"}
       />
 
       {/* Modal Catatan Review */}

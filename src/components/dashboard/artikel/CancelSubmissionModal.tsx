@@ -11,6 +11,7 @@ interface Props {
   onConfirm: () => void;
   title: string;
   isCancelling: boolean;
+  isPublished?: boolean;
 }
 
 export default function CancelSubmissionModal({
@@ -19,6 +20,7 @@ export default function CancelSubmissionModal({
   onConfirm,
   title,
   isCancelling,
+  isPublished = false,
 }: Props) {
   const t = useTranslations("DashboardArtikel");
 
@@ -38,13 +40,13 @@ export default function CancelSubmissionModal({
               <FiRotateCcw size={22} />
             </div>
             <h3 className="font-bold text-base text-on-surface">
-              {t("cancelSubmissionTitle")}
+              {isPublished ? t("retractPublishedTitle") : t("cancelSubmissionTitle")}
             </h3>
             <p className="text-xs text-on-surface-variant font-medium mt-1 line-clamp-2 px-2">
               "{title}"
             </p>
             <p className="text-[11px] text-on-surface-variant/80 mt-2 leading-relaxed">
-              {t("cancelSubmissionDesc")}
+              {isPublished ? t("retractPublishedDesc") : t("cancelSubmissionDesc")}
             </p>
           </div>
 
@@ -71,6 +73,8 @@ export default function CancelSubmissionModal({
               <span>
                 {isCancelling
                   ? t("cancelSubmissionProcessing")
+                  : isPublished
+                  ? t("retractPublishedConfirm")
                   : t("cancelSubmissionConfirm")}
               </span>
             </button>

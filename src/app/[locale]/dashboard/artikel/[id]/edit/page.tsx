@@ -102,7 +102,29 @@ export default function EditArticlePage() {
     );
   }
 
-  const formMode = article.status === "published" ? "revision" : "edit";
+  // Jika artikel berstatus published, kunci pengeditan langsung demi integritas publikasi
+  if (article.status === "published") {
+    return (
+      <div className="max-w-lg mx-auto py-16 px-4 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center mb-4 border border-amber-500/20">
+          <FiAlertTriangle size={28} />
+        </div>
+        <h2 className="text-xl font-bold text-on-surface mb-2">{t("publishedLockTitle")}</h2>
+        <p className="text-xs sm:text-sm text-on-surface-variant mb-6 leading-relaxed">
+          {t("publishedLockDesc", { title: article.title })}
+        </p>
+        <Link
+          href="/dashboard/artikel"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-xs sm:text-sm font-bold shadow-md hover:bg-primary/90 transition-all cursor-pointer"
+        >
+          <FiArrowLeft size={16} />
+          <span>{t("backToDashboard")}</span>
+        </Link>
+      </div>
+    );
+  }
+
+  const formMode = "edit";
 
   return (
     <div className="w-full">

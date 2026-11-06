@@ -1,6 +1,7 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { getTranslations } from "next-intl/server";
 import ArtikelDetailClient from "./ArtikelDetailClient";
 import { PublishedArticleItem } from "../ArtikelClient";
 
@@ -79,8 +80,9 @@ export async function generateMetadata({
   const article = await getArticleBySlug(slug);
 
   if (!article) {
+    const t = await getTranslations({ locale, namespace: "ArticleDetail" });
     return {
-      title: "Artikel Tidak Ditemukan - BEM STMIK Tazkia",
+      title: `${t("notFound")} - BEM STMIK Tazkia`,
     };
   }
 

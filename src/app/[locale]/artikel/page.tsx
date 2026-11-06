@@ -1,11 +1,16 @@
 import React from "react";
 import { createClient } from "@/utils/supabase/server";
+import { getTranslations } from "next-intl/server";
 import ArtikelClient, { PublishedArticleItem } from "./ArtikelClient";
 
-export const metadata = {
-  title: "Karya & Artikel Mahasiswa - BEM STMIK Tazkia",
-  description: "Kumpulan artikel, opini intelektual, wawasan teknologi, dan karya tulis mahasiswa STMIK Tazkia.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "ArticleList" });
+  return {
+    title: `${t("pageTitle")} - BEM STMIK Tazkia`,
+    description: t("pageSubtitle"),
+  };
+}
 
 async function getPublishedArticles(): Promise<PublishedArticleItem[]> {
   try {

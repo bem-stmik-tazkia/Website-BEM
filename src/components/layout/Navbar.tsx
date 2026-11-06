@@ -6,20 +6,21 @@ import NativeLink from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/routing";
-import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid, FiEdit3 } from "react-icons/fi";
+import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid, FiEdit3, FiSettings } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
 import StudentNotificationBell from "@/components/notifications/StudentNotificationBell";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
-import SafeLottie from "@/components/ui/SafeLottie";
 import ProfileSettingsModal from "@/components/profile/ProfileSettingsModal";
-import { FiSettings } from "react-icons/fi";
 
-export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?: boolean }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UserProfile = Record<string, any>;
+
+export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeBottomSheet, setActiveBottomSheet] = useState<'more' | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showProfileSettings, setShowProfileSettings] = useState(false);
@@ -28,7 +29,6 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
 
 
 
-  const [hideProfileTooltip, setHideProfileTooltip] = useState(true);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -43,7 +43,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
       try {
         const { data: { user }, error } = await supabase.auth.getUser();
         // Ignore stale/invalid refresh token errors — user is simply not logged in
-        if (error && (error as any).code === 'refresh_token_not_found') {
+        if (error && (error as { code?: string }).code === 'refresh_token_not_found') {
           await supabase.auth.signOut({ scope: 'local' });
           setUserProfile(null);
           return;
@@ -126,6 +126,8 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Reset pendingPath when route changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setPendingPath(null);
     setActiveBottomSheet(null);
@@ -312,7 +314,14 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
                 >
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 overflow-hidden shadow-sm ring-1 ring-white/20">
                     {userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || userProfile.raw_user_meta_data?.avatar_url || userProfile.raw_user_meta_data?.picture ? (
-                      <img src={userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || userProfile.raw_user_meta_data?.avatar_url || userProfile.raw_user_meta_data?.picture} alt="Profile" className="w-full h-full object-cover" />
+                      <Image
+                        src={userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || userProfile.raw_user_meta_data?.avatar_url || userProfile.raw_user_meta_data?.picture}
+                        alt="Profile"
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
                     ) : (
                       userProfile.full_name ? userProfile.full_name.charAt(0).toUpperCase() : 'U'
                     )}
@@ -496,7 +505,7 @@ export default function Navbar({ isLoggedIn: initialIsLoggedIn }: { isLoggedIn?:
         onClose={() => setShowProfileSettings(false)}
         userProfile={userProfile}
         onProfileUpdated={(updated) => {
-          setUserProfile((prev: any) => ({ ...prev, ...updated }));
+          setUserProfile((prev: UserProfile | null) => ({ ...prev, ...updated }));
         }}
       />
 

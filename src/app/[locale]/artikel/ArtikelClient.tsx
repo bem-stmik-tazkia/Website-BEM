@@ -42,18 +42,6 @@ export interface PublishedArticleItem {
   } | null;
 }
 
-const CATEGORY_KEYS = [
-  { key: "Semua", transKey: "catAll" },
-  { key: "Opini & Esai", transKey: "catOpinion" },
-  { key: "Teknologi & AI", transKey: "catTech" },
-  { key: "Akademik & Riset", transKey: "catAcademic" },
-  { key: "Prestasi Mahasiswa", transKey: "catAchievement" },
-  { key: "Kegiatan Kampus", transKey: "catCampus" },
-  { key: "Tips & Karir", transKey: "catCareer" },
-  { key: "Seni & Budaya", transKey: "catArts" },
-  { key: "Lainnya", transKey: "catOther" },
-];
-
 const ITEMS_PER_PAGE = 6;
 
 export default function ArtikelClient({ initialArticles }: { initialArticles: PublishedArticleItem[] }) {
@@ -62,7 +50,6 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
 
   const [articlesData, setArticlesData] = useState<PublishedArticleItem[]>(initialArticles);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [sortBy, setSortBy] = useState<"newest" | "popular">("newest");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -158,28 +145,21 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
     return null;
   };
 
-  // Reset pagination saat filter kategori atau search berubah
+  // Reset pagination saat search atau sort berubah
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [searchQuery, sortBy]);
 
   // Filtering and sorting
   const filteredArticles = useMemo(() => {
     let result = [...articlesData];
-
-    if (selectedCategory !== "Semua") {
-      result = result.filter(
-        (a) => a.category?.toLowerCase() === selectedCategory.toLowerCase()
-      );
-    }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
         (a) =>
           a.title.toLowerCase().includes(q) ||
-          (a.author?.full_name?.toLowerCase().includes(q) ?? false) ||
-          (a.category?.toLowerCase().includes(q) ?? false)
+          (a.author?.full_name?.toLowerCase().includes(q) ?? false)
       );
     }
 
@@ -194,7 +174,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
     }
 
     return result;
-  }, [articlesData, selectedCategory, searchQuery, sortBy]);
+  }, [articlesData, searchQuery, sortBy]);
 
   // Terjemahkan hanya JUDUL artikel sesuai bahasa yang dipilih (isi artikel tetap asli 100%)
   const { data: translatedArticles } = useTranslatedList(
@@ -205,7 +185,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
   );
 
   // Pagination calculation
-  const hasFeatured = selectedCategory === "Semua" && !searchQuery.trim() && currentPage === 1;
+  const hasFeatured = !searchQuery.trim() && currentPage === 1;
   const featuredArticle = hasFeatured && translatedArticles.length > 0 ? translatedArticles[0] : null;
 
   const gridSourceArticles = useMemo(() => {
@@ -315,27 +295,6 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
             </div>
           </div>
         </div>
-
-        {/* Categories Horizontal Scroll dengan terjemahan multi-bahasa */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 pt-0.5 -mx-3.5 px-3.5 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 scrollbar-none touch-pan-x">
-          {CATEGORY_KEYS.map((cat) => {
-            const isSelected = selectedCategory === cat.key;
-            return (
-              <button
-                key={cat.key}
-                type="button"
-                onClick={() => setSelectedCategory(cat.key)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
-                  isSelected
-                    ? "bg-primary text-white shadow-xs"
-                    : "bg-surface border border-outline-variant/30 text-on-surface-variant hover:border-primary/40 hover:text-on-surface"
-                }`}
-              >
-                {translateCategory(cat.key)}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {/* Empty State */}
@@ -357,7 +316,6 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
             type="button"
             onClick={() => {
               setSearchQuery("");
-              setSelectedCategory("Semua");
             }}
             className="mt-5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-sm shadow-primary/20"
           >
@@ -366,14 +324,18 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
         </div>
       ) : (
         <div className="space-y-6 sm:space-y-8">
-          {/* Featured Article Card */}
+          {/* Featured Article Card - Seluruh Kotak Kartu Dapat Diklik */}
           {featuredArticle && (
-            <div className="group block bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-                <Link
-                  href={`/artikel/${featuredArticle.slug}`}
-                  className="lg:col-span-7 relative h-48 sm:h-64 lg:h-80 max-h-[340px] bg-surface-variant/40 overflow-hidden block"
-                >
+            <div className="group relative block bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all cursor-pointer">
+              {/* Tautan penuh seluruh kotak */}
+              <Link
+                href={`/artikel/${featuredArticle.slug}`}
+                className="absolute inset-0 z-0"
+                aria-label={featuredArticle.title}
+              />
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 relative z-10 pointer-events-none">
+                <div className="lg:col-span-7 relative h-48 sm:h-64 lg:h-80 max-h-[340px] bg-surface-variant/40 overflow-hidden block">
                   {featuredArticle.cover_url ? (
                     <img
                       src={featuredArticle.cover_url}
@@ -385,12 +347,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                       <FiBookOpen size={44} />
                     </div>
                   )}
-                  {featuredArticle.category && (
-                    <div className="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 bg-primary text-white text-[11px] sm:text-xs font-bold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-md">
-                      {translateCategory(featuredArticle.category)}
-                    </div>
-                  )}
-                </Link>
+                </div>
 
                 <div className="lg:col-span-5 p-4 sm:p-6 lg:p-7 flex flex-col justify-between">
                   <div>
@@ -404,11 +361,9 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                       </span>
                     </div>
 
-                    <Link href={`/artikel/${featuredArticle.slug}`} className="block">
-                      <h2 className="text-base sm:text-xl lg:text-2xl font-black text-on-surface group-hover:text-primary transition-colors leading-snug mb-2 sm:mb-2.5 line-clamp-2 break-words [overflow-wrap:anywhere]">
-                        {featuredArticle.title}
-                      </h2>
-                    </Link>
+                    <h2 className="text-base sm:text-xl lg:text-2xl font-black text-on-surface group-hover:text-primary transition-colors leading-snug mb-2 sm:mb-2.5 line-clamp-2 break-words [overflow-wrap:anywhere]">
+                      {featuredArticle.title}
+                    </h2>
 
                     <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed line-clamp-2 sm:line-clamp-3 mb-3 sm:mb-4 break-words [overflow-wrap:anywhere]">
                       {featuredArticle.content.replace(/<[^>]*>?/gm, "").replace(/[#*_`]/g, "").slice(0, 180)}...
@@ -433,12 +388,12 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2.5 sm:gap-3 text-xs text-on-surface-variant shrink-0">
+                    <div className="flex items-center gap-2.5 sm:gap-3 text-xs text-on-surface-variant shrink-0 pointer-events-auto">
                       <span className="flex items-center gap-1" title="Views">
                         <FiEye size={13} />
                         <span>{featuredArticle.views || 0}</span>
                       </span>
-                      <div className="flex items-center">
+                      <div className="flex items-center relative z-20" onClick={(e) => e.stopPropagation()}>
                         <LikeButton
                           initialLikes={featuredArticle.likes || 0}
                           id={featuredArticle.id}
@@ -453,7 +408,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
             </div>
           )}
 
-          {/* Grid of Articles */}
+          {/* Grid of Articles - Seluruh Kotak Kartu Dapat Diklik */}
           {paginatedGridArticles.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {paginatedGridArticles.map((art) => {
@@ -461,9 +416,16 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                 return (
                   <div
                     key={art.id}
-                    className="group bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col"
+                    className="group relative bg-surface border border-outline-variant/30 hover:border-primary/40 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col cursor-pointer"
                   >
-                    <Link href={`/artikel/${art.slug}`} className="relative h-40 sm:h-44 bg-surface-variant/40 overflow-hidden block">
+                    {/* Tautan penuh seluruh kotak kartu */}
+                    <Link
+                      href={`/artikel/${art.slug}`}
+                      className="absolute inset-0 z-0"
+                      aria-label={art.title}
+                    />
+
+                    <div className="relative h-40 sm:h-44 bg-surface-variant/40 overflow-hidden block pointer-events-none">
                       {art.cover_url ? (
                         <img
                           src={art.cover_url}
@@ -475,14 +437,9 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                           <FiBookOpen size={32} />
                         </div>
                       )}
-                      {art.category && (
-                        <span className="absolute top-2.5 left-2.5 bg-surface/90 backdrop-blur-xs text-primary font-bold text-[10px] px-2.5 py-0.5 rounded-full border border-primary/20 shadow-xs">
-                          {translateCategory(art.category)}
-                        </span>
-                      )}
-                    </Link>
+                    </div>
 
-                    <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                    <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between relative z-10 pointer-events-none">
                       <div>
                         <div className="flex items-center gap-2 text-[11px] text-on-surface-variant mb-1.5 sm:mb-2">
                           <FiCalendar size={11} />
@@ -495,11 +452,9 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                           </span>
                         </div>
 
-                        <Link href={`/artikel/${art.slug}`} className="block">
-                          <h3 className="font-bold text-sm sm:text-base text-on-surface group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-1.5 sm:mb-2 break-words [overflow-wrap:anywhere]">
-                            {art.title}
-                          </h3>
-                        </Link>
+                        <h3 className="font-bold text-sm sm:text-base text-on-surface group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-1.5 sm:mb-2 break-words [overflow-wrap:anywhere]">
+                          {art.title}
+                        </h3>
 
                         <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-3 sm:mb-4 break-words [overflow-wrap:anywhere]">
                           {art.content.replace(/<[^>]*>?/gm, "").replace(/[#*_`]/g, "").slice(0, 130)}...
@@ -520,12 +475,12 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-xs text-on-surface-variant shrink-0">
+                        <div className="flex items-center gap-2 text-xs text-on-surface-variant shrink-0 pointer-events-auto">
                           <span className="flex items-center gap-1" title="Views">
                             <FiEye size={12} />
                             <span>{art.views || 0}</span>
                           </span>
-                          <div className="flex items-center">
+                          <div className="flex items-center relative z-20" onClick={(e) => e.stopPropagation()}>
                             <LikeButton
                               initialLikes={art.likes || 0}
                               id={art.id}
