@@ -2,7 +2,7 @@
 
 import { requireAdmin } from "@/lib/auth";
 import { KabinetProfile } from "@/types/kabinet";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function saveKabinetProfile(profile: KabinetProfile) {
   const { supabase } = await requireAdmin();
@@ -42,6 +42,7 @@ export async function saveKabinetProfile(profile: KabinetProfile) {
   // Revalidate the public kabinet page
   revalidatePath("/kabinet");
   revalidatePath("/admin/kabinet");
+  revalidateTag("kabinet", "max");
   
   return { success: true };
 }

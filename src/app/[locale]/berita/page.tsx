@@ -3,6 +3,9 @@ import BeritaClient from "./BeritaClient";
 import { getCachedBerita } from "@/app/(public)/actions/public-data";
 import { getTranslations } from "next-intl/server";
 
+// Revalidate at most every 60s; fine-grained invalidation via revalidateTag("berita")
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations("BeritaPage");

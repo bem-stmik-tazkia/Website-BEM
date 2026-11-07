@@ -4,6 +4,9 @@ import { getCachedAgenda } from "@/app/(public)/actions/public-data";
 
 import { Metadata } from "next";
 
+// Revalidate at most every 60s; fine-grained invalidation via revalidateTag("agenda")
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { getAlternates } = await import('@/utils/seo');
