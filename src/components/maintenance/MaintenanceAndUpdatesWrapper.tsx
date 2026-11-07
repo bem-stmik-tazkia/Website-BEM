@@ -204,11 +204,13 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
             const parsedNotes: ReleaseNotes = JSON.parse(rNotesStr);
             setReleaseNotes(parsedNotes);
 
-            // Check if user has already seen this version
+            // Check if user has already seen this exact release content.
+            // Key includes a simple hash of the full JSON so any change to
+            // version, title, date, or features will trigger the modal again.
             if (!mMode && parsedNotes.published && parsedNotes.version) {
-              const seenKey = `seen_release_notes_${parsedNotes.version}`;
-              const hasSeen = localStorage.getItem(seenKey);
-              if (!hasSeen) {
+              const contentHash = rNotesStr.split("").reduce((h: number, c: string) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0).toString(36);
+              const seenKey = `seen_release_notes_${parsedNotes.version}_${contentHash}`;
+              if (!localStorage.getItem(seenKey)) {
                 setShowWhatsNew(true);
               }
             }
@@ -227,7 +229,8 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
             const parsedNotes: ReleaseNotes = JSON.parse(pub.releaseNotes);
             setReleaseNotes(parsedNotes);
             if (!pub.maintenanceMode && parsedNotes.published && parsedNotes.version) {
-              const seenKey = `seen_release_notes_${parsedNotes.version}`;
+              const contentHash = pub.releaseNotes.split("").reduce((h: number, c: string) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0).toString(36);
+              const seenKey = `seen_release_notes_${parsedNotes.version}_${contentHash}`;
               if (!localStorage.getItem(seenKey)) {
                 setShowWhatsNew(true);
               }
@@ -304,7 +307,10 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
 
   const handleCloseWhatsNew = () => {
     if (releaseNotes?.version) {
-      localStorage.setItem(`seen_release_notes_${releaseNotes.version}`, "true");
+      // Build the same key used when deciding to show the modal
+      const rNotesStr = JSON.stringify(releaseNotes);
+      const contentHash = rNotesStr.split("").reduce((h: number, c: string) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0).toString(36);
+      localStorage.setItem(`seen_release_notes_${releaseNotes.version}_${contentHash}`, "true");
     }
     setShowWhatsNew(false);
   };
