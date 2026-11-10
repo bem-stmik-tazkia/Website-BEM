@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, getServiceRoleClient } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { AgendaKegiatan } from "@/types/agenda";
 
@@ -154,5 +154,24 @@ export async function getVolunteerApplications(agendaId: string) {
 
   if (error) throw new Error(error.message);
   return data;
+}
+
+export async function getVolunteerParticipantCount(agendaId: string): Promise<number> {
+  try {
+    const supabase = getServiceRoleClient();
+    const { count, error } = await supabase
+      .from("volunteer_applications")
+      .select("*", { count: "exact", head: true })
+      .eq("agenda_id", agendaId);
+
+    if (error) {
+      console.error("Error fetching volunteer participant count:", error.message);
+      return 0;
+    }
+    return count ?? 0;
+  } catch (err) {
+    console.error("Error in getVolunteerParticipantCount:", err);
+    return 0;
+  }
 }
 

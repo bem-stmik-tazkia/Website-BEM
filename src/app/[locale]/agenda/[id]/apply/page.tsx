@@ -1,6 +1,6 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { getKegiatanById, getVolunteerApplications } from "@/app/(internal)/admin/kegiatan/actions";
+import { getKegiatanById, getVolunteerParticipantCount } from "@/app/(internal)/admin/kegiatan/actions";
 import ApplyClientForm from "./ApplyClientForm";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string; locale: string }> }) {
@@ -28,8 +28,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ id: stri
     notFound();
   }
 
-  const applications = await getVolunteerApplications(agenda.id);
-  const participantCount = applications ? applications.length : 0;
+  const participantCount = await getVolunteerParticipantCount(agenda.id);
   const maxQuota = agenda.max_participants;
   const isQuotaFull = maxQuota !== null && maxQuota !== undefined && participantCount >= maxQuota;
 

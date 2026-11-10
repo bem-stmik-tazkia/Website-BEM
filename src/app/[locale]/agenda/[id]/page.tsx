@@ -1,6 +1,6 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { getKegiatanById, getVolunteerApplications } from "@/app/(internal)/admin/kegiatan/actions";
+import { getKegiatanById, getVolunteerParticipantCount } from "@/app/(internal)/admin/kegiatan/actions";
 import AgendaDetailClient from "./AgendaDetailClient";
 
 function getValidOgImage(url?: string | null): string {
@@ -70,8 +70,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     notFound();
   }
 
-  const applications = await getVolunteerApplications(agenda.id);
-  const participantCount = applications ? applications.length : 0;
+  const participantCount = await getVolunteerParticipantCount(agenda.id);
 
   return <AgendaDetailClient agenda={agenda} participantCount={participantCount} />;
 }

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { SiWhatsapp } from "react-icons/si";
 import { FiX, FiPlus, FiHelpCircle } from "react-icons/fi";
+import { IoGameController } from "react-icons/io5";
 import { getAdminWhatsappContact } from "@/actions/public-settings";
 import { useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/routing";
@@ -16,9 +17,6 @@ export default function FloatingActionMenu() {
   
   const router = useRouter();
   const pathname = usePathname();
-  
-  // Translation hooks
-  const tSpinner = useTranslations("Spinner");
   
   // WhatsApp logic
   useEffect(() => {
@@ -60,7 +58,7 @@ export default function FloatingActionMenu() {
   const formattedPhone = phone.startsWith("0") ? `62${phone.substring(1)}` : phone.replace(/[^0-9]/g, "");
   const waLink = `https://wa.me/${formattedPhone}`;
 
-  const showSpinner = !pathname.includes("/tools/acak-nama");
+  const showToolsHub = pathname !== "/tools";
 
   // Jangan tampilkan Floating Action Menu / Tools di seluruh halaman dashboard (mahasiswa & admin)
   if (pathname?.includes("/dashboard") || pathname?.includes("/admin")) {
@@ -124,8 +122,8 @@ export default function FloatingActionMenu() {
               </motion.a>
             )}
 
-            {/* Spinner Option */}
-            {showSpinner && (
+            {/* Tools & Mini Games Hub Option */}
+            {showToolsHub && (
               <motion.button
                 variants={itemVariants}
                 initial="hidden"
@@ -133,25 +131,22 @@ export default function FloatingActionMenu() {
                 exit="exit"
                 onClick={() => {
                   setIsOpen(false);
-                  router.push("/tools/acak-nama");
+                  router.push("/tools");
                 }}
                 className="flex items-center gap-3 group"
               >
-                <span className="bg-surface text-on-surface-variant font-bold text-sm px-3 py-1.5 rounded-lg shadow-md border border-outline-variant/30 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  {tSpinner("title") || "Alat Acak"}
-                </span>
-                <div className="w-12 h-12 bg-white dark:bg-inverse-surface backdrop-blur-md rounded-full border-2 border-secondary shadow-glow flex items-center justify-center overflow-hidden relative hover:scale-110 transition-transform">
-                  <motion.div
-                    className="w-8 h-8 rounded-full shadow-inner"
-                    style={{
-                      background:
-                        "conic-gradient(#1b4086 0deg 60deg, #f2791e 60deg 120deg, #1b4086 120deg 180deg, #f2791e 180deg 240deg, #1b4086 240deg 300deg, #f2791e 300deg 360deg)",
-                    }}
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 3.5, ease: "linear" }}
-                  />
-                  <div className="absolute w-2 h-2 bg-white dark:bg-inverse-surface rounded-full shadow-sm z-10 border-2 border-secondary" />
-                  <div className="absolute top-1.5 w-0 h-0 border-l-[3px] border-r-[3px] border-t-[5px] border-l-transparent border-r-transparent border-t-white drop-shadow-sm z-20" />
+                <div className="flex items-center gap-1.5 bg-surface text-on-surface-variant font-bold text-sm px-3 py-1.5 rounded-lg shadow-md border border-outline-variant/30 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  <span>Tools & Mini Games</span>
+                  <span className="text-[10px] bg-secondary/15 text-secondary px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-wider">
+                    Baru
+                  </span>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-br from-[#1b4086] to-[#f2791e] text-white rounded-full border-2 border-white dark:border-slate-800 shadow-lg flex items-center justify-center relative hover:scale-110 transition-transform">
+                  <IoGameController size={22} className="group-hover:rotate-12 transition-transform duration-300" />
+                  <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-secondary border-2 border-white"></span>
+                  </span>
                 </div>
               </motion.button>
             )}
@@ -192,10 +187,10 @@ export default function FloatingActionMenu() {
                   <FiHelpCircle size={11} />
                 </div>
               )}
-              {/* Spinner Icon (Bottom Center) */}
-              {showSpinner && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[20px] h-[20px] bg-white rounded-full flex items-center justify-center shadow-sm z-20 border border-secondary/30 overflow-hidden">
-                   <div className="w-full h-full bg-[conic-gradient(#1b4086_0deg_60deg,#f2791e_60deg_120deg,#1b4086_120deg_180deg,#f2791e_180deg_240deg,#1b4086_240deg_300deg,#f2791e_300deg_360deg)] animate-[spin_3s_linear_infinite]" />
+              {/* Tools & Games Icon (Bottom Center) */}
+              {showToolsHub && (
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[20px] h-[20px] bg-gradient-to-br from-[#1b4086] to-[#f2791e] text-white rounded-full flex items-center justify-center shadow-sm z-20 border border-white">
+                  <IoGameController size={11} />
                 </div>
               )}
               {/* WhatsApp Icon (Top Left) */}
@@ -206,7 +201,7 @@ export default function FloatingActionMenu() {
               )}
               
               {/* Fallback */}
-              {!hasTour && !showSpinner && !phone && (
+              {!hasTour && !showToolsHub && !phone && (
                 <FiPlus size={24} className="text-secondary" />
               )}
             </motion.div>
