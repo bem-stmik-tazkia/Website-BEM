@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { SiWhatsapp } from "react-icons/si";
 import { FiX, FiPlus, FiHelpCircle } from "react-icons/fi";
-import { IoGameController } from "react-icons/io5";
+import { LayoutGrid } from "lucide-react";
 import { getAdminWhatsappContact } from "@/actions/public-settings";
 import { useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/routing";
@@ -142,7 +142,7 @@ export default function FloatingActionMenu() {
                   </span>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-br from-[#1b4086] to-[#f2791e] text-white rounded-full border-2 border-white dark:border-slate-800 shadow-lg flex items-center justify-center relative hover:scale-110 transition-transform">
-                  <IoGameController size={22} className="group-hover:rotate-12 transition-transform duration-300" />
+                  <LayoutGrid size={22} className="group-hover:scale-110 transition-transform duration-300" />
                   <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-secondary border-2 border-white"></span>
@@ -190,7 +190,7 @@ export default function FloatingActionMenu() {
               {/* Tools & Games Icon (Bottom Center) */}
               {showToolsHub && (
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[20px] h-[20px] bg-gradient-to-br from-[#1b4086] to-[#f2791e] text-white rounded-full flex items-center justify-center shadow-sm z-20 border border-white">
-                  <IoGameController size={11} />
+                  <LayoutGrid size={11} />
                 </div>
               )}
               {/* WhatsApp Icon (Top Left) */}
