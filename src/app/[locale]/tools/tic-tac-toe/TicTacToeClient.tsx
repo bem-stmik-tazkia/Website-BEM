@@ -18,10 +18,13 @@ import {
   FiCheck,
   FiLogOut,
   FiRadio,
+  FiSliders,
+  FiX,
 } from "react-icons/fi";
 import { IoGameController, IoInfinite } from "react-icons/io5";
 import { FaWhatsapp } from "react-icons/fa";
 import { createClient } from "@/utils/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
 
 import {
   CharacterId,
@@ -154,6 +157,7 @@ export default function TicTacToeClient() {
   const [winningLine, setWinningLine] = useState<WinLine | null>(null);
   const [isBotThinking, setIsBotThinking] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Online Multiplayer State
   const [onlineRole, setOnlineRole] = useState<Player | null>(null);
@@ -274,6 +278,17 @@ export default function TicTacToeClient() {
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
+
+  // Close Settings Sheet on Escape Key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isSettingsOpen) {
+        setIsSettingsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isSettingsOpen]);
 
   const handleEndGame = useCallback(
     (winResult: Player | "draw", lineResult: WinLine | null) => {
@@ -811,7 +826,7 @@ export default function TicTacToeClient() {
   const showArena = mode !== "online" || onlineState === "connected";
 
   return (
-    <div className="bg-background text-on-background min-h-screen pt-24 pb-16 px-3 sm:px-6 relative overflow-hidden flex flex-col justify-between">
+    <div className="bg-background text-on-background min-h-screen pt-16 sm:pt-20 pb-24 sm:pb-8 px-3 sm:px-6 relative overflow-hidden flex flex-col justify-between">
       {/* Floating Modern Toast Notification */}
       <div
         className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none transition-all duration-300 ease-out ${
@@ -964,13 +979,13 @@ export default function TicTacToeClient() {
         }
       `}</style>
 
-      <div className="w-full max-w-[540px] mx-auto flex flex-col z-10">
+      <div className="w-full max-w-[540px] md:max-w-4xl lg:max-w-5xl mx-auto flex flex-col z-10">
         
         {/* 1. TOP NAVIGATION BAR */}
-        <header className="flex items-center justify-between gap-2 mb-3.5">
+        <header className="flex items-center justify-between gap-2 mb-2 sm:mb-3.5">
           <Link
             href="/tools"
-            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-surface border border-outline-variant/30 text-outline hover:text-on-surface text-xs sm:text-sm font-bold shadow-sm hover:shadow transition-all shrink-0"
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-surface border border-outline-variant/30 text-outline hover:text-on-surface text-xs sm:text-sm font-bold shadow-xs hover:shadow transition-all shrink-0"
           >
             <FiArrowLeft className="w-4 h-4 text-outline" />
             <span className="hidden sm:inline">Semua Tools & Games</span>
@@ -978,7 +993,7 @@ export default function TicTacToeClient() {
           </Link>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-secondary/10 border border-secondary/25 text-secondary text-[11px] sm:text-xs font-bold shadow-sm">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-secondary/10 border border-secondary/25 text-secondary text-[11px] sm:text-xs font-bold shadow-xs">
               <IoGameController className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Mini Game</span>
             </div>
@@ -987,7 +1002,7 @@ export default function TicTacToeClient() {
               onClick={() => setSoundEnabled(!soundEnabled)}
               type="button"
               title={soundEnabled ? "Matikan Suara" : "Aktifkan Suara"}
-              className="p-1.5 sm:p-2 rounded-xl bg-surface border border-outline-variant/30 text-outline hover:text-on-surface shadow-sm hover:bg-surface-container-low active:scale-95 transition-all cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-xl bg-surface border border-outline-variant/30 text-outline hover:text-on-surface shadow-xs hover:bg-surface-container-low active:scale-95 transition-all cursor-pointer"
             >
               {soundEnabled ? (
                 <FiVolume2 className="w-4 h-4 text-primary" />
@@ -995,101 +1010,54 @@ export default function TicTacToeClient() {
                 <FiVolumeX className="w-4 h-4 text-outline" />
               )}
             </button>
+
+            {/* Quick Game Settings Trigger */}
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              type="button"
+              title="Pengaturan Mode & Karakter"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-surface border border-outline-variant/30 text-outline hover:text-on-surface shadow-xs hover:bg-surface-container-low active:scale-95 transition-all cursor-pointer text-xs font-bold"
+            >
+              <FiSliders className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+              <span className="hidden xs:inline">Opsi</span>
+            </button>
           </div>
         </header>
 
         {/* 2. HERO TITLE */}
-        <div className="text-center mb-3">
-          <h1 className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">
+        <div className="text-center mb-1.5 sm:mb-2">
+          <h1 className="text-xl sm:text-2xl font-black text-on-surface tracking-tight">
             Tic-Tac-Toe Kampus
           </h1>
-          <p className="text-xs sm:text-sm text-outline mt-0.5">
-            Adu taktik 3 baris bareng karakter kampus. Main lawan bot, berdua, atau mabar online!
-          </p>
         </div>
 
-        {/* 3. OPPONENT MODE (3-COLUMNS) & RULE MODE */}
-        <div className="flex flex-col gap-2 mb-3.5">
-          {/* 3-Column Mode Pill */}
-          <div className="bg-surface-container-low p-1 rounded-2xl border border-outline-variant/30 shadow-inner grid grid-cols-3 gap-1">
-            <button
-              onClick={() => handleSwitchMode("bot")}
-              type="button"
-              className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl text-[11px] sm:text-xs transition-all cursor-pointer ${
-                mode === "bot"
-                  ? "font-extrabold bg-[#1b4086] text-white shadow-sm"
-                  : "font-bold text-outline hover:text-on-surface"
-              }`}
-            >
-              <FiUser className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">Komputer</span>
-            </button>
-
-            <button
-              onClick={() => handleSwitchMode("pvp")}
-              type="button"
-              className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-xl text-[11px] sm:text-xs transition-all cursor-pointer ${
-                mode === "pvp"
-                  ? "font-extrabold bg-[#1b4086] text-white shadow-sm"
-                  : "font-bold text-outline hover:text-on-surface"
-              }`}
-            >
-              <FiUsers className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">1 Layar</span>
-            </button>
-
-            <button
-              onClick={() => handleSwitchMode("online")}
-              type="button"
-              className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-[11px] sm:text-xs transition-all cursor-pointer ${
-                mode === "online"
-                  ? "font-extrabold bg-[#f2791e] text-white shadow-sm"
-                  : "font-bold text-[#f2791e] hover:bg-[#f2791e]/10"
-              }`}
-            >
-              <FiGlobe className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">Mabar Online</span>
-            </button>
-          </div>
-
-          {/* Rule Twist (Klasik vs Infinity) */}
-          <div className="bg-surface-container-low p-1 rounded-2xl border border-outline-variant/30 shadow-inner flex items-center">
-            <button
-              onClick={() => {
-                if (ruleMode === "classic") return;
-                setRuleMode("classic");
-                resetRound();
-              }}
-              disabled={mode === "online" && onlineRole === "P2"}
-              type="button"
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-[11px] sm:text-xs transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
-                ruleMode === "classic"
-                  ? "font-extrabold bg-[#1b4086] text-white shadow-sm"
-                  : "font-bold text-outline hover:text-on-surface"
-              }`}
-            >
-              <FiZap className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">Mode Klasik</span>
-            </button>
-            <button
-              onClick={() => {
-                if (ruleMode === "infinity") return;
-                setRuleMode("infinity");
-                resetRound();
-              }}
-              disabled={mode === "online" && onlineRole === "P2"}
-              type="button"
-              title="Maksimal 3 bidak per pemain! Langkah ke-4 otomatis menghapus bidak pertama."
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-[11px] sm:text-xs transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
-                ruleMode === "infinity"
-                  ? "font-extrabold bg-[#f2791e] text-white shadow-sm"
-                  : "font-bold text-outline hover:text-on-surface"
-              }`}
-            >
-              <IoInfinite className="w-4 h-4 shrink-0" />
-              <span className="truncate">Mode Infinity</span>
-            </button>
-          </div>
+        {/* 3. UNIFIED COMPACT MODE CHIP (Click opens Settings Modal on all screens) */}
+        <div className="flex items-center justify-center mb-2 sm:mb-2.5">
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            type="button"
+            className="inline-flex items-center gap-2 sm:gap-2.5 px-3.5 py-1.5 rounded-full bg-surface-container-low hover:bg-surface-container border border-outline-variant/40 shadow-xs hover:border-primary/50 active:scale-95 transition-all text-xs cursor-pointer group"
+          >
+            <span className="inline-flex items-center gap-1.5 font-bold text-on-surface">
+              {mode === "bot" && <FiUser className="w-3.5 h-3.5 text-primary shrink-0" />}
+              {mode === "pvp" && <FiUsers className="w-3.5 h-3.5 text-primary shrink-0" />}
+              {mode === "online" && <FiGlobe className="w-3.5 h-3.5 text-[#f2791e] shrink-0" />}
+              <span>{mode === "bot" ? "Lawan Komputer" : mode === "pvp" ? "1 Layar (Duel)" : "Mabar Online"}</span>
+            </span>
+            <span className="w-1 h-1 rounded-full bg-outline-variant shrink-0" />
+            <span className="inline-flex items-center gap-1.5 font-bold text-on-surface">
+              {ruleMode === "classic" ? (
+                <FiZap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              ) : (
+                <IoInfinite className="w-3.5 h-3.5 text-secondary shrink-0" />
+              )}
+              <span>{ruleMode === "classic" ? "Mode Klasik" : "Mode Infinity"}</span>
+            </span>
+            <span className="ml-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] sm:text-[11px] font-black group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
+              <FiSliders className="w-2.5 h-2.5" />
+              <span>Ganti Mode</span>
+            </span>
+          </button>
         </div>
 
         {/* ========================================================= */}
@@ -1378,49 +1346,14 @@ export default function TicTacToeClient() {
           </div>
         )}
 
-        {/* 5. UNIFIED SCORE & STATUS BANNER */}
-        <div className="w-full bg-surface border border-outline-variant/30 rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 mb-3 shadow-sm flex items-center justify-between gap-2">
-          {/* P1 Score */}
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#1b4086] shrink-0" />
-            <span className="text-xs font-bold text-outline">
-              {mode === "online" ? (onlineRole === "P1" ? "Kamu (Host):" : "Host:") : "Kamu:"}{" "}
-              <strong className="text-sm sm:text-base font-black text-primary font-mono">
-                {scores.P1}
-              </strong>
-            </span>
-          </div>
-
-          {/* Turn / Winner Status Pill */}
-          <div
-            className={`px-3 py-1 rounded-xl text-[10px] sm:text-xs font-black tracking-wide shadow-sm truncate text-center ${statusPillClass}`}
-          >
-            {statusText}
-          </div>
-
-          {/* P2 Score & Draw */}
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-outline hidden xs:inline">
-              (Seri: {scores.draw})
-            </span>
-            <span className="text-xs font-bold text-outline">
-              {mode === "bot" ? "Bot:" : mode === "online" ? (onlineRole === "P2" ? "Kamu (Guest):" : "Guest:") : "P2:"}{" "}
-              <strong className="text-sm sm:text-base font-black text-secondary font-mono">
-                {scores.P2}
-              </strong>
-            </span>
-            <span className="w-2.5 h-2.5 rounded-full bg-[#f2791e] shrink-0" />
-          </div>
-        </div>
-
-        {/* 6. TWO FIGHTER CARDS */}
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-4">
+        {/* 5. ARENA BATTLE GRID (P1 Left, Board Center, P2 Right on Desktop) */}
+        <div className="grid grid-cols-2 md:grid-cols-[180px_auto_180px] lg:grid-cols-[210px_auto_210px] items-center justify-center gap-2 sm:gap-3 md:gap-6 w-full mx-auto my-auto">
           
-          {/* P1 CARD */}
+          {/* P1 CARD (Left on md+, top-left on mobile) */}
           <div
-            className={`rounded-2xl p-2.5 sm:p-3 transition-all flex items-center gap-2 sm:gap-3 ${
+            className={`col-span-1 md:col-span-1 order-1 md:order-1 rounded-2xl md:rounded-3xl p-2 sm:p-2.5 md:p-4 lg:p-5 transition-all flex md:flex-col items-center md:text-center gap-2 sm:gap-2.5 md:gap-3 ${
               isP1Turn || winner === "P1"
-                ? "bg-surface border-2 border-primary shadow-md scale-[1.01]"
+                ? "bg-surface border-2 border-primary shadow-xl shadow-primary/15 ring-2 ring-primary/20 scale-[1.01]"
                 : "bg-surface/80 border border-outline-variant/30 opacity-90"
             }`}
           >
@@ -1433,48 +1366,60 @@ export default function TicTacToeClient() {
               disabled={mode === "online" && onlineRole !== "P1"}
               type="button"
               title="Klik untuk ganti karakter"
-              className="group relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0 overflow-visible hover:border-primary active:scale-95 transition-all cursor-pointer disabled:cursor-default"
+              className="group relative w-10 h-10 sm:w-11 sm:h-11 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-xl sm:rounded-2xl md:rounded-3xl bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0 overflow-visible hover:border-primary active:scale-95 transition-all cursor-pointer disabled:cursor-default"
             >
               <div
-                className="w-10 h-10 sm:w-12 sm:h-12 animate-float"
+                className="w-8 h-8 sm:w-9 sm:h-9 md:w-13 md:h-13 lg:w-16 lg:h-16 animate-float"
                 dangerouslySetInnerHTML={{
                   __html: buildCharacterSVG(p1Char, "navy", p1Mood, true),
                 }}
               />
               {(!mode || mode !== "online" || onlineRole === "P1") && (
-                <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-[#1b4086] text-white text-[8px] font-extrabold shadow group-hover:scale-105 transition-transform">
+                <span className="hidden md:inline-block absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full bg-[#1b4086] text-white text-[9px] font-extrabold shadow group-hover:scale-105 transition-transform">
                   Ganti ↻
                 </span>
               )}
             </button>
 
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1">
+            <div className="min-w-0 flex-1 md:flex-initial md:w-full">
+              <div className="flex items-center md:justify-center gap-1">
                 <span className="text-[10px] font-black uppercase tracking-wider text-primary truncate">
                   {mode === "online"
                     ? onlineRole === "P1"
-                      ? "Kamu (Host · P1)"
-                      : "Lawan (Host · P1)"
+                      ? "Kamu (Host)"
+                      : "Lawan (Host)"
                     : "Kamu (P1)"}
                 </span>
                 <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-primary/10 text-primary shrink-0">
                   X
                 </span>
               </div>
-              <h2 className="text-xs sm:text-sm font-black text-on-surface truncate leading-tight mt-0.5">
+              <h2 className="text-xs sm:text-sm md:text-base font-black text-on-surface truncate leading-tight mt-0.5">
                 {c1.name}
               </h2>
-              <p className="text-[10px] font-medium text-outline truncate mt-0.5">
+              <p className="hidden md:block text-[11px] font-medium text-outline truncate mt-0.5">
                 {c1.role}
               </p>
+
+              {/* Mobile Score Display */}
+              <div className="flex md:hidden items-center gap-1 text-[11px] font-bold text-outline mt-0.5">
+                <span>Skor:</span>
+                <strong className="font-mono font-black text-primary text-xs">{scores.P1}</strong>
+              </div>
+
+              {/* Desktop Score Box */}
+              <div className="hidden md:flex items-center justify-center gap-2 mt-2.5 px-3 py-1.5 rounded-2xl bg-primary/10 border border-primary/20 text-primary">
+                <span className="text-xs font-bold uppercase tracking-wider">Skor</span>
+                <span className="text-lg lg:text-xl font-black font-mono">{scores.P1}</span>
+              </div>
             </div>
           </div>
 
-          {/* P2 CARD */}
+          {/* P2 CARD (Right on md+, top-right on mobile) */}
           <div
-            className={`rounded-2xl p-2.5 sm:p-3 transition-all flex items-center gap-2 sm:gap-3 ${
+            className={`col-span-1 md:col-span-1 order-2 md:order-3 rounded-2xl md:rounded-3xl p-2 sm:p-2.5 md:p-4 lg:p-5 transition-all flex md:flex-col items-center md:text-center gap-2 sm:gap-2.5 md:gap-3 ${
               isP2Turn || winner === "P2"
-                ? "bg-surface border-2 border-secondary shadow-md scale-[1.01]"
+                ? "bg-surface border-2 border-secondary shadow-xl shadow-secondary/15 ring-2 ring-secondary/20 scale-[1.01]"
                 : "bg-surface/80 border border-outline-variant/30 opacity-90"
             }`}
           >
@@ -1487,274 +1432,586 @@ export default function TicTacToeClient() {
               disabled={mode === "online" && onlineRole !== "P2"}
               type="button"
               title="Klik untuk ganti karakter"
-              className="group relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-secondary/10 border border-secondary/25 flex items-center justify-center shrink-0 overflow-visible hover:border-secondary active:scale-95 transition-all cursor-pointer disabled:cursor-default"
+              className="group relative w-10 h-10 sm:w-11 sm:h-11 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-xl sm:rounded-2xl md:rounded-3xl bg-secondary/10 border border-secondary/25 flex items-center justify-center shrink-0 overflow-visible hover:border-secondary active:scale-95 transition-all cursor-pointer disabled:cursor-default"
             >
               <div
-                className="w-10 h-10 sm:w-12 sm:h-12 animate-float"
+                className="w-10 h-10 sm:w-9 sm:h-9 md:w-13 md:h-13 lg:w-16 lg:h-16 animate-float"
                 style={{ animationDelay: "-1.5s" }}
                 dangerouslySetInnerHTML={{
                   __html: buildCharacterSVG(p2Char, "orange", p2Mood, true),
                 }}
               />
               {(!mode || mode !== "online" || onlineRole === "P2") && (
-                <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-[#f2791e] text-white text-[8px] font-extrabold shadow group-hover:scale-105 transition-transform">
+                <span className="hidden md:inline-block absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full bg-[#f2791e] text-white text-[9px] font-extrabold shadow group-hover:scale-105 transition-transform">
                   Ganti ↻
                 </span>
               )}
             </button>
 
-            <div className="min-w-0 flex-1 text-left">
-              <div className="flex items-center gap-1">
+            <div className="min-w-0 flex-1 md:flex-initial md:w-full text-left md:text-center">
+              <div className="flex items-center md:justify-center gap-1">
                 <span className="text-[10px] font-black uppercase tracking-wider text-secondary truncate">
                   {mode === "bot"
                     ? "Komputer"
                     : mode === "online"
                     ? onlineRole === "P2"
-                      ? "Kamu (Guest · P2)"
-                      : "Lawan (Guest · P2)"
+                      ? "Kamu (Guest)"
+                      : "Lawan (Guest)"
                     : "Pemain 2"}
                 </span>
                 <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-secondary/10 text-secondary shrink-0">
                   O
                 </span>
               </div>
-              <h2 className="text-xs sm:text-sm font-black text-on-surface truncate leading-tight mt-0.5">
+              <h2 className="text-xs sm:text-sm md:text-base font-black text-on-surface truncate leading-tight mt-0.5">
                 {c2.name}
               </h2>
-              <p className="text-[10px] font-medium text-outline truncate mt-0.5">
+              <p className="hidden md:block text-[11px] font-medium text-outline truncate mt-0.5">
                 {c2.role}
               </p>
+
+              {/* Mobile Score Display */}
+              <div className="flex md:hidden items-center gap-1 text-[11px] font-bold text-outline mt-0.5">
+                <span>Skor:</span>
+                <strong className="font-mono font-black text-secondary text-xs">{scores.P2}</strong>
+              </div>
+
+              {/* Desktop Score Box */}
+              <div className="hidden md:flex items-center justify-center gap-2 mt-2.5 px-3 py-1.5 rounded-2xl bg-secondary/10 border border-secondary/20 text-secondary">
+                <span className="text-xs font-bold uppercase tracking-wider">Skor</span>
+                <span className="text-lg lg:text-xl font-black font-mono">{scores.P2}</span>
+              </div>
             </div>
           </div>
 
-        </div>
+          {/* CENTER COLUMN (Board + Turn Status + Actions) */}
+          <div className="col-span-2 md:col-span-1 order-3 md:order-2 flex flex-col items-center w-full">
+            
+            {/* Status & Draw Pill */}
+            <div className="flex items-center justify-center gap-2 mb-1.5 w-full">
+              <div
+                className={`px-3 py-0.5 sm:py-1 rounded-xl text-[11px] sm:text-xs font-black tracking-wide shadow-xs truncate text-center ${statusPillClass}`}
+              >
+                {statusText}
+              </div>
+              {scores.draw > 0 && (
+                <span className="text-[10px] sm:text-xs font-bold text-outline">
+                  (Seri: {scores.draw})
+                </span>
+              )}
+            </div>
 
-        {/* 7. 3D TACTILE BATTLE BOARD */}
-        <div className="relative w-full max-w-[340px] sm:max-w-[360px] mx-auto bg-surface p-3 sm:p-4 rounded-[28px] border border-outline-variant/40 shadow-xl mb-4">
-          {/* SVG Laser Strike Line (Guaranteed on horizontal, vertical, and diagonal lines) */}
-          {gameOver && winningLine && (
-            <svg
-              className="pointer-events-none absolute inset-0 w-full h-full z-20 overflow-visible"
-              viewBox="0 0 300 300"
-            >
-              {/* Layer 1: Wide Ambient Halo Glow */}
-              <line
-                x1={winningLine.coords[0]}
-                y1={winningLine.coords[1]}
-                x2={winningLine.coords[2]}
-                y2={winningLine.coords[3]}
-                stroke={winner === "P1" ? "#3b82f6" : "#fb923c"}
-                strokeWidth="18"
-                strokeLinecap="round"
-                opacity="0.35"
-                className="strike-beam"
-              />
-              {/* Layer 2: Radiant Energy Beam */}
-              <line
-                x1={winningLine.coords[0]}
-                y1={winningLine.coords[1]}
-                x2={winningLine.coords[2]}
-                y2={winningLine.coords[3]}
-                stroke={winner === "P1" ? "#60a5fa" : "#f97316"}
-                strokeWidth="11"
-                strokeLinecap="round"
-                opacity="0.75"
-                className="strike-beam"
-              />
-              {/* Layer 3: Solid Sharp Core Beam */}
-              <line
-                x1={winningLine.coords[0]}
-                y1={winningLine.coords[1]}
-                x2={winningLine.coords[2]}
-                y2={winningLine.coords[3]}
-                stroke={winner === "P1" ? "#1b4086" : "#ea580c"}
-                strokeWidth="5.5"
-                strokeLinecap="round"
-                className="strike-beam"
-              />
-            </svg>
-          )}
-
-          {/* 3x3 Tactile Grid */}
-          <div className="grid grid-cols-3 grid-rows-3 gap-2.5 sm:gap-3.5 w-full aspect-square relative z-10">
-            {board.map((owner, idx) => {
-              const isDisabled =
-                owner !== null ||
-                gameOver ||
-                (mode === "bot" && currentTurn === "P2") ||
-                isBotThinking ||
-                (mode === "online" && (onlineState !== "connected" || currentTurn !== onlineRole));
-
-              const isWinCell = winningLine?.cells.includes(idx as any);
-              const isJustPlaced = lastPlacedIdx === idx;
-              const isVanishing = vanishingIdx === idx;
-              const isThreatEmpty =
-                !gameOver && owner === null && allDangerCells.includes(idx);
-
-              let cellClasses =
-                "tactile-cell w-full h-full aspect-square flex flex-col items-center justify-center p-1 select-none overflow-hidden ";
-
-              if (owner === "P1") {
-                const tokenMood: Mood = gameOver
-                  ? winner === "P1"
-                    ? "happy"
-                    : winner === "P2"
-                    ? "dizzy"
-                    : "nervous"
-                  : threats.P2.length > 0
-                  ? "nervous"
-                  : "normal";
-
-                cellClasses += isWinCell
-                  ? "cell-p1 bg-primary/15 border-2 border-primary "
-                  : "cell-p1 bg-primary/5 border border-primary/20 ";
-
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    disabled
-                    className={cellClasses}
-                  >
-                    <div
-                      className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 ${
-                        isJustPlaced ? "animate-token-drop" : ""
-                      } ${isWinCell ? "animate-winner-cheer" : ""} ${
-                        isVanishing ? "token-vanishing" : ""
-                      }`}
-                      dangerouslySetInnerHTML={{
-                        __html: buildCharacterSVG(p1Char, "navy", tokenMood, false),
-                      }}
-                    />
-                    <span
-                      className={`text-[8px] sm:text-[9px] font-black mt-0.5 truncate max-w-full leading-none ${
-                        isVanishing ? "text-amber-600 dark:text-amber-400" : "text-primary"
-                      }`}
-                    >
-                      {isVanishing ? "Akan Hilang" : c1.name}
-                    </span>
-                  </button>
-                );
-              }
-
-              if (owner === "P2") {
-                const tokenMood: Mood = gameOver
-                  ? winner === "P2"
-                    ? "happy"
-                    : winner === "P1"
-                    ? "dizzy"
-                    : "nervous"
-                  : threats.P1.length > 0
-                  ? "nervous"
-                  : "normal";
-
-                cellClasses += isWinCell
-                  ? "cell-p2 bg-secondary/15 border-2 border-secondary "
-                  : "cell-p2 bg-secondary/5 border border-secondary/20 ";
-
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    disabled
-                    className={cellClasses}
-                  >
-                    <div
-                      className={`w-10 h-10 sm:w-12 sm:h-12 shrink-0 ${
-                        isJustPlaced ? "animate-token-drop" : ""
-                      } ${isWinCell ? "animate-winner-cheer" : ""} ${
-                        isVanishing ? "token-vanishing" : ""
-                      }`}
-                      dangerouslySetInnerHTML={{
-                        __html: buildCharacterSVG(p2Char, "orange", tokenMood, false),
-                      }}
-                    />
-                    <span
-                      className={`text-[8px] sm:text-[9px] font-black mt-0.5 truncate max-w-full leading-none ${
-                        isVanishing ? "text-amber-600 dark:text-amber-400" : "text-secondary"
-                      }`}
-                    >
-                      {isVanishing ? "Akan Hilang" : c2.name}
-                    </span>
-                  </button>
-                );
-              }
-
-              // Empty cell
-              cellClasses += `bg-surface-container-low border border-outline-variant/30 ${
-                isDisabled ? "cursor-not-allowed opacity-90" : "cursor-pointer"
-              } ${isThreatEmpty ? "cell-danger-threat" : ""} `;
-
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  disabled={isDisabled}
-                  onClick={() => handleCellClick(idx)}
-                  className={cellClasses}
+            {/* 3D Tactile Battle Board */}
+            <div className="relative w-full max-w-[280px] xs:max-w-[310px] sm:max-w-[340px] md:max-w-[350px] bg-surface p-2 sm:p-3 rounded-[22px] sm:rounded-[26px] border border-outline-variant/40 shadow-xl mb-2 sm:mb-2.5">
+              {/* SVG Laser Strike Line (Guaranteed on horizontal, vertical, and diagonal lines) */}
+              {gameOver && winningLine && (
+                <svg
+                  className="pointer-events-none absolute inset-0 w-full h-full z-20 overflow-visible"
+                  viewBox="0 0 300 300"
                 >
-                  {!isDisabled && (
-                    <div
-                      className="ghost-peek w-9 h-9 sm:w-10 sm:h-10 pointer-events-none shrink-0"
-                      dangerouslySetInnerHTML={{
-                        __html: buildCharacterSVG(activeChar, activeTheme, "normal", false),
-                      }}
-                    />
-                  )}
-                  {isThreatEmpty && (
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                  )}
-                </button>
-              );
-            })}
+                  {/* Layer 1: Wide Ambient Halo Glow */}
+                  <line
+                    x1={winningLine.coords[0]}
+                    y1={winningLine.coords[1]}
+                    x2={winningLine.coords[2]}
+                    y2={winningLine.coords[3]}
+                    stroke={winner === "P1" ? "#3b82f6" : "#fb923c"}
+                    strokeWidth="18"
+                    strokeLinecap="round"
+                    opacity="0.35"
+                    className="strike-beam"
+                  />
+                  {/* Layer 2: Radiant Energy Beam */}
+                  <line
+                    x1={winningLine.coords[0]}
+                    y1={winningLine.coords[1]}
+                    x2={winningLine.coords[2]}
+                    y2={winningLine.coords[3]}
+                    stroke={winner === "P1" ? "#60a5fa" : "#f97316"}
+                    strokeWidth="11"
+                    strokeLinecap="round"
+                    opacity="0.75"
+                    className="strike-beam"
+                  />
+                  {/* Layer 3: Solid Sharp Core Beam */}
+                  <line
+                    x1={winningLine.coords[0]}
+                    y1={winningLine.coords[1]}
+                    x2={winningLine.coords[2]}
+                    y2={winningLine.coords[3]}
+                    stroke={winner === "P1" ? "#1b4086" : "#ea580c"}
+                    strokeWidth="5.5"
+                    strokeLinecap="round"
+                    className="strike-beam"
+                  />
+                </svg>
+              )}
+
+              {/* 3x3 Tactile Grid */}
+              <div className="grid grid-cols-3 grid-rows-3 gap-2 sm:gap-3 w-full aspect-square relative z-10">
+                {board.map((owner, idx) => {
+                  const isDisabled =
+                    owner !== null ||
+                    gameOver ||
+                    (mode === "bot" && currentTurn === "P2") ||
+                    isBotThinking ||
+                    (mode === "online" && (onlineState !== "connected" || currentTurn !== onlineRole));
+
+                  const isWinCell = winningLine?.cells.includes(idx as any);
+                  const isJustPlaced = lastPlacedIdx === idx;
+                  const isVanishing = vanishingIdx === idx;
+                  const isThreatEmpty =
+                    !gameOver && owner === null && allDangerCells.includes(idx);
+
+                  let cellClasses =
+                    "tactile-cell w-full h-full aspect-square flex flex-col items-center justify-center p-1 select-none overflow-hidden ";
+
+                  if (owner === "P1") {
+                    const tokenMood: Mood = gameOver
+                      ? winner === "P1"
+                        ? "happy"
+                        : winner === "P2"
+                        ? "dizzy"
+                        : "nervous"
+                      : threats.P2.length > 0
+                      ? "nervous"
+                      : "normal";
+
+                    cellClasses += isWinCell
+                      ? "cell-p1 bg-primary/15 border-2 border-primary "
+                      : "cell-p1 bg-primary/5 border border-primary/20 ";
+
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        disabled
+                        className={cellClasses}
+                      >
+                        <div
+                          className={`w-9 h-9 sm:w-11 sm:h-11 shrink-0 ${
+                            isJustPlaced ? "animate-token-drop" : ""
+                          } ${isWinCell ? "animate-winner-cheer" : ""} ${
+                            isVanishing ? "token-vanishing" : ""
+                          }`}
+                          dangerouslySetInnerHTML={{
+                            __html: buildCharacterSVG(p1Char, "navy", tokenMood, false),
+                          }}
+                        />
+                        <span
+                          className={`text-[8px] sm:text-[9px] font-black mt-0.5 truncate max-w-full leading-none ${
+                            isVanishing ? "text-amber-600 dark:text-amber-400" : "text-primary"
+                          }`}
+                        >
+                          {isVanishing ? "Akan Hilang" : c1.name}
+                        </span>
+                      </button>
+                    );
+                  }
+
+                  if (owner === "P2") {
+                    const tokenMood: Mood = gameOver
+                      ? winner === "P2"
+                        ? "happy"
+                        : winner === "P1"
+                        ? "dizzy"
+                        : "nervous"
+                      : threats.P1.length > 0
+                      ? "nervous"
+                      : "normal";
+
+                    cellClasses += isWinCell
+                      ? "cell-p2 bg-secondary/15 border-2 border-secondary "
+                      : "cell-p2 bg-secondary/5 border border-secondary/20 ";
+
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        disabled
+                        className={cellClasses}
+                      >
+                        <div
+                          className={`w-9 h-9 sm:w-11 sm:h-11 shrink-0 ${
+                            isJustPlaced ? "animate-token-drop" : ""
+                          } ${isWinCell ? "animate-winner-cheer" : ""} ${
+                            isVanishing ? "token-vanishing" : ""
+                          }`}
+                          dangerouslySetInnerHTML={{
+                            __html: buildCharacterSVG(p2Char, "orange", tokenMood, false),
+                          }}
+                        />
+                        <span
+                          className={`text-[8px] sm:text-[9px] font-black mt-0.5 truncate max-w-full leading-none ${
+                            isVanishing ? "text-amber-600 dark:text-amber-400" : "text-secondary"
+                          }`}
+                        >
+                          {isVanishing ? "Akan Hilang" : c2.name}
+                        </span>
+                      </button>
+                    );
+                  }
+
+                  // Empty cell
+                  cellClasses += `bg-surface-container-low border border-outline-variant/30 ${
+                    isDisabled ? "cursor-not-allowed opacity-90" : "cursor-pointer"
+                  } ${isThreatEmpty ? "cell-danger-threat" : ""} `;
+
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => handleCellClick(idx)}
+                      className={cellClasses}
+                    >
+                      {!isDisabled && (
+                        <div
+                          className="ghost-peek w-8 h-8 sm:w-10 sm:h-10 pointer-events-none shrink-0"
+                          dangerouslySetInnerHTML={{
+                            __html: buildCharacterSVG(activeChar, activeTheme, "normal", false),
+                          }}
+                        />
+                      )}
+                      {isThreatEmpty && (
+                        <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Footer Action Buttons */}
+            <div className="flex items-center justify-center gap-2 sm:gap-2.5">
+              <button
+                onClick={handleRematchClick}
+                type="button"
+                className={`btn-3d-navy inline-flex items-center justify-center gap-1.5 sm:gap-2 px-5 py-2 rounded-xl font-black text-xs sm:text-sm tracking-wide cursor-pointer ${
+                  gameOver ? "animate-bounce" : ""
+                }`}
+              >
+                <FiRotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Main Lagi</span>
+              </button>
+
+              <button
+                onClick={handleRandomMatchup}
+                type="button"
+                title="Acak Karakter"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface border border-outline-variant/30 text-xs sm:text-sm font-bold text-on-surface hover:bg-surface-container-low active:scale-95 transition-all shadow-xs cursor-pointer"
+              >
+                <FiShuffle className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="hidden xs:inline">Acak Karakter</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setScores({ P1: 0, draw: 0, P2: 0 });
+                  resetRound();
+                  showToast("Skor pertandingan berhasil di-reset!");
+                }}
+                type="button"
+                className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-outline hover:text-rose-600 transition-colors cursor-pointer"
+              >
+                Reset Skor
+              </button>
+            </div>
+
           </div>
-        </div>
 
-        {/* 8. FOOTER ACTION BUTTONS */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mb-3.5">
-          <button
-            onClick={handleRematchClick}
-            type="button"
-            className="btn-3d-navy inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm tracking-wide cursor-pointer"
-          >
-            <FiRotateCcw className="w-4 h-4" />
-            <span>Main Lagi</span>
-          </button>
-
-          <button
-            onClick={handleRandomMatchup}
-            type="button"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-surface border border-outline-variant/30 text-xs sm:text-sm font-bold text-on-surface hover:bg-surface-container-low active:scale-95 transition-all shadow-sm cursor-pointer"
-          >
-            <FiShuffle className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span>Acak Karakter</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setScores({ P1: 0, draw: 0, P2: 0 });
-              resetRound();
-            }}
-            type="button"
-            className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-outline hover:text-rose-600 transition-colors cursor-pointer"
-          >
-            Reset Skor
-          </button>
-        </div>
-
-        {/* Tips Footer */}
-        <div className="p-3 rounded-2xl bg-surface border border-outline-variant/30 text-center text-xs text-outline shadow-sm">
-          <div className="flex items-center justify-center gap-2">
-            <FiInfo className="w-4 h-4 text-primary shrink-0" />
-            <span>
-              <strong>Tips Arena:</strong> Mode Infinity membatasi maksimal 3 bidak di papan. Langkah ke-4 otomatis menghapus bidak pertama!
-            </span>
-          </div>
         </div>
           </>
         )}
 
       </div>
+
+      {/* 9. GAME SETTINGS & OPTIONS MODAL / BOTTOM SHEET */}
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <div className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-0 sm:p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSettingsOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+            />
+
+            {/* Modal / Bottom Sheet Box */}
+            <motion.div
+              initial={{ y: "100%", opacity: 0.8 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="relative z-10 w-full max-w-lg bg-surface border-t sm:border border-outline-variant/30 rounded-t-[28px] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              {/* Header */}
+              <div className="px-5 py-3.5 border-b border-outline-variant/20 flex items-center justify-between bg-surface-container-low/50">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                    <FiSliders className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-black text-on-surface">
+                      Pengaturan Permainan
+                    </h3>
+                    <p className="text-[11px] text-outline">
+                      Pilihan mode lawan, aturan, karakter & suara
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsSettingsOpen(false)}
+                  type="button"
+                  className="p-2 rounded-xl text-outline hover:text-on-surface hover:bg-surface-container cursor-pointer transition-colors"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-5 overflow-y-auto space-y-4 text-left">
+                {/* 1. Opponent Mode */}
+                <div>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-outline block mb-2">
+                    Mode Lawan
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchMode("bot")}
+                      className={`p-2.5 rounded-2xl border text-center flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                        mode === "bot"
+                          ? "border-[#1b4086] bg-[#1b4086]/10 text-[#1b4086] dark:text-blue-400 font-extrabold shadow-xs"
+                          : "border-outline-variant/30 text-outline hover:bg-surface-container"
+                      }`}
+                    >
+                      <FiUser className="w-5 h-5" />
+                      <span className="text-xs font-black">Komputer</span>
+                      <span className="text-[10px] text-outline">Lawan AI</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchMode("pvp")}
+                      className={`p-2.5 rounded-2xl border text-center flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                        mode === "pvp"
+                          ? "border-[#1b4086] bg-[#1b4086]/10 text-[#1b4086] dark:text-blue-400 font-extrabold shadow-xs"
+                          : "border-outline-variant/30 text-outline hover:bg-surface-container"
+                      }`}
+                    >
+                      <FiUsers className="w-5 h-5" />
+                      <span className="text-xs font-black">1 Layar</span>
+                      <span className="text-[10px] text-outline">Duel 2 Orang</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleSwitchMode("online");
+                        setIsSettingsOpen(false);
+                      }}
+                      className={`p-2.5 rounded-2xl border text-center flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                        mode === "online"
+                          ? "border-[#f2791e] bg-[#f2791e]/15 text-[#f2791e] font-extrabold shadow-xs"
+                          : "border-outline-variant/30 text-[#f2791e] hover:bg-[#f2791e]/10"
+                      }`}
+                    >
+                      <FiGlobe className="w-5 h-5" />
+                      <span className="text-xs font-black">Mabar Online</span>
+                      <span className="text-[10px] text-outline">Bikin / Gabung</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. Rule Mode */}
+                <div>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-outline block mb-2">
+                    Aturan Permainan
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={mode === "online" && onlineRole === "P2"}
+                      onClick={() => {
+                        if (ruleMode !== "classic") {
+                          setRuleMode("classic");
+                          resetRound();
+                        }
+                      }}
+                      className={`p-2.5 rounded-2xl border text-left flex items-start gap-2.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                        ruleMode === "classic"
+                          ? "border-[#1b4086] bg-[#1b4086]/10 text-on-surface shadow-xs font-bold"
+                          : "border-outline-variant/30 text-outline hover:bg-surface-container"
+                      }`}
+                    >
+                      <FiZap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-xs font-black block text-on-surface">Mode Klasik</span>
+                        <span className="text-[10px] text-outline leading-tight block mt-0.5">
+                          Format standar: 3 baris segaris pertama keluar sebagai pemenang.
+                        </span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={mode === "online" && onlineRole === "P2"}
+                      onClick={() => {
+                        if (ruleMode !== "infinity") {
+                          setRuleMode("infinity");
+                          resetRound();
+                        }
+                      }}
+                      className={`p-2.5 rounded-2xl border text-left flex items-start gap-2.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                        ruleMode === "infinity"
+                          ? "border-[#f2791e] bg-[#f2791e]/15 text-on-surface shadow-xs font-bold"
+                          : "border-outline-variant/30 text-outline hover:bg-surface-container"
+                      }`}
+                    >
+                      <IoInfinite className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-xs font-black block text-on-surface">Mode Infinity</span>
+                        <span className="text-[10px] text-outline leading-tight block mt-0.5">
+                          Maks 3 bidak. Langkah ke-4 otomatis menghapus bidak pertama!
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Character Picker */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-outline">
+                      Pilih Karakter Pemain
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRandomMatchup}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline cursor-pointer"
+                    >
+                      <FiShuffle className="w-3 h-3" />
+                      <span>Acak Karakter</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {/* P1 Char Picker */}
+                    <div>
+                      <span className="text-[10px] font-bold text-primary block mb-1">
+                        {mode === "online" && onlineRole === "P2" ? "Karakter Host (X):" : "Karakter Kamu / P1 (X):"}
+                      </span>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {CHARACTER_LIST.map((id) => (
+                          <button
+                            key={`p1_${id}`}
+                            type="button"
+                            disabled={mode === "online" && onlineRole === "P2"}
+                            onClick={() => changeCharacter("P1", id)}
+                            className={`p-1.5 rounded-xl border flex flex-col items-center gap-0.5 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
+                              p1Char === id
+                                ? "border-primary bg-primary/10 shadow-xs scale-102"
+                                : "border-outline-variant/30 hover:bg-surface-container"
+                            }`}
+                          >
+                            <div
+                              className="w-7 h-7"
+                              dangerouslySetInnerHTML={{
+                                __html: buildCharacterSVG(id, "navy", "normal", false),
+                              }}
+                            />
+                            <span className="text-[9px] font-black truncate max-w-full">
+                              {CAMPUS_CHARACTERS[id].name.replace("Si ", "").replace("Kak ", "")}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* P2 Char Picker */}
+                    <div>
+                      <span className="text-[10px] font-bold text-secondary block mb-1">
+                        {mode === "bot"
+                          ? "Karakter Komputer (O):"
+                          : mode === "online" && onlineRole === "P1"
+                          ? "Karakter Lawan (O):"
+                          : "Karakter Pemain 2 / Kamu (O):"}
+                      </span>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {CHARACTER_LIST.map((id) => (
+                          <button
+                            key={`p2_${id}`}
+                            type="button"
+                            disabled={mode === "online" && onlineRole === "P1"}
+                            onClick={() => changeCharacter("P2", id)}
+                            className={`p-1.5 rounded-xl border flex flex-col items-center gap-0.5 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
+                              p2Char === id
+                                ? "border-secondary bg-secondary/10 shadow-xs scale-102"
+                                : "border-outline-variant/30 hover:bg-surface-container"
+                            }`}
+                          >
+                            <div
+                              className="w-7 h-7"
+                              dangerouslySetInnerHTML={{
+                                __html: buildCharacterSVG(id, "orange", "normal", false),
+                              }}
+                            />
+                            <span className="text-[9px] font-black truncate max-w-full">
+                              {CAMPUS_CHARACTERS[id].name.replace("Si ", "").replace("Kak ", "")}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Audio & Reset Skor */}
+                <div className="pt-2 border-t border-outline-variant/20 flex flex-wrap items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSoundEnabled(!soundEnabled)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      soundEnabled
+                        ? "border-primary/30 bg-primary/10 text-primary"
+                        : "border-outline-variant/30 bg-surface-container text-outline"
+                    }`}
+                  >
+                    {soundEnabled ? <FiVolume2 className="w-4 h-4" /> : <FiVolumeX className="w-4 h-4" />}
+                    <span>Suara: {soundEnabled ? "Aktif" : "Mati"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScores({ P1: 0, draw: 0, P2: 0 });
+                      resetRound();
+                      showToast("Skor pertandingan berhasil di-reset!");
+                    }}
+                    className="px-3 py-1.5 rounded-xl border border-outline-variant/30 text-xs font-bold text-outline hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all cursor-pointer"
+                  >
+                    Reset Skor (0 - 0)
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer CTA */}
+              <div className="p-4 border-t border-outline-variant/20 bg-surface-container-low/50">
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(false)}
+                  className="btn-3d-navy w-full py-2.5 rounded-xl font-black text-xs sm:text-sm tracking-wide cursor-pointer"
+                >
+                  Tutup & Lanjut Main
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

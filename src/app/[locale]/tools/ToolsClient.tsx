@@ -215,7 +215,7 @@ export default function ToolsClient() {
       id: "tic-tac-toe",
       type: "game",
       category: "Mini Game Kampus",
-      title: "Tic-Tac-Toe Kampus",
+      title: "Tic-Tac-Toe",
       badge: "Game Seru",
       badgeColor: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/25",
       desc: "Permainan asah taktik klasik X-O. Tantang bot AI pintar atau main tanding berdua bersama teman satu layar!",
