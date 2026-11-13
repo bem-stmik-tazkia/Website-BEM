@@ -70,6 +70,8 @@ export default function PapanSkorClient() {
 
   // UI States
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [dismissMobilePrompt, setDismissMobilePrompt] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [winnerMessage, setWinnerMessage] = useState<string | null>(null);
@@ -85,14 +87,21 @@ export default function PapanSkorClient() {
   const inputRefA = useRef<HTMLInputElement>(null);
   const inputRefB = useRef<HTMLInputElement>(null);
 
-  // Deteksi orientasi layar (potret / lanskap)
+  // Deteksi perangkat mobile & orientasi layar
   useEffect(() => {
-    const checkOrientation = () => {
+    const checkScreen = () => {
+      const isNarrow = window.innerWidth < 768;
+      const isMobileUA =
+        typeof navigator !== "undefined" &&
+        /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+      setIsMobile(isNarrow || isMobileUA);
       setIsPortrait(window.innerHeight > window.innerWidth);
     };
-    checkOrientation();
-    window.addEventListener("resize", checkOrientation);
-    return () => window.removeEventListener("resize", checkOrientation);
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
   // Sync fullscreen state with browser events (e.g. pressing ESC or system gestures)
@@ -384,6 +393,74 @@ export default function PapanSkorClient() {
     )}:${String(secs).padStart(2, "0")}`;
   };
 
+  // Khusus perangkat HP: Tampilkan layar masuk mode penuh jika belum fullscreen
+  if (isMobile && !isFullscreen && !dismissMobilePrompt) {
+    return (
+      <div
+        ref={containerRef}
+        className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center select-none relative overflow-hidden"
+      >
+        {/* Stadium Ambient Glow */}
+        <div className="absolute top-1/4 -left-20 w-72 h-72 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-sm w-full flex flex-col items-center">
+          {/* Sports Badge */}
+          <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl flex items-center justify-center text-4xl mb-5 relative">
+            <span className="animate-pulse">{getSportIcon()}</span>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-slate-950 flex items-center justify-center text-[10px]">
+              ✓
+            </div>
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-slate-300 text-[11px] font-semibold mb-3 border border-white/15">
+            <span>Tools Kampus BEM STMIK Tazkia</span>
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-2">
+            Papan Skor Digital
+          </h1>
+
+          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed mb-6">
+            Khusus di perangkat HP, papan skor dioptimalkan dalam <strong>Mode Layar Penuh (Lanskap)</strong> agar angka skor raksasa terlihat jelas dan tombol leluasa ditekan saat pertandingan.
+          </p>
+
+          {/* Primary CTA: Fullscreen */}
+          <button
+            onClick={toggleFullscreen}
+            className="w-full py-4 px-6 bg-gradient-to-r from-primary via-blue-600 to-secondary text-white font-extrabold text-sm sm:text-base rounded-2xl shadow-xl shadow-primary/30 hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2.5 mb-3"
+          >
+            <FiMaximize className="w-5 h-5 shrink-0" />
+            <span>Masuk ke Mode Layar Penuh</span>
+          </button>
+
+          <div className="flex items-center gap-2 text-[11px] text-slate-400 mb-6 font-medium">
+            <span className="text-sm">🔄</span>
+            <span>Otomatis memutar ke posisi mendatar (lanskap)</span>
+          </div>
+
+          {/* Secondary Actions */}
+          <div className="flex flex-col gap-2.5 w-full pt-4 border-t border-white/10 text-xs">
+            <Link
+              href="/tools"
+              className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <FiArrowLeft className="w-3.5 h-3.5" />
+              <span>Kembali ke Tools Hub</span>
+            </Link>
+
+            <button
+              onClick={() => setDismissMobilePrompt(true)}
+              className="text-[11px] text-slate-500 hover:text-slate-300 py-1 transition-colors"
+            >
+              Lanjutkan dalam tampilan biasa
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
@@ -404,7 +481,7 @@ export default function PapanSkorClient() {
         <div
           className={
             isFullscreen
-              ? "w-full bg-slate-950/90 backdrop-blur-md px-4 sm:px-6 py-2.5 border-b border-white/10 flex items-center justify-between shrink-0 z-30"
+              ? "w-full bg-slate-950/90 backdrop-blur-md px-3 sm:px-6 py-1.5 sm:py-2 border-b border-white/10 flex items-center justify-between shrink-0 z-30"
               : "flex flex-wrap items-center justify-between gap-3 mb-5"
           }
         >
@@ -419,19 +496,19 @@ export default function PapanSkorClient() {
             </Link>
           ) : (
             <div className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="hidden sm:inline">Papan Skor Layar Penuh</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="hidden md:inline text-[11px]">Papan Skor</span>
             </div>
           )}
 
           {/* Preset Sports */}
-          <div className="flex items-center gap-1 bg-surface-container-low dark:bg-white/10 border border-outline-variant/30 dark:border-white/15 rounded-xl p-1 text-xs">
+          <div className="flex items-center gap-0.5 sm:gap-1 bg-surface-container-low dark:bg-white/10 border border-outline-variant/30 dark:border-white/15 rounded-xl p-0.5 sm:p-1 text-[11px] sm:text-xs">
             {(["futsal", "badminton", "basketball", "general"] as SportPreset[]).map(
               (p) => (
                 <button
                   key={p}
                   onClick={() => applyPreset(p)}
-                  className={`px-3 py-1.5 rounded-lg font-bold capitalize transition-all ${
+                  className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg font-bold capitalize transition-all ${
                     preset === p
                       ? "bg-primary text-white shadow-sm"
                       : "text-outline dark:text-slate-300 hover:text-on-surface dark:hover:text-white"
@@ -444,25 +521,29 @@ export default function PapanSkorClient() {
           </div>
 
           {/* Quick Utility Icons */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5">
             <button
               onClick={handleSwapSides}
               title="Tukar Sisi Lapangan"
               className={
                 isFullscreen
-                  ? "p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                  ? "p-1.5 sm:p-2 bg-white/10 hover:bg-white/20 rounded-lg sm:rounded-xl text-white transition-colors"
                   : "p-2 bg-surface hover:bg-surface-container border border-outline-variant/30 rounded-xl text-on-surface transition-colors shadow-sm"
               }
             >
-              <FiRepeat className="w-4 h-4" />
+              <FiRepeat className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
 
             <button
               onClick={playBuzzer}
               title="Bunyikan Klakson / Buzzer"
-              className="p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl transition-colors shadow-sm"
+              className={
+                isFullscreen
+                  ? "p-1.5 sm:p-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 rounded-lg sm:rounded-xl transition-colors shadow-sm"
+                  : "p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-xl transition-colors shadow-sm"
+              }
             >
-              <FiVolume2 className="w-4 h-4" />
+              <FiVolume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
 
             <button
@@ -470,19 +551,19 @@ export default function PapanSkorClient() {
               title="Pengaturan Warna & Waktu"
               className={
                 isFullscreen
-                  ? "p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors"
+                  ? "p-1.5 sm:p-2 bg-white/10 hover:bg-white/20 rounded-lg sm:rounded-xl text-white transition-colors"
                   : "p-2 bg-surface hover:bg-surface-container border border-outline-variant/30 rounded-xl text-on-surface transition-colors shadow-sm"
               }
             >
-              <FiSettings className="w-4 h-4" />
+              <FiSettings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
 
             <button
               onClick={toggleFullscreen}
               title={isFullscreen ? "Keluar Layar Penuh" : "Mode Layar Penuh (Proyektor)"}
-              className="p-2 bg-secondary text-white hover:bg-secondary-dark rounded-xl transition-colors font-bold shadow-sm"
+              className="p-1.5 sm:p-2 bg-secondary text-white hover:bg-secondary-dark rounded-lg sm:rounded-xl transition-colors font-bold shadow-sm"
             >
-              {isFullscreen ? <FiMinimize className="w-4 h-4" /> : <FiMaximize className="w-4 h-4" />}
+              {isFullscreen ? <FiMinimize className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <FiMaximize className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             </button>
           </div>
         </div>
@@ -519,7 +600,7 @@ export default function PapanSkorClient() {
           {/* ================= LEFT HALF (BLUE / TEAM A) ================= */}
           <div
             className={`team-half relative flex flex-col justify-between cursor-pointer transition-colors group overflow-hidden ${
-              isFullscreen ? "p-4 sm:p-8 md:p-12" : "p-4 sm:p-8 md:p-10"
+              isFullscreen ? "p-3 sm:p-6 md:p-8" : "p-4 sm:p-8 md:p-10"
             }`}
             style={{ backgroundColor: teamA.color }}
             onClick={(e) => changeScore("A", 1, e)}
@@ -557,40 +638,40 @@ export default function PapanSkorClient() {
                   e.stopPropagation();
                   inputRefA.current?.focus();
                 }}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white flex items-center justify-center transition-all shadow-sm"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white flex items-center justify-center transition-all shadow-sm"
                 title="Edit Nama"
               >
-                <FiEdit2 className="w-4 h-4" />
+                <FiEdit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
 
               <div className="flex flex-col items-center">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 backdrop-blur-md shadow-md flex items-center justify-center text-3xl sm:text-4xl border-2 border-white/40">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-md shadow-md flex items-center justify-center text-xl sm:text-3xl border border-white/40">
                   {getSportIcon()}
                 </div>
                 {teamA.score > teamB.score && (
-                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider bg-amber-400 text-slate-900 px-2.5 py-0.5 rounded-full mt-1.5 shadow-sm">
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full mt-1 shadow-sm">
                     Memimpin
                   </span>
                 )}
               </div>
 
               {/* Spacer for center alignment */}
-              <div className="w-9 h-9 sm:w-10 sm:h-10" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
 
             {/* Team A Name */}
-            <div className="text-center mt-2 relative z-10" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mt-1 sm:mt-2 relative z-10" onClick={(e) => e.stopPropagation()}>
               <input
                 ref={inputRefA}
                 type="text"
                 value={teamA.name}
                 onChange={(e) => setTeamA({ ...teamA, name: e.target.value })}
-                className="bg-transparent text-center text-xl sm:text-3xl md:text-4xl font-black text-white focus:outline-none focus:bg-black/20 rounded-xl px-2 py-1 w-full max-w-[260px] transition-colors tracking-wide drop-shadow"
+                className="bg-transparent text-center text-base sm:text-2xl md:text-3xl font-black text-white focus:outline-none focus:bg-black/20 rounded-xl px-2 py-0.5 w-full max-w-[180px] sm:max-w-[260px] transition-colors tracking-wide drop-shadow"
               />
             </div>
 
             {/* Team A Giant Score */}
-            <div className="flex-1 flex items-center justify-center py-2 relative z-10">
+            <div className="flex-1 flex items-center justify-center py-1 sm:py-2 relative z-10">
               <motion.span
                 key={teamA.score}
                 initial={{ scale: 1.28, color: "#fef08a" }}
@@ -608,13 +689,13 @@ export default function PapanSkorClient() {
 
             {/* Team A Bottom Controls */}
             <div
-              className="flex flex-wrap items-center justify-between gap-2 relative z-10 pt-2"
+              className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 relative z-10 pt-1 sm:pt-2"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center gap-1.5 bg-black/25 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+              <div className="flex items-center gap-1 sm:gap-1.5 bg-black/25 backdrop-blur-md p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-white/20">
                 <button
                   onClick={(e) => changeScore("A", -1, e)}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 hover:bg-white/30 text-white flex items-center justify-center font-bold text-base transition-transform active:scale-95"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white/20 hover:bg-white/30 text-white flex items-center justify-center font-bold text-sm sm:text-base transition-transform active:scale-95"
                   title="Kurangi 1 Poin"
                 >
                   <FiMinus />
@@ -623,13 +704,13 @@ export default function PapanSkorClient() {
                   <>
                     <button
                       onClick={(e) => changeScore("A", 2, e)}
-                      className="px-3 h-9 sm:h-10 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs sm:text-sm"
+                      className="px-2.5 sm:px-3 h-8 sm:h-10 rounded-lg sm:rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs sm:text-sm"
                     >
                       +2
                     </button>
                     <button
                       onClick={(e) => changeScore("A", 3, e)}
-                      className="px-3 h-9 sm:h-10 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs sm:text-sm"
+                      className="px-2.5 sm:px-3 h-8 sm:h-10 rounded-lg sm:rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs sm:text-sm"
                     >
                       +3
                     </button>
@@ -637,18 +718,18 @@ export default function PapanSkorClient() {
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5 bg-black/25 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/20 text-xs text-white">
-                <span className="font-semibold text-[10px] sm:text-xs uppercase">Fouls:</span>
+              <div className="flex items-center gap-1 sm:gap-1.5 bg-black/25 backdrop-blur-md px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl border border-white/20 text-[11px] sm:text-xs text-white">
+                <span className="font-semibold text-[9px] sm:text-[10px] uppercase">Fouls:</span>
                 <span className="font-mono font-bold text-amber-300 text-xs sm:text-sm">{teamA.fouls}</span>
                 <button
                   onClick={() => changeFouls("A", 1)}
-                  className="w-5 h-5 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center text-xs font-bold"
+                  className="w-4 h-4 sm:w-5 sm:h-5 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center text-xs font-bold"
                 >
                   +
                 </button>
                 <button
                   onClick={() => changeFouls("A", -1)}
-                  className="w-5 h-5 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center text-xs font-bold"
+                  className="w-4 h-4 sm:w-5 sm:h-5 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center text-xs font-bold"
                 >
                   -
                 </button>
@@ -659,7 +740,7 @@ export default function PapanSkorClient() {
           {/* ================= RIGHT HALF (RED / TEAM B) ================= */}
           <div
             className={`team-half relative flex flex-col justify-between cursor-pointer transition-colors group overflow-hidden ${
-              isFullscreen ? "p-4 sm:p-8 md:p-12" : "p-4 sm:p-8 md:p-10"
+              isFullscreen ? "p-3 sm:p-6 md:p-8" : "p-4 sm:p-8 md:p-10"
             }`}
             style={{ backgroundColor: teamB.color }}
             onClick={(e) => changeScore("B", 1, e)}
@@ -693,14 +774,14 @@ export default function PapanSkorClient() {
             {/* Top Row: Ball & Edit */}
             <div className="flex items-start justify-between relative z-10">
               {/* Spacer for center alignment */}
-              <div className="w-9 h-9 sm:w-10 sm:h-10" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10" />
 
               <div className="flex flex-col items-center">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 backdrop-blur-md shadow-md flex items-center justify-center text-3xl sm:text-4xl border-2 border-white/40">
+                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/20 backdrop-blur-md shadow-md flex items-center justify-center text-xl sm:text-3xl border border-white/40">
                   {getSportIcon()}
                 </div>
                 {teamB.score > teamA.score && (
-                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider bg-amber-400 text-slate-900 px-2.5 py-0.5 rounded-full mt-1.5 shadow-sm">
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full mt-1 shadow-sm">
                     Memimpin
                   </span>
                 )}
@@ -711,26 +792,26 @@ export default function PapanSkorClient() {
                   e.stopPropagation();
                   inputRefB.current?.focus();
                 }}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white flex items-center justify-center transition-all shadow-sm"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white flex items-center justify-center transition-all shadow-sm"
                 title="Edit Nama"
               >
-                <FiEdit2 className="w-4 h-4" />
+                <FiEdit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             </div>
 
             {/* Team B Name */}
-            <div className="text-center mt-2 relative z-10" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mt-1 sm:mt-2 relative z-10" onClick={(e) => e.stopPropagation()}>
               <input
                 ref={inputRefB}
                 type="text"
                 value={teamB.name}
                 onChange={(e) => setTeamB({ ...teamB, name: e.target.value })}
-                className="bg-transparent text-center text-xl sm:text-3xl md:text-4xl font-black text-white focus:outline-none focus:bg-black/20 rounded-xl px-2 py-1 w-full max-w-[260px] transition-colors tracking-wide drop-shadow"
+                className="bg-transparent text-center text-base sm:text-2xl md:text-3xl font-black text-white focus:outline-none focus:bg-black/20 rounded-xl px-2 py-0.5 w-full max-w-[180px] sm:max-w-[260px] transition-colors tracking-wide drop-shadow"
               />
             </div>
 
             {/* Team B Giant Score */}
-            <div className="flex-1 flex items-center justify-center py-2 relative z-10">
+            <div className="flex-1 flex items-center justify-center py-1 sm:py-2 relative z-10">
               <motion.span
                 key={teamB.score}
                 initial={{ scale: 1.28, color: "#fef08a" }}
@@ -748,30 +829,30 @@ export default function PapanSkorClient() {
 
             {/* Team B Bottom Controls */}
             <div
-              className="flex flex-wrap items-center justify-between gap-2 relative z-10 pt-2"
+              className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 relative z-10 pt-1 sm:pt-2"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center gap-1.5 bg-black/25 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/20 text-xs text-white">
-                <span className="font-semibold text-[10px] sm:text-xs uppercase">Fouls:</span>
+              <div className="flex items-center gap-1 sm:gap-1.5 bg-black/25 backdrop-blur-md px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl border border-white/20 text-[11px] sm:text-xs text-white">
+                <span className="font-semibold text-[9px] sm:text-[10px] uppercase">Fouls:</span>
                 <span className="font-mono font-bold text-amber-300 text-xs sm:text-sm">{teamB.fouls}</span>
                 <button
                   onClick={() => changeFouls("B", 1)}
-                  className="w-5 h-5 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center text-xs font-bold"
+                  className="w-4 h-4 sm:w-5 sm:h-5 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center text-xs font-bold"
                 >
                   +
                 </button>
                 <button
                   onClick={() => changeFouls("B", -1)}
-                  className="w-5 h-5 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center text-xs font-bold"
+                  className="w-4 h-4 sm:w-5 sm:h-5 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center text-xs font-bold"
                 >
                   -
                 </button>
               </div>
 
-              <div className="flex items-center gap-1.5 bg-black/25 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+              <div className="flex items-center gap-1 sm:gap-1.5 bg-black/25 backdrop-blur-md p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-white/20">
                 <button
                   onClick={(e) => changeScore("B", -1, e)}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 hover:bg-white/30 text-white flex items-center justify-center font-bold text-base transition-transform active:scale-95"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white/20 hover:bg-white/30 text-white flex items-center justify-center font-bold text-sm sm:text-base transition-transform active:scale-95"
                   title="Kurangi 1 Poin"
                 >
                   <FiMinus />
@@ -780,13 +861,13 @@ export default function PapanSkorClient() {
                   <>
                     <button
                       onClick={(e) => changeScore("B", 2, e)}
-                      className="px-3 h-9 sm:h-10 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs sm:text-sm"
+                      className="px-2.5 sm:px-3 h-8 sm:h-10 rounded-lg sm:rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs sm:text-sm"
                     >
                       +2
                     </button>
                     <button
                       onClick={(e) => changeScore("B", 3, e)}
-                      className="px-3 h-9 sm:h-10 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs sm:text-sm"
+                      className="px-2.5 sm:px-3 h-8 sm:h-10 rounded-lg sm:rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs sm:text-sm"
                     >
                       +3
                     </button>
@@ -796,104 +877,96 @@ export default function PapanSkorClient() {
             </div>
           </div>
 
-          {/* ================= FLOATING CENTER ISLAND ================= */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center pointer-events-auto">
-            {/* 1. Timer Pill */}
-            <div className="bg-white text-slate-800 rounded-full px-4 sm:px-5 py-1.5 sm:py-2 shadow-2xl flex items-center gap-3 border border-slate-200">
-              <button
-                onClick={() => setIsRunning(!isRunning)}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-900 text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
-                title={isRunning ? "Jeda" : "Mulai"}
-              >
-                {isRunning ? <FiPause size={12} /> : <FiPlay size={12} className="ml-0.5" />}
-              </button>
+          {/* ================= FLOATING CENTER ISLAND (STREAMLINED & COMPACT) ================= */}
+          <div className="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center pointer-events-auto">
+            {/* Unified Compact Glass Capsule */}
+            <div className="bg-slate-950/85 backdrop-blur-md text-white rounded-2xl px-3 sm:px-4 py-1.5 sm:py-2 shadow-2xl border border-white/20 flex flex-col items-center gap-1">
+              {/* Row 1: Timer */}
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={() => setIsRunning(!isRunning)}
+                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white text-slate-900 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow"
+                  title={isRunning ? "Jeda" : "Mulai"}
+                >
+                  {isRunning ? <FiPause size={10} className="text-slate-900" /> : <FiPlay size={10} className="ml-0.5 text-slate-900" />}
+                </button>
 
-              <span
-                onClick={() => setIsRunning(!isRunning)}
-                className="font-mono text-base sm:text-xl font-black tracking-widest text-slate-900 cursor-pointer select-none"
-              >
-                {formatTime(secondsLeft)}
-              </span>
+                <span
+                  onClick={() => setIsRunning(!isRunning)}
+                  className="font-mono text-sm sm:text-base md:text-lg font-black tracking-widest text-white cursor-pointer select-none"
+                >
+                  {formatTime(secondsLeft)}
+                </span>
 
-              <button
-                onClick={() => {
-                  setIsRunning(false);
-                  setSecondsLeft(initialSeconds);
-                }}
-                className="text-slate-400 hover:text-slate-700 transition-colors p-1"
-                title="Reset Waktu"
-              >
-                <FiRotateCcw size={15} />
-              </button>
-            </div>
-
-            {/* 2. Sets & Babak Pill */}
-            <div className="mt-2.5 bg-white rounded-2xl px-4 py-2 shadow-xl border border-slate-200 flex flex-col items-center">
-              <div className="flex items-center justify-center gap-3 relative">
-                {teamA.sets > teamB.sets && (
-                  <span className="absolute -top-3.5 left-0 text-sm animate-bounce">👑</span>
-                )}
-                {teamB.sets > teamA.sets && (
-                  <span className="absolute -top-3.5 right-0 text-sm animate-bounce">👑</span>
-                )}
-
-                {/* Team A Set */}
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => changeSets("A", -1)}
-                    className="w-4 h-4 rounded bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-600 flex items-center justify-center"
-                  >
-                    -
-                  </button>
-                  <span className="font-mono text-xl sm:text-2xl font-black text-[#1e88e5]">
-                    {teamA.sets}
-                  </span>
-                  <button
-                    onClick={() => changeSets("A", 1)}
-                    className="w-4 h-4 rounded bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-600 flex items-center justify-center"
-                  >
-                    +
-                  </button>
-                </div>
-
-                <span className="text-slate-300 font-bold text-sm">:</span>
-
-                {/* Team B Set */}
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => changeSets("B", -1)}
-                    className="w-4 h-4 rounded bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-600 flex items-center justify-center"
-                  >
-                    -
-                  </button>
-                  <span className="font-mono text-xl sm:text-2xl font-black text-[#e53935]">
-                    {teamB.sets}
-                  </span>
-                  <button
-                    onClick={() => changeSets("B", 1)}
-                    className="w-4 h-4 rounded bg-slate-100 hover:bg-slate-200 text-[10px] font-bold text-slate-600 flex items-center justify-center"
-                  >
-                    +
-                  </button>
-                </div>
+                <button
+                  onClick={() => {
+                    setIsRunning(false);
+                    setSecondsLeft(initialSeconds);
+                  }}
+                  className="text-slate-400 hover:text-white transition-colors p-0.5"
+                  title="Reset Waktu"
+                >
+                  <FiRotateCcw size={12} />
+                </button>
               </div>
 
-              {/* Babak / Period Counter */}
-              <div className="flex items-center gap-1.5 mt-1 pt-1 border-t border-slate-100 text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                <span>{periodName}</span>
-                <button
-                  onClick={() => setPeriod((p) => Math.max(1, p - 1))}
-                  className="w-4 h-4 bg-slate-100 hover:bg-slate-200 rounded flex items-center justify-center text-[9px]"
-                >
-                  -
-                </button>
-                <span className="text-slate-900 font-black">{period}</span>
-                <button
-                  onClick={() => setPeriod((p) => p + 1)}
-                  className="w-4 h-4 bg-slate-100 hover:bg-slate-200 rounded flex items-center justify-center text-[9px]"
-                >
-                  +
-                </button>
+              {/* Row 2: Sets & Babak in One Slim Sub-Row */}
+              <div className="flex items-center gap-2.5 pt-1 border-t border-white/10 text-[10px] sm:text-xs">
+                {/* Team A Set */}
+                <div className="flex items-center gap-0.5 font-mono">
+                  <button
+                    onClick={() => changeSets("A", -1)}
+                    className="w-3.5 h-3.5 rounded bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-[9px] font-bold"
+                  >
+                    -
+                  </button>
+                  <span className="font-bold text-sky-400 px-1">{teamA.sets}</span>
+                  <button
+                    onClick={() => changeSets("A", 1)}
+                    className="w-3.5 h-3.5 rounded bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-[9px] font-bold"
+                  >
+                    +
+                  </button>
+                </div>
+
+                <span className="text-white/20 font-bold">:</span>
+
+                {/* Period / Babak */}
+                <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-slate-300 font-bold uppercase tracking-wider">
+                  <span>{periodName}</span>
+                  <button
+                    onClick={() => setPeriod((p) => Math.max(1, p - 1))}
+                    className="w-3.5 h-3.5 rounded bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-[9px] font-bold"
+                  >
+                    -
+                  </button>
+                  <span className="font-mono font-black text-amber-300">{period}</span>
+                  <button
+                    onClick={() => setPeriod((p) => p + 1)}
+                    className="w-3.5 h-3.5 rounded bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-[9px] font-bold"
+                  >
+                    +
+                  </button>
+                </div>
+
+                <span className="text-white/20 font-bold">:</span>
+
+                {/* Team B Set */}
+                <div className="flex items-center gap-0.5 font-mono">
+                  <button
+                    onClick={() => changeSets("B", -1)}
+                    className="w-3.5 h-3.5 rounded bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-[9px] font-bold"
+                  >
+                    -
+                  </button>
+                  <span className="font-bold text-rose-400 px-1">{teamB.sets}</span>
+                  <button
+                    onClick={() => changeSets("B", 1)}
+                    className="w-3.5 h-3.5 rounded bg-white/10 hover:bg-white/20 text-white/70 flex items-center justify-center text-[9px] font-bold"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
           </div>
