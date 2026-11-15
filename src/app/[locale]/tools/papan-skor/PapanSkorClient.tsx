@@ -398,63 +398,55 @@ export default function PapanSkorClient() {
     return (
       <div
         ref={containerRef}
-        className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center select-none relative overflow-hidden"
+        className="min-h-screen bg-background text-on-surface flex flex-col items-center justify-center px-4 pt-24 pb-28 select-none"
       >
-        {/* Stadium Ambient Glow */}
-        <div className="absolute top-1/4 -left-20 w-72 h-72 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 max-w-sm w-full flex flex-col items-center">
-          {/* Sports Badge */}
-          <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl flex items-center justify-center text-4xl mb-5 relative">
-            <span className="animate-pulse">{getSportIcon()}</span>
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-slate-950 flex items-center justify-center text-[10px]">
-              ✓
-            </div>
+        <div className="w-full max-w-sm bg-surface-container-lowest rounded-3xl border border-outline-variant/30 shadow-lg shadow-primary/5 p-6 sm:p-8 flex flex-col items-center text-center">
+          {/* Sports Icon */}
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-3xl mb-4 text-primary">
+            {getSportIcon()}
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-slate-300 text-[11px] font-semibold mb-3 border border-white/15">
-            <span>Tools Kampus BEM STMIK Tazkia</span>
-          </div>
+          <span className="text-[11px] font-bold text-secondary uppercase tracking-widest mb-1.5">
+            Tools BEM STMIK Tazkia
+          </span>
 
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-2">
+          <h1 className="text-xl sm:text-2xl font-black text-on-surface tracking-tight mb-2">
             Papan Skor Digital
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed mb-6">
-            Khusus di perangkat HP, papan skor dioptimalkan dalam <strong>Mode Layar Penuh (Lanskap)</strong> agar angka skor raksasa terlihat jelas dan tombol leluasa ditekan saat pertandingan.
+          <p className="text-xs sm:text-sm text-outline leading-relaxed mb-6">
+            Untuk tampilan skor maksimal dan kemudahan saat pertandingan, buka papan skor dalam mode layar penuh (lanskap).
           </p>
 
-          {/* Primary CTA: Fullscreen */}
+          {/* Primary CTA */}
           <button
             onClick={toggleFullscreen}
-            className="w-full py-4 px-6 bg-gradient-to-r from-primary via-blue-600 to-secondary text-white font-extrabold text-sm sm:text-base rounded-2xl shadow-xl shadow-primary/30 hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2.5 mb-3"
+            className="w-full py-3.5 px-5 bg-primary hover:bg-primary-dark text-white font-bold text-sm rounded-xl shadow-md shadow-primary/25 active:scale-95 transition-all flex items-center justify-center gap-2 mb-2.5"
           >
-            <FiMaximize className="w-5 h-5 shrink-0" />
-            <span>Masuk ke Mode Layar Penuh</span>
+            <FiMaximize className="w-4 h-4 shrink-0" />
+            <span>Masuk Mode Layar Penuh</span>
           </button>
 
-          <div className="flex items-center gap-2 text-[11px] text-slate-400 mb-6 font-medium">
-            <span className="text-sm">🔄</span>
-            <span>Otomatis memutar ke posisi mendatar (lanskap)</span>
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-outline mb-5 font-medium">
+            <span>🔄</span>
+            <span>Otomatis memutar ke posisi lanskap</span>
           </div>
 
           {/* Secondary Actions */}
-          <div className="flex flex-col gap-2.5 w-full pt-4 border-t border-white/10 text-xs">
+          <div className="w-full border-t border-outline-variant/20 pt-4 flex flex-col gap-2">
+            <button
+              onClick={() => setDismissMobilePrompt(true)}
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-on-surface bg-surface-container-low hover:bg-surface-container transition-colors"
+            >
+              Lanjutkan dalam Tampilan Biasa
+            </button>
             <Link
               href="/tools"
-              className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 font-semibold transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2 text-xs text-outline hover:text-primary transition-colors flex items-center justify-center gap-1.5"
             >
               <FiArrowLeft className="w-3.5 h-3.5" />
               <span>Kembali ke Tools Hub</span>
             </Link>
-
-            <button
-              onClick={() => setDismissMobilePrompt(true)}
-              className="text-[11px] text-slate-500 hover:text-slate-300 py-1 transition-colors"
-            >
-              Lanjutkan dalam tampilan biasa
-            </button>
           </div>
         </div>
       </div>
