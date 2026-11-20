@@ -12,7 +12,6 @@ import {
   FiUsers,
   FiZap,
   FiShuffle,
-  FiInfo,
   FiGlobe,
   FiCopy,
   FiCheck,
