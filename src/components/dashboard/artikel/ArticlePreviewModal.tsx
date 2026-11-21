@@ -17,6 +17,8 @@ import { Link } from "@/i18n/routing";
 import { ArticleItem } from "./ArticleCard";
 import ArticleStatusBadge from "./ArticleStatusBadge";
 import { useTranslatedContent } from "@/hooks/useTranslatedContent";
+import DOMPurify from "isomorphic-dompurify";
+import { processQuillHtml, isHtmlContent } from "@/utils/quill";
 
 interface Props {
   isOpen: boolean;
@@ -152,16 +154,25 @@ export default function ArticlePreviewModal({
             <div className="h-px bg-outline-variant/20" />
 
             {/* Content Body */}
-            <article className="prose dark:prose-invert max-w-none">
-              <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-sm sm:text-base text-on-surface/90 space-y-4">
-                {article.content ? (
-                  article.content
+            <article className="max-w-none">
+              {article.content ? (
+                isHtmlContent(article.content) ? (
+                  <div
+                    className="ql-content leading-relaxed text-sm sm:text-base text-on-surface"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(processQuillHtml(article.content)),
+                    }}
+                  />
                 ) : (
-                  <p className="italic text-on-surface-variant/50">
-                    {t("emptySnippet")}
-                  </p>
-                )}
-              </div>
+                  <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-sm sm:text-base text-on-surface/90 space-y-4">
+                    {article.content}
+                  </div>
+                )
+              ) : (
+                <p className="italic text-on-surface-variant/50">
+                  {t("emptySnippet")}
+                </p>
+              )}
             </article>
           </div>
 

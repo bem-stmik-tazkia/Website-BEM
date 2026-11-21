@@ -22,6 +22,8 @@ import { recordView } from "@/actions/view";
 import { useToast } from "@/components/ui/Toast";
 import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 import { PublishedArticleItem } from "../ArtikelClient";
+import DOMPurify from "isomorphic-dompurify";
+import { processQuillHtml, isHtmlContent } from "@/utils/quill";
 
 interface Props {
   article: PublishedArticleItem;
@@ -321,11 +323,20 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
         </div>
       )}
 
-      {/* Main Content Body (Pure 100% Konten Asli Penulis) */}
+      {/* Main Content Body */}
       <article className="prose dark:prose-invert max-w-none mb-8 sm:mb-12 overflow-hidden">
-        <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-sm sm:text-base md:text-lg text-on-surface/90 font-normal space-y-3 sm:space-y-4">
-          {article.content}
-        </div>
+        {isHtmlContent(article.content) ? (
+          <div
+            className="ql-content leading-relaxed text-sm sm:text-base md:text-lg text-on-surface/90"
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(processQuillHtml(article.content)),
+            }}
+          />
+        ) : (
+          <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-sm sm:text-base md:text-lg text-on-surface/90 font-normal space-y-3 sm:space-y-4">
+            {article.content}
+          </div>
+        )}
       </article>
 
       {/* Interactive Engagement Bar (Likes & Views & Share) */}

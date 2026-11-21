@@ -72,6 +72,40 @@
 .ql-content pre { background: #1e293b; color: #e2e8f0; padding: 1em; border-radius: 0.5em; overflow-x: auto; }
 .ql-content code { background: #f1f5f9; padding: 0.15em 0.4em; border-radius: 0.25em; font-size: 0.9em; }
 
+/* === QUILL EDITOR DARK MODE ADAPTATION === */
+.dark .ql-toolbar.ql-snow {
+  background-color: var(--color-surface, #1e293b);
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.dark .ql-container.ql-snow {
+  background-color: var(--color-surface, #1e293b);
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.dark .ql-snow .ql-stroke {
+  stroke: #cbd5e1 !important;
+}
+.dark .ql-snow .ql-fill {
+  fill: #cbd5e1 !important;
+}
+.dark .ql-snow .ql-picker {
+  color: #cbd5e1 !important;
+}
+.dark .ql-snow .ql-picker-options {
+  background-color: #0f172a !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.dark .ql-snow .ql-picker-item:hover,
+.dark .ql-snow .ql-picker-item.ql-selected {
+  color: #38bdf8 !important;
+}
+.dark .ql-editor {
+  color: #f1f5f9;
+}
+.dark .ql-editor.ql-blank::before {
+  color: #64748b !important;
+}
+
+
 
 @theme {
   /* === BRAND COLORS (same as Astro original) === */

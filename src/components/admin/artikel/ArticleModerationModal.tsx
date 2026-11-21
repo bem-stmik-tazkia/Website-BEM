@@ -22,6 +22,8 @@ import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import { notifyArticleModerated } from "@/actions/telegram-notifications";
 import { unpublishArticleAdmin, deleteArticleAdmin } from "@/app/(internal)/admin/artikel/actions";
+import DOMPurify from "isomorphic-dompurify";
+import { processQuillHtml, isHtmlContent } from "@/utils/quill";
 
 export interface ModerationArticle {
   id: string;
@@ -367,8 +369,19 @@ export default function ArticleModerationModal({
                     Artikel Saat Ini (Live di Publik)
                   </div>
                   <h3 className="font-bold text-sm text-on-surface mb-2 break-words [overflow-wrap:anywhere]">{articleItem.title}</h3>
-                  <div className="text-xs text-on-surface-variant whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed max-h-96 overflow-y-auto">
-                    {articleItem.content}
+                  <div className="text-xs text-on-surface-variant max-h-96 overflow-y-auto">
+                    {isHtmlContent(articleItem.content) ? (
+                      <div
+                        className="ql-content text-xs"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(processQuillHtml(articleItem.content)),
+                        }}
+                      />
+                    ) : (
+                      <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed">
+                        {articleItem.content}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -378,15 +391,37 @@ export default function ArticleModerationModal({
                     Revisi Baru yang Diajukan
                   </div>
                   <h3 className="font-bold text-sm text-on-surface mb-2 break-words [overflow-wrap:anywhere]">{item.title}</h3>
-                  <div className="text-xs text-on-surface-variant whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed max-h-96 overflow-y-auto">
-                    {item.content}
+                  <div className="text-xs text-on-surface-variant max-h-96 overflow-y-auto">
+                    {isHtmlContent(item.content) ? (
+                      <div
+                        className="ql-content text-xs"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(processQuillHtml(item.content)),
+                        }}
+                      />
+                    ) : (
+                      <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed">
+                        {item.content}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             ) : (
               /* Tampilan Konten Standar */
-              <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none text-on-surface leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere] p-4 rounded-2xl bg-surface-variant/10 border border-outline-variant/20">
-                {item.content}
+              <div className="p-4 rounded-2xl bg-surface-variant/10 border border-outline-variant/20 overflow-hidden">
+                {isHtmlContent(item.content) ? (
+                  <div
+                    className="ql-content text-sm sm:text-base leading-relaxed text-on-surface"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(processQuillHtml(item.content)),
+                    }}
+                  />
+                ) : (
+                  <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none text-on-surface leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                    {item.content}
+                  </div>
+                )}
               </div>
             )}
 

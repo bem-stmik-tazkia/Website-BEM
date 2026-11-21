@@ -16,11 +16,6 @@ import {
   FiTag,
   FiInfo,
   FiHelpCircle,
-  FiBold,
-  FiItalic,
-  FiList,
-  FiLink,
-  FiCode,
 } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/Toast";
@@ -28,6 +23,26 @@ import ImageUpload from "@/components/ui/ImageUpload";
 import { ArticleItem } from "./ArticleCard";
 import UnsavedChangesModal from "./UnsavedChangesModal";
 import { notifyArticleSubmitted, notifyArticleModerated } from "@/actions/telegram-notifications";
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+import DOMPurify from "isomorphic-dompurify";
+import { processQuillHtml } from "@/utils/quill";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), {
+  ssr: false,
+  loading: () => <p className="text-sm text-on-surface-variant p-4">Memuat editor...</p>,
+});
+
+const QUILL_MODULES = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ align: [] }],
+    ["link"],
+    ["clean"],
+  ],
+};
 
 const CATEGORIES = [
   "Opini & Esai",
@@ -150,16 +165,20 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
   }, [supabase]);
 
   // Cek apakah form memiliki data tulisan yang belum disimpan (Dirty state)
+  const isCleanContentEmpty = !content || content === "<p><br></p>" || !content.replace(/<[^>]*>?/gm, "").trim();
+  const normalizedContent = isCleanContentEmpty ? "" : content.trim();
+  const initialNormalizedContent = (!initialData?.content || initialData.content === "<p><br></p>" || !initialData.content.replace(/<[^>]*>?/gm, "").trim()) ? "" : initialData.content.trim();
+
   const isCoverValid = coverUrl.trim().length > 0;
   const isDirty = (
     !isSubmitted &&
     !isSubmitting &&
     (
       title.trim() !== (initialData?.title || "").trim() ||
-      content.trim() !== (initialData?.content || "").trim() ||
+      normalizedContent !== initialNormalizedContent ||
       coverUrl.trim() !== (initialData?.cover_url || "").trim()
     ) &&
-    (title.trim().length > 0 || content.trim().length > 0 || coverUrl.trim().length > 0)
+    (title.trim().length > 0 || normalizedContent.length > 0 || coverUrl.trim().length > 0)
   );
 
   // 1. Guard penutupan tab atau reload browser (F5 / tutup tab browser)
@@ -235,10 +254,15 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
     }
   }, [title, slugManual, isNew]);
 
-  // Perhitungan karakter dan kata
+  // Perhitungan karakter dan kata (menghapus tag HTML agar akurat)
   const titleLen = title.trim().length;
-  const contentLen = content.trim().length;
-  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const strippedContent = content
+    .replace(/<[^>]*>?/gm, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\u00A0/g, " ")
+    .trim();
+  const contentLen = strippedContent.length;
+  const wordCount = strippedContent ? strippedContent.split(/\s+/).filter(Boolean).length : 0;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
   // Validasi form
@@ -248,25 +272,6 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
     /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug) &&
     slug.length <= 80 &&
     !RESERVED_SLUGS.includes(slug);
-
-  // Helper untuk formatting toolbar
-  const insertFormatting = (prefix: string, suffix: string = "") => {
-    const textarea = document.getElementById("article-content-input") as HTMLTextAreaElement;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
-    const replacement = prefix + (selectedText || "teks") + suffix;
-
-    const newContent = content.substring(0, start) + replacement + content.substring(end);
-    setContent(newContent);
-
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, start + replacement.length - suffix.length);
-    }, 50);
-  };
 
   const handleSubmit = async (targetStatus: "draft" | "pending" | "published") => {
     setErrorMessage(null);
@@ -287,6 +292,8 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
       }
       if (!isContentValid) {
         setErrorMessage(t("errContent", { len: contentLen }));
+        const el = document.getElementById("field-content");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
     } else {
@@ -311,6 +318,8 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         return;
       }
 
+      const cleanedContent = content.replace(/&nbsp;/g, " ").replace(/\u00A0/g, " ").trim();
+
       if (isRevision && initialData) {
         // Alur Pengajuan Revisi Artikel Tayang (Tabel article_revisions)
         const { error: revError } = await supabase
@@ -319,7 +328,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             article_id: initialData.id,
             author_id: user.id,
             title: title.trim(),
-            content: content.trim(),
+            content: cleanedContent,
             cover_url: coverUrl || null,
             category: category,
             status: effectiveStatus === "published" ? "pending" : effectiveStatus,
@@ -348,7 +357,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         // Alur Update Artikel Draf atau Rejected
         const updatePayload: Record<string, any> = {
           title: title.trim(),
-          content: content.trim(),
+          content: cleanedContent,
           cover_url: coverUrl || null,
           category: category,
           status: effectiveStatus,
@@ -402,7 +411,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           author_id: user.id,
           title: title.trim(),
           slug: finalSlug,
-          content: content.trim(),
+          content: cleanedContent,
           cover_url: coverUrl || null,
           category: category,
           status: effectiveStatus,
@@ -652,82 +661,24 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
           </div>
 
           {activeTab === "write" ? (
-            <div>
-              {/* Markdown Quick Toolbar */}
-              <div className="flex flex-wrap items-center gap-1 mb-2 bg-surface-variant/20 p-1.5 rounded-xl border border-outline-variant/20">
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("**", "**")}
-                  title={t("toolBold")}
-                  className="p-1.5 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs flex items-center gap-1"
-                >
-                  <FiBold size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("*", "*")}
-                  title={t("toolItalic")}
-                  className="p-1.5 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs flex items-center gap-1"
-                >
-                  <FiItalic size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("### ", "")}
-                  title={t("toolHeading")}
-                  className="p-1.5 px-2 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs font-bold"
-                >
-                  H3
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("- ", "")}
-                  title={t("toolList")}
-                  className="p-1.5 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs flex items-center gap-1"
-                >
-                  <FiList size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("> ", "")}
-                  title={t("toolQuote")}
-                  className="p-1.5 px-2 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs font-serif italic"
-                >
-                  “Quote”
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting("`", "`")}
-                  title={t("toolCode")}
-                  className="p-1.5 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs flex items-center gap-1 font-mono"
-                >
-                  <FiCode size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting(`[${t("toolLinkText")}](`, ")")}
-                  title={t("toolLink")}
-                  className="p-1.5 rounded-lg hover:bg-surface text-on-surface-variant hover:text-primary transition-colors text-xs flex items-center gap-1"
-                >
-                  <FiLink size={13} />
-                </button>
+            <div id="field-content">
+              <div className={`${errorMessage && !isContentValid ? "ring-2 ring-rose-500/40 rounded-xl" : ""}`}>
+                <ReactQuill
+                  theme="snow"
+                  value={content}
+                  onChange={(val) => {
+                    const isBlank = !val || val === "<p><br></p>";
+                    setContent(isBlank ? "" : val);
+                  }}
+                  modules={QUILL_MODULES}
+                  className="bg-surface rounded-xl overflow-hidden [&_.ql-toolbar]:border-outline-variant/30 [&_.ql-toolbar]:rounded-t-xl [&_.ql-container]:border-outline-variant/30 [&_.ql-container]:rounded-b-xl [&_.ql-editor]:min-h-[350px] text-on-surface"
+                  placeholder={t("contentPlaceholder")}
+                />
               </div>
-
-              {/* Textarea Input */}
-              <textarea
-                id="article-content-input"
-                rows={16}
-                dir="auto"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder={t("contentPlaceholder")}
-                className="w-full p-4 rounded-xl bg-surface-variant/20 border border-outline-variant/40 focus:border-primary focus:ring-2 focus:ring-primary/20 text-on-surface text-sm sm:text-base outline-none transition-all placeholder:text-on-surface-variant/40 font-mono leading-relaxed resize-y min-h-[320px]"
-                maxLength={20000}
-              />
             </div>
           ) : (
-            /* Live Markdown / Article Preview */
-            <div className="p-4 sm:p-6 rounded-xl bg-surface-variant/10 border border-outline-variant/30 min-h-[320px] prose dark:prose-invert max-w-none break-words overflow-hidden">
+            /* Live Article Preview */
+            <div className="p-4 sm:p-6 rounded-xl bg-surface-variant/10 border border-outline-variant/30 min-h-[350px] max-w-none break-words overflow-hidden">
               {coverUrl && (
                 <div className="mb-6 rounded-xl overflow-hidden max-h-80 border border-outline-variant/30">
                   <img src={coverUrl} alt="Preview Cover" className="w-full h-full object-cover" />
@@ -739,15 +690,18 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
               <div className="text-xs text-on-surface-variant flex items-center gap-3 pb-4 mb-6 border-b border-outline-variant/20">
                 <span>{t("previewReadTime", { min: readingTime })}</span>
               </div>
-              <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-relaxed text-sm sm:text-base text-on-surface space-y-4">
-                {content ? (
-                  content
-                ) : (
-                  <p className="italic text-on-surface-variant/50">
-                    {t("emptyPreview")}
-                  </p>
-                )}
-              </div>
+              {content && strippedContent ? (
+                <div
+                  className="ql-content leading-relaxed text-sm sm:text-base text-on-surface space-y-4"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(processQuillHtml(content)),
+                  }}
+                />
+              ) : (
+                <p className="italic text-on-surface-variant/50">
+                  {t("emptyPreview")}
+                </p>
+              )}
             </div>
           )}
         </div>
