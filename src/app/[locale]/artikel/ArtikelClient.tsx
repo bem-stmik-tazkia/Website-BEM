@@ -351,13 +351,19 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
 
                 <div className="lg:col-span-5 p-4 sm:p-6 lg:p-7 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center gap-2 text-[11px] sm:text-xs text-on-surface-variant mb-1.5 sm:mb-2">
-                      <FiCalendar size={12} />
-                      <span>
-                        {new Date(featuredArticle.published_at || featuredArticle.created_at).toLocaleDateString(
-                          locale,
-                          { day: "numeric", month: "long", year: "numeric" }
-                        )}
+                    <div className="flex items-center gap-2 text-[11px] sm:text-xs text-on-surface-variant mb-1.5 sm:mb-2 flex-wrap">
+                      <span className="font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md text-[11px]">
+                        {featuredArticle.category || "Artikel"}
+                      </span>
+                      <span>•</span>
+                      <span className="inline-flex items-center gap-1">
+                        <FiCalendar size={12} />
+                        <span>
+                          {new Date(featuredArticle.published_at || featuredArticle.created_at).toLocaleDateString(
+                            locale,
+                            { day: "numeric", month: "long", year: "numeric" }
+                          )}
+                        </span>
                       </span>
                     </div>
 
@@ -366,7 +372,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                     </h2>
 
                     <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed line-clamp-2 sm:line-clamp-3 mb-3 sm:mb-4 break-words [overflow-wrap:anywhere]">
-                      {featuredArticle.content.replace(/<[^>]*>?/gm, "").replace(/[#*_`]/g, "").slice(0, 180)}...
+                      {featuredArticle.content.replace(/<[^>]*>?/gm, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim()}
                     </p>
                   </div>
 
@@ -383,7 +389,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                           <span>{featuredArticle.author?.full_name?.charAt(0) || "M"}</span>
                         )}
                       </div>
-                      <span className="text-xs font-bold text-on-surface truncate max-w-[120px] sm:max-w-[140px]">
+                      <span className="text-xs font-bold text-on-surface truncate max-w-[200px] sm:max-w-[260px] lg:max-w-[320px]">
                         {featuredArticle.author?.full_name || "Mahasiswa Tazkia"}
                       </span>
                     </div>
@@ -457,7 +463,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                         </h3>
 
                         <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-3 sm:mb-4 break-words [overflow-wrap:anywhere]">
-                          {art.content.replace(/<[^>]*>?/gm, "").replace(/[#*_`]/g, "").slice(0, 130)}...
+                          {art.content.replace(/<[^>]*>?/gm, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim()}
                         </p>
                       </div>
 
@@ -470,7 +476,7 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                               <span>{art.author?.full_name?.charAt(0) || "M"}</span>
                             )}
                           </div>
-                          <span className="text-xs text-on-surface font-medium truncate max-w-[100px] sm:max-w-[120px]">
+                          <span className="text-xs text-on-surface font-medium truncate max-w-[140px] sm:max-w-[180px]">
                             {art.author?.full_name || "Mahasiswa"}
                           </span>
                         </div>
