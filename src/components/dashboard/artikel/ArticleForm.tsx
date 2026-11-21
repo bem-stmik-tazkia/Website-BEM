@@ -60,11 +60,12 @@ const RESERVED_SLUGS = ["baru", "edit", "admin", "api", "login", "masuk", "dashb
 function slugify(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
-    .slice(0, 80);
+    .slice(0, 70)
+    .replace(/^-+|-+$/g, "");
 }
 
 interface ArticleFormProps {
@@ -318,7 +319,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
         return;
       }
 
-      const cleanedContent = content.replace(/&nbsp;/g, " ").replace(/\u00A0/g, " ").trim();
+      const cleanedContent = processQuillHtml(content).trim();
 
       if (isRevision && initialData) {
         // Alur Pengajuan Revisi Artikel Tayang (Tabel article_revisions)
@@ -458,19 +459,33 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
       setIsSubmitted(false);
       console.error("[ArticleForm] Submit error:", err);
       const msg = err.message || "Terjadi kesalahan saat menyimpan artikel.";
+
+      let userFriendlyMsg = msg;
       // Tangani pesan kuota dari PostgreSQL trigger
-      if (msg.includes("Batas maksimal 10 draf")) {
-        setErrorMessage("Anda telah mencapai batas maksimal 10 draf. Harap ajukan atau hapus draf yang ada.");
-      } else if (msg.includes("Batas maksimal 3 pengajuan")) {
-        setErrorMessage("Anda telah memiliki 3 artikel yang sedang menunggu moderasi. Mohon tunggu proses review admin selesai.");
-      } else if (msg.includes("Batas harian 5 pengajuan")) {
-        setErrorMessage("Kuota harian Anda telah mencapai batas maksimal (5 pengajuan per hari). Silakan coba lagi besok.");
-      } else if (msg.includes("duplicate key") || msg.includes("slug")) {
-        setErrorMessage("Slug tautan ini sudah digunakan oleh artikel lain. Silakan ubah judul atau sesuaikan slug.");
-      } else {
-        setErrorMessage(msg);
+      if (msg.includes("10 draft") || msg.includes("10 draf")) {
+        userFriendlyMsg = "Anda telah mencapai batas maksimal 10 draf. Harap ajukan atau hapus draf yang ada.";
+      } else if (msg.includes("3 pengajuan")) {
+        userFriendlyMsg = "Anda telah memiliki 3 artikel yang sedang menunggu moderasi. Mohon tunggu proses review admin selesai.";
+      } else if (msg.includes("5 pengajuan") || msg.includes("harian")) {
+        userFriendlyMsg = "Kuota harian Anda telah mencapai batas maksimal (5 pengajuan per hari). Silakan coba lagi besok.";
+      } else if (msg.includes("duplicate key") || msg.includes("articles_slug_key")) {
+        userFriendlyMsg = "Tautan artikel ini sudah ada atau sedang digunakan. Silakan sesuaikan sedikit judul artikel.";
+      } else if (msg.includes("slug_fmt")) {
+        userFriendlyMsg = "Format tautan otomatis artikel terlalu panjang atau mengandung karakter yang tidak didukung.";
       }
-      toast(t("genericError"), "error");
+
+      setErrorMessage(userFriendlyMsg);
+      toast(userFriendlyMsg, "error");
+
+      // Auto scroll ke banner error agar pengguna langsung melihat pesan penyebab kegagalan
+      setTimeout(() => {
+        const errorEl = document.getElementById("form-error-banner");
+        if (errorEl) {
+          errorEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }, 50);
     }
   };
 
@@ -554,7 +569,10 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
 
       {/* Error Message Box */}
       {errorMessage && (
-        <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 flex items-start gap-3 text-xs sm:text-sm animate-shake">
+        <div
+          id="form-error-banner"
+          className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 flex items-start gap-3 text-xs sm:text-sm animate-shake"
+        >
           <FiAlertCircle className="text-rose-600 text-base shrink-0 mt-0.5" />
           <div className="flex-1">
             <span className="font-bold">{t("attention")}: </span>
