@@ -58,7 +58,7 @@ export async function fetchComprehensiveActivityLogs(
     // Queries
     let qBerita = service
       .from("berita")
-      .select("id, title, created_at, updated_at")
+      .select("id, title, category, author, created_at")
       .order("created_at", { ascending: false })
       .limit(30);
 
@@ -114,7 +114,7 @@ export async function fetchComprehensiveActivityLogs(
           type: "berita",
           title: `Publikasi Berita: "${item.title}"`,
           description: "Rilis kabar dan pengumuman resmi kabinet BEM STMIK Tazkia.",
-          actor: "Admin BEM",
+          actor: item.author || "Admin BEM",
           timeAgo: formatTimeAgo(item.created_at),
           rawDate: new Date(item.created_at || 0).getTime(),
           badgeColor: "bg-blue-500/10 text-blue-600 border-blue-500/20",
@@ -164,7 +164,7 @@ export async function fetchComprehensiveActivityLogs(
             item.type === "volunteer"
               ? "Open recruitment relawan/kepanitiaan kegiatan BEM."
               : "Jadwal program kerja terdaftar di kalender portal.",
-          actor: "Admin BEM",
+          actor: item.author || "Admin BEM",
           timeAgo: formatTimeAgo(item.created_at),
           rawDate: new Date(item.created_at || 0).getTime(),
           badgeColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
@@ -245,7 +245,7 @@ export async function fetchComprehensiveActivityLogs(
           type: "system",
           title,
           description: desc,
-          actor: "Admin BEM",
+          actor: item.author || "Admin BEM",
           timeAgo: formatTimeAgo(item.updated_at),
           rawDate: new Date(item.updated_at || 0).getTime(),
           badgeColor,

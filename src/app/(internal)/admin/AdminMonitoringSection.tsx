@@ -67,6 +67,12 @@ export default function AdminMonitoringSection({
     }
   };
 
+  const beritaCount = logs.filter((l) => l.type === "berita").length;
+  const artikelCount = logs.filter((l) => l.type === "artikel").length;
+  const agendaCount = logs.filter((l) => l.type === "agenda").length;
+  const saranCount = logs.filter((l) => l.type === "saran").length;
+  const systemCount = logs.filter((l) => l.type === "system").length;
+
   const filteredLogs = logs.filter((log) => {
     if (filterType === "all") return true;
     if (filterType === "berita") return log.type === "berita";
@@ -246,7 +252,7 @@ export default function AdminMonitoringSection({
                       : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  Berita BEM
+                  Berita BEM ({beritaCount})
                 </button>
                 <button
                   onClick={() => setFilterType("artikel")}
@@ -256,7 +262,7 @@ export default function AdminMonitoringSection({
                       : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  Artikel Mahasiswa
+                  Artikel Mahasiswa ({artikelCount})
                 </button>
                 <button
                   onClick={() => setFilterType("agenda")}
@@ -266,7 +272,7 @@ export default function AdminMonitoringSection({
                       : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  Agenda
+                  Agenda ({agendaCount})
                 </button>
                 <button
                   onClick={() => setFilterType("saran")}
@@ -276,7 +282,7 @@ export default function AdminMonitoringSection({
                       : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  Aspirasi
+                  Aspirasi ({saranCount})
                 </button>
                 <button
                   onClick={() => setFilterType("system")}
@@ -286,7 +292,7 @@ export default function AdminMonitoringSection({
                       : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  Sistem
+                  Sistem ({systemCount})
                 </button>
               </div>
             </div>
