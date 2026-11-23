@@ -22,16 +22,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { user } = admin;
 
   return (
-    <div className="min-h-screen bg-surface-variant/20 flex flex-col md:flex-row">
-      {/* Sidebar wrapper: relative and z-50 so it sits ABOVE AdminTopbar (z-40) */}
-      <div className="relative shrink-0 z-50">
-        <AdminSidebar />
-      </div>
+    <div className="min-h-screen bg-slate-100/70 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col md:flex-row antialiased">
+      {/* Sidebar Navigation */}
+      <AdminSidebar />
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 overflow-x-hidden flex flex-col">
+      <main className="flex-1 min-w-0 flex flex-col">
         <AdminTopbar user={user} />
-        <div className="p-5 md:p-10 flex-1">
+        <div className="p-4 sm:p-6 lg:p-8 flex-1">
           {children}
         </div>
       </main>

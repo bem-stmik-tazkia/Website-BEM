@@ -3,6 +3,7 @@ import LayoutClientWrapper from "@/components/layout/LayoutClientWrapper";
 import { ToastProvider } from "@/components/ui/Toast";
 import { createClient } from "@/utils/supabase/server";
 import Script from "next/script";
+import NextTopLoader from "nextjs-toploader";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -52,6 +53,15 @@ export default async function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
       </head>
       <body className="bg-background text-on-background font-sans antialiased transition-colors duration-300" suppressHydrationWarning>
+        <NextTopLoader
+          color="#1b4086"
+          initialPosition={0.1}
+          height={3}
+          showSpinner={false}
+          easing="ease"
+          speed={200}
+          shadow="0 0 10px #1b4086,0 0 5px #1b4086"
+        />
         <NextIntlClientProvider messages={messages}>
             <ToastProvider>
               <LayoutClientWrapper isLoggedIn={!!user}>{children}</LayoutClientWrapper>

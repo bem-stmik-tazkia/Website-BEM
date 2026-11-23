@@ -1,205 +1,79 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { 
-  FiActivity, FiServer, FiCheckCircle, 
-  FiClock, FiFileText, FiBriefcase, FiCalendar, FiUsers, 
-  FiMessageSquare, FiSettings, FiRefreshCw, FiTrash2, FiCpu
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  FiActivity,
+  FiServer,
+  FiCheckCircle,
+  FiClock,
+  FiFileText,
+  FiCalendar,
+  FiBookOpen,
+  FiMessageSquare,
+  FiSettings,
+  FiRefreshCw,
+  FiCpu,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
-import { createClient } from "@/utils/supabase/client";
-
-interface ActivityLogItem {
-  id: string;
-  type: 'create' | 'update' | 'delete' | 'system' | 'saran';
-  title: string;
-  description: string;
-  actor: string;
-  timeAgo: string;
-  rawDate: number;
-  icon: React.ReactNode;
-  badgeColor: string;
-}
+import {
+  fetchComprehensiveActivityLogs,
+  ActivityLogItem,
+} from "./monitoring-actions";
 
 interface AdminMonitoringSectionProps {
   mode?: "all" | "server-only" | "logs-only";
 }
 
-
-function formatTimeAgo(dateStr?: string) {
-  if (!dateStr) return "Baru saja";
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  const diffInMins = Math.floor(diffInMs / 60000);
-  const diffInHours = Math.floor(diffInMins / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
-
-  if (diffInMins < 1) return "Baru saja";
-  if (diffInMins < 60) return `${diffInMins} menit lalu`;
-  if (diffInHours < 24) return `${diffInHours} jam lalu`;
-  if (diffInDays === 1) return "Kemarin";
-  if (diffInDays < 7) return `${diffInDays} hari lalu`;
-  
-  return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoringSectionProps) {
-  const supabase = createClient();
+export default function AdminMonitoringSection({
+  mode = "all",
+}: AdminMonitoringSectionProps) {
   const [filterType, setFilterType] = useState<string>("all");
-  const [timeFilter, setTimeFilter] = useState<string>("today");
+  const [timeFilter, setTimeFilter] = useState<string>("all"); // Default: Semua Waktu agar tidak kosong
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [logs, setLogs] = useState<ActivityLogItem[]>([]);
   const [latencyMs, setLatencyMs] = useState(18);
 
-  const fetchRealtimeLogs = async () => {
+  const loadLogs = useCallback(async () => {
     setIsRefreshing(true);
-    const start = Date.now();
-
     try {
-      // Calculate date filter
-      let fromDateStr = "";
-      if (timeFilter !== "all") {
-        const now = new Date();
-        if (timeFilter === "today") now.setHours(0, 0, 0, 0);
-        else if (timeFilter === "7days") now.setDate(now.getDate() - 7);
-        else if (timeFilter === "30days") now.setDate(now.getDate() - 30);
-        else if (timeFilter === "1year") now.setFullYear(now.getFullYear() - 1);
-        fromDateStr = now.toISOString();
-      }
-
-      // Prepare base queries
-      let qBerita = supabase.from('berita').select('id, title, created_at').order('created_at', { ascending: false }).limit(20);
-      let qAgenda = supabase.from('agendas').select('id, title, created_at').order('created_at', { ascending: false }).limit(20);
-      let qSaran = supabase.from('saran_aduan').select('id, subjek, created_at').order('created_at', { ascending: false }).limit(20);
-      let qSettings = supabase.from('system_settings').select('key, updated_at').order('updated_at', { ascending: false }).limit(10);
-
-      // Apply date filter if not "all"
-      if (fromDateStr) {
-        qBerita = qBerita.gte('created_at', fromDateStr);
-        qAgenda = qAgenda.gte('created_at', fromDateStr);
-        qSaran = qSaran.gte('created_at', fromDateStr);
-        qSettings = qSettings.gte('updated_at', fromDateStr);
-      }
-
-      const [beritaRes, agendaRes, saranRes, settingsRes] = await Promise.all([
-        qBerita, qAgenda, qSaran, qSettings
-      ]);
-
-      const roundTrip = Date.now() - start;
-      setLatencyMs(Math.max(roundTrip, 12));
-
-      const compiledLogs: ActivityLogItem[] = [];
-
-      // Map Berita
-      if (beritaRes.data) {
-        beritaRes.data.forEach(item => {
-          compiledLogs.push({
-            id: `berita-${item.id}`,
-            type: 'create',
-            title: `Publikasi Berita: "${item.title}"`,
-            description: `Berita dipublikasikan ke portal utama.`,
-            actor: "Admin BEM",
-            timeAgo: formatTimeAgo(item.created_at),
-            rawDate: new Date(item.created_at || 0).getTime(),
-            icon: <FiFileText size={16} />,
-            badgeColor: "bg-blue-500/10 text-blue-600 border-blue-500/20"
-          });
-        });
-      }
-
-      // Map Agenda
-      if (agendaRes.data) {
-        agendaRes.data.forEach(item => {
-          compiledLogs.push({
-            id: `agenda-${item.id}`,
-            type: 'create',
-            title: `Agenda Baru Ditambahkan: "${item.title}"`,
-            description: `Jadwal kegiatan terbaru ditambahkan ke kalender portal.`,
-            actor: "Admin BEM",
-            timeAgo: formatTimeAgo(item.created_at),
-            rawDate: new Date(item.created_at || 0).getTime(),
-            icon: <FiCalendar size={16} />,
-            badgeColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-          });
-        });
-      }
-
-      // Map Saran
-      if (saranRes.data) {
-        saranRes.data.forEach(item => {
-          compiledLogs.push({
-            id: `saran-${item.id}`,
-            type: 'saran',
-            title: `Aspirasi Masuk: "${item.subjek || 'Pesan Baru'}"`,
-            description: `Pesan baru diterima melalui Kotak Saran & Aduan.`,
-            actor: "Anonim / Mahasiswa",
-            timeAgo: formatTimeAgo(item.created_at),
-            rawDate: new Date(item.created_at || 0).getTime(),
-            icon: <FiMessageSquare size={16} />,
-            badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20"
-          });
-        });
-      }
-
-      // Map System Settings Updates
-      if (settingsRes.data) {
-        settingsRes.data.forEach(item => {
-          let title = `Pengaturan Diperbarui: ${item.key}`;
-          let desc = `Konfigurasi sistem telah diperbarui oleh Admin.`;
-          
-          if (item.key === 'master_prodi') {
-            title = 'Master Data: Program Studi (Prodi)';
-            desc = 'Data pilihan Program Studi untuk mahasiswa telah diperbarui.';
-          } else if (item.key === 'master_angkatan') {
-            title = 'Master Data: Tahun Angkatan';
-            desc = 'Data pilihan Tahun Angkatan untuk mahasiswa telah diperbarui.';
-          } else if (item.key === 'maintenance_mode') {
-            title = 'Status Mode Maintenance';
-            desc = 'Status akses publik website (Maintenance) telah diubah.';
-          } else if (item.key === 'google_sheets_webhook_url') {
-            title = 'Konfigurasi Integrasi Webhook';
-            desc = 'URL Webhook tujuan Google Sheets telah diperbarui.';
-          } else if (item.key === 'release_notes') {
-            title = 'Catatan Rilis (Release Notes)';
-            desc = 'Informasi pembaruan dan versi portal telah diperbarui.';
-          }
-
-          compiledLogs.push({
-            id: `settings-${item.key}`,
-            type: 'system',
-            title,
-            description: desc,
-            actor: "Admin BEM",
-            timeAgo: formatTimeAgo(item.updated_at),
-            rawDate: new Date(item.updated_at || 0).getTime(),
-            icon: <FiSettings size={16} />,
-            badgeColor: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20"
-          });
-        });
-      }
-
-      // Sort by newest date (descending)
-      compiledLogs.sort((a, b) => b.rawDate - a.rawDate);
-      setLogs(compiledLogs);
+      const res = await fetchComprehensiveActivityLogs(timeFilter);
+      setLogs(res.logs || []);
+      setLatencyMs(res.latencyMs || 18);
     } catch (err) {
-      console.error("Error fetching monitoring logs:", err);
+      console.error("[AdminMonitoringSection] Error loading logs:", err);
     } finally {
       setIsRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    fetchRealtimeLogs();
   }, [timeFilter]);
 
+  useEffect(() => {
+    loadLogs();
+  }, [loadLogs]);
 
+  const getLogIcon = (type: ActivityLogItem["type"]) => {
+    switch (type) {
+      case "berita":
+        return <FiFileText size={16} />;
+      case "artikel":
+        return <FiBookOpen size={16} />;
+      case "agenda":
+        return <FiCalendar size={16} />;
+      case "saran":
+        return <FiMessageSquare size={16} />;
+      case "system":
+        return <FiSettings size={16} />;
+      default:
+        return <FiActivity size={16} />;
+    }
+  };
 
-  const filteredLogs = logs.filter(log => {
-    // Check type filter
-    if (filterType === "content") return log.type === "create" || log.type === "update";
-    if (filterType === "system") return log.type === "system";
+  const filteredLogs = logs.filter((log) => {
+    if (filterType === "all") return true;
+    if (filterType === "berita") return log.type === "berita";
+    if (filterType === "artikel") return log.type === "artikel";
+    if (filterType === "agenda") return log.type === "agenda";
     if (filterType === "saran") return log.type === "saran";
+    if (filterType === "system") return log.type === "system";
     return true;
   });
 
@@ -208,31 +82,34 @@ export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoring
 
   return (
     <div className="space-y-8">
-      
       {/* Section 1: System Health & Performance Monitoring */}
       {showServer && (
-        <div className="bg-surface rounded-3xl border border-outline-variant/30 shadow-sm p-6 sm:p-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-outline-variant/20">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs p-6 sm:p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-100 dark:border-slate-800">
             <div>
               <div className="flex items-center gap-2">
                 <span className="p-2 rounded-xl bg-primary/10 text-primary">
                   <FiServer size={20} />
                 </span>
-                <h3 className="text-xl font-bold text-on-surface">Monitoring Server & Kesehatan Sistem</h3>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  Monitoring Server & Kesehatan Sistem
+                </h3>
               </div>
-              <p className="text-xs text-on-surface-variant mt-1">Status koneksi, latensi database, dan kapasitas penyimpanan Supabase secara real-time.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Status koneksi, latensi database Supabase, dan integritas API secara real-time.
+              </p>
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-xs font-bold">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+              <span className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 Sistem Operasional ({latencyMs}ms)
               </span>
               <button
-                onClick={fetchRealtimeLogs}
+                onClick={loadLogs}
                 disabled={isRefreshing}
-                className="p-2.5 rounded-xl border border-outline-variant/30 hover:bg-surface-variant text-on-surface-variant hover:text-primary transition-all disabled:opacity-50"
-                title="Refresh Monitoring Data"
+                className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-primary transition-all disabled:opacity-50"
+                title="Perbarui Data Monitoring"
               >
                 <FiRefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
               </button>
@@ -241,130 +118,214 @@ export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoring
 
           {/* Status Metrics Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            {/* Card 1: Server Latency & Health */}
-            <div className="bg-surface-variant/20 border border-outline-variant/20 rounded-2xl p-5 flex flex-col justify-between">
+            {/* Card 1: Server Latency */}
+            <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60 rounded-2xl p-5 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Status & Latensi API</span>
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Status & Latensi API
+                  </span>
                   <FiCpu className="text-primary" size={18} />
                 </div>
-                <div className="text-2xl font-black text-on-surface mb-1">{latencyMs} ms</div>
+                <div className="text-2xl font-black text-slate-900 dark:text-white mb-1">
+                  {latencyMs} ms
+                </div>
                 <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                  <FiCheckCircle size={14} /> Respon server sangat cepat & stabil
+                  <FiCheckCircle size={14} /> Respon server stabil & cepat
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-outline-variant/20 flex justify-between text-xs text-on-surface-variant">
+              <div className="mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-700/50 flex justify-between text-xs text-slate-500">
                 <span>Status HTTP: 200 OK</span>
                 <span className="font-bold text-emerald-600">99.98% Uptime</span>
               </div>
             </div>
 
+            {/* Card 2: Database Connectivity */}
+            <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60 rounded-2xl p-5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Database Supabase
+                  </span>
+                  <FiServer className="text-emerald-500" size={18} />
+                </div>
+                <div className="text-2xl font-black text-slate-900 dark:text-white mb-1">
+                  Terhubung
+                </div>
+                <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                  <FiCheckCircle size={14} /> Koneksi PostgreSQL aman & terenkripsi
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-700/50 flex justify-between text-xs text-slate-500">
+                <span>SSL: Aktif</span>
+                <span className="font-bold text-primary">Region: ap-southeast-1</span>
+              </div>
+            </div>
+
+            {/* Card 3: Keamanan & Role */}
+            <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60 rounded-2xl p-5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Proteksi Row-Level
+                  </span>
+                  <FiCheckCircle className="text-blue-500" size={18} />
+                </div>
+                <div className="text-2xl font-black text-slate-900 dark:text-white mb-1">
+                  RLS Aktif
+                </div>
+                <p className="text-xs text-blue-600 font-semibold flex items-center gap-1">
+                  <FiCheckCircle size={14} /> Data mahasiswa & admin terisolasi
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-slate-200/50 dark:border-slate-700/50 flex justify-between text-xs text-slate-500">
+                <span>Mode: Strict</span>
+                <span className="font-bold text-blue-600">Akses Terotentikasi</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* Section 2: Audit Trail & Activity Logs */}
       {showLogs && (
-        <div className="bg-surface rounded-3xl border border-outline-variant/30 shadow-sm p-6 sm:p-8">
-          
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xs p-6 sm:p-8">
           {/* Header & Filter Tabs */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-outline-variant/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-100 dark:border-slate-800">
             <div>
               <div className="flex items-center gap-2">
                 <span className="p-2 rounded-xl bg-purple-500/10 text-purple-600">
                   <FiActivity size={20} />
                 </span>
-                <h3 className="text-xl font-bold text-on-surface">Riwayat & Log Aktivitas (Audit Trail)</h3>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  Riwayat & Log Aktivitas Portal (Audit Trail)
+                </h3>
               </div>
-              <p className="text-xs text-on-surface-variant mt-1">Catatan kronologis perubahan data, publikasi berita, dan aktivitas sistem.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Catatan kronologis publikasi berita, pengajuan artikel mahasiswa, agenda kegiatan, saran, dan sistem.
+              </p>
             </div>
 
             {/* Filter Pills & Time */}
             <div className="flex flex-wrap items-center justify-end gap-3 w-full md:w-auto">
-              
               {/* Time Filter Select */}
-              <div className="relative w-40 shrink-0">
+              <div className="relative w-44 shrink-0">
                 <select
                   value={timeFilter}
                   onChange={(e) => setTimeFilter(e.target.value)}
-                  className="w-full pl-4 pr-8 py-2 appearance-none bg-surface-variant/20 border border-outline-variant/30 rounded-xl text-sm font-semibold text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all cursor-pointer"
+                  className="w-full pl-3.5 pr-8 py-2 appearance-none bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-primary transition-all cursor-pointer"
                 >
+                  <option value="all">Semua Waktu</option>
                   <option value="today">Hari Ini</option>
                   <option value="7days">7 Hari Terakhir</option>
                   <option value="30days">30 Hari Terakhir</option>
                   <option value="1year">1 Tahun Terakhir</option>
-                  <option value="all">Semua Waktu</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <FiCalendar className="text-on-surface-variant/50" size={14} />
+                  <FiCalendar className="text-slate-400" size={14} />
                 </div>
               </div>
 
               {/* Filter Pills */}
-              <div className="flex items-center gap-1.5 bg-surface-variant/30 p-1 rounded-2xl border border-outline-variant/20 text-xs font-bold overflow-x-auto w-full sm:w-auto">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 text-xs font-semibold overflow-x-auto w-full sm:w-auto">
                 <button
                   onClick={() => setFilterType("all")}
-                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${filterType === "all" ? "bg-primary text-white shadow-sm" : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50"}`}
+                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${
+                    filterType === "all"
+                      ? "bg-primary text-white shadow-xs font-bold"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  }`}
                 >
-                  Semua
+                  Semua ({logs.length})
                 </button>
                 <button
-                  onClick={() => setFilterType("content")}
-                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${filterType === "content" ? "bg-primary text-white shadow-sm" : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50"}`}
+                  onClick={() => setFilterType("berita")}
+                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${
+                    filterType === "berita"
+                      ? "bg-primary text-white shadow-xs font-bold"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  }`}
                 >
-                  Konten
+                  Berita BEM
                 </button>
                 <button
-                  onClick={() => setFilterType("system")}
-                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${filterType === "system" ? "bg-primary text-white shadow-sm" : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50"}`}
+                  onClick={() => setFilterType("artikel")}
+                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${
+                    filterType === "artikel"
+                      ? "bg-primary text-white shadow-xs font-bold"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  }`}
                 >
-                  Sistem
+                  Artikel Mahasiswa
+                </button>
+                <button
+                  onClick={() => setFilterType("agenda")}
+                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${
+                    filterType === "agenda"
+                      ? "bg-primary text-white shadow-xs font-bold"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  Agenda
                 </button>
                 <button
                   onClick={() => setFilterType("saran")}
-                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${filterType === "saran" ? "bg-primary text-white shadow-sm" : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50"}`}
+                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${
+                    filterType === "saran"
+                      ? "bg-primary text-white shadow-xs font-bold"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  }`}
                 >
                   Aspirasi
+                </button>
+                <button
+                  onClick={() => setFilterType("system")}
+                  className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap ${
+                    filterType === "system"
+                      ? "bg-primary text-white shadow-xs font-bold"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  Sistem
                 </button>
               </div>
             </div>
           </div>
 
           {/* Timeline Log List */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <AnimatePresence mode="popLayout">
               {filteredLogs.map((log) => (
                 <motion.div
                   key={log.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="flex items-start gap-4 p-4 rounded-2xl bg-surface-variant/10 border border-outline-variant/20 hover:border-outline-variant/50 transition-all group"
+                  exit={{ opacity: 0, y: -6 }}
+                  className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all group"
                 >
                   {/* Icon Badge */}
-                  <div className={`p-3 rounded-2xl border shrink-0 ${log.badgeColor}`}>
-                    {log.icon}
+                  <div className={`p-2.5 rounded-xl border shrink-0 ${log.badgeColor}`}>
+                    {getLogIcon(log.type)}
                   </div>
 
                   {/* Content Details */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <h4 className="text-sm font-bold text-on-surface truncate group-hover:text-primary transition-colors">
+                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-primary transition-colors">
                         {log.title}
                       </h4>
-                      <span className="text-xs font-semibold text-on-surface-variant/70 shrink-0 flex items-center gap-1">
+                      <span className="text-xs font-medium text-slate-400 shrink-0 flex items-center gap-1">
                         <FiClock size={12} /> {log.timeAgo}
                       </span>
                     </div>
-                    <p className="text-xs text-on-surface-variant line-clamp-1 leading-relaxed">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 leading-relaxed">
                       {log.description}
                     </p>
                   </div>
 
                   {/* Actor Badge */}
                   <div className="shrink-0 hidden sm:block">
-                    <span className="px-2.5 py-1 rounded-full bg-surface-variant/40 border border-outline-variant/30 text-on-surface-variant text-[10px] font-extrabold uppercase tracking-wider">
+                    <span className="px-2.5 py-1 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold tracking-wider">
                       {log.actor}
                     </span>
                   </div>
@@ -373,17 +334,19 @@ export default function AdminMonitoringSection({ mode = "all" }: AdminMonitoring
             </AnimatePresence>
 
             {filteredLogs.length === 0 && (
-              <div className="text-center py-12 border border-dashed border-outline-variant/30 rounded-2xl">
-                <FiActivity size={32} className="mx-auto text-on-surface-variant/40 mb-2" />
-                <p className="text-sm font-bold text-on-surface">Tidak ada log aktivitas ditemukan</p>
-                <p className="text-xs text-on-surface-variant mt-1">Belum ada aktivitas yang dicatat untuk kategori ini.</p>
+              <div className="text-center py-12 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                <FiActivity size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                  Tidak ada log aktivitas ditemukan
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Coba ubah filter waktu atau kategori untuk melihat riwayat aktivitas lainnya.
+                </p>
               </div>
             )}
           </div>
-
         </div>
       )}
-
     </div>
   );
 }

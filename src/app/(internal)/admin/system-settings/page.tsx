@@ -248,14 +248,15 @@ export default function SystemSettingsPage() {
       published: rPublished,
     };
 
+    const nowIso = new Date().toISOString();
     const updates = [
-      { key: "maintenance_mode", value: mMode ? "true" : "false" },
-      { key: "maintenance_estimated_time", value: mTime.trim() || "1-2 Jam" },
-      { key: "maintenance_message", value: mMsg.trim() },
-      { key: "release_notes", value: JSON.stringify(releaseNotesObj) },
-      { key: "admin_whatsapp", value: adminPhone.trim() },
-      { key: "telegram_berita_notif_enabled", value: tNotifEnabled ? "true" : "false" },
-      { key: "telegram_berita_reminder_enabled", value: tReminderEnabled ? "true" : "false" },
+      { key: "maintenance_mode", value: mMode ? "true" : "false", updated_at: nowIso },
+      { key: "maintenance_estimated_time", value: mTime.trim() || "1-2 Jam", updated_at: nowIso },
+      { key: "maintenance_message", value: mMsg.trim(), updated_at: nowIso },
+      { key: "release_notes", value: JSON.stringify(releaseNotesObj), updated_at: nowIso },
+      { key: "admin_whatsapp", value: adminPhone.trim(), updated_at: nowIso },
+      { key: "telegram_berita_notif_enabled", value: tNotifEnabled ? "true" : "false", updated_at: nowIso },
+      { key: "telegram_berita_reminder_enabled", value: tReminderEnabled ? "true" : "false", updated_at: nowIso },
     ];
 
     const { error } = await supabase
