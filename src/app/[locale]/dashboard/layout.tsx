@@ -1,9 +1,10 @@
 import React from "react";
 import { getTranslations } from "next-intl/server";
+import StudentDashboardTabs from "@/components/dashboard/StudentDashboardTabs";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "DashboardArtikel" });
+  const t = await getTranslations({ locale, namespace: "StudentDashboard" });
   return {
     title: `${t("pageTitle")} - BEM STMIK Tazkia`,
     description: t("pageSubtitle"),
@@ -22,6 +23,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-surface-variant/20 pt-20 sm:pt-24 pb-32 sm:pb-20 px-3.5 sm:px-6 lg:px-8 w-full overflow-x-hidden">
       <div className="max-w-6xl mx-auto">
+        <StudentDashboardTabs />
         {children}
       </div>
     </div>

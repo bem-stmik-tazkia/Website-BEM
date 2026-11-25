@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { sanitizeNextPath } from '@/utils/auth-url';
+import { sanitizeNextPath, STUDENT_ALLOWED_NEXT_PREFIXES } from '@/utils/auth-url';
 import { isRandomAdminPathActive, verifyAdminToken } from '@/lib/admin-token';
 import { ADMIN_TOKEN_REGEX } from '@/lib/admin-path';
 
@@ -195,8 +195,8 @@ export async function updateSession(request: NextRequest, customSupabase?: any) 
         const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/admin']);
         url.pathname = safeNext || '/admin';
       } else {
-        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/dashboard']);
-        url.pathname = safeNext || '/dashboard/artikel';
+        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, STUDENT_ALLOWED_NEXT_PREFIXES);
+        url.pathname = safeNext || '/dashboard';
       }
       url.searchParams.delete('next');
       return NextResponse.redirect(url);
@@ -235,8 +235,8 @@ export async function updateSession(request: NextRequest, customSupabase?: any) 
         const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/admin']);
         url.pathname = safeNext || '/admin';
       } else {
-        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/dashboard']);
-        url.pathname = safeNext || '/dashboard/artikel';
+        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, STUDENT_ALLOWED_NEXT_PREFIXES);
+        url.pathname = safeNext || '/dashboard';
       }
       url.searchParams.delete('next');
       return NextResponse.redirect(url);

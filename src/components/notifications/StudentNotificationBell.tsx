@@ -24,6 +24,7 @@ export interface StudentNotification {
   action: string;
   note: string | null;
   created_at: string;
+  href?: string;
 }
 
 function timeAgo(dateStr: string, locale: string, t: any): string {
@@ -42,6 +43,26 @@ function timeAgo(dateStr: string, locale: string, t: any): string {
 }
 
 function getActionMeta(action: string, t: any) {
+  if (action === "reg_accepted") {
+    return {
+      title: t("regApproved"),
+      icon: FiCheckCircle,
+      iconColor: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/20",
+      dot: "bg-emerald-500",
+    };
+  }
+  if (action === "reg_rejected") {
+    return {
+      title: t("regRejected"),
+      icon: FiXCircle,
+      iconColor: "text-rose-500",
+      bg: "bg-rose-500/10",
+      border: "border-rose-500/20",
+      dot: "bg-rose-500",
+    };
+  }
   if (action === "status_published" || action === "revision_approved") {
     return {
       title: t("actionApproved"),
@@ -83,6 +104,12 @@ function getActionMeta(action: string, t: any) {
 }
 
 function getDisplayNote(action: string, rawNote: string | null, t: any): string | null {
+  if (action === "reg_accepted") {
+    return rawNote || t("regApprovedNote");
+  }
+  if (action === "reg_rejected") {
+    return rawNote || t("regRejectedNote");
+  }
   if (!rawNote) {
     if (action === "status_published" || action === "revision_approved") {
       return t("approvedDefaultNote");
@@ -136,8 +163,8 @@ export default function StudentNotificationBell({
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Ambil riwayat audit log dan daftar artikel aktif milik user secara bersamaan
-      const [auditRes, articlesRes] = await Promise.all([
+      // Ambil riwayat audit log artikel dan status pendaftaran user secara bersamaan
+      const [auditRes, articlesRes, appsRes] = await Promise.all([
         supabase
           .from("article_audit_log")
           .select("id, article_id, article_title, action, note, created_at")
@@ -154,26 +181,48 @@ export default function StudentNotificationBell({
           .from("articles")
           .select("id")
           .eq("author_id", user.id),
+        supabase
+          .from("volunteer_applications")
+          .select("id, agenda_id, item_name, status, created_at, agendas(title)")
+          .eq("user_id", user.id)
+          .in("status", ["accepted", "rejected"])
+          .order("created_at", { ascending: false })
+          .limit(15),
       ]);
 
-      if (auditRes.error) {
-        console.warn("[StudentNotificationBell] Failed to fetch audit log:", auditRes.error.message);
-        return;
-      }
-
-      // Pastikan artikel yang sudah dihapus tidak muncul lagi dalam daftar notifikasi
       const existingArticleIds = new Set((articlesRes.data || []).map((a: any) => a.id));
 
-      const list: StudentNotification[] = (auditRes.data || [])
-        .filter((item) => item.article_id && existingArticleIds.has(item.article_id))
-        .map((item) => ({
-          id: item.id,
-          article_id: item.article_id,
-          article_title: item.article_title || "Artikel Mahasiswa",
-          action: item.action,
-          note: item.note,
-          created_at: item.created_at,
-        }));
+      const articleList: StudentNotification[] =
+        !auditRes.error && Array.isArray(auditRes.data)
+          ? auditRes.data
+              .filter((item) => item.article_id && existingArticleIds.has(item.article_id))
+              .map((item) => ({
+                id: item.id,
+                article_id: item.article_id,
+                article_title: item.article_title || "Artikel Mahasiswa",
+                action: item.action,
+                note: item.note,
+                created_at: item.created_at,
+                href: "/dashboard/artikel",
+              }))
+          : [];
+
+      const regList: StudentNotification[] =
+        !appsRes.error && Array.isArray(appsRes.data)
+          ? appsRes.data.map((row: any) => ({
+              id: `reg-${row.id}-${row.status}`,
+              article_id: null,
+              article_title: row.agendas?.title || "Kegiatan BEM",
+              action: row.status === "accepted" ? "reg_accepted" : "reg_rejected",
+              note: row.item_name || null,
+              created_at: row.created_at,
+              href: "/dashboard/kegiatan",
+            }))
+          : [];
+
+      const list: StudentNotification[] = [...articleList, ...regList].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
 
       const storedViewed = localStorage.getItem("student_notif_last_viewed") || "";
       let storedDismissed: string[] = [];
@@ -221,6 +270,18 @@ export default function StudentNotificationBell({
             schema: "public",
             table: "article_audit_log",
             filter: `author_id=eq.${user.id}`,
+          },
+          () => {
+            fetchNotifications();
+          }
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "volunteer_applications",
+            filter: `user_id=eq.${user.id}`,
           },
           () => {
             fetchNotifications();
@@ -427,7 +488,7 @@ export default function StudentNotificationBell({
                   return (
                     <div key={item.id} className="relative group">
                       <Link
-                        href="/dashboard/artikel"
+                        href={item.href || "/dashboard/artikel"}
                         onClick={() => setOpen(false)}
                         className={`block p-3.5 pr-8 hover:bg-surface-variant/30 transition-colors ${
                           isItemUnread ? "bg-primary/[0.03]" : ""
@@ -481,7 +542,7 @@ export default function StudentNotificationBell({
             {/* Footer */}
             <div className="p-2.5 border-t border-outline-variant/20 bg-surface-variant/10 text-center">
               <Link
-                href="/dashboard/artikel"
+                href="/dashboard"
                 onClick={() => setOpen(false)}
                 className="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1.5 py-1"
               >

@@ -389,12 +389,12 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                         </NativeLink>
                       ) : (
                         <Link
-                          href="/dashboard/artikel"
+                          href="/dashboard"
                           onClick={() => setShowProfileMenu(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-on-surface hover:bg-primary/10 hover:text-primary transition-colors"
                         >
-                          <FiEdit3 size={16} />
-                          {t("myArticles")}
+                          <FiGrid size={16} />
+                          {t("studentDashboard")}
                         </Link>
                       )}
 

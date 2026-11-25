@@ -33,7 +33,7 @@ export default function MasukPage() {
     const params = new URLSearchParams(window.location.search);
     const nextParam = params.get("next");
     const safeNext = sanitizeNextPath(nextParam, window.location.origin, STUDENT_ALLOWED_NEXT_PREFIXES);
-    const targetNext = safeNext || "/dashboard/artikel";
+    const targetNext = safeNext || "/dashboard";
 
     const supabase = createClient();
 

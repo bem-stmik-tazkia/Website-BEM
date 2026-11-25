@@ -130,7 +130,7 @@ export async function handleAuthCallback(request: NextRequest, customSupabase?: 
 
   // Akun mahasiswa sah: arahkan ke tujuan aman (dashboard atau halaman daftar agenda)
   const safeNext = sanitizeNextPath(nextParam, publicOrigin, STUDENT_ALLOWED_NEXT_PREFIXES);
-  const destination = safeNext || '/dashboard/artikel';
+  const destination = safeNext || '/dashboard';
   return NextResponse.redirect(new URL(destination, publicOrigin));
 }
 
