@@ -93,3 +93,68 @@ export function isOwnRegistrationStorageUrl(urlString: string): boolean {
     return false;
   }
 }
+
+/**
+ * Generates a normalized base slug for agendas from an explicit slug or title.
+ */
+export function buildBaseAgendaSlug(
+  title?: string | null,
+  explicitSlug?: string | null
+): string {
+  const source = (explicitSlug || "").trim() || (title || "").trim();
+  const normalized = source
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+  return normalized || `kegiatan-${Date.now()}`;
+}
+
+/**
+ * Parses a positive integer quota from number or numeric string inputs.
+ * Returns null for empty, zero, negative, or non-numeric values.
+ */
+export function parsePositiveQuota(rawQuota: unknown): number | null {
+  if (rawQuota === null || rawQuota === undefined || rawQuota === "") return null;
+  const parsed = typeof rawQuota === "number" ? rawQuota : Number(String(rawQuota).trim());
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return Math.floor(parsed);
+}
+
+/**
+ * Formats server/database save errors into clear Indonesian messages safe to return
+ * to admin clients (avoiding redacted Next.js production Server Component errors).
+ */
+export function formatAgendaSaveErrorMessage(err: unknown): string {
+  const raw =
+    err instanceof Error
+      ? err.message
+      : typeof err === "object" && err !== null && "message" in err
+      ? String((err as { message?: unknown }).message || "")
+      : String(err || "");
+  const code =
+    typeof err === "object" && err !== null && "code" in err
+      ? String((err as { code?: unknown }).code || "")
+      : "";
+  const lower = raw.toLowerCase();
+
+  if (lower.includes("unauthorized") || lower.includes("forbidden")) {
+    return "Sesi admin tidak valid atau sudah berakhir. Silakan muat ulang halaman lalu login ulang.";
+  }
+
+  if (
+    (lower.includes("extra_fields") && (lower.includes("schema cache") || lower.includes("column"))) ||
+    lower.includes("agenda_items") && lower.includes("does not exist")
+  ) {
+    return "Struktur database belum diperbarui (kolom/tabel item pendaftaran belum ada). Jalankan file migrasi SQL 20261125131500_multi_item_agenda_and_status.sql dan 20261125150000_add_item_extra_fields.sql di Supabase SQL Editor.";
+  }
+
+  if (lower.includes("allow_multiple_items")) {
+    return "Kolom allow_multiple_items belum tersedia di database. Jalankan migrasi SQL 20261125131500_multi_item_agenda_and_status.sql di Supabase SQL Editor.";
+  }
+
+  if (code === "23505" || lower.includes("duplicate key")) {
+    return "Slug atau judul kegiatan bentrok dengan data yang sudah ada. Silakan coba simpan kembali.";
+  }
+
+  return raw.trim() || "Terjadi kesalahan saat menyimpan data ke database.";
+}

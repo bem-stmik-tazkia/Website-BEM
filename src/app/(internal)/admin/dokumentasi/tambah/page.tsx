@@ -314,10 +314,15 @@ export default function TambahDokumentasiPage() {
         { sendDiscord: Boolean(sendDiscord && form.is_published) }
       );
 
+      if (!saveRes?.ok) {
+        toast("Gagal menyimpan: " + (saveRes?.error || "Terjadi kesalahan di server."), "error");
+        return;
+      }
+
       localStorage.removeItem(draftKey);
-      if (saveRes?.discord?.ok) {
+      if (saveRes.discord?.ok) {
         toast("Dokumentasi berhasil disimpan & disiarkan ke Discord #Pengumuman!", "success");
-      } else if (saveRes?.discord && !saveRes.discord.ok) {
+      } else if (saveRes.discord && !saveRes.discord.ok) {
         toast(`Dokumentasi tersimpan! (Catatan Discord: ${saveRes.discord.error || "Gagal kirim"})`, "info");
       } else {
         toast("Dokumentasi berhasil disimpan!", "success");

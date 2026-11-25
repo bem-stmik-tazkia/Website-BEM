@@ -415,14 +415,19 @@ export default function KegiatanFormPage() {
       const saveRes = await saveKegiatan(dataToSave, {
         sendDiscord: Boolean(sendDiscord && formData.is_published),
       });
-      
+
+      if (!saveRes?.ok) {
+        showError("Gagal menyimpan data: " + (saveRes?.error || "Terjadi kesalahan di server."));
+        return;
+      }
+
       const draftKey = `kegiatan_draft_${draftScope}`;
       localStorage.removeItem(draftKey);
       sessionStorage.removeItem(`kegiatan_form_session_${draftKey}`);
 
-      if (saveRes?.discord?.ok) {
+      if (saveRes.discord?.ok) {
         success("Data kegiatan berhasil disimpan & disiarkan ke Discord #Pengumuman!");
-      } else if (saveRes?.discord && !saveRes.discord.ok) {
+      } else if (saveRes.discord && !saveRes.discord.ok) {
         success("Data kegiatan berhasil disimpan!");
         toast(`Catatan Discord: ${saveRes.discord.error || "Gagal kirim"}`, "info");
       } else {

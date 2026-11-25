@@ -2,10 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { isValidImageSignature } from "../src/lib/imageValidation";
 import {
+  buildBaseAgendaSlug,
   extractGoogleDriveFileId,
+  formatAgendaSaveErrorMessage,
   getRegistrationImagePreviewUrl,
   getSafeHttpsUrl,
   isOwnRegistrationStorageUrl,
+  parsePositiveQuota,
 } from "../src/lib/registration-utils";
 import {
   aggregateAgendaItemsAndCounts,
@@ -485,4 +488,47 @@ test("validateMultiItemRegistrationResponses validates common + per-item extra f
       process.env.NEXT_PUBLIC_SUPABASE_URL = prevUrl;
     }
   }
+});
+
+// -----------------------------------------------------------------------------
+// 8. Slug Normalization, Quota Parsing & Readable Save Error Mapping
+// -----------------------------------------------------------------------------
+test("buildBaseAgendaSlug and parsePositiveQuota handle emojis, strings, and invalid numbers safely", () => {
+  assert.equal(
+    buildBaseAgendaSlug("📢 Open Volunteer PJ Lomba  Perayaan HUT STMIK Tazkia ke-3"),
+    "open-volunteer-pj-lomba-perayaan-hut-stmik-tazkia-ke-3"
+  );
+  assert.equal(buildBaseAgendaSlug("Seminar Nasional", "custom-slug-2026"), "custom-slug-2026");
+  assert.match(buildBaseAgendaSlug("📢🔥"), /^kegiatan-\d+$/);
+
+  assert.equal(parsePositiveQuota(5), 5);
+  assert.equal(parsePositiveQuota("12"), 12);
+  assert.equal(parsePositiveQuota(3.9), 3);
+  assert.equal(parsePositiveQuota(0), null);
+  assert.equal(parsePositiveQuota(-2), null);
+  assert.equal(parsePositiveQuota(""), null);
+  assert.equal(parsePositiveQuota("abc"), null);
+});
+
+test("formatAgendaSaveErrorMessage converts raw Postgres/auth errors into clear Indonesian messages", () => {
+  assert.match(
+    formatAgendaSaveErrorMessage(
+      new Error("Could not find the 'extra_fields' column of 'agenda_items' in the schema cache")
+    ),
+    /20261125150000_add_item_extra_fields\.sql/
+  );
+  assert.match(
+    formatAgendaSaveErrorMessage(
+      new Error("Could not find the 'allow_multiple_items' column of 'agendas' in the schema cache")
+    ),
+    /20261125131500_multi_item_agenda_and_status\.sql/
+  );
+  assert.match(
+    formatAgendaSaveErrorMessage({ code: "23505", message: "duplicate key value violates unique constraint" }),
+    /bentrok/i
+  );
+  assert.match(
+    formatAgendaSaveErrorMessage(new Error("Unauthorized: Sesi tidak valid")),
+    /Sesi admin/i
+  );
 });

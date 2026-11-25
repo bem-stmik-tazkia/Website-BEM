@@ -6,31 +6,82 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { AgendaItemInput, AgendaKegiatan, ApplicationStatus, DynamicFormField, KegiatanFormInput } from "@/types/agenda";
 import { sendDiscordKegiatanNotification } from "@/lib/discord";
 import { enrichAgendasWithItemsAndCounts } from "@/lib/agenda-items-server";
-import { isOwnRegistrationStorageUrl } from "@/lib/registration-utils";
+import {
+  buildBaseAgendaSlug,
+  formatAgendaSaveErrorMessage,
+  isOwnRegistrationStorageUrl,
+  parsePositiveQuota,
+} from "@/lib/registration-utils";
 import { hasAnyFormQuestions } from "@/lib/registration-validation";
+import type { SupabaseServerClient } from "@/lib/auth";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+function getAdminWriteClient(fallbackClient: SupabaseServerClient) {
+  try {
+    return getServiceRoleClient();
+  } catch {
+    return fallbackClient;
+  }
+}
+
+function isMissingColumnError(error: { code?: string; message?: string } | null | undefined, colName: string): boolean {
+  if (!error) return false;
+  const msg = (error.message || "").toLowerCase();
+  return (
+    msg.includes(colName.toLowerCase()) &&
+    (error.code === "PGRST204" ||
+      error.code === "42703" ||
+      msg.includes("schema cache") ||
+      msg.includes("does not exist") ||
+      msg.includes("column"))
+  );
+}
+
+async function resolveUniqueAgendaSlug(
+  supabase: SupabaseServerClient,
+  baseSlug: string,
+  excludeId?: string
+): Promise<string> {
+  let candidate = baseSlug;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    let q = supabase.from("agendas").select("id").eq("slug", candidate);
+    if (excludeId) {
+      q = q.neq("id", excludeId);
+    }
+    const { data, error } = await q.maybeSingle();
+    if (error || !data) {
+      return candidate;
+    }
+    candidate = `${baseSlug}-${attempt + 2}`;
+  }
+  return `${baseSlug}-${Date.now().toString(36)}`;
+}
+
 function revalidateAllAgendaPaths(agendaId?: string, slug?: string | null) {
-  revalidatePath("/admin/kegiatan");
-  revalidatePath("/admin/dokumentasi");
-  revalidatePath("/agenda");
-  revalidatePath("/dokumentasi");
-  revalidatePath("/publikasi/dokumentasi");
-  revalidatePath("/[locale]/agenda", "page");
-  revalidatePath("/[locale]/dokumentasi", "page");
-  revalidatePath("/[locale]/publikasi/dokumentasi", "page");
-  if (agendaId) {
-    revalidatePath(`/[locale]/agenda/${agendaId}`, "page");
-    revalidatePath(`/[locale]/agenda/${agendaId}/apply`, "page");
-    revalidatePath(`/admin/kegiatan/${agendaId}/pendaftar`);
+  try {
+    revalidatePath("/admin/kegiatan");
+    revalidatePath("/admin/dokumentasi");
+    revalidatePath("/agenda");
+    revalidatePath("/dokumentasi");
+    revalidatePath("/publikasi/dokumentasi");
+    revalidatePath("/[locale]/agenda", "page");
+    revalidatePath("/[locale]/dokumentasi", "page");
+    revalidatePath("/[locale]/publikasi/dokumentasi", "page");
+    if (agendaId) {
+      revalidatePath(`/[locale]/agenda/${agendaId}`, "page");
+      revalidatePath(`/[locale]/agenda/${agendaId}/apply`, "page");
+      revalidatePath(`/admin/kegiatan/${agendaId}/pendaftar`);
+    }
+    if (slug) {
+      revalidatePath(`/[locale]/agenda/${slug}`, "page");
+      revalidatePath(`/[locale]/agenda/${slug}/apply`, "page");
+    }
+    revalidatePath("/", "layout");
+    revalidateTag("agenda", "max");
+  } catch (err) {
+    console.warn("[revalidateAllAgendaPaths] Non-fatal cache revalidation warning:", err);
   }
-  if (slug) {
-    revalidatePath(`/[locale]/agenda/${slug}`, "page");
-    revalidatePath(`/[locale]/agenda/${slug}/apply`, "page");
-  }
-  revalidatePath("/", "layout");
-  revalidateTag("agenda", "max");
 }
 
 export async function getKegiatans() {
@@ -92,19 +143,17 @@ function sanitizeExtraFields(fields?: DynamicFormField[]): DynamicFormField[] {
 
 async function syncAgendaItems(
   agendaId: string,
-  incomingItems: AgendaItemInput[]
+  incomingItems: AgendaItemInput[],
+  fallbackClient: SupabaseServerClient
 ) {
-  const service = getServiceRoleClient();
+  const dbClient = getAdminWriteClient(fallbackClient);
 
   const normalized = incomingItems
     .map((item, idx) => ({
       id: item.id && UUID_REGEX.test(item.id) ? item.id : undefined,
       name: (item.name || "").trim(),
       description: item.description?.trim() || null,
-      quota:
-        typeof item.quota === "number" && Number.isFinite(item.quota) && item.quota > 0
-          ? Math.floor(item.quota)
-          : null,
+      quota: parsePositiveQuota(item.quota),
       participant_type: item.participant_type === "tim" ? "tim" : "individu",
       rulebook_url: item.rulebook_url?.trim() || null,
       extra_fields: sanitizeExtraFields(item.extra_fields),
@@ -112,7 +161,7 @@ async function syncAgendaItems(
     }))
     .filter((item) => item.name.length > 0);
 
-  const { data: existingRows, error: fetchErr } = await service
+  const { data: existingRows, error: fetchErr } = await dbClient
     .from("agenda_items")
     .select("id")
     .eq("agenda_id", agendaId);
@@ -133,7 +182,7 @@ async function syncAgendaItems(
   // Hapus item yang sudah dihapus oleh admin di form
   const toDelete = Array.from(existingIds).filter((id) => !keepIds.has(id));
   if (toDelete.length > 0) {
-    const { error: delErr } = await service
+    const { error: delErr } = await dbClient
       .from("agenda_items")
       .delete()
       .eq("agenda_id", agendaId)
@@ -141,23 +190,35 @@ async function syncAgendaItems(
     if (delErr) throw new Error(delErr.message);
   }
 
+  const hasAnyExtraFields = normalized.some((item) => item.extra_fields.length > 0);
+
   // Update item yang sudah ada
   for (const item of normalized) {
     if (item.id && existingIds.has(item.id)) {
-      const { error: updErr } = await service
+      const baseUpdate = {
+        name: item.name,
+        description: item.description,
+        quota: item.quota,
+        participant_type: item.participant_type,
+        rulebook_url: item.rulebook_url,
+        sort_order: item.sort_order,
+        updated_at: new Date().toISOString(),
+      };
+      let { error: updErr } = await dbClient
         .from("agenda_items")
-        .update({
-          name: item.name,
-          description: item.description,
-          quota: item.quota,
-          participant_type: item.participant_type,
-          rulebook_url: item.rulebook_url,
-          extra_fields: item.extra_fields,
-          sort_order: item.sort_order,
-          updated_at: new Date().toISOString(),
-        })
+        .update({ ...baseUpdate, extra_fields: item.extra_fields })
         .eq("id", item.id)
         .eq("agenda_id", agendaId);
+
+      if (updErr && isMissingColumnError(updErr, "extra_fields") && !hasAnyExtraFields) {
+        const retry = await dbClient
+          .from("agenda_items")
+          .update(baseUpdate)
+          .eq("id", item.id)
+          .eq("agenda_id", agendaId);
+        updErr = retry.error;
+      }
+
       if (updErr) throw new Error(updErr.message);
     }
   }
@@ -177,7 +238,20 @@ async function syncAgendaItems(
     }));
 
   if (toInsert.length > 0) {
-    const { error: insErr } = await service.from("agenda_items").insert(toInsert);
+    let { error: insErr } = await dbClient.from("agenda_items").insert(toInsert);
+    if (insErr && isMissingColumnError(insErr, "extra_fields") && !hasAnyExtraFields) {
+      const legacyInsert = toInsert.map((row) => ({
+        agenda_id: row.agenda_id,
+        name: row.name,
+        description: row.description,
+        quota: row.quota,
+        participant_type: row.participant_type,
+        rulebook_url: row.rulebook_url,
+        sort_order: row.sort_order,
+      }));
+      const retry = await dbClient.from("agenda_items").insert(legacyInsert);
+      insErr = retry.error;
+    }
     if (insErr) throw new Error(insErr.message);
   }
 }
@@ -185,112 +259,157 @@ async function syncAgendaItems(
 export async function saveKegiatan(
   data: KegiatanFormInput,
   options?: { sendDiscord?: boolean }
-) {
-  const { supabase } = await requireAdmin();
-
-  if (!data.slug) {
-    data.slug =
-      data.title
-        ?.toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)+/g, "") || `kegiatan-${Date.now()}`;
-  }
-
-  const validItems = Array.isArray(data.items)
-    ? data.items.filter((i) => (i.name || "").trim().length > 0)
-    : [];
-  const hasSubItems = validItems.length > 0;
-
-  const payload = {
-    title: data.title,
-    slug: data.slug,
-    type: data.type,
-    date: data.date || null,
-    end_date: data.end_date || null,
-    location: data.location || null,
-    image_url: data.image_url,
-    registration_link: data.registration_link,
-    description: data.description,
-    category: data.category,
-    time_range: data.time_range,
-    deadline: data.deadline || null,
-    is_urgent: data.is_urgent,
-    is_published: data.is_published,
-    gallery: data.gallery || [],
-    video_url: data.video_url || null,
-    online_link: data.online_link || null,
-    form_schema: data.form_schema || [],
-    speakers: data.speakers || [],
-    max_participants: hasSubItems
-      ? null
-      : data.max_participants !== undefined
-      ? data.max_participants
-      : null,
-    allow_multiple_items:
-      data.type === "volunteer"
-        ? false
-        : data.allow_multiple_items !== undefined
-        ? Boolean(data.allow_multiple_items)
-        : true,
-  };
-
-  let savedKegiatan: AgendaKegiatan | null = null;
-
-  if (data.id) {
-    const { data: updated, error } = await supabase
-      .from("agendas")
-      .update(payload)
-      .eq("id", data.id)
-      .select()
-      .single();
-
-    if (error) throw new Error(error.message);
-    savedKegiatan = updated as AgendaKegiatan;
-  } else {
-    const { data: inserted, error } = await supabase
-      .from("agendas")
-      .insert([payload])
-      .select()
-      .single();
-
-    if (error) throw new Error(error.message);
-    savedKegiatan = inserted as AgendaKegiatan;
-  }
-
-  if (savedKegiatan?.id && Array.isArray(data.items)) {
-    const isRegistrationEnabled =
-      savedKegiatan.type === "volunteer" ||
-      (savedKegiatan.type === "event" &&
-        hasAnyFormQuestions(savedKegiatan.form_schema, validItems));
-    await syncAgendaItems(
-      savedKegiatan.id,
-      isRegistrationEnabled ? validItems : []
-    );
-  }
-
-  const [enrichedSaved] = savedKegiatan
-    ? await enrichAgendasWithItemsAndCounts([savedKegiatan])
-    : [null];
-
-  let discordResult: { ok: boolean; channel?: string; error?: string } | null = null;
-  if (options?.sendDiscord && enrichedSaved?.is_published) {
-    try {
-      discordResult = await sendDiscordKegiatanNotification({
-        ...enrichedSaved,
-        hasRegistrationForm: hasAnyFormQuestions(
-          enrichedSaved.form_schema,
-          enrichedSaved.items
-        ),
-      });
-    } catch (discordErr) {
-      console.warn("[saveKegiatan] Gagal mengirim notif Discord:", discordErr);
-      discordResult = { ok: false, error: "Gagal mengirim notifikasi Discord" };
+): Promise<
+  | {
+      ok: true;
+      data: AgendaKegiatan | null;
+      discord: { ok: boolean; channel?: string; error?: string } | null;
     }
+  | { ok: false; error: string }
+> {
+  try {
+    const { supabase } = await requireAdmin();
+
+    const baseSlug = buildBaseAgendaSlug(data.title, data.id ? data.slug : undefined);
+    const resolvedSlug = data.id
+      ? baseSlug
+      : await resolveUniqueAgendaSlug(supabase, baseSlug);
+
+    const validItems = Array.isArray(data.items)
+      ? data.items.filter((i) => (i.name || "").trim().length > 0)
+      : [];
+    const hasSubItems = validItems.length > 0;
+
+    const basePayload = {
+      title: (data.title || "").trim(),
+      slug: resolvedSlug,
+      type: data.type,
+      date: data.date || null,
+      end_date: data.end_date || null,
+      location: data.location || null,
+      image_url: data.image_url || "",
+      registration_link: data.registration_link || "",
+      description: data.description || "",
+      category: data.category || "",
+      time_range: data.time_range || "",
+      deadline: data.deadline || null,
+      is_urgent: Boolean(data.is_urgent),
+      is_published: Boolean(data.is_published),
+      gallery: Array.isArray(data.gallery) ? data.gallery.filter(Boolean) : [],
+      video_url: data.video_url || null,
+      online_link: data.online_link || null,
+      form_schema: Array.isArray(data.form_schema) ? data.form_schema : [],
+      speakers: Array.isArray(data.speakers) ? data.speakers : [],
+      max_participants: hasSubItems
+        ? null
+        : parsePositiveQuota(data.max_participants),
+    };
+
+    const fullPayload = {
+      ...basePayload,
+      allow_multiple_items:
+        data.type === "volunteer"
+          ? false
+          : data.allow_multiple_items !== undefined
+          ? Boolean(data.allow_multiple_items)
+          : true,
+    };
+
+    let savedKegiatan: AgendaKegiatan | null = null;
+
+    if (data.id) {
+      let { data: updated, error } = await supabase
+        .from("agendas")
+        .update(fullPayload)
+        .eq("id", data.id)
+        .select()
+        .single();
+
+      if (error && isMissingColumnError(error, "allow_multiple_items")) {
+        const retry = await supabase
+          .from("agendas")
+          .update(basePayload)
+          .eq("id", data.id)
+          .select()
+          .single();
+        updated = retry.data;
+        error = retry.error;
+      }
+
+      if (error) throw new Error(error.message);
+      savedKegiatan = updated as AgendaKegiatan;
+    } else {
+      let targetSlug = resolvedSlug;
+      let { data: inserted, error } = await supabase
+        .from("agendas")
+        .insert([fullPayload])
+        .select()
+        .single();
+
+      if (error && error.code === "23505") {
+        targetSlug = `${baseSlug}-${Date.now().toString(36)}`;
+        const retrySlug = await supabase
+          .from("agendas")
+          .insert([{ ...fullPayload, slug: targetSlug }])
+          .select()
+          .single();
+        inserted = retrySlug.data;
+        error = retrySlug.error;
+      }
+
+      if (error && isMissingColumnError(error, "allow_multiple_items")) {
+        const retry = await supabase
+          .from("agendas")
+          .insert([{ ...basePayload, slug: targetSlug }])
+          .select()
+          .single();
+        inserted = retry.data;
+        error = retry.error;
+      }
+
+      if (error) throw new Error(error.message);
+      savedKegiatan = inserted as AgendaKegiatan;
+    }
+
+    if (savedKegiatan?.id && Array.isArray(data.items)) {
+      const isRegistrationEnabled =
+        savedKegiatan.type === "volunteer" ||
+        (savedKegiatan.type === "event" &&
+          hasAnyFormQuestions(savedKegiatan.form_schema, validItems));
+      await syncAgendaItems(
+        savedKegiatan.id,
+        isRegistrationEnabled ? validItems : [],
+        supabase
+      );
+    }
+
+    const [enrichedSaved] = savedKegiatan
+      ? await enrichAgendasWithItemsAndCounts([savedKegiatan])
+      : [null];
+
+    let discordResult: { ok: boolean; channel?: string; error?: string } | null = null;
+    if (options?.sendDiscord && enrichedSaved?.is_published) {
+      try {
+        discordResult = await sendDiscordKegiatanNotification({
+          ...enrichedSaved,
+          hasRegistrationForm: hasAnyFormQuestions(
+            enrichedSaved.form_schema,
+            enrichedSaved.items
+          ),
+        });
+      } catch (discordErr) {
+        console.warn("[saveKegiatan] Gagal mengirim notif Discord:", discordErr);
+        discordResult = { ok: false, error: "Gagal mengirim notifikasi Discord" };
+      }
+    }
+
+    revalidateAllAgendaPaths(enrichedSaved?.id, enrichedSaved?.slug);
+
+    return { ok: true, data: enrichedSaved, discord: discordResult };
+  } catch (err) {
+    console.error("[saveKegiatan] Error saving agenda:", err);
+    return { ok: false, error: formatAgendaSaveErrorMessage(err) };
   }
-
-  revalidateAllAgendaPaths(enrichedSaved?.id, enrichedSaved?.slug);
-
-  return { data: enrichedSaved, discord: discordResult };
 }
 
 export async function deleteKegiatan(id: string) {

@@ -50,7 +50,11 @@ export default function KabinetForm({ initialData }: { initialData: KabinetProfi
     setIsLoading(true);
     
     try {
-      await saveKabinetProfile(formData);
+      const res = await saveKabinetProfile(formData);
+      if (!res?.success) {
+        showError("Gagal menyimpan data: " + (res?.error || "Terjadi kesalahan server."));
+        return;
+      }
       localStorage.removeItem("kabinet_draft");
       success("Profil Kabinet berhasil disimpan!");
     } catch (e: any) {
