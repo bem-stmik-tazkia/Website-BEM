@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiArrowLeft, FiSave, FiPlus, FiX, FiUpload, FiImage, FiLoader, FiAlertCircle } from "react-icons/fi";
+import { SiDiscord } from "react-icons/si";
 import { saveKegiatan } from "@/app/(internal)/admin/kegiatan/actions";
 import { createClient } from "@/utils/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
@@ -168,6 +169,7 @@ export default function TambahDokumentasiPage() {
 
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+  const [sendDiscord, setSendDiscord] = useState(true);
 
   const [initialForm] = useState(form);
   const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
@@ -294,23 +296,32 @@ export default function TambahDokumentasiPage() {
       const slug = form.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + "-" + Date.now();
       const dateObj = new Date(form.date);
 
-      await saveKegiatan({
-        title: form.title,
-        slug,
-        type: "dokumentasi",
-        category: form.category,
-        date: dateObj.toISOString(),
-        description: form.description || "",
-        location: form.location || "-",
-        time_range: form.time_range || "-",
-        is_published: form.is_published,
-        video_url: form.video_url || null,
-        gallery: form.gallery.filter(Boolean),
-        speakers: [],
-      });
+      const saveRes = await saveKegiatan(
+        {
+          title: form.title,
+          slug,
+          type: "dokumentasi",
+          category: form.category,
+          date: dateObj.toISOString(),
+          description: form.description || "",
+          location: form.location || "-",
+          time_range: form.time_range || "-",
+          is_published: form.is_published,
+          video_url: form.video_url || null,
+          gallery: form.gallery.filter(Boolean),
+          speakers: [],
+        },
+        { sendDiscord: Boolean(sendDiscord && form.is_published) }
+      );
 
       localStorage.removeItem(draftKey);
-      toast("Dokumentasi berhasil disimpan!", "success");
+      if (saveRes?.discord?.ok) {
+        toast("Dokumentasi berhasil disimpan & disiarkan ke Discord #Pengumuman!", "success");
+      } else if (saveRes?.discord && !saveRes.discord.ok) {
+        toast(`Dokumentasi tersimpan! (Catatan Discord: ${saveRes.discord.error || "Gagal kirim"})`, "info");
+      } else {
+        toast("Dokumentasi berhasil disimpan!", "success");
+      }
       router.push("/admin/dokumentasi");
     } catch (err: any) {
       toast("Gagal menyimpan: " + err.message, "error");
@@ -364,6 +375,38 @@ export default function TambahDokumentasiPage() {
             <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${form.is_published ? "translate-x-8" : "translate-x-1"}`} />
           </button>
         </div>
+
+        {/* Discord Broadcast Toggle */}
+        {form.is_published && (
+          <div className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+            sendDiscord
+              ? "bg-indigo-500/10 border-indigo-500/20"
+              : "bg-surface-variant/20 border-outline-variant/20"
+          }`}>
+            <div className="flex items-start gap-3">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                sendDiscord
+                  ? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400"
+                  : "bg-surface-variant text-on-surface-variant/60"
+              }`}>
+                <SiDiscord size={15} />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-on-surface">Siarkan ke Discord (#Pengumuman)</p>
+                <p className="text-xs text-on-surface-variant mt-0.5">
+                  Bagikan info dokumentasi dan cuplikan foto ke channel Discord #Pengumuman saat disimpan
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSendDiscord(!sendDiscord)}
+              className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors shrink-0 ${sendDiscord ? "bg-indigo-600" : "bg-outline-variant/40"}`}
+            >
+              <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${sendDiscord ? "translate-x-8" : "translate-x-1"}`} />
+            </button>
+          </div>
+        )}
 
         {/* Judul */}
         <div id="field-title" className="space-y-2">

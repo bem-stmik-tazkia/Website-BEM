@@ -150,8 +150,13 @@ export default async function AdminBeritaPage() {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-1 sm:gap-2">
-                        {/* Telegram Broadcast button */}
-                        <BroadcastBeritaButton id={item.id} title={item.title} />
+                        {/* Discord Broadcast button */}
+                        <BroadcastBeritaButton
+                          id={item.id}
+                          title={item.title}
+                          category={item.category}
+                          isPublished={item.is_published}
+                        />
 
                         {/* Edit button */}
                         <Link

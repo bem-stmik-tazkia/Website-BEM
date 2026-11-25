@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiClock, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { revalidatePath } from "next/cache";
 import DeleteButton from "./DeleteButton";
+import BroadcastKegiatanButton from "./BroadcastKegiatanButton";
 import { formatDateToIndo } from "@/utils/dateFormatter";
 
 const getEventStatus = (item: any) => {
@@ -183,6 +184,11 @@ export default async function KegiatanAdminPage({
                             Pendaftar
                           </Link>
                         )}
+                        <BroadcastKegiatanButton
+                          id={item.id}
+                          title={item.title}
+                          isPublished={item.is_published}
+                        />
                         <Link
                           href={`/admin/kegiatan/form?id=${item.id}`}
                           className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors"

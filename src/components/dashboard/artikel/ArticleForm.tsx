@@ -23,6 +23,7 @@ import ImageUpload from "@/components/ui/ImageUpload";
 import { ArticleItem } from "./ArticleCard";
 import UnsavedChangesModal from "./UnsavedChangesModal";
 import { notifyArticleSubmitted, notifyArticleModerated } from "@/actions/telegram-notifications";
+import { notifyDiscordArticlePublished } from "@/actions/discord-notifications";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 import DOMPurify from "isomorphic-dompurify";
@@ -386,7 +387,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
 
         if (updateError) throw updateError;
 
-        // Notifikasi Telegram pengajuan artikel ulang setelah revisi
+        // Notifikasi pengajuan ulang atau publikasi langsung oleh admin
         if (targetStatus === "pending") {
           notifyArticleSubmitted({
             title: title.trim(),
@@ -396,6 +397,23 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             isRevision: false,
             slug: slug.trim() || initialData.slug,
           }).catch((err) => console.warn("[Telegram] Gagal kirim notif pengajuan:", err));
+        } else if (effectiveStatus === "published" && initialData.status !== "published") {
+          const finalSlug = slug.trim() || initialData.slug;
+          notifyArticleModerated({
+            title: title.trim(),
+            action: "approved",
+            category,
+            authorName: user.user_metadata?.full_name || user.email,
+            slug: finalSlug,
+          }).catch((err) => console.warn("[Telegram] Gagal kirim notif terbit admin:", err));
+
+          notifyDiscordArticlePublished({
+            title: title.trim(),
+            category,
+            authorName: user.user_metadata?.full_name || user.email,
+            slug: finalSlug,
+            coverUrl: coverUrl || undefined,
+          }).catch((err) => console.warn("[Discord] Gagal kirim notif artikel tayang:", err));
         }
 
         setIsSubmitted(true);
@@ -429,7 +447,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
 
         if (insertError) throw insertError;
 
-        // Notifikasi Telegram
+        // Notifikasi Telegram & Discord
         if (targetStatus === "pending") {
           notifyArticleSubmitted({
             title: title.trim(),
@@ -439,7 +457,7 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             isRevision: false,
             slug: finalSlug,
           }).catch((err) => console.warn("[Telegram] Gagal kirim notif pengajuan baru:", err));
-        } else if (targetStatus === "published") {
+        } else if (effectiveStatus === "published") {
           notifyArticleModerated({
             title: title.trim(),
             action: "approved",
@@ -447,6 +465,14 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             authorName: user.user_metadata?.full_name || user.email,
             slug: finalSlug,
           }).catch((err) => console.warn("[Telegram] Gagal kirim notif terbit admin:", err));
+
+          notifyDiscordArticlePublished({
+            title: title.trim(),
+            category,
+            authorName: user.user_metadata?.full_name || user.email,
+            slug: finalSlug,
+            coverUrl: coverUrl || undefined,
+          }).catch((err) => console.warn("[Discord] Gagal kirim notif terbit admin:", err));
         }
 
         setIsSubmitted(true);

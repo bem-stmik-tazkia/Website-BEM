@@ -11,6 +11,7 @@ import {
   MaintenanceModePayload,
 } from "@/lib/telegram";
 import { createClient } from "@/utils/supabase/server";
+import { requireAdmin } from "@/lib/auth";
 
 /**
  * Notifikasi saat artikel baru atau revisi diajukan oleh mahasiswa.
@@ -18,7 +19,10 @@ import { createClient } from "@/utils/supabase/server";
 export async function notifyArticleSubmitted(payload: ArticleSubmittedPayload) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return { ok: false, error: "Unauthorized" };
+    }
     let authorName = payload.authorName || user?.user_metadata?.full_name;
     if ((!authorName || authorName.includes("@")) && user?.id) {
       const { data: profile } = await supabase
@@ -44,7 +48,10 @@ export async function notifyArticleSubmitted(payload: ArticleSubmittedPayload) {
 export async function notifyArticleWithdrawn(payload: ArticleWithdrawnPayload) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return { ok: false, error: "Unauthorized" };
+    }
     let authorName = payload.authorName || user?.user_metadata?.full_name;
     if ((!authorName || authorName.includes("@")) && user?.id) {
       const { data: profile } = await supabase
@@ -70,8 +77,7 @@ export async function notifyArticleWithdrawn(payload: ArticleWithdrawnPayload) {
  */
 export async function notifyArticleModerated(payload: ArticleModeratedPayload) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { user, supabase } = await requireAdmin();
     let adminName = user?.user_metadata?.full_name;
     if (!adminName && user?.id) {
       const { data: profile } = await supabase
@@ -98,8 +104,7 @@ export async function notifyArticleModerated(payload: ArticleModeratedPayload) {
  */
 export async function notifyMaintenanceMode(payload: MaintenanceModePayload) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { user, supabase } = await requireAdmin();
     let adminName = user?.user_metadata?.full_name;
     if (!adminName && user?.id) {
       const { data: profile } = await supabase

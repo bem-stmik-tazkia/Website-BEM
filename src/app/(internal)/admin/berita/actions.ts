@@ -3,7 +3,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { sendNewBeritaNotification } from "@/lib/telegram";
+import { sendDiscordBeritaNotification } from "@/lib/discord";
 
 export async function saveBerita(formData: FormData) {
   const { supabase } = await requireAdmin();
@@ -16,7 +16,7 @@ export async function saveBerita(formData: FormData) {
   const content = formData.get("content") as string;
   const image_url = formData.get("image_url") as string;
   const tagsString = formData.get("tags") as string;
-  const sendTelegram = formData.get("send_telegram") !== "false";
+  const sendDiscord = formData.get("send_discord") !== "false" && formData.get("send_telegram") !== "false";
 
   const tags = tagsString ? tagsString.split(",").map((t) => t.trim()) : [];
 
@@ -42,11 +42,11 @@ export async function saveBerita(formData: FormData) {
       .select()
       .single();
 
-    if (sendTelegram && inserted) {
+    if (sendDiscord && inserted) {
       try {
-        await sendNewBeritaNotification(inserted);
+        await sendDiscordBeritaNotification(inserted);
       } catch (e) {
-        console.error("Gagal mengirim notif Telegram saat saveBerita:", e);
+        console.error("Gagal mengirim notif Discord saat saveBerita:", e);
       }
     }
   }

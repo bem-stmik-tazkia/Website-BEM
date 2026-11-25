@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceRoleClient } from "@/lib/auth";
 import { getClientIp, checkRateLimit, createRateLimitResponse } from "@/lib/rateLimit";
+import { sendVolunteerAppliedNotification } from "@/lib/telegram";
 
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 
@@ -166,7 +167,7 @@ export async function POST(req: Request) {
 
     const { data: agenda, error: agendaError } = await supabaseAdmin
       .from("agendas")
-      .select("id, is_published, deadline, form_schema, type")
+      .select("id, title, slug, is_published, deadline, form_schema, type")
       .eq("id", agendaId)
       .maybeSingle();
 
@@ -295,6 +296,29 @@ export async function POST(req: Request) {
         { error: "Gagal menyimpan data pendaftaran. Silakan coba kembali." },
         { status: 500, headers: rateLimitResult.headers }
       );
+    }
+
+    // 7. Kirim notifikasi teknis ke Telegram internal pengurus (non-blocking)
+    try {
+      const { count } = await supabaseAdmin
+        .from("volunteer_applications")
+        .select("*", { count: "exact", head: true })
+        .eq("agenda_id", agendaId);
+
+      const formattedFields = formSchema.map((field) => ({
+        label: field.label,
+        value: typeof responses[field.id] === "string" ? responses[field.id].trim() : "",
+      }));
+
+      await sendVolunteerAppliedNotification({
+        agendaId: agenda.id,
+        agendaTitle: agenda.title || "Kegiatan BEM",
+        agendaType: agenda.type,
+        fields: formattedFields,
+        totalParticipants: typeof count === "number" ? count : undefined,
+      });
+    } catch (teleErr) {
+      console.warn("[volunteer/apply] Gagal mengirim notif Telegram:", teleErr);
     }
 
     return NextResponse.json(

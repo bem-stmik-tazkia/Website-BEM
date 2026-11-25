@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FiArrowLeft, FiSave, FiAlertCircle, FiRefreshCw, FiSend } from "react-icons/fi";
+import { FiArrowLeft, FiSave, FiAlertCircle, FiRefreshCw } from "react-icons/fi";
+import { SiDiscord } from "react-icons/si";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageUpload from "@/components/ui/ImageUpload";
 import dynamic from "next/dynamic";
@@ -39,7 +40,7 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
   const router = useRouter();
   const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [sendTelegram, setSendTelegram] = useState(!initialData);
+  const [sendDiscord, setSendDiscord] = useState(!initialData);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -187,7 +188,7 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
         ...formData,
         content: cleanedContent,
         tags: finalTags.split(",").map((t: string) => t.trim()).filter(Boolean),
-        send_telegram: sendTelegram,
+        send_discord: sendDiscord,
       };
 
       const res = await fetch("/api/admin/berita", {
@@ -205,10 +206,11 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
       if (!initialData) localStorage.removeItem("berita_draft");
       setIsDirty(false);
 
-      if (responseData.telegram?.ok) {
-        toast("Berita berhasil disimpan & disiarkan ke Telegram!", "success");
-      } else if (responseData.telegram && !responseData.telegram.ok) {
-        toast(`Berita berhasil disimpan! (Catatan Telegram: ${responseData.telegram.error || "Gagal kirim"})`, "info");
+      const channelLabel = responseData.discord?.channel === "pengumuman" ? "#Pengumuman" : "#Berita";
+      if (responseData.discord?.ok) {
+        toast(`Berita berhasil disimpan & disiarkan ke Discord ${channelLabel}!`, "success");
+      } else if (responseData.discord && !responseData.discord.ok) {
+        toast(`Berita berhasil disimpan! (Catatan Discord: ${responseData.discord.error || "Gagal kirim"})`, "info");
       } else {
         toast("Berita berhasil disimpan!", "success");
       }
@@ -272,45 +274,52 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
           </button>
         </div>
 
-        {/* Telegram Notification Toggle */}
-        <div className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
-          sendTelegram 
-            ? "bg-sky-500/10 border-sky-500/20" 
-            : "bg-surface-variant/20 border-outline-variant/20"
-        }`}>
-          <div className="flex items-start gap-3">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-              sendTelegram 
-                ? "bg-sky-500/20 text-sky-600 dark:text-sky-400" 
-                : "bg-surface-variant text-on-surface-variant/60"
+        {/* Discord Notification Toggle */}
+        {(() => {
+          const targetChannel = formData.category?.toLowerCase() === "pengumuman" ? "#Pengumuman" : "#Berita";
+          return (
+            <div className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+              sendDiscord
+                ? "bg-indigo-500/10 border-indigo-500/20"
+                : "bg-surface-variant/20 border-outline-variant/20"
             }`}>
-              <FiSend size={15} />
+              <div className="flex items-start gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                  sendDiscord
+                    ? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400"
+                    : "bg-surface-variant text-on-surface-variant/60"
+                }`}>
+                  <SiDiscord size={15} />
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-on-surface">
+                    {initialData
+                      ? `Kirim Ulang Notifikasi ke Discord (${targetChannel})`
+                      : `Siarkan ke Discord (${targetChannel})`}
+                  </p>
+                  <p className="text-xs text-on-surface-variant mt-0.5">
+                    {initialData
+                      ? `Secara default mati saat edit agar tidak spam di Discord ${targetChannel}. Aktifkan jika ingin menyiarkan ulang.`
+                      : `Kirim ringkasan, gambar banner, dan tautan otomatis ke channel Discord ${targetChannel} saat dipublikasikan`}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSendDiscord(!sendDiscord)}
+                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none shrink-0 ${
+                  sendDiscord ? "bg-indigo-600" : "bg-outline-variant/40"
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
+                    sendDiscord ? "translate-x-8" : "translate-x-1"
+                  }`}
+                />
+              </button>
             </div>
-            <div>
-              <p className="font-bold text-sm text-on-surface">
-                {initialData ? "Kirim Ulang Notifikasi ke Telegram" : "Siarkan ke Bot Telegram"}
-              </p>
-              <p className="text-xs text-on-surface-variant mt-0.5">
-                {initialData
-                  ? "Secara default mati saat edit berita agar tidak spam di chat Telegram. Aktifkan jika ingin menyiarkan ulang."
-                  : "Kirim ringkasan berita, gambar banner, dan tautan otomatis ke Telegram saat disimpan"}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSendTelegram(!sendTelegram)}
-            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none ${
-              sendTelegram ? "bg-sky-500" : "bg-outline-variant/40"
-            }`}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
-                sendTelegram ? "translate-x-8" : "translate-x-1"
-              }`}
-            />
-          </button>
-        </div>
+          );
+        })()}
 
         {/* Judul */}
         <div id="field-title" className="space-y-2">

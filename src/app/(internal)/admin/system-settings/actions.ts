@@ -108,6 +108,46 @@ function validateSecretFormat(key: AppSecretKey, value: string): { valid: boolea
       }
     }
 
+    case 'discord_berita_webhook_url':
+    case 'discord_pengumuman_webhook_url': {
+      try {
+        const url = new URL(trimmed);
+        if (url.protocol !== 'https:') {
+          return { valid: false, error: "URL Webhook Discord wajib menggunakan protokol HTTPS (https://)." };
+        }
+        if (url.username || url.password) {
+          return { valid: false, error: "URL Webhook Discord tidak boleh mengandung kredensial pengguna." };
+        }
+        if (url.port && url.port !== '443') {
+          return { valid: false, error: "URL Webhook Discord tidak boleh menggunakan port non-standar." };
+        }
+        const allowedHosts = ['discord.com', 'ptb.discord.com', 'canary.discord.com', 'discordapp.com'];
+        const host = url.hostname.toLowerCase();
+        if (!allowedHosts.includes(host)) {
+          return {
+            valid: false,
+            error: "URL Webhook harus menggunakan domain resmi Discord (discord.com atau discordapp.com).",
+          };
+        }
+        const webhookPathRegex = /^\/api\/webhooks\/\d{15,22}\/[A-Za-z0-9._-]+$/;
+        if (!webhookPathRegex.test(url.pathname)) {
+          return {
+            valid: false,
+            error: "Format path Webhook Discord tidak valid (harus berupa https://discord.com/api/webhooks/<id>/<token>).",
+          };
+        }
+        if (url.search || url.hash) {
+          return {
+            valid: false,
+            error: "URL Webhook Discord tidak boleh mengandung query parameter atau fragment (#).",
+          };
+        }
+        return { valid: true };
+      } catch {
+        return { valid: false, error: "URL Webhook Discord tidak valid." };
+      }
+    }
+
     default:
       return { valid: false, error: "Key rahasia tidak dikenali." };
   }
@@ -163,12 +203,66 @@ export async function setSecret(key: string, value: string): Promise<{ success: 
 
     if (upsertError) {
       console.error("[setSecret] Database upsert error:", upsertError.message);
+      if (
+        upsertError.code === '23514' ||
+        upsertError.message?.includes('check_app_secrets_allowed_keys')
+      ) {
+        return {
+          success: false,
+          error:
+            "Constraint database app_secrets belum diperbarui untuk key baru. Jalankan migrasi sql/supabase/migrations/20261125090000_add_discord_app_secrets.sql di Supabase SQL Editor.",
+        };
+      }
       return { success: false, error: "Gagal menyimpan rahasia ke database." };
     }
 
     return { success: true };
   } catch (err: any) {
     console.error("[setSecret] Server action error:", err);
+    return { success: false, error: err.message || "Terjadi kesalahan internal server." };
+  }
+}
+
+/**
+ * Server Action: Menghapus/mencopot kredensial rahasia dari public.app_secrets.
+ * Memungkinkan admin mencopot atau menonaktifkan integrasi secara dinamis.
+ */
+export async function deleteSecret(key: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const admin = await requireAdmin();
+
+    if (!ALLOWED_SECRET_KEYS.includes(key as AppSecretKey)) {
+      return { success: false, error: "Key rahasia tidak sah." };
+    }
+    const secretKey = key as AppSecretKey;
+
+    const adminIdentifier = admin.user.email || 'admin_user';
+    const rateLimitRes = await checkRateLimit(`admin_delete_secret_${adminIdentifier}`, {
+      limit: 10,
+      windowMs: 60 * 1000,
+    });
+
+    if (!rateLimitRes.success) {
+      return {
+        success: false,
+        error: "Terlalu banyak permintaan penghapusan kredensial. Silakan tunggu 1 menit.",
+      };
+    }
+
+    const supabase = getServiceRoleClient();
+    const { error: deleteError } = await supabase
+      .from('app_secrets')
+      .delete()
+      .eq('key', secretKey);
+
+    if (deleteError) {
+      console.error("[deleteSecret] Database delete error:", deleteError.message);
+      return { success: false, error: "Gagal mencopot kredensial dari database." };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("[deleteSecret] Server action error:", err);
     return { success: false, error: err.message || "Terjadi kesalahan internal server." };
   }
 }

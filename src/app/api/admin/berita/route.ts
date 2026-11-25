@@ -1,7 +1,7 @@
 import { verifyAdminApi } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
-import { sendNewBeritaNotification } from "@/lib/telegram";
+import { sendDiscordBeritaNotification } from "@/lib/discord";
 
 export async function POST(req: Request) {
   try {
@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       image_url,
       tags,
       is_published,
+      send_discord,
       send_telegram,
     } = body;
 
@@ -67,29 +68,31 @@ export async function POST(req: Request) {
 
     revalidatePath("/admin/berita");
     revalidatePath("/berita");
+    revalidateTag("berita", "max");
 
-    // Telegram notification logic:
-    // Hanya kirim otomatis untuk artikel baru (!id).
-    // Saat edit artikel yang sudah ada (id ada), JANGAN kirim notifikasi kecuali admin mencentang opsi kirim ulang secara eksplisit.
-    let telegramResult: { ok: boolean; error?: string } | null = null;
-    const shouldSendTelegram = id
-      ? send_telegram === true
-      : data.is_published && send_telegram !== false;
+    // Discord notification logic:
+    // Hanya kirim otomatis untuk berita baru (!id) yang dipublikasikan.
+    // Saat edit berita yang sudah ada (id ada), JANGAN kirim kecuali admin mengaktifkan kirim ulang secara eksplisit.
+    const broadcastFlag = send_discord !== undefined ? send_discord : send_telegram;
+    let discordResult: { ok: boolean; channel?: string; error?: string } | null = null;
+    const shouldSendDiscord = id
+      ? broadcastFlag === true && data.is_published
+      : data.is_published && broadcastFlag !== false;
 
-    if (shouldSendTelegram && savedBerita) {
+    if (shouldSendDiscord && savedBerita) {
       try {
-        telegramResult = await sendNewBeritaNotification(savedBerita);
-      } catch (teleErr: unknown) {
-        const msg = teleErr instanceof Error ? teleErr.message : "Error sending telegram";
-        console.error("Gagal mengirim notifikasi Telegram:", msg);
-        telegramResult = { ok: false, error: "Gagal mengirim notifikasi Telegram" };
+        discordResult = await sendDiscordBeritaNotification(savedBerita);
+      } catch (discordErr: unknown) {
+        const msg = discordErr instanceof Error ? discordErr.message : "Error sending Discord";
+        console.error("Gagal mengirim notifikasi Discord:", msg);
+        discordResult = { ok: false, error: "Gagal mengirim notifikasi Discord" };
       }
     }
 
     return NextResponse.json({
       ok: true,
       data: savedBerita,
-      telegram: telegramResult,
+      discord: discordResult,
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Internal Server Error";

@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { FiPlus, FiEdit2, FiTrash2, FiImage, FiAlertTriangle, FiCheckCircle } from "react-icons/fi";
 import { revalidatePath } from "next/cache";
 import DeleteButton from "@/app/(internal)/admin/kegiatan/DeleteButton";
+import BroadcastKegiatanButton from "@/app/(internal)/admin/kegiatan/BroadcastKegiatanButton";
 import AddDocumentationButton from "./AddDocumentationButton";
 import { formatDateToIndo } from "@/utils/dateFormatter";
 
@@ -130,6 +131,11 @@ export default async function DokumentasiAdminPage() {
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
+                        <BroadcastKegiatanButton
+                          id={item.id}
+                          title={item.title}
+                          isPublished={item.is_published}
+                        />
                         <Link
                           href={`/admin/kegiatan/form?id=${item.id}&from=dokumentasi`}
                           className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-bold transition-colors ${

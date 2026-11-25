@@ -353,13 +353,13 @@ export default function SaranAduanAdminPage() {
             </div>
             <div className="px-6 py-5 overflow-y-auto flex-1 space-y-6">
               
-              {/* Security Notice: Env Vars */}
+              {/* Security Notice: App Secrets */}
               <div className="bg-sky-500/10 border border-sky-500/20 rounded-xl p-3.5 text-xs text-on-surface flex items-start gap-2.5">
                 <span className="material-symbols-outlined text-sky-500 text-[18px] shrink-0 mt-0.5">verified_user</span>
                 <div className="space-y-1">
-                  <p className="font-bold">Kredensial Integrasi Dikelola via Environment Variables</p>
+                  <p className="font-bold">Kredensial Integrasi Dikelola via Pengaturan Sistem (App Secrets)</p>
                   <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                    Demi keamanan, <code>GOOGLE_SHEETS_WEBHOOK_URL</code>, <code>TELEGRAM_BOT_TOKEN</code>, dan <code>TELEGRAM_CHAT_ID</code> dikonfigurasi melalui <strong>Environment Variables di Vercel</strong> dan tidak lagi disimpan di database.
+                    Demi keamanan, kredensial Webhook Spreadsheet, Bot Telegram, dan Spreadsheet Rekap dikonfigurasi secara aman melalui menu <strong>Pengaturan Sistem &gt; App Secrets</strong>.
                   </p>
                 </div>
               </div>

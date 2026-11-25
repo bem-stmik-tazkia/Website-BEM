@@ -3,13 +3,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
-import { FiBell, FiMessageSquare, FiCheck, FiBookOpen } from "react-icons/fi";
+import { FiBell, FiMessageSquare, FiCheck, FiBookOpen, FiUsers } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchPendingArticlesForBell } from "@/app/(internal)/admin/artikel/actions";
+import { fetchRecentVolunteerApplicationsForBell } from "@/app/(internal)/admin/kegiatan/actions";
 
 interface Notification {
   id: string;
-  type: "saran" | "artikel";
+  type: "saran" | "artikel" | "volunteer";
   title: string;
   author: string;
   created_at: string;
@@ -46,6 +47,15 @@ const TYPE_CONFIG: Record<string, any> = {
     border: "border-blue-100",
     dot: "bg-blue-400",
   },
+  volunteer: {
+    label: "Pendaftar",
+    icon: FiUsers,
+    bg: "bg-emerald-50 dark:bg-emerald-950/40",
+    iconColor: "text-emerald-500",
+    badge: "bg-emerald-500",
+    border: "border-emerald-100",
+    dot: "bg-emerald-400",
+  },
 };
 
 export default function AdminNotificationBell({ isScrolled, isHome }: { isScrolled?: boolean; isHome?: boolean }) {
@@ -67,7 +77,11 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
         ? (localStorage.getItem("admin_articles_last_viewed") || "")
         : "";
 
-      const [saranRes, artikelNotifs] = await Promise.all([
+      const lastViewedVolunteer = typeof window !== "undefined"
+        ? (localStorage.getItem("admin_volunteer_last_viewed") || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const [saranRes, artikelNotifs, volunteerNotifs] = await Promise.all([
         supabase
           .from("saran_aduan")
           .select("id, nama, kategori, pesan, subjek, created_at")
@@ -75,6 +89,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
           .order("created_at", { ascending: false })
           .limit(20),
         fetchPendingArticlesForBell(),
+        fetchRecentVolunteerApplicationsForBell(lastViewedVolunteer),
       ]);
 
       const filteredArticles = lastViewedArticles
@@ -90,7 +105,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
         href: "/admin/saran-aduan",
       }));
 
-      const combined = [...mappedSaran, ...filteredArticles].sort(
+      const combined = [...mappedSaran, ...filteredArticles, ...(volunteerNotifs || [])].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
@@ -124,6 +139,13 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
       })
       .subscribe();
 
+    const channelVolunteer = supabase
+      .channel(`notif_bell_volunteer_${Date.now()}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "volunteer_applications" }, () => {
+        fetchNotifications();
+      })
+      .subscribe();
+
     const handleSaranRead = () => {
       fetchNotifications();
     };
@@ -132,6 +154,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
     return () => {
       supabase.removeChannel(channelSaran);
       supabase.removeChannel(channelArticles);
+      supabase.removeChannel(channelVolunteer);
       window.removeEventListener("saran_read", handleSaranRead);
     };
   }, []);
@@ -157,6 +180,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
     if (typeof window !== "undefined") {
       localStorage.setItem("admin_saran_last_viewed", nowIso);
       localStorage.setItem("admin_articles_last_viewed", nowIso);
+      localStorage.setItem("admin_volunteer_last_viewed", nowIso);
       window.dispatchEvent(new Event("saran_read"));
     }
     setNotifications([]);

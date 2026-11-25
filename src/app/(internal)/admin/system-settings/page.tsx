@@ -12,21 +12,24 @@ import {
   FiAlertTriangle, 
   FiSend, 
   FiShield, 
-  FiLock, 
   FiKey, 
   FiRefreshCw,
   FiLink,
-  FiFileText
+  FiFileText,
+  FiTrash2
 } from "react-icons/fi";
+import { SiDiscord } from "react-icons/si";
 import { useToast } from "@/components/ui/Toast";
 import { useRouter } from "next/navigation";
 import { 
   getSecretStatus, 
   setSecret, 
+  deleteSecret,
   SecretStatusMap 
 } from "./actions";
 import { AppSecretKey } from "@/lib/secrets";
 import { notifyMaintenanceMode } from "@/actions/telegram-notifications";
+import { notifyDiscordReleaseUpdate } from "@/actions/discord-notifications";
 
 export default function SystemSettingsPage() {
   const supabase = createClient();
@@ -50,8 +53,10 @@ export default function SystemSettingsPage() {
     ],
     rPublished: true,
     adminPhone: "",
-    tNotifEnabled: true,
+    tTechNotifEnabled: true,
     tReminderEnabled: true,
+    dBeritaNotifEnabled: true,
+    dPengumumanNotifEnabled: true,
   });
 
   const [mMode, setMMode] = useState(false);
@@ -66,9 +71,12 @@ export default function SystemSettingsPage() {
   ]);
   const [rPublished, setRPublished] = useState(true);
   const [adminPhone, setAdminPhone] = useState("");
-  const [tNotifEnabled, setTNotifEnabled] = useState(true);
+  const [tTechNotifEnabled, setTTechNotifEnabled] = useState(true);
   const [tReminderEnabled, setTReminderEnabled] = useState(true);
+  const [dBeritaNotifEnabled, setDBeritaNotifEnabled] = useState(true);
+  const [dPengumumanNotifEnabled, setDPengumumanNotifEnabled] = useState(true);
   const [testingPing, setTestingPing] = useState(false);
+  const [testingDiscordTarget, setTestingDiscordTarget] = useState<"berita" | "pengumuman" | null>(null);
   const [newFeatureInput, setNewFeatureInput] = useState("");
   const [savingMaintenance, setSavingMaintenance] = useState(false);
 
@@ -77,6 +85,8 @@ export default function SystemSettingsPage() {
   const [loadingSecrets, setLoadingSecrets] = useState(true);
   const [secretInputs, setSecretInputs] = useState<Record<string, string>>({});
   const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [confirmDetachKey, setConfirmDetachKey] = useState<AppSecretKey | null>(null);
 
   // Check dirty against saved ref using useEffect
   useEffect(() => {
@@ -90,11 +100,13 @@ export default function SystemSettingsPage() {
       rTitle !== s.rTitle ||
       rPublished !== s.rPublished ||
       adminPhone !== s.adminPhone ||
-      tNotifEnabled !== s.tNotifEnabled ||
+      tTechNotifEnabled !== s.tTechNotifEnabled ||
       tReminderEnabled !== s.tReminderEnabled ||
+      dBeritaNotifEnabled !== s.dBeritaNotifEnabled ||
+      dPengumumanNotifEnabled !== s.dPengumumanNotifEnabled ||
       JSON.stringify(rFeatures) !== JSON.stringify(s.rFeatures);
     setIsDirty(dirty);
-  }, [mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone, tNotifEnabled, tReminderEnabled, loading]);
+  }, [mMode, mTime, mMsg, rVersion, rTitle, rFeatures, rPublished, adminPhone, tTechNotifEnabled, tReminderEnabled, dBeritaNotifEnabled, dPengumumanNotifEnabled, loading]);
 
   const loadSecretStatusData = async () => {
     setLoadingSecrets(true);
@@ -120,8 +132,10 @@ export default function SystemSettingsPage() {
         "maintenance_message",
         "release_notes",
         "admin_whatsapp",
-        "telegram_berita_notif_enabled",
+        "telegram_tech_notif_enabled",
         "telegram_berita_reminder_enabled",
+        "discord_berita_notif_enabled",
+        "discord_pengumuman_notif_enabled",
       ]);
 
     if (error) {
@@ -132,15 +146,19 @@ export default function SystemSettingsPage() {
       const mMsgItem = data.find((d) => d.key === "maintenance_message");
       const rNotesItem = data.find((d) => d.key === "release_notes");
       const adminPhoneItem = data.find((d) => d.key === "admin_whatsapp");
-      const tNotifItem = data.find((d) => d.key === "telegram_berita_notif_enabled");
+      const tTechNotifItem = data.find((d) => d.key === "telegram_tech_notif_enabled");
       const tReminderItem = data.find((d) => d.key === "telegram_berita_reminder_enabled");
+      const dBeritaItem = data.find((d) => d.key === "discord_berita_notif_enabled");
+      const dPengumumanItem = data.find((d) => d.key === "discord_pengumuman_notif_enabled");
 
       const newMMode = mModeItem?.value === "true";
       const newMTime = mTimeItem?.value || "1-2 Jam";
       const newMMsg = mMsgItem?.value || "";
       const newAdminPhone = adminPhoneItem?.value || "";
-      const newTNotif = tNotifItem ? tNotifItem.value !== "false" : true;
+      const newTTechNotif = tTechNotifItem ? tTechNotifItem.value !== "false" : true;
       const newTReminder = tReminderItem ? tReminderItem.value !== "false" : true;
+      const newDBeritaNotif = dBeritaItem ? dBeritaItem.value !== "false" : true;
+      const newDPengumumanNotif = dPengumumanItem ? dPengumumanItem.value !== "false" : true;
       
       let newRVersion = "v1.2.0";
       let newRTitle = "Pembaruan Sistem Portal BEM";
@@ -168,8 +186,10 @@ export default function SystemSettingsPage() {
         rFeatures: newRFeatures,
         rPublished: newRPublished,
         adminPhone: newAdminPhone,
-        tNotifEnabled: newTNotif,
+        tTechNotifEnabled: newTTechNotif,
         tReminderEnabled: newTReminder,
+        dBeritaNotifEnabled: newDBeritaNotif,
+        dPengumumanNotifEnabled: newDPengumumanNotif,
       };
 
       setMMode(newMMode);
@@ -180,8 +200,10 @@ export default function SystemSettingsPage() {
       setRFeatures(newRFeatures);
       setRPublished(newRPublished);
       setAdminPhone(newAdminPhone);
-      setTNotifEnabled(newTNotif);
+      setTTechNotifEnabled(newTTechNotif);
       setTReminderEnabled(newTReminder);
+      setDBeritaNotifEnabled(newDBeritaNotif);
+      setDPengumumanNotifEnabled(newDPengumumanNotif);
       
       setIsDirty(false);
     }
@@ -255,8 +277,10 @@ export default function SystemSettingsPage() {
       { key: "maintenance_message", value: mMsg.trim(), updated_at: nowIso },
       { key: "release_notes", value: JSON.stringify(releaseNotesObj), updated_at: nowIso },
       { key: "admin_whatsapp", value: adminPhone.trim(), updated_at: nowIso },
-      { key: "telegram_berita_notif_enabled", value: tNotifEnabled ? "true" : "false", updated_at: nowIso },
+      { key: "telegram_tech_notif_enabled", value: tTechNotifEnabled ? "true" : "false", updated_at: nowIso },
       { key: "telegram_berita_reminder_enabled", value: tReminderEnabled ? "true" : "false", updated_at: nowIso },
+      { key: "discord_berita_notif_enabled", value: dBeritaNotifEnabled ? "true" : "false", updated_at: nowIso },
+      { key: "discord_pengumuman_notif_enabled", value: dPengumumanNotifEnabled ? "true" : "false", updated_at: nowIso },
     ];
 
     const { error } = await supabase
@@ -277,10 +301,19 @@ export default function SystemSettingsPage() {
           releaseTitle: rTitle,
           releaseFeatures: rFeatures,
         }).catch((err) => console.warn("[Telegram] Gagal kirim notif maintenance:", err));
+
+        if (!mMode && rPublished) {
+          notifyDiscordReleaseUpdate({
+            releaseVersion: rVersion,
+            releaseTitle: rTitle,
+            releaseFeatures: rFeatures,
+          }).catch((err) => console.warn("[Discord] Gagal kirim notif rilis update:", err));
+        }
       }
       savedRef.current = { 
         mMode, mTime, mMsg, rVersion, rTitle, rFeatures, 
-        rPublished, adminPhone, tNotifEnabled, tReminderEnabled
+        rPublished, adminPhone, tTechNotifEnabled, tReminderEnabled,
+        dBeritaNotifEnabled, dPengumumanNotifEnabled
       };
       setIsDirty(false);
       toast("Pengaturan Sistem berhasil disimpan!", "success");
@@ -291,15 +324,16 @@ export default function SystemSettingsPage() {
   const handleUpdateSecret = async (key: AppSecretKey) => {
     const rawVal = secretInputs[key] || "";
     if (!rawVal.trim()) {
-      toast("Silakan masukkan nilai baru untuk mengganti kredensial.", "error");
+      toast("Silakan masukkan nilai baru untuk memasang atau mengganti kredensial.", "error");
       return;
     }
 
     setSavingKey(key);
+    setConfirmDetachKey(null);
     try {
       const res = await setSecret(key, rawVal);
       if (res.success) {
-        toast("Kredensial rahasia berhasil diperbarui!", "success");
+        toast("Kredensial rahasia berhasil dipasang/diperbarui!", "success");
         setSecretInputs((prev) => ({ ...prev, [key]: "" }));
         await loadSecretStatusData();
       } else {
@@ -309,6 +343,25 @@ export default function SystemSettingsPage() {
       toast(e.message || "Terjadi kesalahan.", "error");
     } finally {
       setSavingKey(null);
+    }
+  };
+
+  const handleDeleteSecret = async (key: AppSecretKey) => {
+    setDeletingKey(key);
+    try {
+      const res = await deleteSecret(key);
+      if (res.success) {
+        toast("Kredensial berhasil dicopot.", "success");
+        setConfirmDetachKey(null);
+        setSecretInputs((prev) => ({ ...prev, [key]: "" }));
+        await loadSecretStatusData();
+      } else {
+        toast(res.error || "Gagal mencopot kredensial.", "error");
+      }
+    } catch (e: any) {
+      toast(e.message || "Terjadi kesalahan.", "error");
+    } finally {
+      setDeletingKey(null);
     }
   };
 
@@ -330,6 +383,27 @@ export default function SystemSettingsPage() {
       toast("Error: " + e.message, "error");
     } finally {
       setTestingPing(false);
+    }
+  };
+
+  const handleTestDiscord = async (target: "berita" | "pengumuman") => {
+    try {
+      setTestingDiscordTarget(target);
+      const res = await fetch("/api/admin/discord", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "test_ping", target }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        toast(data.message || `Pesan tes berhasil dikirim ke Discord #${target}!`, "success");
+      } else {
+        toast("Gagal tes Discord: " + (data.error || "Pastikan Webhook Discord sudah dipasang."), "error");
+      }
+    } catch (e: any) {
+      toast("Error: " + e.message, "error");
+    } finally {
+      setTestingDiscordTarget(null);
     }
   };
 
@@ -355,7 +429,7 @@ export default function SystemSettingsPage() {
             Pengaturan Sistem & Kredensial
           </h2>
           <p className="text-on-surface-variant mt-1">
-            Kelola Mode Maintenance, Kredensial Rahasia Aplikasi (App Secrets), dan Integrasi Bot Telegram.
+            Kelola Mode Maintenance, Kredensial Rahasia Aplikasi (App Secrets), serta Integrasi Bot Telegram &amp; Webhook Discord.
           </p>
         </div>
       </div>
@@ -411,229 +485,175 @@ export default function SystemSettingsPage() {
           </div>
 
           <div className="space-y-4">
-            {/* 1. Token Bot Telegram */}
-            <div className="p-4 bg-surface-variant/10 rounded-2xl border border-outline-variant/20">
-              <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <FiSend size={15} className="text-sky-500" />
-                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
-                      Token Bot Telegram
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-on-surface-variant mt-0.5">
-                    Token otentikasi dari @BotFather (Format: <code>&lt;angka_id&gt;:&lt;token_alphanumeric&gt;</code>).
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {secretStatuses?.telegram_bot_token.isSet ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                      <FiCheckCircle size={12} />
-                      Terisi
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                      <FiAlertTriangle size={12} />
-                      Kosong
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {secretStatuses?.telegram_bot_token.updatedAt && (
-                <p className="text-[10px] text-on-surface-variant mb-2">
-                  Terakhir diubah: {new Date(secretStatuses.telegram_bot_token.updatedAt).toLocaleString("id-ID")}
-                  {secretStatuses.telegram_bot_token.updatedBy ? ` oleh ${secretStatuses.telegram_bot_token.updatedBy}` : ''}
-                </p>
-              )}
-
-              <div className="flex gap-2 mt-2">
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  value={secretInputs.telegram_bot_token || ""}
-                  onChange={(e) => setSecretInputs((prev) => ({ ...prev, telegram_bot_token: e.target.value }))}
-                  placeholder="Ketik token Telegram baru untuk mengganti..."
-                  className="flex-1 bg-surface border border-outline-variant/30 rounded-xl px-4 py-2 text-xs outline-none focus:border-primary font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleUpdateSecret("telegram_bot_token")}
-                  disabled={savingKey === "telegram_bot_token" || !(secretInputs.telegram_bot_token || "").trim()}
-                  className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 shadow-sm"
-                >
-                  {savingKey === "telegram_bot_token" ? "Menyimpan..." : "Ganti"}
-                </button>
-              </div>
-            </div>
-
-            {/* 2. Chat ID Telegram */}
-            <div className="p-4 bg-surface-variant/10 rounded-2xl border border-outline-variant/20">
-              <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <FiSend size={15} className="text-sky-500" />
-                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
-                      Chat ID Telegram
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-on-surface-variant mt-0.5">
-                    ID grup / channel tujuan notifikasi berita & aduan (Angka bulat numerik, contoh: <code>-1001234567890</code>).
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {secretStatuses?.telegram_chat_id.isSet ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                      <FiCheckCircle size={12} />
-                      Terisi
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                      <FiAlertTriangle size={12} />
-                      Kosong
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {secretStatuses?.telegram_chat_id.updatedAt && (
-                <p className="text-[10px] text-on-surface-variant mb-2">
-                  Terakhir diubah: {new Date(secretStatuses.telegram_chat_id.updatedAt).toLocaleString("id-ID")}
-                  {secretStatuses.telegram_chat_id.updatedBy ? ` oleh ${secretStatuses.telegram_chat_id.updatedBy}` : ''}
-                </p>
-              )}
-
-              <div className="flex gap-2 mt-2">
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  value={secretInputs.telegram_chat_id || ""}
-                  onChange={(e) => setSecretInputs((prev) => ({ ...prev, telegram_chat_id: e.target.value }))}
-                  placeholder="Ketik Chat ID Telegram baru untuk mengganti..."
-                  className="flex-1 bg-surface border border-outline-variant/30 rounded-xl px-4 py-2 text-xs outline-none focus:border-primary font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleUpdateSecret("telegram_chat_id")}
-                  disabled={savingKey === "telegram_chat_id" || !(secretInputs.telegram_chat_id || "").trim()}
-                  className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 shadow-sm"
-                >
-                  {savingKey === "telegram_chat_id" ? "Menyimpan..." : "Ganti"}
-                </button>
-              </div>
-            </div>
-
-            {/* 3. URL Webhook Make (Kotak Saran) */}
-            <div className="p-4 bg-surface-variant/10 rounded-2xl border border-outline-variant/20">
-              <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <FiLink size={15} className="text-purple-500" />
-                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
-                      URL Webhook Make / Sheets
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-on-surface-variant mt-0.5">
+            {([
+              {
+                key: "telegram_bot_token" as AppSecretKey,
+                title: "Token Bot Telegram (Internal & Teknis)",
+                desc: (
+                  <>
+                    Token otentikasi dari @BotFather untuk notifikasi teknis &amp; pengajuan (Format: <code>&lt;angka_id&gt;:&lt;token_alphanumeric&gt;</code>).
+                  </>
+                ),
+                placeholder: "Ketik token Telegram baru untuk memasang / mengganti...",
+                icon: <FiSend size={15} className="text-sky-500" />,
+              },
+              {
+                key: "telegram_chat_id" as AppSecretKey,
+                title: "Chat ID Telegram (Grup Pengurus)",
+                desc: (
+                  <>
+                    ID grup / channel internal pengurus untuk pengajuan artikel, pendaftar volunteer, aduan, &amp; status sistem (contoh: <code>-1001234567890</code>).
+                  </>
+                ),
+                placeholder: "Ketik Chat ID Telegram baru untuk memasang / mengganti...",
+                icon: <FiSend size={15} className="text-sky-500" />,
+              },
+              {
+                key: "discord_berita_webhook_url" as AppSecretKey,
+                title: "Webhook Discord (#Berita)",
+                desc: (
+                  <>
+                    Webhook URL channel <code>#Berita</code> untuk siaran berita, kabar kampus, dan artikel mahasiswa tayang (<code>https://discord.com/api/webhooks/...</code>).
+                  </>
+                ),
+                placeholder: "https://discord.com/api/webhooks/...",
+                icon: <SiDiscord size={15} className="text-indigo-500" />,
+              },
+              {
+                key: "discord_pengumuman_webhook_url" as AppSecretKey,
+                title: "Webhook Discord (#Pengumuman)",
+                desc: (
+                  <>
+                    Webhook URL channel <code>#Pengumuman</code> untuk pengumuman resmi, agenda/event, open recruitment volunteer, dokumentasi, &amp; rilis update (<code>https://discord.com/api/webhooks/...</code>).
+                  </>
+                ),
+                placeholder: "https://discord.com/api/webhooks/...",
+                icon: <SiDiscord size={15} className="text-indigo-500" />,
+              },
+              {
+                key: "google_sheets_webhook_url" as AppSecretKey,
+                title: "URL Webhook Make / Sheets",
+                desc: (
+                  <>
                     Endpoint penerima otomatis aduan mahasiswa (Wajib HTTPS dengan host resmi <code>make.com</code>).
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {secretStatuses?.google_sheets_webhook_url.isSet ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                      <FiCheckCircle size={12} />
-                      Terisi
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                      <FiAlertTriangle size={12} />
-                      Kosong
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {secretStatuses?.google_sheets_webhook_url.updatedAt && (
-                <p className="text-[10px] text-on-surface-variant mb-2">
-                  Terakhir diubah: {new Date(secretStatuses.google_sheets_webhook_url.updatedAt).toLocaleString("id-ID")}
-                  {secretStatuses.google_sheets_webhook_url.updatedBy ? ` oleh ${secretStatuses.google_sheets_webhook_url.updatedBy}` : ''}
-                </p>
-              )}
-
-              <div className="flex gap-2 mt-2">
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  value={secretInputs.google_sheets_webhook_url || ""}
-                  onChange={(e) => setSecretInputs((prev) => ({ ...prev, google_sheets_webhook_url: e.target.value }))}
-                  placeholder="https://hook.eu1.make.com/..."
-                  className="flex-1 bg-surface border border-outline-variant/30 rounded-xl px-4 py-2 text-xs outline-none focus:border-primary font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleUpdateSecret("google_sheets_webhook_url")}
-                  disabled={savingKey === "google_sheets_webhook_url" || !(secretInputs.google_sheets_webhook_url || "").trim()}
-                  className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 shadow-sm"
-                >
-                  {savingKey === "google_sheets_webhook_url" ? "Menyimpan..." : "Ganti"}
-                </button>
-              </div>
-            </div>
-
-            {/* 4. URL Spreadsheet Rekap Aduan */}
-            <div className="p-4 bg-surface-variant/10 rounded-2xl border border-outline-variant/20">
-              <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <FiFileText size={15} className="text-emerald-500" />
-                    <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
-                      URL Spreadsheet Rekap Aduan
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-on-surface-variant mt-0.5">
+                  </>
+                ),
+                placeholder: "https://hook.eu1.make.com/...",
+                icon: <FiLink size={15} className="text-purple-500" />,
+              },
+              {
+                key: "excel_view_url" as AppSecretKey,
+                title: "URL Spreadsheet Rekap Aduan",
+                desc: (
+                  <>
                     Tautan Google Sheets rekap aduan (Wajib HTTPS dengan host <code>docs.google.com</code>).
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {secretStatuses?.excel_view_url.isSet ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                      <FiCheckCircle size={12} />
-                      Terisi
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                      <FiAlertTriangle size={12} />
-                      Kosong
-                    </span>
-                  )}
-                </div>
-              </div>
+                  </>
+                ),
+                placeholder: "https://docs.google.com/spreadsheets/d/...",
+                icon: <FiFileText size={15} className="text-emerald-500" />,
+              },
+            ]).map((field) => {
+              const status = secretStatuses?.[field.key];
+              const isSet = Boolean(status?.isSet);
+              const isSavingThis = savingKey === field.key;
+              const isDeletingThis = deletingKey === field.key;
+              const isConfirmingDetach = confirmDetachKey === field.key;
+              const inputValue = secretInputs[field.key] || "";
 
-              {secretStatuses?.excel_view_url.updatedAt && (
-                <p className="text-[10px] text-on-surface-variant mb-2">
-                  Terakhir diubah: {new Date(secretStatuses.excel_view_url.updatedAt).toLocaleString("id-ID")}
-                  {secretStatuses.excel_view_url.updatedBy ? ` oleh ${secretStatuses.excel_view_url.updatedBy}` : ''}
-                </p>
-              )}
-
-              <div className="flex gap-2 mt-2">
-                <input
-                  type="password"
-                  autoComplete="new-password"
-                  value={secretInputs.excel_view_url || ""}
-                  onChange={(e) => setSecretInputs((prev) => ({ ...prev, excel_view_url: e.target.value }))}
-                  placeholder="https://docs.google.com/spreadsheets/d/..."
-                  className="flex-1 bg-surface border border-outline-variant/30 rounded-xl px-4 py-2 text-xs outline-none focus:border-primary font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleUpdateSecret("excel_view_url")}
-                  disabled={savingKey === "excel_view_url" || !(secretInputs.excel_view_url || "").trim()}
-                  className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 shadow-sm"
+              return (
+                <div
+                  key={field.key}
+                  className="p-4 bg-surface-variant/10 rounded-2xl border border-outline-variant/20"
                 >
-                  {savingKey === "excel_view_url" ? "Menyimpan..." : "Ganti"}
-                </button>
-              </div>
-            </div>
+                  <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        {field.icon}
+                        <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
+                          {field.title}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-on-surface-variant mt-0.5">{field.desc}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isSet ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                          <FiCheckCircle size={12} />
+                          Terpasang
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                          <FiAlertTriangle size={12} />
+                          Kosong
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {status?.updatedAt && (
+                    <p className="text-[10px] text-on-surface-variant mb-2">
+                      Terakhir diubah: {new Date(status.updatedAt).toLocaleString("id-ID")}
+                      {status.updatedBy ? ` oleh ${status.updatedBy}` : ""}
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap sm:flex-nowrap gap-2 mt-2">
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      value={inputValue}
+                      onChange={(e) =>
+                        setSecretInputs((prev) => ({ ...prev, [field.key]: e.target.value }))
+                      }
+                      placeholder={field.placeholder}
+                      className="flex-1 min-w-[200px] bg-surface border border-outline-variant/30 rounded-xl px-4 py-2 text-xs outline-none focus:border-primary font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateSecret(field.key)}
+                      disabled={isSavingThis || !inputValue.trim()}
+                      className="px-4 py-2 text-xs font-bold rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 shadow-sm"
+                    >
+                      {isSavingThis ? "Menyimpan..." : isSet ? "Ganti" : "Pasang"}
+                    </button>
+
+                    {isSet && !isConfirmingDetach && (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDetachKey(field.key)}
+                        disabled={isSavingThis || isDeletingThis}
+                        title="Copot kredensial ini dari sistem"
+                        className="px-3.5 py-2 text-xs font-bold rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors disabled:opacity-50 shrink-0 flex items-center gap-1.5"
+                      >
+                        <FiTrash2 size={13} />
+                        Copot
+                      </button>
+                    )}
+
+                    {isSet && isConfirmingDetach && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSecret(field.key)}
+                          disabled={isDeletingThis}
+                          className="px-3 py-2 text-xs font-bold rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                        >
+                          {isDeletingThis ? "Mencopot..." : "Ya, Copot"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDetachKey(null)}
+                          disabled={isDeletingThis}
+                          className="px-3 py-2 text-xs font-bold rounded-xl bg-surface-variant/50 text-on-surface hover:bg-surface-variant transition-colors"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -834,7 +854,7 @@ export default function SystemSettingsPage() {
           </div>
         </div>
 
-        {/* ── BOT TELEGRAM OPERATIONAL CARD ──────────────────────────── */}
+        {/* ── BOT TELEGRAM OPERATIONAL CARD (INTERNAL & TEKNIS) ──────── */}
         <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6">
           <div className="flex items-center justify-between pb-6 border-b border-outline-variant/20 mb-6 flex-wrap gap-4">
             <div className="flex items-center gap-3">
@@ -843,10 +863,10 @@ export default function SystemSettingsPage() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-on-surface">
-                  Fitur Notifikasi Telegram Berita
+                  Notifikasi Telegram (Internal &amp; Teknis)
                 </h3>
                 <p className="text-xs text-on-surface-variant">
-                  Kontrol penyiaran otomatis berita baru dan peringatan berkala mingguan.
+                  Khusus pengajuan artikel, pendaftar volunteer/RSVP, kotak saran/aduan, mode maintenance, &amp; pengingat mingguan pengurus.
                 </p>
               </div>
             </div>
@@ -858,7 +878,7 @@ export default function SystemSettingsPage() {
               className="px-4 py-2 text-xs font-bold rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 border border-sky-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
             >
               <FiSend size={14} className={testingPing ? "animate-spin" : ""} />
-              {testingPing ? "Menguji..." : "Uji Coba Pesan Bot"}
+              {testingPing ? "Menguji..." : "Uji Coba Bot Telegram"}
             </button>
           </div>
 
@@ -867,9 +887,9 @@ export default function SystemSettingsPage() {
               <FiShield size={18} />
             </div>
             <div className="text-xs space-y-1">
-              <p className="font-bold text-on-surface">Kredensial Terhubung Otomatis</p>
+              <p className="font-bold text-on-surface">Kredensial Terhubung Dinamis</p>
               <p className="text-on-surface-variant leading-relaxed">
-                Token dan Chat ID Telegram dibaca dari tabel rahasia <strong>App Secrets</strong> di atas (dengan fallback ke Environment Variables). Tombol di samping langsung menguji pengiriman pesan ke channel aktif.
+                Token dan Chat ID Telegram dibaca dari tabel <strong>App Secrets</strong> di atas dan dapat dipasang, diganti, atau dicopot kapan saja.
               </p>
             </div>
           </div>
@@ -878,19 +898,19 @@ export default function SystemSettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-outline-variant/20">
             <div className="flex items-center justify-between p-3.5 bg-surface-variant/20 rounded-xl border border-outline-variant/20">
               <div>
-                <p className="font-bold text-xs text-on-surface">Notifikasi Berita Baru</p>
-                <p className="text-[11px] text-on-surface-variant">Siarkan otomatis berita yang baru dipublikasikan</p>
+                <p className="font-bold text-xs text-on-surface">Notifikasi Teknis &amp; Pengajuan</p>
+                <p className="text-[11px] text-on-surface-variant">Pengajuan artikel, volunteer masuk, aduan, &amp; maintenance</p>
               </div>
               <button
                 type="button"
-                onClick={() => setTNotifEnabled(!tNotifEnabled)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  tNotifEnabled ? "bg-primary" : "bg-outline-variant/40"
+                onClick={() => setTTechNotifEnabled(!tTechNotifEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+                  tTechNotifEnabled ? "bg-primary" : "bg-outline-variant/40"
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
-                    tNotifEnabled ? "translate-x-6" : "translate-x-1"
+                    tTechNotifEnabled ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
               </button>
@@ -899,18 +919,100 @@ export default function SystemSettingsPage() {
             <div className="flex items-center justify-between p-3.5 bg-surface-variant/20 rounded-xl border border-outline-variant/20">
               <div>
                 <p className="font-bold text-xs text-on-surface">Peringatan Belum Upload 1 Minggu</p>
-                <p className="text-[11px] text-on-surface-variant">Kirim peringatan jika 7 hari tanpa upload berita</p>
+                <p className="text-[11px] text-on-surface-variant">Pengingat internal jika 7 hari tanpa upload berita</p>
               </div>
               <button
                 type="button"
                 onClick={() => setTReminderEnabled(!tReminderEnabled)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
                   tReminderEnabled ? "bg-amber-500" : "bg-outline-variant/40"
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
                     tReminderEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── DISCORD WEBHOOK OPERATIONAL CARD (PUBLIK & KOMUNITAS) ───── */}
+        <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6">
+          <div className="flex items-center justify-between pb-6 border-b border-outline-variant/20 mb-6 flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 p-3 rounded-2xl">
+                <SiDiscord size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-on-surface">
+                  Notifikasi Discord (Publik &amp; Komunitas)
+                </h3>
+                <p className="text-xs text-on-surface-variant">
+                  Siaran publik otomatis ke channel <code>#Berita</code> dan <code>#Pengumuman</code> di server Discord.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleTestDiscord("berita")}
+                disabled={testingDiscordTarget !== null}
+                className="px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <SiDiscord size={13} className={testingDiscordTarget === "berita" ? "animate-spin" : ""} />
+                {testingDiscordTarget === "berita" ? "Menguji..." : "Tes #Berita"}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTestDiscord("pengumuman")}
+                disabled={testingDiscordTarget !== null}
+                className="px-3.5 py-2 text-xs font-bold rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 transition-all flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <SiDiscord size={13} className={testingDiscordTarget === "pengumuman" ? "animate-spin" : ""} />
+                {testingDiscordTarget === "pengumuman" ? "Menguji..." : "Tes #Pengumuman"}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-3.5 bg-surface-variant/20 rounded-xl border border-outline-variant/20">
+              <div>
+                <p className="font-bold text-xs text-on-surface">Siaran Channel #Berita</p>
+                <p className="text-[11px] text-on-surface-variant">Berita reguler, kabar kampus, &amp; artikel mahasiswa tayang</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDBeritaNotifEnabled(!dBeritaNotifEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+                  dBeritaNotifEnabled ? "bg-indigo-600" : "bg-outline-variant/40"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
+                    dBeritaNotifEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between p-3.5 bg-surface-variant/20 rounded-xl border border-outline-variant/20">
+              <div>
+                <p className="font-bold text-xs text-on-surface">Siaran Channel #Pengumuman</p>
+                <p className="text-[11px] text-on-surface-variant">Pengumuman, event, volunteer, dokumentasi, &amp; rilis update</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDPengumumanNotifEnabled(!dPengumumanNotifEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+                  dPengumumanNotifEnabled ? "bg-indigo-600" : "bg-outline-variant/40"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
+                    dPengumumanNotifEnabled ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
               </button>

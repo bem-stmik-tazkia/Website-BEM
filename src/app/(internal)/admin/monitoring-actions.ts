@@ -235,7 +235,22 @@ export async function fetchComprehensiveActivityLogs(
           desc = "Nomor kontak WhatsApp pusat bantuan admin diperbarui.";
         } else if (item.key === "telegram_berita_notif_enabled") {
           title = "Notifikasi Otomatis Bot Telegram";
-          desc = `Pengiriman siaran berita otomatis diatur ke: ${
+          desc = `Pengiriman notifikasi bot Telegram diatur ke: ${
+            item.value === "true" ? "Aktif" : "Nonaktif"
+          }.`;
+        } else if (item.key === "telegram_tech_notif_enabled") {
+          title = "Notifikasi Teknis & Pengajuan (Telegram)";
+          desc = `Notifikasi internal teknis Telegram diatur ke: ${
+            item.value === "true" ? "Aktif" : "Nonaktif"
+          }.`;
+        } else if (item.key === "discord_berita_notif_enabled") {
+          title = "Siaran Discord Channel #Berita";
+          desc = `Siaran otomatis ke Discord #Berita diatur ke: ${
+            item.value === "true" ? "Aktif" : "Nonaktif"
+          }.`;
+        } else if (item.key === "discord_pengumuman_notif_enabled") {
+          title = "Siaran Discord Channel #Pengumuman";
+          desc = `Siaran otomatis ke Discord #Pengumuman diatur ke: ${
             item.value === "true" ? "Aktif" : "Nonaktif"
           }.`;
         }

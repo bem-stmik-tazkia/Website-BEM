@@ -55,6 +55,7 @@ export default function KegiatanFormPage() {
 
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+  const [sendDiscord, setSendDiscord] = useState(!id);
   const [sendBlast, setSendBlast] = useState(false);
   const [isBlasting, setIsBlasting] = useState(false);
 
@@ -307,13 +308,22 @@ export default function KegiatanFormPage() {
     setIsLoading(true);
     
     try {
-      const savedData = await saveKegiatan(dataToSave);
+      const saveRes = await saveKegiatan(dataToSave, {
+        sendDiscord: Boolean(sendDiscord && formData.is_published),
+      });
       
       const draftKey = `kegiatan_draft_${id || 'new'}`;
       localStorage.removeItem(draftKey);
       sessionStorage.removeItem(`kegiatan_form_session_${draftKey}`);
 
-      success("Data kegiatan berhasil disimpan!");
+      if (saveRes?.discord?.ok) {
+        success("Data kegiatan berhasil disimpan & disiarkan ke Discord #Pengumuman!");
+      } else if (saveRes?.discord && !saveRes.discord.ok) {
+        success("Data kegiatan berhasil disimpan!");
+        toast(`Catatan Discord: ${saveRes.discord.error || "Gagal kirim"}`, "info");
+      } else {
+        success("Data kegiatan berhasil disimpan!");
+      }
       
       // TRIGGER EMAIL BLAST
       if (sendBlast && formData.is_published) {
@@ -413,11 +423,20 @@ export default function KegiatanFormPage() {
                 </label>
                 
                 {formData.is_published && (
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" checked={sendBlast} onChange={(e) => setSendBlast(e.target.checked)} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-surface-variant/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-secondary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
-                    <span className="ml-3 text-sm font-bold text-on-surface">Kirim Email Massal ke Subscriber</span>
-                  </label>
+                  <>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={sendDiscord} onChange={(e) => setSendDiscord(e.target.checked)} className="sr-only peer" />
+                      <div className="w-11 h-6 bg-surface-variant/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                      <span className="ml-3 text-sm font-bold text-on-surface">
+                        {id ? "Siarkan Ulang ke Discord (#Pengumuman)" : "Siarkan ke Discord (#Pengumuman)"}
+                      </span>
+                    </label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={sendBlast} onChange={(e) => setSendBlast(e.target.checked)} className="sr-only peer" />
+                      <div className="w-11 h-6 bg-surface-variant/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-secondary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+                      <span className="ml-3 text-sm font-bold text-on-surface">Kirim Email Massal ke Subscriber</span>
+                    </label>
+                  </>
                 )}
               </div>
             </div>

@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { requireAdmin, getServiceRoleClient } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { AgendaKegiatan } from "@/types/agenda";
+import { sendDiscordKegiatanNotification } from "@/lib/discord";
 
 export async function getKegiatans() {
   const supabase = await createClient();
@@ -42,7 +43,10 @@ export async function getKegiatanById(idOrSlug: string) {
   return data as AgendaKegiatan;
 }
 
-export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
+export async function saveKegiatan(
+  data: Partial<AgendaKegiatan>,
+  options?: { sendDiscord?: boolean }
+) {
   const { supabase } = await requireAdmin();
   
   if (!data.slug) {
@@ -50,9 +54,11 @@ export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
     data.slug = data.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') || `kegiatan-${Date.now()}`;
   }
 
+  let savedKegiatan: AgendaKegiatan | null = null;
+
   if (data.id) {
     // Update existing
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from("agendas")
       .update({
         title: data.title,
@@ -76,12 +82,15 @@ export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
         speakers: data.speakers || [],
         max_participants: data.max_participants !== undefined ? data.max_participants : null
       })
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .select()
+      .single();
 
     if (error) throw new Error(error.message);
+    savedKegiatan = updated as AgendaKegiatan;
   } else {
     // Insert new
-    const { error } = await supabase
+    const { data: inserted, error } = await supabase
       .from("agendas")
       .insert([{
         title: data.title,
@@ -104,9 +113,26 @@ export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
         form_schema: data.form_schema || [],
         speakers: data.speakers || [],
         max_participants: data.max_participants !== undefined ? data.max_participants : null
-      }]);
+      }])
+      .select()
+      .single();
 
     if (error) throw new Error(error.message);
+    savedKegiatan = inserted as AgendaKegiatan;
+  }
+
+  let discordResult: { ok: boolean; channel?: string; error?: string } | null = null;
+  if (options?.sendDiscord && savedKegiatan?.is_published) {
+    try {
+      discordResult = await sendDiscordKegiatanNotification({
+        ...savedKegiatan,
+        hasRegistrationForm:
+          Array.isArray(savedKegiatan.form_schema) && savedKegiatan.form_schema.length > 0,
+      });
+    } catch (discordErr) {
+      console.warn("[saveKegiatan] Gagal mengirim notif Discord:", discordErr);
+      discordResult = { ok: false, error: "Gagal mengirim notifikasi Discord" };
+    }
   }
 
   revalidatePath("/admin/kegiatan");
@@ -119,6 +145,8 @@ export async function saveKegiatan(data: Partial<AgendaKegiatan>) {
   revalidatePath("/[locale]/publikasi/dokumentasi", "page");
   revalidatePath("/", "layout");
   revalidateTag("agenda", "max");
+
+  return { data: savedKegiatan, discord: discordResult };
 }
 
 export async function deleteKegiatan(id: string) {
@@ -172,6 +200,68 @@ export async function getVolunteerParticipantCount(agendaId: string): Promise<nu
   } catch (err) {
     console.error("Error in getVolunteerParticipantCount:", err);
     return 0;
+  }
+}
+
+export interface AdminVolunteerBellNotif {
+  id: string;
+  type: "volunteer";
+  title: string;
+  author: string;
+  created_at: string;
+  href: string;
+}
+
+export async function fetchRecentVolunteerApplicationsForBell(
+  sinceIso?: string
+): Promise<AdminVolunteerBellNotif[]> {
+  try {
+    await requireAdmin();
+    const service = getServiceRoleClient();
+    const cutoff =
+      sinceIso || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: apps, error } = await service
+      .from("volunteer_applications")
+      .select("id, agenda_id, responses, created_at")
+      .gt("created_at", cutoff)
+      .order("created_at", { ascending: false })
+      .limit(15);
+
+    if (error || !apps || apps.length === 0) {
+      return [];
+    }
+
+    const agendaIds = Array.from(new Set(apps.map((a: any) => a.agenda_id).filter(Boolean)));
+    const { data: agendas } = await service
+      .from("agendas")
+      .select("id, title, type")
+      .in("id", agendaIds);
+
+    const agendaMap = new Map((agendas || []).map((ag: any) => [ag.id, ag]));
+
+    return apps.map((app: any) => {
+      const agenda = agendaMap.get(app.agenda_id);
+      const prefix = agenda?.type === "volunteer" ? "Pendaftar Oprec" : "RSVP Event";
+      const firstTextVal =
+        app.responses && typeof app.responses === "object"
+          ? Object.values(app.responses).find(
+              (v) => typeof v === "string" && v.trim().length > 0 && !v.startsWith("http")
+            )
+          : null;
+
+      return {
+        id: `vol-${app.id}`,
+        type: "volunteer" as const,
+        title: `${prefix}: ${agenda?.title || "Kegiatan BEM"}`,
+        author: typeof firstTextVal === "string" ? firstTextVal : "Mahasiswa",
+        created_at: app.created_at,
+        href: `/admin/kegiatan/${app.agenda_id}/pendaftar`,
+      };
+    });
+  } catch (err) {
+    console.warn("[actions:fetchRecentVolunteerApplicationsForBell] Error:", err);
+    return [];
   }
 }
 

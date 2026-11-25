@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getServiceRoleClient } from '@/lib/auth';
 import { checkRateLimit, getClientIp, createRateLimitResponse } from '@/lib/rateLimit';
 import { getSecret } from '@/lib/secrets';
+import { sendSaranAduanNotification } from '@/lib/telegram';
 
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 
@@ -135,10 +136,7 @@ export async function POST(req: Request) {
     }
 
     // 4. Integrasi Webhook Make / Sheets & Kredensial Notifikasi
-    // Membaca kredensial rahasia dari public.app_secrets via getSecret (fallback ke env)
     const webhookUrl = await getSecret('google_sheets_webhook_url');
-    const botToken = await getSecret('telegram_bot_token');
-    const chatId = await getSecret('telegram_chat_id');
     const excelLink = await getSecret('excel_view_url');
 
     try {
@@ -167,58 +165,16 @@ export async function POST(req: Request) {
       console.error("[saran-aduan] Gagal mengirim ke Google Sheets Webhook:", webhookErr);
     }
 
-    // 5. Trigger Telegram Notification
+    // 5. Trigger Telegram Notification (Internal & Teknis)
     try {
-      if (botToken && chatId) {
-        const escapeHtml = (text: string) => {
-          return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-        };
-
-        const safeNama = escapeHtml(finalNama);
-        const safeKategori = escapeHtml(kategori);
-        const safeDeskripsi = escapeHtml(deskripsi);
-        
-        const wibTime = new Date().toLocaleString('id-ID', {
-          timeZone: 'Asia/Jakarta',
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        }) + ' WIB';
-
-        let message = `🚨 <b>Pesan Baru di Kotak Saran / Aduan!</b> 🚨\n\n` +
-                      `👤 <b>Pengirim:</b> ${safeNama}\n` +
-                      `📂 <b>Kategori:</b> ${safeKategori}\n` +
-                      `📅 <b>Waktu:</b> ${wibTime}\n` +
-                      `📝 <b>Pesan:</b> \n${safeDeskripsi}\n\n`;
-                      
-        if (excelLink && excelLink.startsWith('http')) {
-          message += `📊 <a href="${excelLink}">Lihat Rekap Spreadsheet</a>`;
-        } else {
-          message += `📊 <i>Link Excel belum diatur di Admin Panel</i>`;
-        }
-        
-        const teleRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: message,
-            parse_mode: 'HTML'
-          })
-        });
-        
-        const teleData = await teleRes.json();
-        if (!teleData.ok) {
-          console.error("[saran-aduan] Telegram Error:", teleData);
-        }
+      const teleRes = await sendSaranAduanNotification({
+        nama: finalNama,
+        kategori,
+        deskripsi,
+        excelLink,
+      });
+      if (!teleRes.ok && teleRes.error) {
+        console.warn("[saran-aduan] Telegram notify info:", teleRes.error);
       }
     } catch (teleErr) {
       console.error("[saran-aduan] Gagal mengirim notif Telegram:", teleErr);

@@ -193,7 +193,7 @@ export default function TelegramBeritaWidget() {
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-bold text-sm md:text-base text-on-surface">
-                Bot Telegram Berita & Peringatan Mingguan
+                Bot Telegram Pengingat Mingguan (Internal)
               </h3>
 
               {isConfigured ? (

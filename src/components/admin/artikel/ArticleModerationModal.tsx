@@ -21,6 +21,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/components/ui/Toast";
 import { notifyArticleModerated } from "@/actions/telegram-notifications";
+import { notifyDiscordArticlePublished } from "@/actions/discord-notifications";
 import { unpublishArticleAdmin, deleteArticleAdmin } from "@/app/(internal)/admin/artikel/actions";
 import DOMPurify from "isomorphic-dompurify";
 import { processQuillHtml, isHtmlContent } from "@/utils/quill";
@@ -127,15 +128,27 @@ export default function ArticleModerationModal({
         toast("Artikel berhasil disetujui dan resmi dipublikasikan!", "success");
       }
 
-      // Notifikasi Telegram Approval
+      const resolvedSlug = 'slug' in item ? item.slug : (item.article?.slug || undefined);
+      const resolvedCover = item.cover_url || articleItem?.cover_url || undefined;
+
+      // Notifikasi Telegram Approval (Audit Internal)
       notifyArticleModerated({
         title: item.title,
         action: "approved",
         category: item.category || undefined,
         authorName: author?.full_name || undefined,
-        slug: 'slug' in item ? item.slug : (item.article?.slug || undefined),
+        slug: resolvedSlug,
         isRevision: isRevisionItem,
       }).catch((err) => console.warn("[Telegram] Gagal kirim notif approve:", err));
+
+      // Siaran Discord #Berita untuk karya tulis yang resmi tayang
+      notifyDiscordArticlePublished({
+        title: item.title,
+        category: item.category || undefined,
+        authorName: author?.full_name || undefined,
+        slug: resolvedSlug,
+        coverUrl: resolvedCover,
+      }).catch((err) => console.warn("[Discord] Gagal kirim notif artikel tayang:", err));
 
       onSuccess();
       onClose();

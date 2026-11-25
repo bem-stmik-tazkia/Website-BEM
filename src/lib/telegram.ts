@@ -1,5 +1,16 @@
+import "server-only";
 import { getServiceRoleClient } from "@/lib/auth";
 import { getSecret } from "@/lib/secrets";
+import {
+  stripHtml,
+  getBaseSiteUrl,
+  isValidHttpUrl,
+  truncateText,
+  formatWibDate,
+  formatWibDateTime,
+} from "@/lib/notification-utils";
+
+export { stripHtml, getBaseSiteUrl };
 
 /**
  * Creates an admin/service-role Supabase client to bypass RLS
@@ -21,37 +32,11 @@ export function escapeHtml(text: string): string {
     .replace(/'/g, "&#039;");
 }
 
-/**
- * Strips HTML tags and normalizes spaces.
- */
-export function stripHtml(text: string): string {
-  return (text || "")
-    .replace(/<[^>]*>?/gm, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/**
- * Returns the public website base URL.
- */
-export function getBaseSiteUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.SITE_URL ||
-    "https://bem.stmik.tazkia.ac.id"
-  ).replace(/\/+$/, "");
-}
-
 export interface TelegramConfig {
   botToken: string;
   chatId: string;
   notifEnabled: boolean;
+  techNotifEnabled: boolean;
   reminderEnabled: boolean;
   lastReminderSentAt: string | null;
   isConfigured: boolean;
@@ -59,15 +44,15 @@ export interface TelegramConfig {
 
 /**
  * Loads Telegram configuration.
- * Sensitive credentials (botToken, chatId) are loaded EXCLUSIVELY from environment variables
- * (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) for defense in depth.
- * Operational feature flags (notifEnabled, reminderEnabled, lastReminderSentAt) are read from system_settings.
+ * Sensitive credentials (botToken, chatId) are loaded EXCLUSIVELY from app_secrets.
+ * Operational feature flags (techNotifEnabled, reminderEnabled, lastReminderSentAt) are read from system_settings.
  */
 export async function getTelegramConfig(): Promise<TelegramConfig> {
   const supabase = getAdminSupabaseClient();
   const botToken = await getSecret("telegram_bot_token");
   const chatId = await getSecret("telegram_chat_id");
   let notifEnabled = true;
+  let techNotifEnabled = true;
   let reminderEnabled = true;
   let lastReminderSentAt: string | null = null;
 
@@ -77,6 +62,7 @@ export async function getTelegramConfig(): Promise<TelegramConfig> {
       .select("key, value")
       .in("key", [
         "telegram_berita_notif_enabled",
+        "telegram_tech_notif_enabled",
         "telegram_berita_reminder_enabled",
         "telegram_last_reminder_sent_at",
       ]);
@@ -87,6 +73,7 @@ export async function getTelegramConfig(): Promise<TelegramConfig> {
         {} as Record<string, string>
       );
       if (map["telegram_berita_notif_enabled"] === "false") notifEnabled = false;
+      if (map["telegram_tech_notif_enabled"] === "false") techNotifEnabled = false;
       if (map["telegram_berita_reminder_enabled"] === "false") reminderEnabled = false;
       if (map["telegram_last_reminder_sent_at"])
         lastReminderSentAt = map["telegram_last_reminder_sent_at"];
@@ -99,6 +86,7 @@ export async function getTelegramConfig(): Promise<TelegramConfig> {
     botToken: botToken.trim(),
     chatId: chatId.trim(),
     notifEnabled,
+    techNotifEnabled,
     reminderEnabled,
     lastReminderSentAt,
     isConfigured: Boolean(botToken.trim() && chatId.trim()),
@@ -156,10 +144,9 @@ export async function sendTelegramMessage(
     }
 
     return { ok: true, data };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Network error sending telegram message";
-    console.error("sendTelegramMessage exception:", msg);
-    return { ok: false, error: msg };
+  } catch {
+    console.error("sendTelegramMessage exception: gagal menghubungi API Telegram");
+    return { ok: false, error: "Gagal menghubungi server Telegram." };
   }
 }
 
@@ -209,9 +196,8 @@ export async function sendTelegramPhoto(
     }
 
     return { ok: true, data };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Error sending telegram photo";
-    console.warn("sendTelegramPhoto exception, falling back to sendMessage:", msg);
+  } catch {
+    console.warn("sendTelegramPhoto exception, falling back to sendMessage");
     return await sendTelegramMessage(caption, options);
   }
 }
@@ -265,13 +251,7 @@ export async function sendNewBeritaNotification(
     .map((t) => `#${escapeHtml(t.replace(/\s+/g, ""))}`)
     .join(" ");
 
-  const todayStr = new Date().toLocaleDateString("id-ID", {
-    timeZone: "Asia/Jakarta",
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const todayStr = formatWibDate();
 
   let message =
     `📢 <b>BERITA TERBARU BEM STMIK TAZKIA</b>\n\n` +
@@ -297,12 +277,7 @@ export async function sendNewBeritaNotification(
     ],
   ];
 
-  // If there is an image URL that looks like a valid external or uploaded URL
-  const validImageUrl =
-    berita.image_url &&
-    (berita.image_url.startsWith("http://") || berita.image_url.startsWith("https://"))
-      ? berita.image_url
-      : null;
+  const validImageUrl = isValidHttpUrl(berita.image_url);
 
   if (validImageUrl) {
     return await sendTelegramPhoto(validImageUrl, message, { inlineButtons });
@@ -506,18 +481,21 @@ export async function sendTelegramTestPing(): Promise<{ ok: boolean; error?: str
 
   const siteUrl = getBaseSiteUrl();
   const testMsg =
-    `🤖 <b>Uji Coba Koneksi Bot Telegram BEM STMIK Tazkia</b>\n\n` +
+    `🤖 <b>Uji Coba Koneksi Bot Telegram Internal BEM STMIK Tazkia</b>\n\n` +
     `✅ <b>Status:</b> Bot terhubung dan berfungsi dengan baik!\n` +
-    `📅 <b>Waktu:</b> ${new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB\n\n` +
-    `Fitur yang aktif:\n` +
-    `• 📢 Notifikasi otomatis saat berita baru diupload\n` +
-    `• ⏰ Peringatan otomatis jika 1 minggu belum ada upload berita baru`;
+    `📅 <b>Waktu:</b> ${formatWibDateTime()} WIB\n\n` +
+    `Kanal Telegram digunakan untuk notifikasi internal & teknis:\n` +
+    `• 📝 Pengajuan, revisi, penarikan & moderasi artikel mahasiswa\n` +
+    `• 🤝 Pendaftaran Volunteer & RSVP Event masuk\n` +
+    `• 🚨 Kotak Saran & Aduan mahasiswa\n` +
+    `• 🚧 Status mode maintenance sistem\n` +
+    `• ⏰ Pengingat mingguan jika belum ada berita baru`;
 
   const inlineButtons = [
     [
       {
-        text: "🌐 Kunjungi Portal BEM",
-        url: siteUrl,
+        text: "🌐 Kunjungi Portal Admin",
+        url: `${siteUrl}/admin`,
       },
     ],
   ];
@@ -543,8 +521,8 @@ export async function sendArticleSubmittedNotification(
   payload: ArticleSubmittedPayload
 ): Promise<{ ok: boolean; error?: string }> {
   const config = await getTelegramConfig();
-  if (!config.isConfigured || !config.notifEnabled) {
-    return { ok: false, error: "Notifikasi Telegram tidak aktif atau belum dikonfigurasi." };
+  if (!config.isConfigured || !config.techNotifEnabled) {
+    return { ok: false, error: "Notifikasi teknis Telegram tidak aktif atau belum dikonfigurasi." };
   }
 
   const siteUrl = getBaseSiteUrl();
@@ -553,16 +531,7 @@ export async function sendArticleSubmittedNotification(
   const safeAuthor = escapeHtml(payload.authorName || "Mahasiswa STMIK Tazkia");
   const safeEmail = payload.authorEmail ? escapeHtml(payload.authorEmail) : "";
   const jenisText = payload.isRevision ? "Pengajuan Revisi Artikel" : "Artikel Baru";
-
-  const timeStr = new Date().toLocaleString("id-ID", {
-    timeZone: "Asia/Jakarta",
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const timeStr = formatWibDateTime();
 
   const message =
     `📝 <b>PENGAJUAN ARTIKEL MAHASISWA BARU</b>\n\n` +
@@ -600,8 +569,8 @@ export async function sendArticleWithdrawnNotification(
   payload: ArticleWithdrawnPayload
 ): Promise<{ ok: boolean; error?: string }> {
   const config = await getTelegramConfig();
-  if (!config.isConfigured || !config.notifEnabled) {
-    return { ok: false, error: "Notifikasi Telegram tidak aktif atau belum dikonfigurasi." };
+  if (!config.isConfigured || !config.techNotifEnabled) {
+    return { ok: false, error: "Notifikasi teknis Telegram tidak aktif atau belum dikonfigurasi." };
   }
 
   const siteUrl = getBaseSiteUrl();
@@ -609,16 +578,7 @@ export async function sendArticleWithdrawnNotification(
   const safeCategory = escapeHtml(payload.category || "Artikel Mahasiswa");
   const safeAuthor = escapeHtml(payload.authorName || "Mahasiswa STMIK Tazkia");
   const safeEmail = payload.authorEmail ? escapeHtml(payload.authorEmail) : "";
-
-  const timeStr = new Date().toLocaleString("id-ID", {
-    timeZone: "Asia/Jakarta",
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const timeStr = formatWibDateTime();
 
   const message =
     `↩️ <b>PENGAJUAN ARTIKEL DITARIK (KEMBALI KE DRAF)</b>\n\n` +
@@ -659,8 +619,8 @@ export async function sendArticleModeratedNotification(
   payload: ArticleModeratedPayload
 ): Promise<{ ok: boolean; error?: string }> {
   const config = await getTelegramConfig();
-  if (!config.isConfigured || !config.notifEnabled) {
-    return { ok: false, error: "Notifikasi Telegram tidak aktif atau belum dikonfigurasi." };
+  if (!config.isConfigured || !config.techNotifEnabled) {
+    return { ok: false, error: "Notifikasi teknis Telegram tidak aktif atau belum dikonfigurasi." };
   }
 
   const siteUrl = getBaseSiteUrl();
@@ -668,16 +628,7 @@ export async function sendArticleModeratedNotification(
   const safeAuthor = escapeHtml(payload.authorName || "Mahasiswa");
   const safeAdmin = escapeHtml(payload.adminName || "Administrator BEM");
   const safeCategory = escapeHtml(payload.category || "Artikel Mahasiswa");
-
-  const timeStr = new Date().toLocaleString("id-ID", {
-    timeZone: "Asia/Jakarta",
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const timeStr = formatWibDateTime();
 
   let message = "";
   const inlineButtons: Array<Array<{ text: string; url: string }>> = [];
@@ -685,7 +636,7 @@ export async function sendArticleModeratedNotification(
   if (payload.action === "approved") {
     const articleUrl = payload.slug
       ? `${siteUrl}/id/artikel/${encodeURIComponent(payload.slug)}`
-      : `${siteUrl}/berita`;
+      : `${siteUrl}/id/artikel`;
     message =
       `✅ <b>ARTIKEL MAHASISWA DISETUJUI & TAYANG</b>\n\n` +
       `Karya tulis mahasiswa telah disetujui oleh admin dan kini resmi tayang di website:\n\n` +
@@ -759,21 +710,13 @@ export async function sendMaintenanceModeNotification(
   payload: MaintenanceModePayload
 ): Promise<{ ok: boolean; error?: string }> {
   const config = await getTelegramConfig();
-  if (!config.isConfigured || !config.notifEnabled) {
-    return { ok: false, error: "Notifikasi Telegram tidak aktif atau belum dikonfigurasi." };
+  if (!config.isConfigured || !config.techNotifEnabled) {
+    return { ok: false, error: "Notifikasi teknis Telegram tidak aktif atau belum dikonfigurasi." };
   }
 
   const siteUrl = getBaseSiteUrl();
   const safeAdmin = escapeHtml(payload.adminName || "Administrator BEM");
-  const timeStr = new Date().toLocaleString("id-ID", {
-    timeZone: "Asia/Jakarta",
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const timeStr = formatWibDateTime();
 
   let message = "";
   const inlineButtons: Array<Array<{ text: string; url: string }>> = [];
@@ -834,6 +777,115 @@ export async function sendMaintenanceModeNotification(
       },
     ]);
   }
+
+  return await sendTelegramMessage(message, { inlineButtons });
+}
+
+export interface SaranAduanNotificationPayload {
+  nama: string;
+  kategori: string;
+  deskripsi: string;
+  excelLink?: string | null;
+}
+
+/**
+ * Mengirim notifikasi pesan baru Kotak Saran / Aduan mahasiswa ke Telegram internal pengurus.
+ */
+export async function sendSaranAduanNotification(
+  payload: SaranAduanNotificationPayload
+): Promise<{ ok: boolean; error?: string }> {
+  const config = await getTelegramConfig();
+  if (!config.isConfigured || !config.techNotifEnabled) {
+    return { ok: false, error: "Notifikasi teknis Telegram tidak aktif atau belum dikonfigurasi." };
+  }
+
+  const siteUrl = getBaseSiteUrl();
+  const safeNama = escapeHtml(payload.nama || "Mahasiswa / Anonim");
+  const safeKategori = escapeHtml(payload.kategori || "Umum");
+  const safeDeskripsi = escapeHtml(truncateText(payload.deskripsi, 1500));
+  const wibTime = formatWibDateTime();
+  const validExcelLink = isValidHttpUrl(payload.excelLink);
+
+  let message =
+    `🚨 <b>Pesan Baru di Kotak Saran / Aduan!</b> 🚨\n\n` +
+    `👤 <b>Pengirim:</b> ${safeNama}\n` +
+    `📂 <b>Kategori:</b> ${safeKategori}\n` +
+    `📅 <b>Waktu:</b> ${wibTime} WIB\n` +
+    `📝 <b>Pesan:</b>\n${safeDeskripsi}\n\n`;
+
+  if (validExcelLink) {
+    message += `📊 <a href="${escapeHtml(validExcelLink)}">Lihat Rekap Spreadsheet</a>`;
+  } else {
+    message += `📊 <i>Link Excel belum diatur di Pengaturan Sistem</i>`;
+  }
+
+  const inlineButtons = [
+    [
+      {
+        text: "💬 Buka Kotak Saran Admin",
+        url: `${siteUrl}/admin/saran-aduan`,
+      },
+    ],
+  ];
+
+  return await sendTelegramMessage(message, { inlineButtons });
+}
+
+export interface VolunteerAppliedNotificationPayload {
+  agendaId: string;
+  agendaTitle: string;
+  agendaType?: "volunteer" | "event" | string;
+  fields: Array<{ label: string; value: string }>;
+  totalParticipants?: number;
+}
+
+/**
+ * Mengirim notifikasi ke Telegram internal pengurus saat ada pendaftar volunteer / RSVP event baru.
+ */
+export async function sendVolunteerAppliedNotification(
+  payload: VolunteerAppliedNotificationPayload
+): Promise<{ ok: boolean; error?: string }> {
+  const config = await getTelegramConfig();
+  if (!config.isConfigured || !config.techNotifEnabled) {
+    return { ok: false, error: "Notifikasi teknis Telegram tidak aktif atau belum dikonfigurasi." };
+  }
+
+  const siteUrl = getBaseSiteUrl();
+  const isVolunteer = payload.agendaType === "volunteer";
+  const header = isVolunteer
+    ? "🤝 <b>PENDAFTAR VOLUNTEER / OPREC BARU</b>"
+    : "🎟️ <b>PENDAFTARAN RSVP EVENT BARU</b>";
+
+  const safeTitle = escapeHtml(payload.agendaTitle || "Kegiatan BEM");
+  const timeStr = formatWibDateTime();
+
+  const summaryLines = payload.fields
+    .filter((f) => f.value && f.value.trim().length > 0)
+    .slice(0, 6)
+    .map((f) => `• <b>${escapeHtml(f.label)}:</b> ${escapeHtml(truncateText(f.value, 140))}`)
+    .join("\n");
+
+  const countLine =
+    typeof payload.totalParticipants === "number"
+      ? `👥 <b>Total Pendaftar Saat Ini:</b> ${payload.totalParticipants} orang\n`
+      : "";
+
+  const message =
+    `${header}\n\n` +
+    `📌 <b>Kegiatan / Posisi:</b> ${safeTitle}\n` +
+    countLine +
+    `📅 <b>Waktu Daftar:</b> ${timeStr} WIB\n` +
+    (summaryLines ? `\n📋 <b>Ringkasan Data Pendaftar:</b>\n${summaryLines}\n` : "") +
+    `\nSilakan cek panel admin untuk meninjau data lengkap dan berkas pendaftar.`;
+
+  const inlineButtons = [
+    [
+      {
+        text: "📋 Lihat Data Pendaftar",
+        url: `${siteUrl}/admin/kegiatan/${encodeURIComponent(payload.agendaId)}/pendaftar`,
+      },
+    ],
+  ];
 
   return await sendTelegramMessage(message, { inlineButtons });
 }

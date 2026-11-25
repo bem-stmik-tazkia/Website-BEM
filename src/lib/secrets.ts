@@ -5,13 +5,17 @@ export type AppSecretKey =
   | 'telegram_bot_token'
   | 'telegram_chat_id'
   | 'google_sheets_webhook_url'
-  | 'excel_view_url';
+  | 'excel_view_url'
+  | 'discord_berita_webhook_url'
+  | 'discord_pengumuman_webhook_url';
 
 export const ALLOWED_SECRET_KEYS: readonly AppSecretKey[] = [
   'telegram_bot_token',
   'telegram_chat_id',
   'google_sheets_webhook_url',
   'excel_view_url',
+  'discord_berita_webhook_url',
+  'discord_pengumuman_webhook_url',
 ] as const;
 
 /**
