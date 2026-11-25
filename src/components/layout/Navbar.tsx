@@ -12,7 +12,6 @@ import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
 import StudentNotificationBell from "@/components/notifications/StudentNotificationBell";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
-import ProfileSettingsModal from "@/components/profile/ProfileSettingsModal";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UserProfile = Record<string, any>;
@@ -23,7 +22,6 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showProfileSettings, setShowProfileSettings] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +33,7 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
   const router = useRouter();
   const locale = useLocale();
   const isHome = pathname === "/";
+  const isDashboard = pathname.startsWith("/dashboard");
   const supabase = createClient();
 
   const currentPath = pendingPath || pathname;
@@ -62,19 +61,13 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
           } catch {
             // Biarkan fallback ke profile?.role jika RPC offline
           }
-          // Auto-sinkronisasi avatar akun ke public.profiles jika belum tersimpan
-
+          // Auto-sinkronisasi avatar akun ke public.profiles hanya bila avatar_url masih kosong
           const userAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
 
-          if (userAvatar && profile && (!profile.avatar_url || profile.avatar_url !== userAvatar)) {
-
+          if (userAvatar && profile && !profile.avatar_url) {
             await supabase.from('profiles').update({ avatar_url: userAvatar }).eq('id', user.id);
-
             profile.avatar_url = userAvatar;
-
           }
-
-
 
           setUserProfile({ ...user, ...profile, role: effectiveRole });
         } else {
@@ -85,6 +78,15 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
       }
     };
     fetchUser();
+
+    const handleProfileUpdated = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) {
+        setUserProfile((prev: UserProfile | null) => (prev ? { ...prev, ...detail } : prev));
+      }
+    };
+    window.addEventListener("profile_updated", handleProfileUpdated);
+    return () => window.removeEventListener("profile_updated", handleProfileUpdated);
   }, [supabase]);
 
   // Pre-fetch main routes for instant navigation response on mobile
@@ -135,6 +137,14 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
   }, [pathname]);
 
   const t = useTranslations("Navigation");
+  const tDash = useTranslations("StudentDashboard");
+
+  const dashboardNavItems = [
+    { name: t("home"), path: "/", icon: FiHome, active: false },
+    { name: tDash("tabOverview"), path: "/dashboard", icon: FiGrid, active: currentPath === "/dashboard" || currentPath === "/dashboard/" },
+    { name: tDash("tabActivities"), path: "/dashboard/kegiatan", icon: FiCalendar, active: currentPath.startsWith("/dashboard/kegiatan") },
+    { name: tDash("tabArticles"), path: "/dashboard/artikel", icon: FiEdit3, active: currentPath.startsWith("/dashboard/artikel") },
+  ];
 
   const navItems = [
     { type: "link", name: t("home"), path: "/" },
@@ -164,10 +174,13 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
     <>
       <nav
         id="navbar"
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ease-in-out border-b ${isScrolled
-          ? "bg-surface border-outline-variant/50 shadow-md"
-          : "bg-transparent border-transparent"
-          }`}
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ease-in-out border-b ${
+          isScrolled
+            ? "bg-surface border-outline-variant/50 shadow-md"
+            : isDashboard
+              ? "bg-surface/95 backdrop-blur-md border-outline-variant/30"
+              : "bg-transparent border-transparent"
+        }`}
       >
         <div className="flex justify-between items-center h-20 md:h-24 px-2.5 sm:px-4 md:px-6 lg:px-8 max-w-7xl mx-auto gap-1.5 sm:gap-4">
           <Link href="/" className="flex items-center gap-1.5 sm:gap-2 md:gap-3 group shrink-0">
@@ -207,7 +220,21 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
 
           {/* Desktop Nav Links dengan Dropdown Menu Rapi */}
           <div ref={dropdownRef} className="hidden lg:flex lg:gap-4 xl:gap-7 items-center font-semibold text-sm">
-            {navItems.map((item) => {
+            {isDashboard ? (
+              dashboardNavItems.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`relative py-2 transition-colors duration-300 after:absolute after:bottom-[-4px] after:left-0 after:h-1 after:rounded-full after:transition-all after:duration-300 ${
+                    item.active
+                      ? "font-bold text-primary after:w-full after:bg-secondary"
+                      : "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))
+            ) : navItems.map((item) => {
               if (item.type === "dropdown") {
                 const isAnyChildActive = item.items?.some((sub) => pathname.startsWith(sub.path));
                 const isOpen = openDropdown === item.id;
@@ -398,17 +425,14 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                         </Link>
                       )}
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowProfileMenu(false);
-                          setShowProfileSettings(true);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-on-surface hover:bg-primary/10 hover:text-primary transition-colors text-left cursor-pointer"
+                      <Link
+                        href={userProfile.role === 'admin' ? '/profil' : '/dashboard/profil'}
+                        onClick={() => setShowProfileMenu(false)}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-on-surface hover:bg-primary/10 hover:text-primary transition-colors text-left"
                       >
                         <FiSettings size={16} />
                         <span>{t("profileSettings")}</span>
-                      </button>
+                      </Link>
 
 
                       <div className="h-px bg-outline-variant/20 my-1 mx-4"></div>
@@ -450,65 +474,95 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
       {/* Mobile & Tablet Bottom Navigation Bar */}
       <>
         <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-surface/95 backdrop-blur-lg border-t border-outline-variant/30 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] pb-5 pt-2 px-1 flex justify-between items-center rounded-t-3xl touch-manipulation">
-            <Link
-              href="/"
-              onClick={() => { setPendingPath("/"); setActiveBottomSheet(null); }}
-              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath === "/" ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-            >
-              <FiHome size={20} className={currentPath === "/" ? "fill-secondary/20" : ""} />
-              <span className="text-[9px] font-bold">{t("home")}</span>
-            </Link>
+          {isDashboard ? (
+            <>
+              <Link
+                href="/dashboard"
+                onClick={() => { setPendingPath("/dashboard"); setActiveBottomSheet(null); }}
+                className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath === "/dashboard" || currentPath === "/dashboard/" ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+              >
+                <FiGrid size={20} className={currentPath === "/dashboard" || currentPath === "/dashboard/" ? "fill-secondary/20" : ""} />
+                <span className="text-[9px] font-bold">{tDash("tabOverview")}</span>
+              </Link>
 
-            <Link
-              href="/agenda"
-              onClick={() => { setPendingPath("/agenda"); setActiveBottomSheet(null); }}
-              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/agenda") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-            >
-              <FiCalendar size={20} className={currentPath.startsWith("/agenda") ? "fill-secondary/20" : ""} />
-              <span className="text-[9px] font-bold">{t("agenda")}</span>
-            </Link>
+              <Link
+                href="/dashboard/kegiatan"
+                onClick={() => { setPendingPath("/dashboard/kegiatan"); setActiveBottomSheet(null); }}
+                className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/dashboard/kegiatan") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+              >
+                <FiCalendar size={20} className={currentPath.startsWith("/dashboard/kegiatan") ? "fill-secondary/20" : ""} />
+                <span className="text-[9px] font-bold">{tDash("tabActivitiesShort")}</span>
+              </Link>
 
+              <Link
+                href="/dashboard/artikel"
+                onClick={() => { setPendingPath("/dashboard/artikel"); setActiveBottomSheet(null); }}
+                className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/dashboard/artikel") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+              >
+                <FiEdit3 size={20} className={currentPath.startsWith("/dashboard/artikel") ? "fill-secondary/20" : ""} />
+                <span className="text-[9px] font-bold">{tDash("tabArticlesShort")}</span>
+              </Link>
 
+              <Link
+                href="/"
+                onClick={() => { setPendingPath("/"); setActiveBottomSheet(null); }}
+                className="flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 text-on-surface-variant hover:text-primary"
+              >
+                <FiHome size={20} />
+                <span className="text-[9px] font-bold">{t("home")}</span>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/"
+                onClick={() => { setPendingPath("/"); setActiveBottomSheet(null); }}
+                className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath === "/" ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+              >
+                <FiHome size={20} className={currentPath === "/" ? "fill-secondary/20" : ""} />
+                <span className="text-[9px] font-bold">{t("home")}</span>
+              </Link>
 
-            <Link
-              href="/berita"
-              onClick={() => { setPendingPath("/berita"); setActiveBottomSheet(null); }}
-              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/berita") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-            >
-              <FiBookOpen size={20} className={currentPath.startsWith("/berita") ? "fill-secondary/20" : ""} />
-              <span className="text-[9px] font-bold">{t("menuNews")}</span>
-            </Link>
+              <Link
+                href="/agenda"
+                onClick={() => { setPendingPath("/agenda"); setActiveBottomSheet(null); }}
+                className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/agenda") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+              >
+                <FiCalendar size={20} className={currentPath.startsWith("/agenda") ? "fill-secondary/20" : ""} />
+                <span className="text-[9px] font-bold">{t("agenda")}</span>
+              </Link>
 
-            <Link
-              href="/artikel"
-              onClick={() => { setPendingPath("/artikel"); setActiveBottomSheet(null); }}
-              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/artikel") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-            >
-              <FiEdit3 size={20} className={currentPath.startsWith("/artikel") ? "fill-secondary/20" : ""} />
-              <span className="text-[9px] font-bold">{t("studentArticles")}</span>
-            </Link>
+              <Link
+                href="/berita"
+                onClick={() => { setPendingPath("/berita"); setActiveBottomSheet(null); }}
+                className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/berita") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+              >
+                <FiBookOpen size={20} className={currentPath.startsWith("/berita") ? "fill-secondary/20" : ""} />
+                <span className="text-[9px] font-bold">{t("menuNews")}</span>
+              </Link>
 
-            <Link
-              href="/kabinet"
-              onClick={() => { setPendingPath("/kabinet"); setActiveBottomSheet(null); }}
-              className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/kabinet") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
-            >
-              <FiUser size={20} className={currentPath.startsWith("/kabinet") ? "fill-secondary/20" : ""} />
-              <span className="text-[9px] font-bold">{t("menuCab")}</span>
-            </Link>
-          </nav>
-        </>
+              <Link
+                href="/artikel"
+                onClick={() => { setPendingPath("/artikel"); setActiveBottomSheet(null); }}
+                className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/artikel") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+              >
+                <FiEdit3 size={20} className={currentPath.startsWith("/artikel") ? "fill-secondary/20" : ""} />
+                <span className="text-[9px] font-bold">{t("studentArticles")}</span>
+              </Link>
 
+              <Link
+                href="/kabinet"
+                onClick={() => { setPendingPath("/kabinet"); setActiveBottomSheet(null); }}
+                className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/kabinet") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+              >
+                <FiUser size={20} className={currentPath.startsWith("/kabinet") ? "fill-secondary/20" : ""} />
+                <span className="text-[9px] font-bold">{t("menuCab")}</span>
+              </Link>
+            </>
+          )}
+        </nav>
+      </>
 
-            {/* Modal Pengaturan Profil Pengguna */}
-      <ProfileSettingsModal
-        isOpen={showProfileSettings}
-        onClose={() => setShowProfileSettings(false)}
-        userProfile={userProfile}
-        onProfileUpdated={(updated) => {
-          setUserProfile((prev: UserProfile | null) => ({ ...prev, ...updated }));
-        }}
-      />
 
       {/* Logout Confirmation Modal */}
       <AnimatePresence>

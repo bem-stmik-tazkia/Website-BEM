@@ -74,7 +74,7 @@ export default function LayoutClientWrapper({
         <>
           {!isDashboardPage && <FloatingKaryaPrompt />}
           {!isDashboardPage && !isAdminPage && <FloatingActionMenu />}
-          <Footer />
+          {!isDashboardPage && <Footer />}
         </>
       )}
     </MaintenanceAndUpdatesWrapper>

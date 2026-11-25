@@ -14,6 +14,7 @@ import {
   FiEdit3,
   FiPlus,
   FiSearch,
+  FiSettings,
   FiXCircle,
 } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
@@ -153,7 +154,14 @@ export default function StudentDashboardOverview({
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <Link
+            href="/dashboard/profil"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-variant/30 hover:bg-surface-variant text-on-surface border border-outline-variant/40 text-xs sm:text-sm font-bold transition-colors"
+          >
+            <FiSettings size={15} />
+            <span>{t("editProfileBtn")}</span>
+          </Link>
           <Link
             href="/agenda"
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-surface-variant/40 hover:bg-primary/10 text-on-surface hover:text-primary border border-outline-variant/40 text-xs sm:text-sm font-bold transition-colors"

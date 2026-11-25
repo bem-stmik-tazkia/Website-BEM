@@ -1422,7 +1422,14 @@
     "save": "Save Changes",
     "saving": "Saving...",
     "saveSuccess": "Profile updated successfully!",
-    "saveError": "Failed to update profile: "
+    "saveError": "Failed to update profile: ",
+    "backToDashboard": "Back to Dashboard",
+    "backToHome": "Back to Home",
+    "accountInfoTitle": "Account Information",
+    "lockedFieldsHint": "Campus email and account role are locked by the system for security.",
+    "personalInfoTitle": "Identity & Bio",
+    "emailLabel": "Account Email",
+    "roleLabel": "Role"
   },
   "ImageUpload": {
     "tabUpload": "Upload Photo",
@@ -1504,6 +1511,9 @@
     "articleStatusPending": "Pending Review",
     "articleStatusRejected": "Needs Revision",
     "articleStatusDraft": "Draft",
-    "untitledAgenda": "BEM Activity"
+    "untitledAgenda": "BEM Activity",
+    "tabActivitiesShort": "Activities",
+    "tabArticlesShort": "Articles",
+    "editProfileBtn": "Edit Profile"
   }
 }

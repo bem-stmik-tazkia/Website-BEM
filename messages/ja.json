@@ -1420,7 +1420,14 @@
     "save": "変更を保存",
     "saving": "保存中...",
     "saveSuccess": "プロフィールが更新されました！",
-    "saveError": "プロフィールの更新に失敗しました: "
+    "saveError": "プロフィールの更新に失敗しました: ",
+    "backToDashboard": "ダッシュボードに戻る",
+    "backToHome": "ホームに戻る",
+    "accountInfoTitle": "アカウント情報",
+    "lockedFieldsHint": "大学メールとアカウント権限はセキュリティのためシステムで固定されています。",
+    "personalInfoTitle": "プロフィール・自己紹介",
+    "emailLabel": "アカウントメール",
+    "roleLabel": "権限"
   },
   "ImageUpload": {
     "tabUpload": "写真をアップロード",
@@ -1502,6 +1509,9 @@
     "articleStatusPending": "審査中",
     "articleStatusRejected": "要修正",
     "articleStatusDraft": "下書き",
-    "untitledAgenda": "BEM活動"
+    "untitledAgenda": "BEM活動",
+    "tabActivitiesShort": "活動",
+    "tabArticlesShort": "記事",
+    "editProfileBtn": "プロフィール編集"
   }
 }

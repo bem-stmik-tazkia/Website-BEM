@@ -1420,7 +1420,14 @@
     "save": "Enregistrer",
     "saving": "Enregistrement...",
     "saveSuccess": "Profil mis à jour avec succès !",
-    "saveError": "Échec de la mise à jour du profil : "
+    "saveError": "Échec de la mise à jour du profil : ",
+    "backToDashboard": "Retour au tableau de bord",
+    "backToHome": "Retour à l'accueil",
+    "accountInfoTitle": "Informations du compte",
+    "lockedFieldsHint": "L'e-mail du campus et le rôle sont verrouillés par le système pour la sécurité.",
+    "personalInfoTitle": "Identité & Bio",
+    "emailLabel": "E-mail du compte",
+    "roleLabel": "Rôle"
   },
   "ImageUpload": {
     "tabUpload": "Télécharger une photo",
@@ -1502,6 +1509,9 @@
     "articleStatusPending": "En attente",
     "articleStatusRejected": "À réviser",
     "articleStatusDraft": "Brouillon",
-    "untitledAgenda": "Activité BEM"
+    "untitledAgenda": "Activité BEM",
+    "tabActivitiesShort": "Activités",
+    "tabArticlesShort": "Articles",
+    "editProfileBtn": "Modifier le profil"
   }
 }

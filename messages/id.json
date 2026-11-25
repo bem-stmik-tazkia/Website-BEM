@@ -1422,7 +1422,14 @@
     "save": "Simpan Perubahan",
     "saving": "Menyimpan...",
     "saveSuccess": "Profil berhasil diperbarui!",
-    "saveError": "Gagal memperbarui profil: "
+    "saveError": "Gagal memperbarui profil: ",
+    "backToDashboard": "Kembali ke Dashboard",
+    "backToHome": "Kembali ke Beranda",
+    "accountInfoTitle": "Informasi Akun",
+    "lockedFieldsHint": "Email kampus dan peran akun dikunci oleh sistem untuk keamanan.",
+    "personalInfoTitle": "Identitas & Bio",
+    "emailLabel": "Email Akun",
+    "roleLabel": "Peran"
   },
   "ImageUpload": {
     "tabUpload": "Upload Foto",
@@ -1504,6 +1511,9 @@
     "articleStatusPending": "Menunggu Moderasi",
     "articleStatusRejected": "Perlu Revisi",
     "articleStatusDraft": "Draf",
-    "untitledAgenda": "Kegiatan BEM"
+    "untitledAgenda": "Kegiatan BEM",
+    "tabActivitiesShort": "Kegiatan",
+    "tabArticlesShort": "Artikel",
+    "editProfileBtn": "Edit Profil"
   }
 }

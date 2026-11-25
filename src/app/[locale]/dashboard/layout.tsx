@@ -1,6 +1,5 @@
 import React from "react";
 import { getTranslations } from "next-intl/server";
-import StudentDashboardTabs from "@/components/dashboard/StudentDashboardTabs";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -21,9 +20,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-surface-variant/20 pt-20 sm:pt-24 pb-32 sm:pb-20 px-3.5 sm:px-6 lg:px-8 w-full overflow-x-hidden">
+    <div className="min-h-screen bg-surface-variant/20 pt-24 sm:pt-28 pb-28 lg:pb-12 px-3.5 sm:px-6 lg:px-8 w-full overflow-x-hidden">
       <div className="max-w-6xl mx-auto">
-        <StudentDashboardTabs />
         {children}
       </div>
     </div>

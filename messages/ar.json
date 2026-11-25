@@ -1420,7 +1420,14 @@
     "save": "حفظ التغييرات",
     "saving": "جارٍ الحفظ...",
     "saveSuccess": "تم تحديث الملف الشخصي بنجاح!",
-    "saveError": "فشل تحديث الملف الشخصي: "
+    "saveError": "فشل تحديث الملف الشخصي: ",
+    "backToDashboard": "العودة إلى اللوحة",
+    "backToHome": "العودة إلى الرئيسية",
+    "accountInfoTitle": "معلومات الحساب",
+    "lockedFieldsHint": "البريد الجامعي ودور الحساب مقفلان من قبل النظام للأمان.",
+    "personalInfoTitle": "الهوية والنبذة التعريفية",
+    "emailLabel": "بريد الحساب",
+    "roleLabel": "الدور"
   },
   "ImageUpload": {
     "tabUpload": "تحميل الصورة",
@@ -1502,6 +1509,9 @@
     "articleStatusPending": "قيد المراجعة",
     "articleStatusRejected": "يحتاج مراجعة",
     "articleStatusDraft": "مسودة",
-    "untitledAgenda": "فعالية BEM"
+    "untitledAgenda": "فعالية BEM",
+    "tabActivitiesShort": "الفعاليات",
+    "tabArticlesShort": "المقالات",
+    "editProfileBtn": "تعديل الملف"
   }
 }
