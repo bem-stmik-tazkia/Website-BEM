@@ -20,6 +20,36 @@ import {
   isSvgImageUrl,
 } from "@/lib/default-posters";
 
+// --- CAROUSEL POSTER ARROWS ---
+function CarouselPosterArrows({ onPrev, onNext }: { onPrev: () => void; onNext: () => void }) {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 aspect-[16/9] z-20 flex items-center justify-between px-3">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onPrev();
+        }}
+        className="pointer-events-auto w-8 h-8 rounded-full bg-surface/90 backdrop-blur-sm shadow-md flex items-center justify-center text-on-background hover:bg-surface hover:scale-110 transition-all duration-200"
+        aria-label="Sebelumnya"
+      >
+        <FiChevronLeft size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onNext();
+        }}
+        className="pointer-events-auto w-8 h-8 rounded-full bg-surface/90 backdrop-blur-sm shadow-md flex items-center justify-center text-on-background hover:bg-surface hover:scale-110 transition-all duration-200"
+        aria-label="Berikutnya"
+      >
+        <FiChevronRight size={16} />
+      </button>
+    </div>
+  );
+}
+
 // --- MAIN COMPONENT ---
 
 interface EventVolunteerProps {
@@ -693,13 +723,8 @@ export default function EventVolunteer({
                       </div>
                     </motion.div>
                   </AnimatePresence>
+                  {upcomingEvents.length > 1 && <CarouselPosterArrows onPrev={prev} onNext={next} />}
                 </div>
-                {upcomingEvents.length > 1 && (
-                  <>
-                    <button onClick={prev} className="absolute left-3 top-[38%] -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-surface/90 backdrop-blur-sm shadow-md flex items-center justify-center text-on-background hover:bg-surface hover:scale-110 transition-all duration-200" aria-label="Sebelumnya"><FiChevronLeft size={15} /></button>
-                    <button onClick={next} className="absolute right-3 top-[38%] -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-surface/90 backdrop-blur-sm shadow-md flex items-center justify-center text-on-background hover:bg-surface hover:scale-110 transition-all duration-200" aria-label="Berikutnya"><FiChevronRight size={15} /></button>
-                  </>
-                )}
                 {upcomingEvents.length > 1 && (
                   <div className="flex items-center justify-center gap-2 mt-3">
                     {upcomingEvents.map((p, i) => (
@@ -834,7 +859,7 @@ export default function EventVolunteer({
                         <h3 className="font-extrabold text-sm text-on-background leading-snug line-clamp-2">
                           {(translatedVolunteer[activeVol] ?? volunteerOpportunities[activeVol]).title}
                         </h3>
-                        <p className="text-on-surface-variant text-[11px] leading-relaxed line-clamp-2">
+                        <p className="text-on-surface-variant text-[11px] leading-relaxed line-clamp-3">
                           {(translatedVolunteer[activeVol] ?? volunteerOpportunities[activeVol]).description}
                         </p>
                         <div className="flex flex-wrap items-center gap-2 text-[11px] text-on-surface-variant">
@@ -865,13 +890,8 @@ export default function EventVolunteer({
                       </div>
                     </motion.div>
                   </AnimatePresence>
+                  {volunteerOpportunities.length > 1 && <CarouselPosterArrows onPrev={prevVol} onNext={nextVol} />}
                 </div>
-                {volunteerOpportunities.length > 1 && (
-                  <>
-                    <button onClick={prevVol} className="absolute left-3 top-[38%] -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-surface/90 backdrop-blur-sm shadow-md flex items-center justify-center text-on-background hover:bg-surface hover:scale-110 transition-all duration-200" aria-label="Sebelumnya"><FiChevronLeft size={15} /></button>
-                    <button onClick={nextVol} className="absolute right-3 top-[38%] -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-surface/90 backdrop-blur-sm shadow-md flex items-center justify-center text-on-background hover:bg-surface hover:scale-110 transition-all duration-200" aria-label="Berikutnya"><FiChevronRight size={15} /></button>
-                  </>
-                )}
                 {volunteerOpportunities.length > 1 && (
                   <div className="flex items-center justify-center gap-2 mt-3">
                     {volunteerOpportunities.map((p, i) => (
@@ -991,9 +1011,14 @@ export default function EventVolunteer({
                         <h3 className="font-extrabold text-sm text-on-background leading-snug line-clamp-2">
                           {(translatedPast[activePast] ?? pastEvents[activePast]).title}
                         </h3>
-                        <p className="text-on-surface-variant text-[11px] leading-relaxed line-clamp-2">
+                        <p className="text-on-surface-variant text-[11px] leading-relaxed line-clamp-5">
                           {(translatedPast[activePast] ?? pastEvents[activePast]).description}
                         </p>
+                        {pastEvents[activePast].date && (
+                          <span className="flex items-center gap-1.5 text-on-surface-variant text-[11px]">
+                            <FiCalendar size={12} className="text-primary shrink-0" /> {formatDateToIndo(pastEvents[activePast].date)}
+                          </span>
+                        )}
                         <div className="mt-auto pt-2">
                           <Link href={`/agenda/${pastEvents[activePast].id}`} className="relative z-30 bg-surface-variant text-on-background text-[11px] font-bold px-4 py-2 rounded-full hover:bg-primary hover:text-white transition-all inline-flex items-center gap-1.5 border border-outline-variant/40">
                             {t("viewDocs")} <FiArrowRight size={12} />
@@ -1002,13 +1027,8 @@ export default function EventVolunteer({
                       </div>
                     </motion.div>
                   </AnimatePresence>
+                  {pastEvents.length > 1 && <CarouselPosterArrows onPrev={prevPast} onNext={nextPast} />}
                 </div>
-                {pastEvents.length > 1 && (
-                  <>
-                    <button onClick={prevPast} className="absolute left-3 top-[38%] -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-surface/90 backdrop-blur-sm shadow-md flex items-center justify-center text-on-background hover:bg-surface hover:scale-110 transition-all duration-200" aria-label="Sebelumnya"><FiChevronLeft size={15} /></button>
-                    <button onClick={nextPast} className="absolute right-3 top-[38%] -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-surface/90 backdrop-blur-sm shadow-md flex items-center justify-center text-on-background hover:bg-surface hover:scale-110 transition-all duration-200" aria-label="Berikutnya"><FiChevronRight size={15} /></button>
-                  </>
-                )}
                 {pastEvents.length > 1 && (
                   <div className="flex items-center justify-center gap-2 mt-3">
                     {pastEvents.map((p, i) => (
