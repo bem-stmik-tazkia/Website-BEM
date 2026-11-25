@@ -61,5 +61,5 @@ export function getKegiatanPosterUrl(
  * Matching fallback background class for default SVG posters when fitted inside non-16:9 frames.
  */
 export function getDefaultPosterBgClass(type?: string | null): string {
-  return type === "volunteer" ? "bg-[#C2410C]" : "bg-[#071330]";
+  return type === "volunteer" ? "bg-[#C2410C]" : "bg-[#0E245C]";
 }

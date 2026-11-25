@@ -14,7 +14,7 @@ import { createClient } from "@/utils/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
 import { combineDeadlineWib, splitDeadlineWib } from "@/lib/registration-utils";
 import { formatDeadlineWib } from "@/utils/dateFormatter";
-import { getDefaultPosterPath, isDefaultPosterPath } from "@/lib/default-posters";
+import { getDefaultPosterBgClass, getDefaultPosterPath, isDefaultPosterPath } from "@/lib/default-posters";
 
 const DEADLINE_TIME_PRESETS = ["17:00", "21:00", "23:59"] as const;
 
@@ -811,7 +811,7 @@ export default function KegiatanFormPage() {
                       </span>
                       <span className="text-[10px] text-on-surface-variant">16:9 SVG</span>
                     </div>
-                    <div className="aspect-video w-full rounded-xl overflow-hidden border border-outline-variant/30 shadow-xs bg-[#071330]">
+                    <div className={`aspect-video w-full rounded-xl overflow-hidden border border-outline-variant/30 shadow-xs ${getDefaultPosterBgClass(formData.type)}`}>
                       <img
                         src={getDefaultPosterPath(formData.type)}
                         alt={
