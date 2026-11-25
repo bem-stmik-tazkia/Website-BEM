@@ -73,7 +73,7 @@ export default function FloatingKaryaPrompt() {
               <div>
                 <div className="inline-flex items-center gap-1.5 bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 border border-white/10 shadow-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]"></span>
-                  Platform Baru
+                  {t("newPlatform")}
                 </div>
                 <h4 className="font-extrabold text-xs md:text-base leading-tight mb-0.5 text-white">
                   {t("ctaTitle") || "Punya Karya Terbaik?"}

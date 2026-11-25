@@ -25,6 +25,7 @@ import AgendaUpcomingPast from "@/components/agenda/AgendaUpcomingPast";
 import AgendaTourClient from "@/components/agenda/AgendaTourClient";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import {
+  dedupeCategoryLabel,
   getDefaultPosterBgClass,
   getKegiatanPosterUrl,
   isDefaultPosterPath,
@@ -809,7 +810,7 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                       })()}
 
                       <div className="p-4 md:p-6 flex flex-col flex-grow">
-                        <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block mb-1 md:mb-2">{vol.category}</span>
+                        <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block mb-1 md:mb-2">{dedupeCategoryLabel(vol.category)}</span>
                         <h4 className="font-bold text-base md:text-lg text-on-background group-hover:text-primary transition-colors mb-1 md:mb-2">{vol.title}</h4>
                         <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed mb-4 md:mb-6 flex-grow line-clamp-3">{vol.description}</p>
 

@@ -47,7 +47,8 @@
     "ctaTitle": "هل لديك مشروع أو ابتكار رائع؟",
     "ctaDesc": "اعرض أفضل أعمالك لمجتمع STMIK Tazkia الأكاديمي بأكمله. قم بتسجيل الدخول ببريدك الإلكتروني الجامعي وقم بتحميل مشروعك!",
     "ctaBtn": "تحميل المشروع",
-    "feedbackBox": "صندوق الاقتراحات والشكاوى"
+    "feedbackBox": "صندوق الاقتراحات والشكاوى",
+    "newPlatform": "منصة جديدة"
   },
   "Hero": {
     "titlePart1": "خطوة واحدة نحو",
@@ -90,7 +91,12 @@
     "notOpenedYet": "لم يفتح التسجيل بعد!",
     "loading": "جارٍ تحميل الصفحة...",
     "competitionsBadge": "فروع المسابقة",
-    "positionsBadge": "الوظائف المتاحة"
+    "positionsBadge": "الوظائف المتاحة",
+    "spotlightVolunteer": "التوظيف المفتوح",
+    "spotlightUpcoming": "الفعالية القادمة",
+    "openNowBadge": "مفتوح الآن",
+    "upcomingBadge": "قريباً",
+    "filledBadge": "مسجل"
   },
   "News": {
     "title": "أخبار مميزة",
@@ -344,7 +350,9 @@
     "overviewVolunteerTitle": "نظرة عامة على التوظيف والتطوع",
     "competitionsBadge": "فروع المسابقة",
     "positionsBadge": "وظائف",
-    "filledBadge": "تم شغلها"
+    "filledBadge": "تم شغلها",
+    "closesInDays": "يغلق خلال {days} أيام",
+    "deadlineShort": "الموعد النهائي:"
   },
   "VisiMisi": {
     "title": "الرؤية والرسالة",
@@ -540,7 +548,8 @@
     "individualType": "فردي",
     "rulebook": "عرض الدليل",
     "applyThisPosition": "التقديم لهذه الوظيفة",
-    "registerThisCompetition": "التسجيل في المسابقة"
+    "registerThisCompetition": "التسجيل في المسابقة",
+    "deadline": "آخر موعد للتسجيل:"
   },
   "UserNotification": {
     "title": "إشعارات الأعمال",
@@ -926,7 +935,28 @@
     "errEmail": "تنسيق بريد إلكتروني غير صالح!",
     "errNumber": "يجب أن يكون رقما!",
     "errPhone": "تنسيق رقم هاتف غير صالح!",
-    "errFixFields": "يرجى إصلاح {count} حقول غير صالحة!"
+    "errFixFields": "يرجى إصلاح {count} حقول غير صالحة!",
+    "selectPositionLabel": "اختر المنصب المطلوب",
+    "selectCompetitionMultiLabel": "اختر فئات المسابقة (يمكن اختيار أكثر من فئة)",
+    "selectCompetitionLabel": "اختر فئة المسابقة",
+    "selectPositionHint": "يتم ملء المقاعد بأولوية التسجيل. لا يمكن اختيار المناصب الممتلئة.",
+    "selectCompetitionMultiHint": "حدد فئة أو أكثر للمشاركة في هذا النموذج.",
+    "selectCompetitionHint": "اختر فئة مسابقة متاحة.",
+    "teamCategory": "فئة الفرق",
+    "individualCategory": "فردي",
+    "fullBadge": "ممتلئ",
+    "leftBadge": "متبقي {count}",
+    "openBadge": "متاح",
+    "filledLabel": "المسجلون:",
+    "neededLabel": "المطلوب {count}",
+    "unlimitedLabel": "غير محدود",
+    "questionsCount": "{count} أسئلة",
+    "positionsSelected": "تم اختيار {count} منصب",
+    "competitionsSelected": "تم اختيار {count} مسابقة",
+    "errSelectPosition": "يرجى اختيار المنصب الذي ترغب في التقديم له أولاً.",
+    "errSelectCompetition": "يرجى اختيار فئة مسابقة واحدة على الأقل.",
+    "errCaptchaLoad": "فشل تحميل التحقق الأمني Captcha",
+    "closedAtLabel": "مغلق:"
   },
   "NewsDetail": {
     "share": "مشاركة",

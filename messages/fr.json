@@ -47,7 +47,8 @@
     "ctaTitle": "Vous avez un super projet ou une innovation ?",
     "ctaDesc": "Présentez votre meilleur travail à l’ensemble de la communauté académique de STMIK Tazkia. Connectez-vous avec votre e-mail universitaire et téléchargez votre projet !",
     "ctaBtn": "Télécharger Projet",
-    "feedbackBox": "Boîte à suggestions et plaintes"
+    "feedbackBox": "Boîte à suggestions et plaintes",
+    "newPlatform": "Nouvelle Plateforme"
   },
   "Hero": {
     "titlePart1": "Un pas vers",
@@ -90,7 +91,12 @@
     "notOpenedYet": "L'inscription n'est pas encore ouverte!",
     "loading": "Chargement de la page...",
     "competitionsBadge": "Concours",
-    "positionsBadge": "Postes ouverts"
+    "positionsBadge": "Postes ouverts",
+    "spotlightVolunteer": "Recrutement Ouvert",
+    "spotlightUpcoming": "Prochain Événement",
+    "openNowBadge": "OUVERT",
+    "upcomingBadge": "À VENIR",
+    "filledBadge": "Inscrits"
   },
   "News": {
     "title": "Actualités à la Une",
@@ -344,7 +350,9 @@
     "overviewVolunteerTitle": "Aperçu du recrutement et des bénévoles",
     "competitionsBadge": "Concours",
     "positionsBadge": "Postes",
-    "filledBadge": "Pourvus"
+    "filledBadge": "Pourvus",
+    "closesInDays": "Ferme dans {days} j",
+    "deadlineShort": "Échéance :"
   },
   "VisiMisi": {
     "title": "Vision & Mission",
@@ -540,7 +548,8 @@
     "individualType": "Individuel",
     "rulebook": "Voir le règlement",
     "applyThisPosition": "Postuler à ce poste",
-    "registerThisCompetition": "S’inscrire au concours"
+    "registerThisCompetition": "S’inscrire au concours",
+    "deadline": "Date limite d'inscription :"
   },
   "UserNotification": {
     "title": "Notifications d'Oeuvre",
@@ -926,7 +935,28 @@
     "errEmail": "format d'e-mail invalide!",
     "errNumber": "doit être un nombre!",
     "errPhone": "format de numéro de téléphone invalide!",
-    "errFixFields": "Veuillez corriger {count} champs invalides!"
+    "errFixFields": "Veuillez corriger {count} champs invalides!",
+    "selectPositionLabel": "Choisir le poste souhaité",
+    "selectCompetitionMultiLabel": "Choisir les catégories (Choix multiples)",
+    "selectCompetitionLabel": "Choisir une catégorie de concours",
+    "selectPositionHint": "Les places sont attribuées par ordre d'arrivée. Les postes complets ne sont plus disponibles.",
+    "selectCompetitionMultiHint": "Cochez une ou plusieurs catégories auxquelles vous souhaitez participer.",
+    "selectCompetitionHint": "Sélectionnez une catégorie disponible.",
+    "teamCategory": "Équipe",
+    "individualCategory": "Individuel",
+    "fullBadge": "Complet",
+    "leftBadge": "{count} restant(s)",
+    "openBadge": "Ouvert",
+    "filledLabel": "Inscrits :",
+    "neededLabel": "{count} requis",
+    "unlimitedLabel": "Illimité",
+    "questionsCount": "{count} Questions",
+    "positionsSelected": "{count} poste(s) sélectionné(s)",
+    "competitionsSelected": "{count} catégorie(s) sélectionnée(s)",
+    "errSelectPosition": "Veuillez d'abord sélectionner un poste.",
+    "errSelectCompetition": "Veuillez sélectionner au moins une catégorie.",
+    "errCaptchaLoad": "Échec du chargement du Captcha",
+    "closedAtLabel": "Fermé :"
   },
   "NewsDetail": {
     "share": "Partager",

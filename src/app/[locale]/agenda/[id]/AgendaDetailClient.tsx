@@ -37,6 +37,7 @@ import { hasAnyFormQuestions, isDeadlinePassedJakarta } from "@/lib/registration
 import { formatDateToIndo, formatDateLocalized, formatDeadlineWib } from "@/utils/dateFormatter";
 import { translateContent } from "@/utils/translate";
 import {
+  dedupeCategoryLabel,
   getDefaultPosterBgClass,
   getKegiatanPosterUrl,
   isDefaultPosterPath,
@@ -502,19 +503,103 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
 
       {/* ── HERO SECTION ───────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-5 md:px-8 mb-6 md:mb-10">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-          className="relative w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/8] min-h-[260px] sm:min-h-0 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 flex flex-col justify-end bg-surface-variant"
-        >
-          {/* Background Image Carousel */}
-          <AnimatePresence mode="popLayout">
-            {(() => {
-              const bannerSrc =
-                validGallery.length > 0
-                  ? validGallery[currentBannerIndex]
-                  : getKegiatanPosterUrl(agenda.image_url, agenda.type, agenda.gallery);
-              const isDefault = validGallery.length === 0 && isDefaultPosterPath(bannerSrc);
-              return (
+        {(() => {
+          const bannerSrc =
+            validGallery.length > 0
+              ? validGallery[currentBannerIndex]
+              : getKegiatanPosterUrl(agenda.image_url, agenda.type, agenda.gallery);
+          const isDefault = validGallery.length === 0 && isDefaultPosterPath(bannerSrc);
+          const categoryLabel = dedupeCategoryLabel(agenda.category);
+
+          const renderDateText = () => {
+            if (agenda.type === "volunteer" && agenda.deadline) {
+              return formatDeadlineWib(agenda.deadline, locale);
+            }
+            const startDate = agenda.date || agenda.deadline;
+            if (!startDate) return "-";
+            const startOpt: Intl.DateTimeFormatOptions = { day: "numeric", month: "long", year: "numeric" };
+            const endOpt: Intl.DateTimeFormatOptions = { day: "numeric", month: "long", year: "numeric" };
+            const localeCode =
+              locale === "en" ? "en-GB" : locale === "ar" ? "ar-SA" : locale === "fr" ? "fr-FR" : locale === "ja" ? "ja-JP" : "id-ID";
+            const startStr = new Date(startDate).toLocaleDateString(localeCode, startOpt);
+
+            if (agenda.end_date && agenda.end_date !== agenda.date) {
+              const dStart = new Date(startDate);
+              const dEnd = new Date(agenda.end_date);
+              if (dStart.getMonth() === dEnd.getMonth() && dStart.getFullYear() === dEnd.getFullYear()) {
+                return `${dStart.getDate()} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
+              } else if (dStart.getFullYear() === dEnd.getFullYear()) {
+                return `${dStart.getDate()} ${dStart.toLocaleDateString(localeCode, { month: "short" })} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
+              } else {
+                return `${startStr} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
+              }
+            }
+            return startStr;
+          };
+
+          if (isDefault) {
+            // Split hero layout agar tulisan judul tidak menabrak teks pada poster default SVG
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="rounded-2xl md:rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 bg-surface grid grid-cols-1 lg:grid-cols-12"
+              >
+                <div className={`lg:col-span-6 relative aspect-[16/9] w-full overflow-hidden ${getDefaultPosterBgClass(agenda.type)}`}>
+                  <img
+                    src={bannerSrc}
+                    alt={agenda.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="lg:col-span-6 p-5 sm:p-7 md:p-9 flex flex-col justify-center bg-gradient-to-br from-[#0F2458] to-[#16337A] text-white">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    {categoryLabel && (
+                      <span className="inline-block bg-white/15 backdrop-blur-sm border border-white/25 text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        {categoryLabel}
+                      </span>
+                    )}
+                    {(isFinished || isManualDokumentasi) && (
+                      <span className="inline-block bg-gray-500 text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        {t("statusDone")}
+                      </span>
+                    )}
+                  </div>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold mb-4 leading-tight">
+                    {agenda.title}
+                  </h1>
+                  <div className="flex flex-col gap-2 text-xs md:text-sm text-white/90 font-medium">
+                    <span className="flex items-center gap-2">
+                      <FiCalendar className="text-[var(--color-secondary)] shrink-0" size={16} />
+                      {renderDateText()}
+                    </span>
+                    {agenda.time_range && agenda.time_range !== "-" && (
+                      <span className="flex items-center gap-2">
+                        <FiClock className="text-[var(--color-secondary)] shrink-0" size={16} />
+                        {locale === "en"
+                          ? agenda.time_range.replace(/selesai/gi, "End").replace(/s\/d/gi, "to")
+                          : agenda.time_range}
+                      </span>
+                    )}
+                    {agenda.location && agenda.location !== "-" && (
+                      <span className="flex items-center gap-2">
+                        <FiMapPin className="text-[var(--color-secondary)] shrink-0" size={16} /> {agenda.location}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          }
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+              className="relative w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/8] min-h-[260px] sm:min-h-0 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg border border-outline-variant/20 flex flex-col justify-end bg-surface-variant"
+            >
+              {/* Background Image Carousel */}
+              <AnimatePresence mode="popLayout">
                 <motion.img
                   key={`${currentBannerIndex}-${bannerSrc}`}
                   src={bannerSrc}
@@ -523,81 +608,53 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 1 }}
-                  className={`absolute inset-0 w-full h-full object-cover object-center ${
-                    isDefault ? getDefaultPosterBgClass(agenda.type) : ""
-                  }`}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
                 />
-              );
-            })()}
-          </AnimatePresence>
-          
-          {/* Gradient Overlay for Text Readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/60 to-transparent pointer-events-none"></div>
+              </AnimatePresence>
 
-          {/* Hero Content */}
-          <div className="relative z-10 p-4 md:p-8 text-white w-full">
-            <span className="inline-block bg-surface/20 backdrop-blur-sm border border-white/30 text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-wider mb-2 md:mb-4 shadow-sm">
-              {agenda.category}
-            </span>
-            {(isFinished || isManualDokumentasi) && (
-              <span className="inline-block ml-2 bg-gray-500 text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-wider mb-2 md:mb-4 shadow-sm">
-                {t("statusDone")}
-              </span>
-            )}
-            
-            <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-extrabold mb-2 md:mb-4 leading-tight">
-              {agenda.title}
-            </h1>
-            
-            <div className="flex flex-col md:flex-row md:items-center gap-x-6 gap-y-1.5 md:gap-y-3 text-xs md:text-base text-white/90 font-medium">
-              <span className="flex items-center gap-2">
-                <FiCalendar className="text-[var(--color-secondary)] shrink-0" size={16} /> 
-                {(() => {
-                  if (agenda.type === "volunteer" && agenda.deadline) {
-                    return formatDeadlineWib(agenda.deadline, locale);
-                  }
-                  const startDate = agenda.date || agenda.deadline;
-                  if (!startDate) return "-";
-                  const startOpt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-                  const endOpt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-                  
-                  const localeCode = locale === 'en' ? 'en-GB' : locale === 'ar' ? 'ar-SA' : locale === 'fr' ? 'fr-FR' : locale === 'ja' ? 'ja-JP' : 'id-ID';
-                  const startStr = new Date(startDate).toLocaleDateString(localeCode, startOpt);
-                  
-                  if (agenda.end_date && agenda.end_date !== agenda.date) {
-                    const dStart = new Date(startDate);
-                    const dEnd = new Date(agenda.end_date);
-                    if (dStart.getMonth() === dEnd.getMonth() && dStart.getFullYear() === dEnd.getFullYear()) {
-                       // Same month and year: "12 - 14 September 2026"
-                       return `${dStart.getDate()} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
-                    } else if (dStart.getFullYear() === dEnd.getFullYear()) {
-                       // Same year, diff month: "12 Aug - 14 Sep 2026"
-                       return `${dStart.getDate()} ${dStart.toLocaleDateString(localeCode, { month: 'short' })} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
-                    } else {
-                       // Diff year
-                       return `${startStr} - ${dEnd.toLocaleDateString(localeCode, endOpt)}`;
-                    }
-                  }
-                  
-                  return startStr;
-                })()}
-              </span>
-              {agenda.time_range && agenda.time_range !== "-" && (
-                <span className="flex items-center gap-2">
-                  <FiClock className="text-[var(--color-secondary)] shrink-0" size={16} /> 
-                  {locale === 'en'
-                    ? agenda.time_range.replace(/selesai/gi, "End").replace(/s\/d/gi, "to")
-                    : agenda.time_range}
-                </span>
-              )}
-              {agenda.location && agenda.location !== "-" && (
-                <span className="flex items-center gap-2">
-                  <FiMapPin className="text-[var(--color-secondary)] shrink-0" size={16} /> {agenda.location}
-                </span>
-              )}
-            </div>
-          </div>
-        </motion.div>
+              {/* Gradient Overlay for Text Readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/60 to-transparent pointer-events-none"></div>
+
+              {/* Hero Content */}
+              <div className="relative z-10 p-4 md:p-8 text-white w-full">
+                {categoryLabel && (
+                  <span className="inline-block bg-surface/20 backdrop-blur-sm border border-white/30 text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-wider mb-2 md:mb-4 shadow-sm">
+                    {categoryLabel}
+                  </span>
+                )}
+                {(isFinished || isManualDokumentasi) && (
+                  <span className="inline-block ml-2 bg-gray-500 text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-wider mb-2 md:mb-4 shadow-sm">
+                    {t("statusDone")}
+                  </span>
+                )}
+
+                <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-extrabold mb-2 md:mb-4 leading-tight">
+                  {agenda.title}
+                </h1>
+
+                <div className="flex flex-col md:flex-row md:items-center gap-x-6 gap-y-1.5 md:gap-y-3 text-xs md:text-base text-white/90 font-medium">
+                  <span className="flex items-center gap-2">
+                    <FiCalendar className="text-[var(--color-secondary)] shrink-0" size={16} />
+                    {renderDateText()}
+                  </span>
+                  {agenda.time_range && agenda.time_range !== "-" && (
+                    <span className="flex items-center gap-2">
+                      <FiClock className="text-[var(--color-secondary)] shrink-0" size={16} />
+                      {locale === "en"
+                        ? agenda.time_range.replace(/selesai/gi, "End").replace(/s\/d/gi, "to")
+                        : agenda.time_range}
+                    </span>
+                  )}
+                  {agenda.location && agenda.location !== "-" && (
+                    <span className="flex items-center gap-2">
+                      <FiMapPin className="text-[var(--color-secondary)] shrink-0" size={16} /> {agenda.location}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* ── LIVE BUTTON & ONLINE LINK (For Events) ───────────────────── */}
         {agenda.type === 'event' && !isFinished && !isManualDokumentasi && (

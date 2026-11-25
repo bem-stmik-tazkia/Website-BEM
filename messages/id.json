@@ -47,7 +47,8 @@
     "ctaTitle": "Punya Karya, atau Inovasi Keren?",
     "ctaDesc": "Tunjukkan karya terbaikmu kepada seluruh civitas akademika STMIK Tazkia. Masuk dengan akun email kampus dan unggah karyamu!",
     "ctaBtn": "Unggah Karya",
-    "feedbackBox": "Kotak Saran & Aduan"
+    "feedbackBox": "Kotak Saran & Aduan",
+    "newPlatform": "Platform Baru"
   },
   "Hero": {
     "titlePart1": "Satu Langkah untuk",
@@ -90,7 +91,12 @@
     "notOpenedYet": "Pendaftaran belum dibuka!",
     "loading": "Membuka halaman...",
     "competitionsBadge": "Cabang Lomba",
-    "positionsBadge": "Posisi Dibuka"
+    "positionsBadge": "Posisi Dibuka",
+    "spotlightVolunteer": "Rekrutmen Terbuka",
+    "spotlightUpcoming": "Agenda Terdekat",
+    "openNowBadge": "DIBUKA",
+    "upcomingBadge": "SEGERA",
+    "filledBadge": "Terisi"
   },
   "News": {
     "title": "Berita Sorotan",
@@ -344,7 +350,9 @@
     "overviewVolunteerTitle": "Ringkasan Rekrutmen & Relawan",
     "competitionsBadge": "Cabang Lomba",
     "positionsBadge": "Posisi",
-    "filledBadge": "Terisi"
+    "filledBadge": "Terisi",
+    "closesInDays": "Tutup dlm {days} Hari",
+    "deadlineShort": "Batas:"
   },
   "VisiMisi": {
     "title": "Visi & Misi",
@@ -540,7 +548,8 @@
     "individualType": "Individu",
     "rulebook": "Lihat Juknis",
     "applyThisPosition": "Daftar Posisi Ini",
-    "registerThisCompetition": "Daftar Lomba Ini"
+    "registerThisCompetition": "Daftar Lomba Ini",
+    "deadline": "Batas Pendaftaran:"
   },
   "UserNotification": {
     "title": "Notifikasi Karya",
@@ -926,7 +935,28 @@
     "errEmail": "format email tidak valid!",
     "errNumber": "harus berupa angka!",
     "errPhone": "format nomor telepon tidak valid!",
-    "errFixFields": "Mohon perbaiki {count} isian yang belum valid!"
+    "errFixFields": "Mohon perbaiki {count} isian yang belum valid!",
+    "selectPositionLabel": "Pilih Posisi yang Dilamar",
+    "selectCompetitionMultiLabel": "Pilih Cabang Lomba (Bisa pilih lebih dari 1)",
+    "selectCompetitionLabel": "Pilih Cabang Lomba",
+    "selectPositionHint": "Kuota langsung terisi oleh pendaftar tercepat. Posisi yang sudah penuh tidak dapat dipilih.",
+    "selectCompetitionMultiHint": "Centang satu atau beberapa cabang lomba yang ingin kamu ikuti dalam satu formulir.",
+    "selectCompetitionHint": "Pilih salah satu cabang lomba yang masih tersedia.",
+    "teamCategory": "Kategori Tim",
+    "individualCategory": "Individu",
+    "fullBadge": "Penuh",
+    "leftBadge": "Sisa {count}",
+    "openBadge": "Terbuka",
+    "filledLabel": "Terisi:",
+    "neededLabel": "Butuh {count}",
+    "unlimitedLabel": "Tanpa Batas",
+    "questionsCount": "{count} Pertanyaan",
+    "positionsSelected": "{count} posisi dipilih",
+    "competitionsSelected": "{count} cabang lomba dipilih",
+    "errSelectPosition": "Silakan pilih posisi yang ingin kamu lamar terlebih dahulu.",
+    "errSelectCompetition": "Silakan pilih minimal 1 cabang lomba yang ingin diikuti.",
+    "errCaptchaLoad": "Gagal memuat verifikasi Captcha",
+    "closedAtLabel": "Ditutup:"
   },
   "NewsDetail": {
     "share": "Bagikan",

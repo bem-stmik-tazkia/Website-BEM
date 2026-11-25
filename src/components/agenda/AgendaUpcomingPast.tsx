@@ -149,25 +149,21 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                   }
                 }
                 
-                // Logika khusus Volunteer
+                // Logika khusus Volunteer: hitung sisa hari menuju deadline
                 let volunteerBadgeText = "";
-                let isVolunteerWaiting = false; // Belum buka
-                
+                const isVolunteerWaiting = false;
+
                 if (isVolunteer) {
-                  const end = agenda.end_date ? parseDateLocal(agenda.end_date) : null;
+                  const deadlineTarget = agenda.deadline || agenda.end_date || agenda.date;
+                  const end = deadlineTarget ? parseDateLocal(deadlineTarget) : null;
                   const volunteerDaysLeft = end ? Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-                  
-                  if (daysLeft > 0) {
-                     isVolunteerWaiting = true;
-                     volunteerBadgeText = `Buka dlm ${daysLeft} Hari`;
+
+                  if (volunteerDaysLeft > 0) {
+                    volunteerBadgeText = t("closesInDays", { days: volunteerDaysLeft });
+                  } else if (volunteerDaysLeft === 0) {
+                    volunteerBadgeText = t("todayLabel");
                   } else {
-                     if (volunteerDaysLeft > 0) {
-                        volunteerBadgeText = `Sisa ${volunteerDaysLeft} Hari`;
-                     } else if (volunteerDaysLeft === 0) {
-                        volunteerBadgeText = t("todayLabel");
-                     } else {
-                        volunteerBadgeText = t("closedPosition");
-                     }
+                    volunteerBadgeText = t("closedPosition");
                   }
                 }
 
@@ -195,7 +191,7 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                         </p>
                         <p className="text-[10px] text-on-surface-variant leading-tight mt-0.5">
                         {isVolunteer && (agenda.deadline || agenda.end_date)
-                          ? `Batas: ${formatDeadlineWib(agenda.deadline || agenda.end_date, locale)}`
+                          ? `${t("deadlineShort")} ${formatDeadlineWib(agenda.deadline || agenda.end_date, locale)}`
                           : formatDateRange(agenda)}
                         </p>
                     </div>

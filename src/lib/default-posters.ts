@@ -63,3 +63,19 @@ export function getKegiatanPosterUrl(
 export function getDefaultPosterBgClass(type?: string | null): string {
   return type === "volunteer" ? "bg-[#C2410C]" : "bg-[#0E245C]";
 }
+
+/**
+ * Deduplicates redundant category labels such as "VOLUNTEERS / VOLUNTEERS" into "VOLUNTEERS".
+ */
+export function dedupeCategoryLabel(category?: string | null): string {
+  if (!category) return "";
+  const parts = category.split("/").map((p) => p.trim()).filter(Boolean);
+  if (parts.length <= 1) return category.trim();
+  const unique: string[] = [];
+  for (const part of parts) {
+    if (!unique.some((u) => u.toLowerCase() === part.toLowerCase())) {
+      unique.push(part);
+    }
+  }
+  return unique.join(" / ");
+}

@@ -329,7 +329,7 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
                   >
                     <div className="flex items-start justify-between gap-2 mb-1.5">
                       <span className={`text-[9px] font-bold uppercase tracking-wider ${color.text}`}>
-                        {agenda.category}
+                        {agenda.category ? agenda.category.split("/").map((p) => p.trim()).filter((p, i, arr) => p && arr.findIndex((x) => x.toLowerCase() === p.toLowerCase()) === i).join(" / ") : ""}
                       </span>
                       {isLive && (
                         <span className="text-[9px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
@@ -348,7 +348,7 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
                     <div className="flex flex-col gap-0.5 text-xs text-on-surface-variant">
                       {isVolunteer && agenda.deadline && (
                         <span className="flex items-center gap-1.5">
-                          <FiClock size={11} className={color.text} /> Tutup: {formatDeadlineWib(agenda.deadline, locale)}
+                          <FiClock size={11} className={color.text} /> {t("deadlineShort")} {formatDeadlineWib(agenda.deadline, locale)}
                         </span>
                       )}
                       {agenda.time_range && (

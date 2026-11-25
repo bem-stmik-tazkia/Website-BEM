@@ -47,7 +47,8 @@
     "ctaTitle": "Have a Great Project or Innovation?",
     "ctaDesc": "Showcase your best work to the entire STMIK Tazkia academic community. Log in with your campus email and upload your project!",
     "ctaBtn": "Upload Project",
-    "feedbackBox": "Feedback & Complaints"
+    "feedbackBox": "Feedback & Complaints",
+    "newPlatform": "New Platform"
   },
   "Hero": {
     "titlePart1": "One Step for",
@@ -108,7 +109,12 @@
     "notOpenedYet": "Registration hasn't opened yet!",
     "loading": "Loading page...",
     "competitionsBadge": "Competitions",
-    "positionsBadge": "Open Positions"
+    "positionsBadge": "Open Positions",
+    "spotlightVolunteer": "Open Recruitment",
+    "spotlightUpcoming": "Next Upcoming Event",
+    "openNowBadge": "OPEN NOW",
+    "upcomingBadge": "UPCOMING",
+    "filledBadge": "Filled"
   },
   "News": {
     "title": "Featured News",
@@ -362,7 +368,9 @@
     "overviewVolunteerTitle": "Recruitment & Volunteer Overview",
     "competitionsBadge": "Competitions",
     "positionsBadge": "Positions",
-    "filledBadge": "Filled"
+    "filledBadge": "Filled",
+    "closesInDays": "Closes in {days} Days",
+    "deadlineShort": "Deadline:"
   },
   "VisiMisi": {
     "title": "Vision & Mission",
@@ -558,7 +566,8 @@
     "individualType": "Individual",
     "rulebook": "View Rulebook",
     "applyThisPosition": "Apply Position",
-    "registerThisCompetition": "Join Competition"
+    "registerThisCompetition": "Join Competition",
+    "deadline": "Registration Deadline:"
   },
   "Dashboard": {
     "navProfile": "Profile",
@@ -926,7 +935,28 @@
     "errEmail": "invalid email format!",
     "errNumber": "must be a number!",
     "errPhone": "invalid phone number format!",
-    "errFixFields": "Please fix {count} invalid fields!"
+    "errFixFields": "Please fix {count} invalid fields!",
+    "selectPositionLabel": "Select Position to Apply",
+    "selectCompetitionMultiLabel": "Select Competition Categories (Multiple allowed)",
+    "selectCompetitionLabel": "Select Competition Category",
+    "selectPositionHint": "Slots are filled on a first-come basis. Full positions can no longer be selected.",
+    "selectCompetitionMultiHint": "Select one or more competition categories you want to join in this form.",
+    "selectCompetitionHint": "Select one available competition category.",
+    "teamCategory": "Team Category",
+    "individualCategory": "Individual",
+    "fullBadge": "Full",
+    "leftBadge": "{count} Left",
+    "openBadge": "Open",
+    "filledLabel": "Filled:",
+    "neededLabel": "{count} Needed",
+    "unlimitedLabel": "Unlimited",
+    "questionsCount": "{count} Questions",
+    "positionsSelected": "{count} position(s) selected",
+    "competitionsSelected": "{count} competition(s) selected",
+    "errSelectPosition": "Please select a position you want to apply for first.",
+    "errSelectCompetition": "Please select at least 1 competition category to join.",
+    "errCaptchaLoad": "Failed to load Captcha verification",
+    "closedAtLabel": "Closed:"
   },
   "NewsDetail": {
     "share": "Share",

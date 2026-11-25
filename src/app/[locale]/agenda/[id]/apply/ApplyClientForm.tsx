@@ -21,7 +21,8 @@ import { hasAnyFormQuestions } from "@/lib/registration-validation";
 import { formatDeadlineWib } from "@/utils/dateFormatter";
 import { useToast } from "@/components/ui/Toast";
 import SafeLottie from "@/components/ui/SafeLottie";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { compressImage } from "@/lib/imageCompression";
 import { getRegistrationImagePreviewUrl } from "@/lib/registration-utils";
 
@@ -310,6 +311,9 @@ export default function ApplyClientForm({
   const [invalidFields, setInvalidFields] = useState<Record<string, string>>({});
   const { error: showErrorToast, success: showSuccessToast } = useToast();
   const t = useTranslations("ApplyForm");
+  const locale = useLocale();
+  const { data: translatedAgendaArr } = useTranslatedList([agenda], "agenda_kegiatan", locale, ["title"]);
+  const displayTitle = translatedAgendaArr[0]?.title || agenda.title;
 
   const fields = agenda.form_schema || [];
   const selectedItems = items.filter((it) => selectedItemIds.includes(it.id));
@@ -365,8 +369,8 @@ export default function ApplyClientForm({
     // Validasi pilihan posisi / cabang lomba
     if (hasItems && selectedItemIds.length === 0) {
       const msg = isVolunteer
-        ? "Silakan pilih posisi yang ingin kamu lamar terlebih dahulu."
-        : "Silakan pilih minimal 1 cabang lomba yang ingin diikuti.";
+        ? t("errSelectPosition")
+        : t("errSelectCompetition");
       setItemError(msg);
       showErrorToast(msg);
       document
@@ -754,7 +758,7 @@ export default function ApplyClientForm({
             {t("formLabel")}
           </span>
           <h1 className="text-2xl md:text-3xl font-extrabold mb-2">
-            {agenda.title}
+            {displayTitle}
           </h1>
           <p className="text-white/80 text-sm">
             {isClosed
@@ -762,7 +766,7 @@ export default function ApplyClientForm({
               : isQuotaFull
               ? t("fullMsg")
               : agenda.deadline
-              ? `${t("deadlineMsg")}: ${formatDeadlineWib(agenda.deadline)}`
+              ? `${t("deadlineMsg")}: ${formatDeadlineWib(agenda.deadline, locale)}`
               : t("fillBelow")}
           </p>
         </div>
@@ -777,7 +781,7 @@ export default function ApplyClientForm({
               </h3>
               <p className="text-sm opacity-80">
                 {t("cannotSubmit")}
-                {isClosed && agenda.deadline ? ` (Ditutup: ${formatDeadlineWib(agenda.deadline)})` : ""}
+                {isClosed && agenda.deadline ? ` (${t("closedAtLabel")} ${formatDeadlineWib(agenda.deadline, locale)})` : ""}
               </p>
             </div>
           ) : (
@@ -795,18 +799,18 @@ export default function ApplyClientForm({
                   <div>
                     <label className="text-sm font-extrabold text-on-surface flex items-center gap-1.5">
                       {isVolunteer
-                        ? "Pilih Posisi yang Dilamar"
+                        ? t("selectPositionLabel")
                         : allowMultiple
-                        ? "Pilih Cabang Lomba (Bisa pilih lebih dari 1)"
-                        : "Pilih Cabang Lomba"}
+                        ? t("selectCompetitionMultiLabel")
+                        : t("selectCompetitionLabel")}
                       <span className="text-red-500">*</span>
                     </label>
                     <p className="text-xs text-on-surface-variant mt-0.5">
                       {isVolunteer
-                        ? "Kuota langsung terisi oleh pendaftar tercepat. Posisi yang sudah penuh tidak dapat dipilih."
+                        ? t("selectPositionHint")
                         : allowMultiple
-                        ? "Centang satu atau beberapa cabang lomba yang ingin kamu ikuti dalam satu formulir."
-                        : "Pilih salah satu cabang lomba yang masih tersedia."}
+                        ? t("selectCompetitionMultiHint")
+                        : t("selectCompetitionHint")}
                     </p>
                   </div>
 
@@ -857,11 +861,11 @@ export default function ApplyClientForm({
                                   <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-on-surface-variant mt-0.5">
                                     {item.participant_type === "tim" ? (
                                       <>
-                                        <FiUsers size={10} /> Kategori Tim
+                                        <FiUsers size={10} /> {t("teamCategory")}
                                       </>
                                     ) : (
                                       <>
-                                        <FiUser size={10} /> Individu
+                                        <FiUser size={10} /> {t("individualCategory")}
                                       </>
                                     )}
                                   </span>
@@ -877,10 +881,10 @@ export default function ApplyClientForm({
                               }`}
                             >
                               {isFull
-                                ? "Penuh"
+                                ? t("fullBadge")
                                 : hasQuota
-                                ? `Sisa ${remaining}`
-                                : "Terbuka"}
+                                ? t("leftBadge", { count: remaining ?? 0 })
+                                : t("openBadge")}
                             </span>
                           </div>
 
@@ -893,11 +897,11 @@ export default function ApplyClientForm({
                           <div className="w-full space-y-1 pt-1">
                             <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
                               <span>
-                                Terisi: <strong className="text-on-surface">{filled}</strong>
+                                {t("filledLabel")} <strong className="text-on-surface">{filled}</strong>
                                 {hasQuota ? ` / ${item.quota}` : ""}
                               </span>
                               <span>
-                                {hasQuota ? `Butuh ${item.quota}` : "Tanpa Batas"}
+                                {hasQuota ? t("neededLabel", { count: item.quota ?? 0 }) : t("unlimitedLabel")}
                               </span>
                             </div>
                             {hasQuota && (
@@ -968,7 +972,7 @@ export default function ApplyClientForm({
                           </h3>
                         </div>
                         <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-                          {extra.length} Pertanyaan
+                          {t("questionsCount", { count: extra.length })}
                         </span>
                       </div>
                       {extra.map((field, eIdx) =>
@@ -985,7 +989,7 @@ export default function ApplyClientForm({
                   ref={turnstileRef}
                   siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
                   onSuccess={(token) => setTurnstileToken(token)}
-                  onError={() => showErrorToast("Gagal memuat verifikasi Captcha")}
+                  onError={() => showErrorToast(t("errCaptchaLoad"))}
                   onExpire={() => setTurnstileToken("")}
                   options={{ theme: "light" }}
                 />
@@ -994,8 +998,9 @@ export default function ApplyClientForm({
               <div className="pt-6 border-t border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 {hasItems && selectedItemIds.length > 0 && (
                   <p className="text-xs font-semibold text-primary">
-                    {selectedItemIds.length}{" "}
-                    {isVolunteer ? "posisi dipilih" : "cabang lomba dipilih"}
+                    {isVolunteer
+                      ? t("positionsSelected", { count: selectedItemIds.length })
+                      : t("competitionsSelected", { count: selectedItemIds.length })}
                   </p>
                 )}
                 <button

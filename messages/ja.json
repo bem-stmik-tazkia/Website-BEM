@@ -47,7 +47,8 @@
     "ctaTitle": "素晴らしいプロジェクトやイノベーションがありますか？",
     "ctaDesc": "STMIK Tazkia の学術コミュニティ全体にあなたの最高の作品を披露しましょう。大学のメールアドレスでログインして、プロジェクトをアップロードしてください！",
     "ctaBtn": "プロジェクトをアップロード",
-    "feedbackBox": "フィードバックと苦情箱"
+    "feedbackBox": "フィードバックと苦情箱",
+    "newPlatform": "新プラットフォーム"
   },
   "Hero": {
     "titlePart1": "インパクトのある",
@@ -90,7 +91,12 @@
     "notOpenedYet": "登録はまだ始まっていません！",
     "loading": "ページを読み込んでいます...",
     "competitionsBadge": "競技部門",
-    "positionsBadge": "募集ポジション"
+    "positionsBadge": "募集ポジション",
+    "spotlightVolunteer": "募集中のボランティア",
+    "spotlightUpcoming": "次回のイベント",
+    "openNowBadge": "募集中",
+    "upcomingBadge": "開催予定",
+    "filledBadge": "応募済"
   },
   "News": {
     "title": "注目のニュース",
@@ -344,7 +350,9 @@
     "overviewVolunteerTitle": "採用とボランティアの概要",
     "competitionsBadge": "競技部門",
     "positionsBadge": "ポジション",
-    "filledBadge": "応募済"
+    "filledBadge": "応募済",
+    "closesInDays": "あと{days}日で締切",
+    "deadlineShort": "締切:"
   },
   "VisiMisi": {
     "title": "ビジョン＆ミッション",
@@ -540,7 +548,8 @@
     "individualType": "個人",
     "rulebook": "要項を見る",
     "applyThisPosition": "このポジションに応募",
-    "registerThisCompetition": "この部門に応募"
+    "registerThisCompetition": "この部門に応募",
+    "deadline": "応募締切:"
   },
   "UserNotification": {
     "title": "作品通知",
@@ -926,7 +935,28 @@
     "errEmail": "無効なメール形式です！",
     "errNumber": "数字である必要があります！",
     "errPhone": "無効な電話番号形式です！",
-    "errFixFields": "{count}個の無効なフィールドを修正してください！"
+    "errFixFields": "{count}個の無効なフィールドを修正してください！",
+    "selectPositionLabel": "応募するポジションを選択",
+    "selectCompetitionMultiLabel": "競技部門を選択（複数選択可）",
+    "selectCompetitionLabel": "競技部門を選択",
+    "selectPositionHint": "先着順で定員が埋まります。満員のポジションは選択できません。",
+    "selectCompetitionMultiHint": "参加したい競技部門を1つ以上選択してください。",
+    "selectCompetitionHint": "参加可能な競技部門を1つ選択してください。",
+    "teamCategory": "チーム部門",
+    "individualCategory": "個人",
+    "fullBadge": "満員",
+    "leftBadge": "残り{count}枠",
+    "openBadge": "受付中",
+    "filledLabel": "応募済:",
+    "neededLabel": "募集 {count}名",
+    "unlimitedLabel": "定員なし",
+    "questionsCount": "{count}問",
+    "positionsSelected": "{count}件のポジションを選択中",
+    "competitionsSelected": "{count}件の部門を選択中",
+    "errSelectPosition": "先に応募するポジションを選択してください。",
+    "errSelectCompetition": "参加する競技部門を1つ以上選択してください。",
+    "errCaptchaLoad": "Captcha認証の読み込みに失敗しました",
+    "closedAtLabel": "締切:"
   },
   "NewsDetail": {
     "share": "シェア",
