@@ -1,87 +1,26 @@
 import { NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { getServiceRoleClient } from "@/lib/auth";
 import { getClientIp, checkRateLimit, createRateLimitResponse } from "@/lib/rateLimit";
 import { sendVolunteerAppliedNotification } from "@/lib/telegram";
+import {
+  isDeadlinePassedJakarta,
+  isHostnameAllowed,
+  validateItemSelection,
+  validateRegistrationResponses,
+} from "@/lib/registration-validation";
+import type { DynamicFormField } from "@/types/agenda";
+
+export { isHostnameAllowed };
 
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 
-// Allowlist root domain untuk lampiran dokumen (exact match atau endsWith('.' + domain))
-const ALLOWED_ROOT_DOMAINS = [
-  "drive.google.com",
-  "docs.google.com",
-  "notion.so",
-  "notion.site",
-  "github.com",
-  "linkedin.com",
-  "figma.com",
-  "canva.com",
-  "onedrive.live.com",
-  "1drv.ms",
-];
-
-export function isHostnameAllowed(hostname: string): boolean {
-  const host = hostname.toLowerCase();
-  return ALLOWED_ROOT_DOMAINS.some(
-    (domain) => host === domain || host.endsWith("." + domain)
-  );
-}
-
-function isAllowedDocumentUrl(urlString: string): { valid: boolean; reason?: string; url?: URL } {
-  if (urlString.length > 500) {
-    return { valid: false, reason: "Tautan dokumen maksimal 500 karakter" };
-  }
-
-  // Wajib tanpa spasi atau karakter kontrol (\x00-\x1F, \x7F)
-  if (/[\s\x00-\x1F\x7F]/.test(urlString)) {
-    return { valid: false, reason: "Tautan tidak boleh mengandung spasi atau karakter kontrol" };
-  }
-
-  let parsed: URL;
-  try {
-    parsed = new URL(urlString);
-  } catch {
-    return { valid: false, reason: "Format tautan dokumen tidak valid" };
-  }
-
-  // Wajib protokol https://
-  if (parsed.protocol !== "https:") {
-    return { valid: false, reason: "Tautan dokumen wajib menggunakan protokol https://" };
-  }
-
-  // Tolak URL yang memuat username atau password
-  if (parsed.username || parsed.password) {
-    return { valid: false, reason: "Tautan tidak boleh memuat kredensial username/password" };
-  }
-
-  // Tolak port non-default
-  if (parsed.port !== "" && parsed.port !== "443") {
-    return { valid: false, reason: "Tautan tidak boleh menggunakan port non-default" };
-  }
-
-  const host = parsed.hostname.toLowerCase();
-
-  // Tolak hostname berupa alamat IP (IPv4 atau IPv6)
-  const isIpv4 = /^(\d{1,3}\.){3}\d{1,3}$/.test(host);
-  const isIpv6 = host.startsWith("[") || host.includes(":");
-  if (isIpv4 || isIpv6) {
-    return { valid: false, reason: "Hostname tidak boleh berupa alamat IP" };
-  }
-
-  // Pencocokan hostname: exact match atau endsWith('.' + domain), BUKAN includes
-  if (!isHostnameAllowed(host)) {
-    return {
-      valid: false,
-      reason: `Domain '${host}' tidak diizinkan. Harap lampirkan tautan dari Google Drive/Docs, Notion, GitHub, LinkedIn, Figma, Canva, atau OneDrive.`,
-    };
-  }
-
-  return { valid: true, url: parsed };
-}
-
-// Skema dasar request pendaftaran volunteer
+// Skema dasar request pendaftaran
 const requestSchema = z.object({
-  agendaId: z.string().min(1, "Agenda ID wajib disertakan"),
+  agendaId: z.string().uuid("Agenda ID tidak valid"),
+  itemId: z.string().uuid().optional(),
+  itemIds: z.array(z.string().uuid("Pilihan posisi/lomba tidak valid")).max(20).optional(),
   turnstileToken: z.string().min(1, "Verifikasi Captcha wajib disertakan"),
   responses: z.record(z.string(), z.string()).refine(
     (obj) => Object.keys(obj).length <= 50,
@@ -95,7 +34,7 @@ export async function POST(req: Request) {
     const clientIp = getClientIp(req);
     const rateLimitResult = await checkRateLimit(`volunteer_apply_${clientIp}`, {
       limit: 5,
-      windowMs: 10 * 60 * 1000, // 10 menit
+      windowMs: 10 * 60 * 1000,
     });
 
     if (!rateLimitResult.success) {
@@ -125,7 +64,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const { agendaId, responses, turnstileToken } = parseResult.data;
+    const { agendaId, itemId, itemIds, responses, turnstileToken } = parseResult.data;
+    const requestedItemIds = Array.from(
+      new Set([...(itemIds || []), ...(itemId ? [itemId] : [])].filter(Boolean))
+    );
 
     // 3. Verifikasi Cloudflare Turnstile Captcha (GAGAL TERTUTUP / FAIL-CLOSED)
     if (!TURNSTILE_SECRET_KEY) {
@@ -162,12 +104,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. Ambil Definisi Form & Status Agenda dari Database Server
+    // 4. Ambil Definisi Form, Sub-Item, & Status Agenda dari Database Server
     const supabaseAdmin = getServiceRoleClient();
 
     const { data: agenda, error: agendaError } = await supabaseAdmin
       .from("agendas")
-      .select("id, title, slug, is_published, deadline, form_schema, type")
+      .select("id, title, slug, is_published, deadline, form_schema, type, max_participants, allow_multiple_items")
       .eq("id", agendaId)
       .maybeSingle();
 
@@ -178,7 +120,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Tolak jika belum dipublikasikan
     if (!agenda.is_published) {
       return NextResponse.json(
         { error: "Pendaftaran untuk kegiatan ini tidak dibuka atau belum dipublikasikan" },
@@ -186,9 +127,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Tolak jika formulir pendaftaran tidak didefinisikan / kosong
-    const formSchema: Array<{ id: string; type: string; label: string; required: boolean }> =
-      Array.isArray(agenda.form_schema) ? agenda.form_schema : [];
+    const formSchema: DynamicFormField[] = Array.isArray(agenda.form_schema)
+      ? agenda.form_schema
+      : [];
 
     if (formSchema.length === 0) {
       return NextResponse.json(
@@ -197,114 +138,117 @@ export async function POST(req: Request) {
       );
     }
 
-    // Cek batas waktu deadline pendaftaran
-    if (agenda.deadline) {
-      const deadlineDate = new Date(agenda.deadline);
-      deadlineDate.setHours(23, 59, 59, 999);
-      if (new Date() > deadlineDate) {
-        return NextResponse.json(
-          { error: "Pendaftaran untuk kegiatan ini sudah ditutup" },
-          { status: 400, headers: rateLimitResult.headers }
-        );
-      }
+    if (isDeadlinePassedJakarta(agenda.deadline)) {
+      return NextResponse.json(
+        { error: "Pendaftaran untuk kegiatan ini sudah ditutup" },
+        { status: 400, headers: rateLimitResult.headers }
+      );
+    }
+
+    // Ambil sub-items (posisi / cabang lomba) jika tersedia
+    const { data: agendaItems, error: itemsError } = await supabaseAdmin
+      .from("agenda_items")
+      .select("id, name, quota")
+      .eq("agenda_id", agendaId)
+      .order("sort_order", { ascending: true });
+
+    if (itemsError) {
+      console.error("[volunteer/apply] Error reading agenda_items:", itemsError.message);
+      return NextResponse.json(
+        { error: "Gagal memeriksa posisi/cabang pendaftaran" },
+        { status: 500, headers: rateLimitResult.headers }
+      );
+    }
+
+    const selectionValidation = validateItemSelection({
+      agendaType: agenda.type,
+      allowMultipleItems: agenda.allow_multiple_items,
+      availableItems: agendaItems || [],
+      requestedItemIds,
+    });
+    if (!selectionValidation.valid) {
+      return NextResponse.json(
+        { error: selectionValidation.error },
+        { status: 400, headers: rateLimitResult.headers }
+      );
     }
 
     // 5. Validasi Responses Terhadap Form Schema Server
-    const formSchemaMap = new Map<string, { id: string; type: string; label: string; required: boolean }>();
-    for (const field of formSchema) {
-      formSchemaMap.set(field.id, field);
+    const responseValidation = validateRegistrationResponses(formSchema, responses);
+    if (!responseValidation.valid) {
+      return NextResponse.json(
+        { error: responseValidation.error },
+        { status: 400, headers: rateLimitResult.headers }
+      );
     }
 
-    // (a) Tolak key yang tidak ada di definisi form
-    for (const submittedKey of Object.keys(responses)) {
-      if (!formSchemaMap.has(submittedKey)) {
+    // 6. Simpan Pendaftaran Secara Atomik (Lock Kuota via RPC)
+    const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc(
+      "submit_agenda_registration",
+      {
+        p_agenda_id: agendaId,
+        p_item_ids:
+          selectionValidation.selectedItemIds.length > 0
+            ? selectionValidation.selectedItemIds
+            : null,
+        p_responses: responses,
+        p_portofolio_url: responseValidation.extractedPortofolioUrl,
+        p_batch_id: null,
+      }
+    );
+
+    if (rpcError) {
+      const msg = rpcError.message || "";
+      if (msg.includes("QUOTA_FULL:")) {
+        const fullTarget = msg.split("QUOTA_FULL:")[1]?.trim() || agenda.title;
         return NextResponse.json(
-          { error: `Field '${submittedKey}' tidak terdaftar dalam formulir pendaftaran kegiatan ini` },
+          { error: `Maaf, kuota untuk "${fullTarget}" sudah terisi penuh.` },
+          { status: 409, headers: rateLimitResult.headers }
+        );
+      }
+      if (msg.includes("DEADLINE_PASSED")) {
+        return NextResponse.json(
+          { error: "Pendaftaran untuk kegiatan ini sudah ditutup." },
           { status: 400, headers: rateLimitResult.headers }
         );
       }
-    }
-
-    // (b) Validasi per field berdasarkan tipe dan kewajiban isian
-    let extractedPortofolioUrl: string | null = null;
-
-    for (const field of formSchema) {
-      const rawValue = responses[field.id];
-      const value = typeof rawValue === "string" ? rawValue.trim() : "";
-
-      // Validasi field wajib
-      if (field.required && !value) {
+      if (
+        msg.includes("ITEM_REQUIRED") ||
+        msg.includes("INVALID_ITEM") ||
+        msg.includes("MULTIPLE_ITEMS_NOT_ALLOWED")
+      ) {
         return NextResponse.json(
-          { error: `Kolom '${field.label}' wajib diisi` },
+          { error: "Pilihan posisi / cabang lomba tidak valid." },
           { status: 400, headers: rateLimitResult.headers }
         );
       }
 
-      // Jika field memiliki nilai, validasi formatnya
-      if (value) {
-        if (field.type === "file" || field.type === "image") {
-          const urlCheck = isAllowedDocumentUrl(value);
-          if (!urlCheck.valid) {
-            return NextResponse.json(
-              { error: `Kolom '${field.label}': ${urlCheck.reason}` },
-              { status: 400, headers: rateLimitResult.headers }
-            );
-          }
-          if (!extractedPortofolioUrl) {
-            extractedPortofolioUrl = value.slice(0, 500);
-          }
-        } else {
-          // Field teks / textarea / number / tel / email
-          if (value.length > 3000) {
-            return NextResponse.json(
-              { error: `Kolom '${field.label}' melebihi batas maksimal 3000 karakter` },
-              { status: 400, headers: rateLimitResult.headers }
-            );
-          }
-          if (field.type === "number" && !/^-?\d+$/.test(value)) {
-            return NextResponse.json(
-              { error: `Kolom '${field.label}' harus berupa angka yang valid` },
-              { status: 400, headers: rateLimitResult.headers }
-            );
-          }
-          if (field.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-            return NextResponse.json(
-              { error: `Kolom '${field.label}' harus berupa alamat email yang valid` },
-              { status: 400, headers: rateLimitResult.headers }
-            );
-          }
-        }
-      }
-    }
-
-    // 6. Simpan Aplikasi Volunteer ke Database via Service Role
-    const insertPayload: Record<string, any> = {
-      agenda_id: agendaId,
-      responses,
-    };
-    if (extractedPortofolioUrl) {
-      insertPayload.portofolio_url = extractedPortofolioUrl;
-    }
-
-    const { error: insertError } = await supabaseAdmin
-      .from("volunteer_applications")
-      .insert([insertPayload]);
-
-    if (insertError) {
-      console.error("[volunteer/apply] Database insert error:", insertError.message);
+      console.error("[volunteer/apply] RPC submit_agenda_registration error:", msg);
       return NextResponse.json(
         { error: "Gagal menyimpan data pendaftaran. Silakan coba kembali." },
         { status: 500, headers: rateLimitResult.headers }
       );
     }
 
+    const itemNames: string[] = Array.isArray(rpcResult?.item_names)
+      ? rpcResult.item_names
+      : [];
+    const totalAccepted: number | undefined =
+      typeof rpcResult?.total_accepted === "number" ? rpcResult.total_accepted : undefined;
+
+    // Segarkan cache halaman publik & kuota
+    revalidateTag("agenda", "max");
+    revalidatePath("/agenda");
+    revalidatePath("/[locale]/agenda", "page");
+    revalidatePath(`/[locale]/agenda/${agendaId}`, "page");
+    if (agenda.slug) {
+      revalidatePath(`/[locale]/agenda/${agenda.slug}`, "page");
+    }
+    revalidatePath("/admin/kegiatan");
+    revalidatePath(`/admin/kegiatan/${agendaId}/pendaftar`);
+
     // 7. Kirim notifikasi teknis ke Telegram internal pengurus (non-blocking)
     try {
-      const { count } = await supabaseAdmin
-        .from("volunteer_applications")
-        .select("*", { count: "exact", head: true })
-        .eq("agenda_id", agendaId);
-
       const formattedFields = formSchema.map((field) => ({
         label: field.label,
         value: typeof responses[field.id] === "string" ? responses[field.id].trim() : "",
@@ -314,15 +258,20 @@ export async function POST(req: Request) {
         agendaId: agenda.id,
         agendaTitle: agenda.title || "Kegiatan BEM",
         agendaType: agenda.type,
+        selectedItems: itemNames,
         fields: formattedFields,
-        totalParticipants: typeof count === "number" ? count : undefined,
+        totalParticipants: totalAccepted,
       });
     } catch (teleErr) {
       console.warn("[volunteer/apply] Gagal mengirim notif Telegram:", teleErr);
     }
 
     return NextResponse.json(
-      { success: true, message: "Pendaftaran berhasil dikirim" },
+      {
+        success: true,
+        message: "Pendaftaran berhasil dikirim",
+        selectedItems: itemNames,
+      },
       { status: 201, headers: rateLimitResult.headers }
     );
   } catch (err: any) {

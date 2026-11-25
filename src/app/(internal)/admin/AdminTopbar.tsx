@@ -50,7 +50,7 @@ export default function AdminTopbar({ user }: AdminTopbarProps) {
 
   return (
     <>
-      <header className="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-40 transition-colors duration-200">
+      <header className="w-full print:hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-40 transition-colors duration-200">
         {/* Left Side: Mobile Menu Button + Breadcrumb */}
         <div className="flex items-center gap-3">
           {/* Mobile Hamburger Toggle Button */}

@@ -88,7 +88,9 @@
     "viewDocs": "عرض التوثيق",
     "detailEvent": "تفاصيل الحدث",
     "notOpenedYet": "لم يفتح التسجيل بعد!",
-    "loading": "جارٍ تحميل الصفحة..."
+    "loading": "جارٍ تحميل الصفحة...",
+    "competitionsBadge": "فروع المسابقة",
+    "positionsBadge": "الوظائف المتاحة"
   },
   "News": {
     "title": "أخبار مميزة",
@@ -339,7 +341,10 @@
     "statusFilterClosed": "مغلق",
     "closedPosition": "التسجيل مغلق",
     "overviewTitle": "نظرة عامة على جدول الأعمال والأرشيف",
-    "overviewVolunteerTitle": "نظرة عامة على التوظيف والتطوع"
+    "overviewVolunteerTitle": "نظرة عامة على التوظيف والتطوع",
+    "competitionsBadge": "فروع المسابقة",
+    "positionsBadge": "وظائف",
+    "filledBadge": "تم شغلها"
   },
   "VisiMisi": {
     "title": "الرؤية والرسالة",
@@ -515,7 +520,27 @@
     "copyFail": "فشل في نسخ الرابط",
     "shareTitle": "شارك هذه الفعالية",
     "shareDesc": "انشر معلومات هذه الفعالية الرائعة لأصدقائك!",
-    "shareNow": "شارك الآن"
+    "shareNow": "شارك الآن",
+    "regClosed": "انتهى التسجيل",
+    "oprecClosedDesc": "انتهت فترة التسجيل في هذا التوظيف المفتوح.",
+    "competitionsCount": "فروع المسابقة",
+    "positionsCount": "الوظائف المتاحة",
+    "positionsTitle": "الوظائف المطلوبة والحصة",
+    "positionsSubtitle": "تحقق من العدد المطلوب والمقاعد المشغولة لكل وظيفة.",
+    "competitionsTitle": "فروع المسابقة والتسجيل",
+    "competitionsMultiSubtitle": "اختر مسابقة أدناه أو سجل في عدة مسابقات في نموذج واحد.",
+    "competitionsSingleSubtitle": "اختر إحدى المسابقات أدناه للتسجيل.",
+    "registerMultiple": "التسجيل المتعدد",
+    "openLabel": "مفتوح",
+    "remainingLabel": "المتبقي",
+    "neededLabel": "المطلوب",
+    "quotaLabel": "الحصة",
+    "filledLabel": "تم شغلها",
+    "teamType": "فريق",
+    "individualType": "فردي",
+    "rulebook": "عرض الدليل",
+    "applyThisPosition": "التقديم لهذه الوظيفة",
+    "registerThisCompetition": "التسجيل في المسابقة"
   },
   "UserNotification": {
     "title": "إشعارات الأعمال",

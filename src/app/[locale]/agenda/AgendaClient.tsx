@@ -586,6 +586,11 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                             <span className="flex items-center gap-2">
                               <FiMapPin size={13} className="text-primary shrink-0" /> {agenda.location}
                             </span>
+                            {agenda.items && agenda.items.length > 0 && (
+                              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full w-fit mt-1">
+                                {agenda.items.length} {t("competitionsBadge")}
+                              </span>
+                            )}
                           </div>
 
                           <div className="flex items-center justify-between pt-3 border-t border-outline-variant/20 mt-auto">
@@ -778,6 +783,21 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                         <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block mb-1 md:mb-2">{vol.category}</span>
                         <h4 className="font-bold text-base md:text-lg text-on-background group-hover:text-primary transition-colors mb-1 md:mb-2">{vol.title}</h4>
                         <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed mb-4 md:mb-6 flex-grow line-clamp-3">{vol.description}</p>
+
+                        {vol.items && vol.items.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/70 px-2.5 py-1.5 rounded-xl mb-3">
+                            <span>{vol.items.length} {t("positionsBadge")}</span>
+                            <span>•</span>
+                            <span>
+                              {(() => {
+                                const filled = vol.items.reduce((s, it) => s + (it.filled_count || 0), 0);
+                                const quota = vol.items.reduce((s, it) => s + (it.quota || 0), 0);
+                                const hasUnlim = vol.items.some((it) => it.quota == null);
+                                return hasUnlim ? `${filled} ${t("filledBadge")}` : `${filled}/${quota} ${t("filledBadge")}`;
+                              })()}
+                            </span>
+                          </div>
+                        )}
 
                         <div className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-4 md:mb-5">
                           <FiClock size={13} className={isClosed ? "text-on-surface-variant" : "text-primary"} />

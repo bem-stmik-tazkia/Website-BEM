@@ -1,49 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { getServiceRoleClient } from "@/lib/auth";
-
-/**
- * Validasi Magic Bytes biner gambar.
- * Memastikan file yang diunggah benar-benar file raster gambar murni (JPEG/PNG/WebP/GIF)
- * dan menolak executable, script berbahaya, SVG XSS, atau berkas polyglot.
- */
-function isValidImageSignature(buffer: Buffer): boolean {
-  if (buffer.length < 12) return false;
-
-  // JPEG: FF D8 FF
-  const isJpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
-  if (isJpeg) return true;
-
-  // PNG: 89 50 4E 47 0D 0A 1A 0A
-  const isPng =
-    buffer[0] === 0x89 &&
-    buffer[1] === 0x50 &&
-    buffer[2] === 0x4e &&
-    buffer[3] === 0x47;
-  if (isPng) return true;
-
-  // WebP: RIFF .... WEBP
-  const isWebp =
-    buffer[0] === 0x52 &&
-    buffer[1] === 0x49 &&
-    buffer[2] === 0x46 &&
-    buffer[3] === 0x46 &&
-    buffer[8] === 0x57 &&
-    buffer[9] === 0x45 &&
-    buffer[10] === 0x42 &&
-    buffer[11] === 0x50;
-  if (isWebp) return true;
-
-  // GIF: GIF87a or GIF89a
-  const isGif =
-    buffer[0] === 0x47 &&
-    buffer[1] === 0x49 &&
-    buffer[2] === 0x46 &&
-    buffer[3] === 0x38;
-  if (isGif) return true;
-
-  return false;
-}
+import { isValidImageSignature } from "@/lib/imageValidation";
 
 export async function POST(request: NextRequest) {
   try {

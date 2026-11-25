@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiSave, FiArrowLeft, FiAlertCircle, FiUpload } from "react-icons/fi";
+import { FiSave, FiArrowLeft, FiAlertCircle, FiUpload, FiPlus, FiTrash2, FiChevronUp, FiChevronDown, FiLayers } from "react-icons/fi";
 import Link from "next/link";
 import { getKegiatanById, saveKegiatan } from "../actions";
 import { motion, AnimatePresence } from "framer-motion";
-import { AgendaKegiatan, DynamicFormField } from "@/types/agenda";
+import { AgendaItemInput, KegiatanFormInput } from "@/types/agenda";
 import ImageUpload from "@/components/ui/ImageUpload";
 import { useToast } from "@/components/ui/Toast";
 import FormBuilder from "./FormBuilder";
@@ -24,7 +24,7 @@ export default function KegiatanFormPage() {
   const [isFetching, setIsFetching] = useState(!!id);
   const typeParam = searchParams.get("type");
   
-  const initialFormState: Partial<AgendaKegiatan> = {
+  const initialFormState: KegiatanFormInput = {
     title: "",
     type: (typeParam as any) || (fromParam === 'dokumentasi' ? 'dokumentasi' : 'event'),
     category: "",
@@ -41,12 +41,14 @@ export default function KegiatanFormPage() {
     is_published: false,
     form_schema: [],
     speakers: [{ name: "", role: "", photo: "" }],
-    max_participants: null
+    max_participants: null,
+    allow_multiple_items: true,
+    items: [],
   };
 
-  const [formData, setFormData] = useState<Partial<AgendaKegiatan>>(initialFormState);
+  const [formData, setFormData] = useState<KegiatanFormInput>(initialFormState);
   const [requiresRegistration, setRequiresRegistration] = useState(false);
-  const [initialData, setInitialData] = useState<Partial<AgendaKegiatan>>(initialFormState);
+  const [initialData, setInitialData] = useState<KegiatanFormInput>(initialFormState);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const toastShown = React.useRef(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -101,9 +103,29 @@ export default function KegiatanFormPage() {
           if (data.date) data.date = data.date.split('T')[0];
           if (data.end_date) data.end_date = data.end_date.split('T')[0];
           if (data.deadline) data.deadline = data.deadline.split('T')[0];
-          setFormData(data);
-          setInitialData(JSON.parse(JSON.stringify(data))); // Deep copy for accurate isDirty check
-          if (data.type === 'event' && data.form_schema && data.form_schema.length > 0) {
+          const cleanItems: AgendaItemInput[] = Array.isArray(data.items)
+            ? data.items.map((it, idx) => ({
+                id: it.id,
+                name: it.name || "",
+                description: it.description || "",
+                quota: it.quota ?? null,
+                participant_type: it.participant_type === "tim" ? "tim" : "individu",
+                rulebook_url: it.rulebook_url || "",
+                sort_order: it.sort_order ?? idx,
+              }))
+            : [];
+          const normalizedData: KegiatanFormInput = {
+            ...data,
+            allow_multiple_items: data.allow_multiple_items !== false,
+            items: cleanItems,
+          };
+          delete (normalizedData as any).accepted_count;
+          setFormData(normalizedData);
+          setInitialData(JSON.parse(JSON.stringify(normalizedData)));
+          if (
+            data.type === 'event' &&
+            ((data.form_schema && data.form_schema.length > 0) || cleanItems.length > 0)
+          ) {
             setRequiresRegistration(true);
           }
         }
@@ -258,6 +280,34 @@ export default function KegiatanFormPage() {
       if (!formData.description?.trim()) newErrors.description = "Deskripsi wajib diisi";
     }
 
+    const registrationActive =
+      formData.type === 'volunteer' || (formData.type === 'event' && requiresRegistration);
+
+    if (registrationActive && formData.items && formData.items.length > 0) {
+      formData.items.forEach((item, idx) => {
+        if (!item.name?.trim()) {
+          newErrors[`item_${idx}_name`] =
+            formData.type === 'volunteer'
+              ? "Nama posisi wajib diisi"
+              : "Nama cabang lomba wajib diisi";
+        }
+        if (item.rulebook_url?.trim() && !item.rulebook_url.trim().startsWith("https://")) {
+          newErrors[`item_${idx}_rulebook`] = "Link juknis wajib diawali https://";
+        }
+      });
+    }
+
+    if (registrationActive && formData.form_schema && formData.form_schema.length > 0) {
+      const hasInvalidSelect = formData.form_schema.some(
+        (f) =>
+          f.type === "select" &&
+          (!Array.isArray(f.options) || f.options.filter((o) => o.trim()).length === 0)
+      );
+      if (hasInvalidSelect) {
+        newErrors.form_schema = "Pertanyaan bertipe Pilihan (Dropdown) wajib memiliki minimal 1 opsi.";
+      }
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setFormErrors(newErrors);
       showError("Harap lengkapi semua kolom yang ditandai merah.");
@@ -268,9 +318,13 @@ export default function KegiatanFormPage() {
       // Coba cari field wrapper-nya terlebih dahulu
       let el = document.getElementById(`field-${firstErrorKey}`);
       
-      // Khusus untuk error array speakers
+      // Khusus untuk error array speakers atau items
       if (firstErrorKey.startsWith("speaker")) {
         el = document.getElementById("field-speakers");
+      } else if (firstErrorKey.startsWith("item_")) {
+        el = document.getElementById("field-items");
+      } else if (firstErrorKey === "form_schema") {
+        el = document.getElementById("field-form-builder");
       }
       
       if (el) {
@@ -284,11 +338,19 @@ export default function KegiatanFormPage() {
     }
 
     // Build clean copy of data to save (do not mutate state directly)
-    let dataToSave = { ...formData };
+    let dataToSave: KegiatanFormInput = { ...formData };
 
-    // Jika Wajib Pendaftaran dinonaktifkan pada Event, hapus form_schema
+    if (dataToSave.form_schema) {
+      dataToSave.form_schema = dataToSave.form_schema.map((f) =>
+        f.type === "select"
+          ? { ...f, options: (f.options || []).map((o) => o.trim()).filter(Boolean) }
+          : f
+      );
+    }
+
+    // Jika Wajib Pendaftaran dinonaktifkan pada Event, hapus form_schema, kuota, dan cabang lomba
     if (dataToSave.type === 'event' && !requiresRegistration) {
-      dataToSave = { ...dataToSave, form_schema: [], max_participants: null };
+      dataToSave = { ...dataToSave, form_schema: [], max_participants: null, items: [], deadline: null };
     }
     
     // Filter pembicara yang kosong
@@ -687,25 +749,342 @@ export default function KegiatanFormPage() {
 
                 {(formData.type === 'volunteer' || (formData.type === 'event' && requiresRegistration)) && (
                   <>
-                    <div className="space-y-2 pb-4 border-b border-outline-variant/20">
+                    {/* Deadline opsional khusus Event dengan pendaftaran */}
+                    {formData.type === 'event' && (
+                      <div id="field-deadline-event" className="space-y-2 pb-4 border-b border-outline-variant/20">
+                        <label className="text-sm font-bold text-on-surface">
+                          Batas Pendaftaran (Deadline) <span className="font-normal text-on-surface-variant text-xs">(Opsional)</span>
+                        </label>
+                        <input
+                          type="date"
+                          name="deadline"
+                          value={formData.deadline || ""}
+                          onChange={handleChange}
+                          className="w-full md:w-1/2 bg-background border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors"
+                        />
+                        <p className="text-xs text-on-surface-variant">
+                          Pendaftaran lomba/event akan otomatis ditutup setelah melewati tanggal ini. Kosongkan jika dibuka hingga hari pelaksanaan.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Cabang Lomba (Event) / Multi-Posisi (Oprec) */}
+                    <div id="field-items" className="space-y-4 pb-6 border-b border-outline-variant/20">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <label className="text-sm font-bold text-on-surface flex items-center gap-2">
+                            <FiLayers className="text-primary" />
+                            {formData.type === 'volunteer'
+                              ? "Daftar Posisi yang Dibuka (Opsional — untuk Multi-Posisi)"
+                              : "Daftar Cabang Lomba / Sub-Pilihan (Opsional)"}
+                          </label>
+                          <p className="text-xs text-on-surface-variant mt-1">
+                            {formData.type === 'volunteer'
+                              ? "Tambahkan posisi jika Oprec ini membuka beberapa divisi/posisi (misal: Posisi A, Posisi B) agar terlihat kuota dibutuhkan & yang sudah terisi per posisi."
+                              : "Tambahkan cabang lomba jika dalam 1 event ini peserta bisa memilih/mendaftar ke beberapa cabang lomba."}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextItems = [
+                              ...(formData.items || []),
+                              {
+                                name: "",
+                                description: "",
+                                quota: null,
+                                participant_type: "individu" as const,
+                                rulebook_url: "",
+                                sort_order: (formData.items || []).length,
+                              },
+                            ];
+                            setFormData((prev) => ({ ...prev, items: nextItems }));
+                          }}
+                          className="shrink-0 inline-flex items-center gap-1.5 text-xs font-bold bg-primary text-white px-3.5 py-2 rounded-xl hover:bg-primary/90 transition-colors shadow-xs"
+                        >
+                          <FiPlus size={14} />
+                          {formData.type === 'volunteer' ? "Tambah Posisi" : "Tambah Cabang Lomba"}
+                        </button>
+                      </div>
+
+                      {formData.items && formData.items.length > 0 && (
+                        <div className="space-y-4">
+                          {formData.type === 'event' && formData.items.length > 1 && (
+                            <label className="flex items-center gap-3 p-3.5 rounded-xl bg-blue-50/60 border border-blue-200/70 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={formData.allow_multiple_items !== false}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    allow_multiple_items: e.target.checked,
+                                  }))
+                                }
+                                className="w-4 h-4 text-primary focus:ring-primary rounded"
+                              />
+                              <div>
+                                <span className="text-xs font-bold text-on-surface block">
+                                  Izinkan peserta mendaftar lebih dari 1 cabang lomba sekaligus
+                                </span>
+                                <span className="text-[11px] text-on-surface-variant">
+                                  Peserta cukup isi biodata 1x dan bisa mencentang beberapa lomba sekaligus.
+                                </span>
+                              </div>
+                            </label>
+                          )}
+
+                          <div className="space-y-3">
+                            {formData.items.map((item, idx) => (
+                              <div
+                                key={item.id || `new-item-${idx}`}
+                                className="p-4 rounded-2xl border border-outline-variant/40 bg-surface-variant/10 space-y-3 relative"
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-xs font-extrabold uppercase tracking-wider text-primary">
+                                    {formData.type === 'volunteer'
+                                      ? `Posisi #${idx + 1}`
+                                      : `Cabang Lomba #${idx + 1}`}
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      disabled={idx === 0}
+                                      onClick={() => {
+                                        const arr = [...(formData.items || [])];
+                                        [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
+                                        setFormData((prev) => ({ ...prev, items: arr }));
+                                      }}
+                                      className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-variant/50 disabled:opacity-30"
+                                      title="Geser Atas"
+                                    >
+                                      <FiChevronUp size={15} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={idx === (formData.items?.length || 0) - 1}
+                                      onClick={() => {
+                                        const arr = [...(formData.items || [])];
+                                        [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+                                        setFormData((prev) => ({ ...prev, items: arr }));
+                                      }}
+                                      className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-variant/50 disabled:opacity-30"
+                                      title="Geser Bawah"
+                                    >
+                                      <FiChevronDown size={15} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const arr = [...(formData.items || [])];
+                                        arr.splice(idx, 1);
+                                        setFormData((prev) => ({ ...prev, items: arr }));
+                                      }}
+                                      className="p-1.5 rounded-lg text-red-500 hover:bg-red-50"
+                                      title="Hapus"
+                                    >
+                                      <FiTrash2 size={15} />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                                  <div className="md:col-span-6 space-y-1">
+                                    <label className="text-xs font-bold text-on-surface">
+                                      {formData.type === 'volunteer' ? "Nama Posisi" : "Nama Cabang Lomba"}{" "}
+                                      <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={item.name || ""}
+                                      onChange={(e) => {
+                                        const arr = [...(formData.items || [])];
+                                        arr[idx] = { ...arr[idx], name: e.target.value };
+                                        setFormData((prev) => ({ ...prev, items: arr }));
+                                        if (formErrors[`item_${idx}_name`]) {
+                                          setFormErrors((prev) => {
+                                            const n = { ...prev };
+                                            delete n[`item_${idx}_name`];
+                                            return n;
+                                          });
+                                        }
+                                      }}
+                                      placeholder={
+                                        formData.type === 'volunteer'
+                                          ? "Contoh: Posisi A - Desain Grafis"
+                                          : "Contoh: Lomba UI/UX Design"
+                                      }
+                                      className={`w-full bg-background border ${
+                                        formErrors[`item_${idx}_name`]
+                                          ? "border-red-500 bg-red-50"
+                                          : "border-outline-variant/50"
+                                      } rounded-xl px-3.5 py-2.5 text-sm focus:border-primary outline-none`}
+                                    />
+                                    {formErrors[`item_${idx}_name`] && (
+                                      <p className="text-xs text-red-500">{formErrors[`item_${idx}_name`]}</p>
+                                    )}
+                                  </div>
+
+                                  <div className="md:col-span-3 space-y-1">
+                                    <label className="text-xs font-bold text-on-surface">
+                                      {formData.type === 'volunteer' ? "Dibutuhkan (Kuota)" : "Kuota Peserta/Tim"}
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={item.quota == null ? "" : item.quota}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        const num = val === "" ? null : parseInt(val, 10);
+                                        const arr = [...(formData.items || [])];
+                                        arr[idx] = {
+                                          ...arr[idx],
+                                          quota: num && num > 0 ? num : null,
+                                        };
+                                        setFormData((prev) => ({ ...prev, items: arr }));
+                                      }}
+                                      placeholder="Tanpa batas"
+                                      className="w-full bg-background border border-outline-variant/50 rounded-xl px-3.5 py-2.5 text-sm focus:border-primary outline-none"
+                                    />
+                                  </div>
+
+                                  {formData.type === 'event' && (
+                                    <div className="md:col-span-3 space-y-1">
+                                      <label className="text-xs font-bold text-on-surface">Tipe Peserta</label>
+                                      <select
+                                        value={item.participant_type || "individu"}
+                                        onChange={(e) => {
+                                          const arr = [...(formData.items || [])];
+                                          arr[idx] = {
+                                            ...arr[idx],
+                                            participant_type: e.target.value === "tim" ? "tim" : "individu",
+                                          };
+                                          setFormData((prev) => ({ ...prev, items: arr }));
+                                        }}
+                                        className="w-full bg-background border border-outline-variant/50 rounded-xl px-3.5 py-2.5 text-sm focus:border-primary outline-none"
+                                      >
+                                        <option value="individu">Individu</option>
+                                        <option value="tim">Tim / Kelompok</option>
+                                      </select>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  <div className={`space-y-1 ${formData.type === 'volunteer' ? 'md:col-span-2' : ''}`}>
+                                    <label className="text-xs font-bold text-on-surface">
+                                      Deskripsi / Ketentuan Singkat <span className="font-normal text-on-surface-variant">(Opsional)</span>
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={item.description || ""}
+                                      onChange={(e) => {
+                                        const arr = [...(formData.items || [])];
+                                        arr[idx] = { ...arr[idx], description: e.target.value };
+                                        setFormData((prev) => ({ ...prev, items: arr }));
+                                      }}
+                                      placeholder={
+                                        formData.type === 'volunteer'
+                                          ? "Contoh: Menguasai Figma/Canva, siap koordinasi rutin"
+                                          : "Contoh: 1 Tim maks 3 orang, wajib melampirkan KTM"
+                                      }
+                                      className="w-full bg-background border border-outline-variant/50 rounded-xl px-3.5 py-2 text-xs focus:border-primary outline-none"
+                                    />
+                                  </div>
+
+                                  {formData.type === 'event' && (
+                                    <div className="space-y-1">
+                                      <label className="text-xs font-bold text-on-surface">
+                                        Link Juknis / Rulebook <span className="font-normal text-on-surface-variant">(Opsional)</span>
+                                      </label>
+                                      <input
+                                        type="url"
+                                        value={item.rulebook_url || ""}
+                                        onChange={(e) => {
+                                          const arr = [...(formData.items || [])];
+                                          arr[idx] = { ...arr[idx], rulebook_url: e.target.value };
+                                          setFormData((prev) => ({ ...prev, items: arr }));
+                                          if (formErrors[`item_${idx}_rulebook`]) {
+                                            setFormErrors((prev) => {
+                                              const n = { ...prev };
+                                              delete n[`item_${idx}_rulebook`];
+                                              return n;
+                                            });
+                                          }
+                                        }}
+                                        placeholder="https://drive.google.com/..."
+                                        className={`w-full bg-background border ${
+                                          formErrors[`item_${idx}_rulebook`]
+                                            ? "border-red-500 bg-red-50"
+                                            : "border-outline-variant/50"
+                                        } rounded-xl px-3.5 py-2 text-xs focus:border-primary outline-none`}
+                                      />
+                                      {formErrors[`item_${idx}_rulebook`] && (
+                                        <p className="text-xs text-red-500">{formErrors[`item_${idx}_rulebook`]}</p>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="text-xs text-on-surface-variant bg-emerald-50/70 border border-emerald-200/80 text-emerald-800 px-3.5 py-2.5 rounded-xl">
+                            {(() => {
+                              const totalNamed = formData.items.filter((i) => i.name.trim()).length;
+                              const totalQuota = formData.items.reduce(
+                                (sum, i) => sum + (typeof i.quota === "number" && i.quota > 0 ? i.quota : 0),
+                                0
+                              );
+                              const hasUnlimited = formData.items.some((i) => !i.quota);
+                              return formData.type === "volunteer"
+                                ? `Ringkasan: ${totalNamed} posisi dibuka • Total kuota dibutuhkan: ${
+                                    hasUnlimited ? `${totalQuota}+ orang (sebagian tanpa batas)` : `${totalQuota} orang`
+                                  }. Pendaftar otomatis mengisi slot (siapa cepat dia dapat) dan admin dapat menolak/menghapus jika tidak sesuai.`
+                                : `Ringkasan: ${totalNamed} cabang lomba • ${
+                                    hasUnlimited
+                                      ? `${totalQuota} kuota terbatas (+ cabang tanpa batas)`
+                                      : `Total kuota ${totalQuota} slot`
+                                  }.`;
+                            })()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div id="field-form-builder" className="space-y-2 pb-4 border-b border-outline-variant/20">
                       <FormBuilder 
                         fields={formData.form_schema || []} 
-                        onChange={(newFields) => setFormData(prev => ({...prev, form_schema: newFields}))} 
+                        onChange={(newFields) => {
+                          setFormData(prev => ({...prev, form_schema: newFields}));
+                          if (formErrors.form_schema) {
+                            setFormErrors((prev) => {
+                              const n = { ...prev };
+                              delete n.form_schema;
+                              return n;
+                            });
+                          }
+                        }} 
                       />
+                      {formErrors.form_schema && (
+                        <p className="text-xs text-red-500 font-semibold">{formErrors.form_schema}</p>
+                      )}
                     </div>
-                    <div id="field-max_participants" className="space-y-2 pb-4 border-b border-outline-variant/20">
-                      <label className="text-sm font-bold text-on-surface">Kuota Pendaftar (Opsional)</label>
-                      <input 
-                        type="number" 
-                        name="max_participants" 
-                        value={formData.max_participants == null ? "" : formData.max_participants} 
-                        onChange={handleChange} 
-                        className={`w-full md:w-1/2 bg-background border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} 
-                        placeholder="Kosongkan jika kuota tidak terbatas" 
-                        min="1"
-                      />
-                      <p className="text-xs text-on-surface-variant mt-1">Sistem akan otomatis menutup pendaftaran jika jumlah pendaftar sudah mencapai angka ini.</p>
-                    </div>
+
+                    {(!formData.items || formData.items.length === 0) && (
+                      <div id="field-max_participants" className="space-y-2 pb-4 border-b border-outline-variant/20">
+                        <label className="text-sm font-bold text-on-surface">Kuota Pendaftar Global (Opsional)</label>
+                        <input 
+                          type="number" 
+                          name="max_participants" 
+                          value={formData.max_participants == null ? "" : formData.max_participants} 
+                          onChange={handleChange} 
+                          className={`w-full md:w-1/2 bg-background border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} 
+                          placeholder="Kosongkan jika kuota tidak terbatas" 
+                          min="1"
+                        />
+                        <p className="text-xs text-on-surface-variant mt-1">Sistem akan otomatis menutup pendaftaran jika jumlah pendaftar sudah mencapai angka ini.</p>
+                      </div>
+                    )}
                   </>
                 )}
 

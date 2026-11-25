@@ -24,7 +24,11 @@ import {
   FiClipboard,
   FiFolder,
   FiLink,
-  FiShare2
+  FiShare2,
+  FiLayers,
+  FiUsers,
+  FiUser,
+  FiArrowRight
 } from "react-icons/fi";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/components/ui/Toast";
@@ -242,11 +246,45 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
   const isLive = eventStatus === t("statusLive");
   const isFinished = eventStatus === t("statusDone");
   const isManualDokumentasi = agenda.type === 'dokumentasi';
-  
-  const hasRegistration = agenda.form_schema && agenda.form_schema.length > 0;
+
+  const items = rawAgenda.items || [];
+  const hasItems = items.length > 0;
+  const hasRegistration = (agenda.form_schema && agenda.form_schema.length > 0) || hasItems;
+
+  const jakartaTodayStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const isDeadlinePassed = Boolean(
+    agenda.deadline && jakartaTodayStr > agenda.deadline.split("T")[0]
+  );
+
   const maxQuota = agenda.max_participants;
-  const isQuotaFull = maxQuota !== null && maxQuota !== undefined && participantCount >= maxQuota;
-  const remainingQuota = maxQuota !== null && maxQuota !== undefined ? maxQuota - participantCount : null;
+  const totalItemFilled = items.reduce((s, it) => s + (it.filled_count || 0), 0);
+  const totalItemQuota = items.reduce(
+    (s, it) => s + (typeof it.quota === "number" ? it.quota : 0),
+    0
+  );
+  const hasUnlimitedItem = items.some((it) => it.quota == null);
+  const isAllItemsFull =
+    hasItems &&
+    !hasUnlimitedItem &&
+    items.every((it) => typeof it.quota === "number" && (it.filled_count || 0) >= it.quota);
+
+  const isQuotaFull = hasItems
+    ? isAllItemsFull
+    : maxQuota !== null && maxQuota !== undefined && participantCount >= maxQuota;
+  const remainingQuota = hasItems
+    ? hasUnlimitedItem
+      ? null
+      : Math.max(0, totalItemQuota - totalItemFilled)
+    : maxQuota !== null && maxQuota !== undefined
+    ? Math.max(0, maxQuota - participantCount)
+    : null;
+  const effectiveParticipantCount = hasItems ? totalItemFilled : participantCount;
+  const effectiveMaxQuota = hasItems ? (hasUnlimitedItem ? null : totalItemQuota) : maxQuota;
 
   const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
   const [flipDirection, setFlipDirection] = React.useState<number>(1);
@@ -570,11 +608,21 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
                       : t("descPublic")}
                 </p>
                 {hasRegistration && (
-                   <p className={`text-xs mt-1 font-bold ${isQuotaFull ? 'text-red-500' : isLive ? 'text-white' : 'text-primary'}`}>
-                     {maxQuota !== null && maxQuota !== undefined 
-                       ? (isQuotaFull ? t("quotaFull") : `${t("remainingQuota")}: ${remainingQuota} ${t("of")} ${maxQuota}`)
-                       : t("unlimitedQuota")}
-                     {` (${t("totalRegistrants")}: ${participantCount})`}
+                   <p className={`text-xs mt-1 font-bold ${isQuotaFull || isDeadlinePassed ? 'text-red-500' : isLive ? 'text-white' : 'text-primary'}`}>
+                     {isDeadlinePassed
+                       ? t("regClosed")
+                       : hasItems
+                       ? `${items.length} ${t("competitionsCount")} • ${
+                           effectiveMaxQuota !== null && effectiveMaxQuota !== undefined
+                             ? isQuotaFull
+                               ? t("quotaFull")
+                               : `${t("remainingQuota")}: ${remainingQuota} ${t("of")} ${effectiveMaxQuota}`
+                             : `${t("totalRegistrants")}: ${effectiveParticipantCount}`
+                         }`
+                       : effectiveMaxQuota !== null && effectiveMaxQuota !== undefined 
+                         ? (isQuotaFull ? t("quotaFull") : `${t("remainingQuota")}: ${remainingQuota} ${t("of")} ${effectiveMaxQuota}`)
+                         : t("unlimitedQuota")}
+                     {!hasItems && ` (${t("totalRegistrants")}: ${effectiveParticipantCount})`}
                    </p>
                 )}
               </div>
@@ -593,11 +641,11 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
               )}
               {hasRegistration && (
                 <Link 
-                  href={isQuotaFull ? '#' : `/agenda/${agenda.id}/apply`}
-                  className={`w-full sm:w-auto px-6 py-3 font-extrabold rounded-xl shadow-md transition-all text-center flex items-center justify-center gap-2 text-sm ${isQuotaFull ? 'bg-surface-variant text-on-surface-variant cursor-not-allowed' : 'bg-primary text-white hover:bg-primary/90 hover:scale-105'}`}
-                  onClick={(e) => isQuotaFull && e.preventDefault()}
+                  href={isQuotaFull || isDeadlinePassed ? '#' : `/agenda/${agenda.id}/apply`}
+                  className={`w-full sm:w-auto px-6 py-3 font-extrabold rounded-xl shadow-md transition-all text-center flex items-center justify-center gap-2 text-sm ${isQuotaFull || isDeadlinePassed ? 'bg-surface-variant text-on-surface-variant cursor-not-allowed' : 'bg-primary text-white hover:bg-primary/90 hover:scale-105'}`}
+                  onClick={(e) => (isQuotaFull || isDeadlinePassed) && e.preventDefault()}
                 >
-                  {isQuotaFull ? t("quotaFull") : t("registerNow")}
+                  {isDeadlinePassed ? t("regClosed") : isQuotaFull ? t("quotaFull") : t("registerNow")}
                 </Link>
               )}
             </div>
@@ -616,27 +664,216 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
               </div>
               <div>
                 <h3 className="font-bold text-base md:text-lg">
-                  {t("oprecOpen")}
+                  {isDeadlinePassed ? t("regClosed") : t("oprecOpen")}
                 </h3>
                 <p className={`text-xs md:text-sm text-emerald-100`}>
-                  {t("oprecDesc")}
+                  {isDeadlinePassed ? t("oprecClosedDesc") : t("oprecDesc")}
                 </p>
                 <p className="text-xs mt-1 font-bold text-emerald-100">
-                  {maxQuota !== null && maxQuota !== undefined 
-                    ? (isQuotaFull ? t("quotaFull") : `${t("remainingQuota")}: ${remainingQuota} ${t("of")} ${maxQuota}`)
-                    : t("unlimitedQuota")}
-                  {` (${t("totalRegistrants")}: ${participantCount})`}
+                  {hasItems
+                    ? `${items.length} ${t("positionsCount")} • ${
+                        effectiveMaxQuota !== null && effectiveMaxQuota !== undefined
+                          ? isQuotaFull
+                            ? t("quotaFull")
+                            : `${t("filledLabel")}: ${effectiveParticipantCount} ${t("of")} ${effectiveMaxQuota} (${t("remainingQuota")}: ${remainingQuota})`
+                          : `${t("filledLabel")}: ${effectiveParticipantCount}`
+                      }`
+                    : effectiveMaxQuota !== null && effectiveMaxQuota !== undefined 
+                      ? (isQuotaFull ? t("quotaFull") : `${t("remainingQuota")}: ${remainingQuota} ${t("of")} ${effectiveMaxQuota}`)
+                      : t("unlimitedQuota")}
+                  {!hasItems && ` (${t("totalRegistrants")}: ${effectiveParticipantCount})`}
                 </p>
               </div>
             </div>
             
             <Link 
-              href={isQuotaFull ? '#' : `/agenda/${agenda.id}/apply`}
-              className={`w-full sm:w-auto px-6 py-3 font-extrabold rounded-xl shadow-md transition-all text-center flex items-center justify-center gap-2 text-sm ${isQuotaFull ? 'bg-white/30 text-white cursor-not-allowed' : 'bg-surface text-emerald-700 hover:bg-emerald-50 hover:scale-105'}`}
-              onClick={(e) => isQuotaFull && e.preventDefault()}
+              href={isQuotaFull || isDeadlinePassed ? '#' : `/agenda/${agenda.id}/apply`}
+              className={`w-full sm:w-auto px-6 py-3 font-extrabold rounded-xl shadow-md transition-all text-center flex items-center justify-center gap-2 text-sm ${isQuotaFull || isDeadlinePassed ? 'bg-white/30 text-white cursor-not-allowed' : 'bg-surface text-emerald-700 hover:bg-emerald-50 hover:scale-105'}`}
+              onClick={(e) => (isQuotaFull || isDeadlinePassed) && e.preventDefault()}
             >
-              {isQuotaFull ? t("quotaFull") : t("registerNow")}
+              {isDeadlinePassed ? t("regClosed") : isQuotaFull ? t("quotaFull") : t("registerNow")}
             </Link>
+          </motion.div>
+        )}
+
+        {/* ── POSITIONS / COMPETITIONS BREAKDOWN CARDS ─────────── */}
+        {hasItems && !isFinished && !isManualDokumentasi && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="mt-6 bg-surface rounded-2xl md:rounded-3xl p-5 md:p-7 border border-outline-variant/30 shadow-sm space-y-5"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-lg md:text-xl font-extrabold text-on-surface flex items-center gap-2">
+                  <FiLayers className="text-primary" />
+                  {agenda.type === "volunteer" ? t("positionsTitle") : t("competitionsTitle")}
+                </h3>
+                <p className="text-xs md:text-sm text-on-surface-variant mt-0.5">
+                  {agenda.type === "volunteer"
+                    ? t("positionsSubtitle")
+                    : agenda.allow_multiple_items !== false && items.length > 1
+                    ? t("competitionsMultiSubtitle")
+                    : t("competitionsSingleSubtitle")}
+                </p>
+              </div>
+              {agenda.type === "event" && agenda.allow_multiple_items !== false && items.length > 1 && !isDeadlinePassed && !isQuotaFull && (
+                <Link
+                  href={`/agenda/${agenda.id}/apply`}
+                  className="shrink-0 inline-flex items-center gap-1.5 text-xs font-bold bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-xl transition-colors"
+                >
+                  {t("registerMultiple")} <FiArrowRight size={14} />
+                </Link>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {items.map((item) => {
+                const filled = item.filled_count || 0;
+                const hasQuota = typeof item.quota === "number";
+                const isItemFull = hasQuota && filled >= item.quota!;
+                const itemRemaining = hasQuota ? Math.max(0, item.quota! - filled) : null;
+                const pct =
+                  hasQuota && item.quota! > 0
+                    ? Math.min(100, Math.round((filled / item.quota!) * 100))
+                    : 0;
+                const disabled = isItemFull || isDeadlinePassed;
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`rounded-2xl border p-4 md:p-5 flex flex-col justify-between gap-4 transition-all ${
+                      disabled
+                        ? "bg-surface-variant/20 border-outline-variant/30 opacity-80"
+                        : "bg-background border-outline-variant/40 hover:border-primary/50 hover:shadow-md"
+                    }`}
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-extrabold text-base text-on-surface leading-snug">
+                          {item.name}
+                        </h4>
+                        <span
+                          className={`shrink-0 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase ${
+                            isItemFull
+                              ? "bg-rose-100 text-rose-700"
+                              : isDeadlinePassed
+                              ? "bg-surface-variant text-on-surface-variant"
+                              : "bg-emerald-100 text-emerald-700"
+                          }`}
+                        >
+                          {isItemFull
+                            ? t("quotaFull")
+                            : isDeadlinePassed
+                            ? t("regClosed")
+                            : hasQuota
+                            ? `${t("remainingLabel")} ${itemRemaining}`
+                            : t("openLabel")}
+                        </span>
+                      </div>
+
+                      {agenda.type === "event" && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-primary/10 text-primary px-2.5 py-0.5 rounded-full">
+                            {item.participant_type === "tim" ? (
+                              <>
+                                <FiUsers size={11} /> {t("teamType")}
+                              </>
+                            ) : (
+                              <>
+                                <FiUser size={11} /> {t("individualType")}
+                              </>
+                            )}
+                          </span>
+                          {item.rulebook_url && (
+                            <a
+                              href={item.rulebook_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-secondary hover:underline"
+                            >
+                              <FiExternalLink size={11} /> {t("rulebook")}
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {item.description && (
+                        <p className="text-xs text-on-surface-variant leading-relaxed">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-3 pt-2 border-t border-outline-variant/20">
+                      <div className="grid grid-cols-3 gap-2 text-center bg-surface rounded-xl p-2.5 border border-outline-variant/20">
+                        <div>
+                          <p className="text-[10px] text-on-surface-variant font-medium">
+                            {agenda.type === "volunteer" ? t("neededLabel") : t("quotaLabel")}
+                          </p>
+                          <p className="text-sm font-extrabold text-on-surface">
+                            {hasQuota ? item.quota : "∞"}
+                          </p>
+                        </div>
+                        <div className="border-x border-outline-variant/20">
+                          <p className="text-[10px] text-on-surface-variant font-medium">
+                            {t("filledLabel")}
+                          </p>
+                          <p className="text-sm font-extrabold text-primary">{filled}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-on-surface-variant font-medium">
+                            {t("remainingLabel")}
+                          </p>
+                          <p
+                            className={`text-sm font-extrabold ${
+                              isItemFull ? "text-rose-600" : "text-emerald-600"
+                            }`}
+                          >
+                            {hasQuota ? itemRemaining : "∞"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {hasQuota && (
+                        <div className="w-full h-2 rounded-full bg-surface-variant/50 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              isItemFull
+                                ? "bg-rose-500"
+                                : pct >= 80
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      )}
+
+                      <Link
+                        href={disabled ? "#" : `/agenda/${agenda.id}/apply?item=${item.id}`}
+                        onClick={(e) => disabled && e.preventDefault()}
+                        className={`w-full py-2.5 px-4 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all ${
+                          disabled
+                            ? "bg-surface-variant text-on-surface-variant cursor-not-allowed"
+                            : "bg-primary text-white hover:bg-primary/90 shadow-xs"
+                        }`}
+                      >
+                        {isItemFull
+                          ? t("quotaFull")
+                          : isDeadlinePassed
+                          ? t("regClosed")
+                          : agenda.type === "volunteer"
+                          ? t("applyThisPosition")
+                          : t("registerThisCompetition")}
+                        {!disabled && <FiArrowRight size={13} />}
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </motion.div>
         )}
       </section>

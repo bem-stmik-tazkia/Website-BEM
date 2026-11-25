@@ -132,6 +132,25 @@ export default async function KegiatanAdminPage({
                         <div>
                           <p className="font-bold text-sm text-on-surface line-clamp-1">{item.title}</p>
                           <p className="text-xs text-on-surface-variant">{item.category}</p>
+                          {item.items && item.items.length > 0 ? (
+                            <p className="text-[11px] font-semibold text-primary mt-0.5">
+                              {item.items.length} {item.type === "volunteer" ? "Posisi" : "Cabang Lomba"} •{" "}
+                              {(() => {
+                                const totalFilled = item.items.reduce((s, it) => s + (it.filled_count || 0), 0);
+                                const totalQuota = item.items.reduce((s, it) => s + (it.quota || 0), 0);
+                                const hasUnlimited = item.items.some((it) => it.quota == null);
+                                return hasUnlimited
+                                  ? `${totalFilled} Terisi`
+                                  : `${totalFilled}/${totalQuota} Terisi`;
+                              })()}
+                            </p>
+                          ) : (item.type === "volunteer" || (item.form_schema && item.form_schema.length > 0)) ? (
+                            <p className="text-[11px] text-on-surface-variant mt-0.5">
+                              {item.max_participants
+                                ? `${item.accepted_count || 0}/${item.max_participants} Terisi`
+                                : `${item.accepted_count || 0} Pendaftar`}
+                            </p>
+                          ) : null}
                         </div>
                       </div>
                     </td>
@@ -171,7 +190,7 @@ export default async function KegiatanAdminPage({
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {(item.type === 'volunteer' || (item.type === 'event' && item.form_schema && item.form_schema.length > 0)) && (
+                        {(item.type === 'volunteer' || (item.type === 'event' && ((item.form_schema && item.form_schema.length > 0) || (item.items && item.items.length > 0)))) && (
                           <Link
                             href={`/admin/kegiatan/${item.id}/pendaftar`}
                             className={`h-8 px-3 rounded-lg flex items-center justify-center transition-colors text-xs font-bold ${

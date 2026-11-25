@@ -88,7 +88,9 @@
     "viewDocs": "Voir la Documentation",
     "detailEvent": "Détails de l'Événement",
     "notOpenedYet": "L'inscription n'est pas encore ouverte!",
-    "loading": "Chargement de la page..."
+    "loading": "Chargement de la page...",
+    "competitionsBadge": "Concours",
+    "positionsBadge": "Postes ouverts"
   },
   "News": {
     "title": "Actualités à la Une",
@@ -339,7 +341,10 @@
     "statusFilterClosed": "Fermé",
     "closedPosition": "Inscriptions closes",
     "overviewTitle": "Aperçu de l'agenda et des archives",
-    "overviewVolunteerTitle": "Aperçu du recrutement et des bénévoles"
+    "overviewVolunteerTitle": "Aperçu du recrutement et des bénévoles",
+    "competitionsBadge": "Concours",
+    "positionsBadge": "Postes",
+    "filledBadge": "Pourvus"
   },
   "VisiMisi": {
     "title": "Vision & Mission",
@@ -515,7 +520,27 @@
     "copyFail": "Échec de la copie du lien",
     "shareTitle": "Partager cet événement",
     "shareDesc": "Partagez cette information intéressante avec vos amis !",
-    "shareNow": "Partager maintenant"
+    "shareNow": "Partager maintenant",
+    "regClosed": "Inscriptions fermées",
+    "oprecClosedDesc": "La période d’inscription pour ce recrutement est terminée.",
+    "competitionsCount": "Concours",
+    "positionsCount": "Postes ouverts",
+    "positionsTitle": "Postes requis et quotas",
+    "positionsSubtitle": "Consultez le quota requis et les places déjà pourvues pour chaque poste.",
+    "competitionsTitle": "Catégories de concours",
+    "competitionsMultiSubtitle": "Choisissez un concours ci-dessous ou inscrivez-vous à plusieurs concours à la fois.",
+    "competitionsSingleSubtitle": "Choisissez l’un des concours ci-dessous pour vous inscrire.",
+    "registerMultiple": "Inscription multiple",
+    "openLabel": "Ouvert",
+    "remainingLabel": "Restant",
+    "neededLabel": "Requis",
+    "quotaLabel": "Quota",
+    "filledLabel": "Pourvus",
+    "teamType": "Équipe",
+    "individualType": "Individuel",
+    "rulebook": "Voir le règlement",
+    "applyThisPosition": "Postuler à ce poste",
+    "registerThisCompetition": "S’inscrire au concours"
   },
   "UserNotification": {
     "title": "Notifications d'Oeuvre",

@@ -106,7 +106,9 @@
     "viewDocs": "View Documentation",
     "detailEvent": "Event Details",
     "notOpenedYet": "Registration hasn't opened yet!",
-    "loading": "Loading page..."
+    "loading": "Loading page...",
+    "competitionsBadge": "Competitions",
+    "positionsBadge": "Open Positions"
   },
   "News": {
     "title": "Featured News",
@@ -357,7 +359,10 @@
     "statusFilterClosed": "Closed",
     "closedPosition": "Registration Closed",
     "overviewTitle": "Agenda & Archive Overview",
-    "overviewVolunteerTitle": "Recruitment & Volunteer Overview"
+    "overviewVolunteerTitle": "Recruitment & Volunteer Overview",
+    "competitionsBadge": "Competitions",
+    "positionsBadge": "Positions",
+    "filledBadge": "Filled"
   },
   "VisiMisi": {
     "title": "Vision & Mission",
@@ -533,7 +538,27 @@
     "copyFail": "Failed to copy link",
     "shareTitle": "Share This Event",
     "shareDesc": "Spread this exciting event to your friends!",
-    "shareNow": "Share Now"
+    "shareNow": "Share Now",
+    "regClosed": "Registration Closed",
+    "oprecClosedDesc": "The registration period for this open recruitment has ended.",
+    "competitionsCount": "Competitions",
+    "positionsCount": "Open Positions",
+    "positionsTitle": "Open Positions & Quota",
+    "positionsSubtitle": "View the required quota and filled slots for each position.",
+    "competitionsTitle": "Competitions & Registration",
+    "competitionsMultiSubtitle": "Choose a competition below or register for multiple competitions in one form.",
+    "competitionsSingleSubtitle": "Choose one of the competitions below to register.",
+    "registerMultiple": "Register Multiple",
+    "openLabel": "Open",
+    "remainingLabel": "Left",
+    "neededLabel": "Needed",
+    "quotaLabel": "Quota",
+    "filledLabel": "Filled",
+    "teamType": "Team",
+    "individualType": "Individual",
+    "rulebook": "View Rulebook",
+    "applyThisPosition": "Apply Position",
+    "registerThisCompetition": "Join Competition"
   },
   "Dashboard": {
     "navProfile": "Profile",

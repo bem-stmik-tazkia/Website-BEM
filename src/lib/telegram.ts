@@ -835,6 +835,7 @@ export interface VolunteerAppliedNotificationPayload {
   agendaId: string;
   agendaTitle: string;
   agendaType?: "volunteer" | "event" | string;
+  selectedItems?: string[];
   fields: Array<{ label: string; value: string }>;
   totalParticipants?: number;
 }
@@ -870,9 +871,17 @@ export async function sendVolunteerAppliedNotification(
       ? `👥 <b>Total Pendaftar Saat Ini:</b> ${payload.totalParticipants} orang\n`
       : "";
 
+  const selectedLine =
+    payload.selectedItems && payload.selectedItems.length > 0
+      ? `🏷️ <b>${isVolunteer ? "Posisi Dipilih" : "Cabang Lomba"}:</b> ${escapeHtml(
+          payload.selectedItems.join(", ")
+        )}\n`
+      : "";
+
   const message =
     `${header}\n\n` +
-    `📌 <b>Kegiatan / Posisi:</b> ${safeTitle}\n` +
+    `📌 <b>Kegiatan / Program:</b> ${safeTitle}\n` +
+    selectedLine +
     countLine +
     `📅 <b>Waktu Daftar:</b> ${timeStr} WIB\n` +
     (summaryLines ? `\n📋 <b>Ringkasan Data Pendaftar:</b>\n${summaryLines}\n` : "") +

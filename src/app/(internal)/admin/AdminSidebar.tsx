@@ -235,13 +235,13 @@ export default function AdminSidebar() {
       {isMobileOpen && (
         <div
           onClick={() => setIsMobileOpen(false)}
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 md:hidden print:hidden transition-opacity"
         />
       )}
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed md:sticky top-0 left-0 h-screen z-50 flex flex-col bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-r border-slate-200/80 dark:border-slate-800/80 shadow-xl md:shadow-none transition-all duration-300 ease-in-out ${
+        className={`fixed md:sticky top-0 left-0 h-screen z-50 flex flex-col print:hidden bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-r border-slate-200/80 dark:border-slate-800/80 shadow-xl md:shadow-none transition-all duration-300 ease-in-out ${
           isMobileOpen ? "translate-x-0 w-72" : "-translate-x-full md:translate-x-0"
         } ${isCollapsed ? "md:w-20" : "md:w-68"}`}
       >

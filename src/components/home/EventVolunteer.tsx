@@ -523,6 +523,11 @@ export default function EventVolunteer({
                           <span className="flex items-center gap-1.5"><FiCalendar size={11} className="text-secondary" /> {formatDateToIndo(upcomingEvents[active].date)}</span>
                           <span className="flex items-center gap-1.5"><FiClock size={11} className="text-secondary" /> {upcomingEvents[active].time_range}</span>
                           <span className="flex items-center gap-1.5"><FiMapPin size={11} className="text-secondary" /> {(translatedUpcoming[active] ?? upcomingEvents[active]).location || "Online"}</span>
+                          {upcomingEvents[active].items && upcomingEvents[active].items.length > 0 && (
+                            <span className="inline-block mt-1 bg-white/20 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full w-fit">
+                              {upcomingEvents[active].items.length} {t("competitionsBadge")}
+                            </span>
+                          )}
                         </div>
                         <Link href={`/agenda/${upcomingEvents[active].id}`} className="relative z-30 bg-primary text-white text-[10px] font-bold px-4 py-2 rounded-full hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md inline-flex items-center gap-1.5">
                           {t("detailEvent")} <FiArrowRight size={12} />
@@ -662,9 +667,16 @@ export default function EventVolunteer({
                          <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block mb-1">{(translatedVolunteer[activeVol] ?? volunteerOpportunities[activeVol]).category}</span>
                          <h3 className="font-extrabold text-sm leading-tight mb-1">{(translatedVolunteer[activeVol] ?? volunteerOpportunities[activeVol]).title}</h3>
                          <p className="text-white/80 text-[10px] mb-2 leading-relaxed line-clamp-2">{(translatedVolunteer[activeVol] ?? volunteerOpportunities[activeVol]).description}</p>
-                        <div className="flex items-center gap-1 text-[10px] text-white/70 mb-3">
-                          <FiClock size={11} className="text-secondary" />
-                          <span>{t("deadline")}: <span className="font-semibold text-white">{formatDateToIndo(volunteerOpportunities[activeVol].deadline)}</span></span>
+                        <div className="flex flex-wrap items-center gap-2 text-[10px] text-white/70 mb-3">
+                          <span className="flex items-center gap-1">
+                            <FiClock size={11} className="text-secondary" />
+                            <span>{t("deadline")}: <span className="font-semibold text-white">{formatDateToIndo(volunteerOpportunities[activeVol].deadline)}</span></span>
+                          </span>
+                          {volunteerOpportunities[activeVol].items && volunteerOpportunities[activeVol].items.length > 0 && (
+                            <span className="bg-emerald-500/80 text-white font-bold px-2 py-0.5 rounded-full">
+                              {volunteerOpportunities[activeVol].items.length} {t("positionsBadge")}
+                            </span>
+                          )}
                         </div>
                         {(() => {
                           const vStart = volunteerOpportunities[activeVol].date ? new Date(volunteerOpportunities[activeVol].date) : new Date();

@@ -88,7 +88,9 @@
     "viewDocs": "Lihat Dokumentasi",
     "detailEvent": "Detail Event",
     "notOpenedYet": "Pendaftaran belum dibuka!",
-    "loading": "Membuka halaman..."
+    "loading": "Membuka halaman...",
+    "competitionsBadge": "Cabang Lomba",
+    "positionsBadge": "Posisi Dibuka"
   },
   "News": {
     "title": "Berita Sorotan",
@@ -339,7 +341,10 @@
     "statusFilterClosed": "Ditutup",
     "closedPosition": "Pendaftaran Ditutup",
     "overviewTitle": "Ringkasan Agenda & Arsip",
-    "overviewVolunteerTitle": "Ringkasan Rekrutmen & Relawan"
+    "overviewVolunteerTitle": "Ringkasan Rekrutmen & Relawan",
+    "competitionsBadge": "Cabang Lomba",
+    "positionsBadge": "Posisi",
+    "filledBadge": "Terisi"
   },
   "VisiMisi": {
     "title": "Visi & Misi",
@@ -515,7 +520,27 @@
     "copyFail": "Gagal menyalin tautan",
     "shareTitle": "Bagikan Event Ini",
     "shareDesc": "Sebarkan informasi acara menarik ini ke teman-temanmu!",
-    "shareNow": "Bagikan Sekarang"
+    "shareNow": "Bagikan Sekarang",
+    "regClosed": "Pendaftaran Ditutup",
+    "oprecClosedDesc": "Batas waktu pendaftaran untuk open recruitment ini telah berakhir.",
+    "competitionsCount": "Cabang Lomba",
+    "positionsCount": "Posisi Dibuka",
+    "positionsTitle": "Posisi yang Dibutuhkan",
+    "positionsSubtitle": "Lihat kebutuhan kuota dan slot yang sudah terisi pada masing-masing posisi.",
+    "competitionsTitle": "Cabang Lomba & Pendaftaran",
+    "competitionsMultiSubtitle": "Pilih lomba di bawah ini atau daftar beberapa lomba sekaligus dalam 1 formulir.",
+    "competitionsSingleSubtitle": "Pilih salah satu cabang lomba di bawah ini untuk mendaftar.",
+    "registerMultiple": "Daftar Sekaligus",
+    "openLabel": "Terbuka",
+    "remainingLabel": "Sisa",
+    "neededLabel": "Dibutuhkan",
+    "quotaLabel": "Kuota",
+    "filledLabel": "Terisi",
+    "teamType": "Kategori Tim",
+    "individualType": "Individu",
+    "rulebook": "Lihat Juknis",
+    "applyThisPosition": "Daftar Posisi Ini",
+    "registerThisCompetition": "Daftar Lomba Ini"
   },
   "UserNotification": {
     "title": "Notifikasi Karya",

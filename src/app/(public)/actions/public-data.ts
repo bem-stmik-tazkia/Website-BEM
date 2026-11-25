@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { unstable_cache } from "next/cache";
+import { enrichAgendasWithItemsAndCounts } from "@/lib/agenda-items-server";
+import { AgendaKegiatan } from "@/types/agenda";
 
 function createPublicClient() {
   return createClient(
@@ -43,7 +45,7 @@ export const getCachedAgenda = unstable_cache(
     const { data, error } = await supabase
       .from("agendas")
       .select(
-        "id, title, slug, description, category, date, end_date, time_range, location, type, is_urgent, is_published, created_at, image_url, deadline, gallery, video_url"
+        "id, title, slug, description, category, date, end_date, time_range, location, type, is_urgent, is_published, created_at, image_url, deadline, gallery, video_url, max_participants, allow_multiple_items"
       )
       .order("created_at", { ascending: false });
 
@@ -51,7 +53,7 @@ export const getCachedAgenda = unstable_cache(
       console.error("Error fetching cached agendas:", error);
       return [];
     }
-    return data ?? [];
+    return enrichAgendasWithItemsAndCounts((data ?? []) as Partial<AgendaKegiatan>[]);
   },
   ["agenda-list"],
   { revalidate: 60, tags: ["agenda"] }

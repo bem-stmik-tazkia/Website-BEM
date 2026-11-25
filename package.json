@@ -10,7 +10,8 @@
     "build": "next build",
     "build:bundles": "node scripts/build-sql-bundles.mjs",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --import ./tests/ts-loader.mjs --test tests/*.test.ts"
   },
   "dependencies": {
     "@lottiefiles/dotlottie-react": "^0.19.8",

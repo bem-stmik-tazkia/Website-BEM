@@ -335,6 +335,7 @@ export interface DiscordKegiatanPayload {
   is_urgent?: boolean;
   max_participants?: number | null;
   hasRegistrationForm?: boolean;
+  items?: Array<{ name: string; quota?: number | null }> | null;
 }
 
 const KEGIATAN_META: Record<
@@ -442,6 +443,19 @@ export async function sendDiscordKegiatanNotification(
   const galleryFirst = Array.isArray(kegiatan.gallery)
     ? kegiatan.gallery.find((url) => Boolean(isValidHttpUrl(url)))
     : null;
+
+  if (Array.isArray(kegiatan.items) && kegiatan.items.length > 0 && typeKey !== "dokumentasi") {
+    const itemLines = kegiatan.items
+      .slice(0, 10)
+      .map((it) => `• ${it.name}${it.quota ? ` (Kuota: ${it.quota})` : ""}`)
+      .join("\n");
+    const extraCount = kegiatan.items.length > 10 ? `\n... +${kegiatan.items.length - 10} lainnya` : "";
+    fields.push({
+      name: typeKey === "volunteer" ? "🧩 Posisi Dibuka" : "🏆 Cabang Lomba",
+      value: truncateText(`${itemLines}${extraCount}`, 900),
+      inline: false,
+    });
+  }
   const validImageUrl = isValidHttpUrl(kegiatan.image_url) || isValidHttpUrl(galleryFirst);
 
   const cleanDesc = truncateText(stripHtml(kegiatan.description || ""), 360);

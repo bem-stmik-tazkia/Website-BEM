@@ -88,7 +88,9 @@
     "viewDocs": "ドキュメントを見る",
     "detailEvent": "イベントの詳細",
     "notOpenedYet": "登録はまだ始まっていません！",
-    "loading": "ページを読み込んでいます..."
+    "loading": "ページを読み込んでいます...",
+    "competitionsBadge": "競技部門",
+    "positionsBadge": "募集ポジション"
   },
   "News": {
     "title": "注目のニュース",
@@ -339,7 +341,10 @@
     "statusFilterClosed": "終了",
     "closedPosition": "募集終了",
     "overviewTitle": "予定とアーカイブの概要",
-    "overviewVolunteerTitle": "採用とボランティアの概要"
+    "overviewVolunteerTitle": "採用とボランティアの概要",
+    "competitionsBadge": "競技部門",
+    "positionsBadge": "ポジション",
+    "filledBadge": "応募済"
   },
   "VisiMisi": {
     "title": "ビジョン＆ミッション",
@@ -515,7 +520,27 @@
     "copyFail": "リンクのコピーに失敗しました",
     "shareTitle": "このイベントをシェアする",
     "shareDesc": "この魅力的なイベントを友達に共有しましょう！",
-    "shareNow": "今すぐシェア"
+    "shareNow": "今すぐシェア",
+    "regClosed": "受付終了",
+    "oprecClosedDesc": "この募集の応募期間は終了しました。",
+    "competitionsCount": "競技部門",
+    "positionsCount": "募集ポジション",
+    "positionsTitle": "募集ポジションと定員",
+    "positionsSubtitle": "各ポジションの必要人数と現在の応募状況を確認できます。",
+    "competitionsTitle": "競技部門とエントリー",
+    "competitionsMultiSubtitle": "下の部門から選ぶか、1つのフォームで複数部門にまとめて応募できます。",
+    "competitionsSingleSubtitle": "以下の競技部門から1つ選択してエントリーしてください。",
+    "registerMultiple": "まとめて応募",
+    "openLabel": "受付中",
+    "remainingLabel": "残り",
+    "neededLabel": "必要数",
+    "quotaLabel": "定員",
+    "filledLabel": "応募済",
+    "teamType": "チーム",
+    "individualType": "個人",
+    "rulebook": "要項を見る",
+    "applyThisPosition": "このポジションに応募",
+    "registerThisCompetition": "この部門に応募"
   },
   "UserNotification": {
     "title": "作品通知",
