@@ -561,7 +561,7 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                                 }`}
                               />
                               <div className="absolute top-3.5 left-3.5 bg-surface/90 backdrop-blur-sm text-secondary text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider">
-                                {agenda.category}
+                                {dedupeCategoryLabel(agenda.category)}
                               </div>
                               {statusType === "live" && (
                                 <div className="absolute top-3.5 right-3.5 bg-red-500 text-white text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-md">
