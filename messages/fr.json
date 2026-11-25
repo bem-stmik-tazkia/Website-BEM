@@ -989,7 +989,15 @@
     "leaveModalTitle": "Quitter le formulaire ?",
     "leaveModalDesc": "Les données saisies dans ce formulaire seront automatiquement supprimées si vous quittez maintenant.",
     "leaveModalStay": "Continuer à remplir",
-    "leaveModalConfirm": "Quitter et effacer"
+    "leaveModalConfirm": "Quitter et effacer",
+    "loginRequiredTitle": "Connexion requise",
+    "loginRequiredDesc": "Pour sécuriser les données des candidats et préparer les e-certificats, veuillez vous connecter avec votre compte avant de remplir ce formulaire.",
+    "loginNowBtn": "Se connecter avec le compte campus",
+    "loggedInAs": "Connecté en tant que",
+    "alreadyRegisteredBadge": "Déjà inscrit",
+    "alreadyRegisteredTitle": "Vous êtes déjà inscrit",
+    "alreadyRegisteredDesc": "Votre compte a déjà soumis une inscription pour cette activité. Veuillez attendre la confirmation du comité.",
+    "pendingStatusNotice": "Votre inscription sera enregistrée avec le statut En attente de validation."
   },
   "NewsDetail": {
     "share": "Partager",

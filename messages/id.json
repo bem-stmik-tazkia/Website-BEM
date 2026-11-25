@@ -989,7 +989,15 @@
     "leaveModalTitle": "Keluar dari Formulir?",
     "leaveModalDesc": "Data formulir yang sudah kamu isi akan otomatis terhapus jika keluar sekarang.",
     "leaveModalStay": "Lanjutkan Mengisi",
-    "leaveModalConfirm": "Tetap Keluar & Hapus"
+    "leaveModalConfirm": "Tetap Keluar & Hapus",
+    "loginRequiredTitle": "Login Akun Diperlukan",
+    "loginRequiredDesc": "Untuk menjaga keamanan data pendaftar dan keperluan e-sertifikat di akhir kegiatan, kamu perlu masuk menggunakan akun terlebih dahulu sebelum mengisi formulir ini.",
+    "loginNowBtn": "Masuk dengan Akun Kampus",
+    "loggedInAs": "Masuk sebagai",
+    "alreadyRegisteredBadge": "Sudah Terdaftar",
+    "alreadyRegisteredTitle": "Kamu Sudah Terdaftar",
+    "alreadyRegisteredDesc": "Akun kamu sudah mengirimkan pendaftaran untuk kegiatan ini. Pantau status penerimaan melalui pengumuman panitia.",
+    "pendingStatusNotice": "Pendaftaran kamu akan masuk dengan status Menunggu Review (Pending) dan akan diverifikasi oleh panitia."
   },
   "NewsDetail": {
     "share": "Bagikan",

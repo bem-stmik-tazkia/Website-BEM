@@ -1,3 +1,18 @@
+export const STUDENT_ALLOWED_NEXT_PREFIXES = [
+  "/dashboard",
+  "/agenda",
+  "/id/dashboard",
+  "/en/dashboard",
+  "/ar/dashboard",
+  "/fr/dashboard",
+  "/ja/dashboard",
+  "/id/agenda",
+  "/en/agenda",
+  "/ar/agenda",
+  "/fr/agenda",
+  "/ja/agenda",
+];
+
 /**
  * Validasi dan sanitasi parameter `next` URL untuk mencegah serangan Open Redirect.
  * Syarat:

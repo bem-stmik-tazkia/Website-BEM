@@ -317,6 +317,10 @@ export async function saveKegiatan(
           : data.allow_multiple_items !== undefined
           ? Boolean(data.allow_multiple_items)
           : true,
+      require_login:
+        data.require_login !== undefined
+          ? Boolean(data.require_login)
+          : data.type === "volunteer",
     };
 
     let savedKegiatan: AgendaKegiatan | null = null;
@@ -329,7 +333,11 @@ export async function saveKegiatan(
         .select()
         .single();
 
-      if (error && isMissingColumnError(error, "allow_multiple_items")) {
+      if (
+        error &&
+        (isMissingColumnError(error, "allow_multiple_items") ||
+          isMissingColumnError(error, "require_login"))
+      ) {
         const retry = await supabase
           .from("agendas")
           .update(basePayload)
@@ -361,7 +369,11 @@ export async function saveKegiatan(
         error = retrySlug.error;
       }
 
-      if (error && isMissingColumnError(error, "allow_multiple_items")) {
+      if (
+        error &&
+        (isMissingColumnError(error, "allow_multiple_items") ||
+          isMissingColumnError(error, "require_login"))
+      ) {
         const retry = await supabase
           .from("agendas")
           .insert([{ ...basePayload, slug: targetSlug }])
@@ -589,7 +601,7 @@ export async function fetchRecentVolunteerApplicationsForBell(
       .from("volunteer_applications")
       .select("id, agenda_id, item_name, status, responses, created_at")
       .gt("created_at", cutoff)
-      .or("status.is.null,status.eq.accepted")
+      .or("status.is.null,status.eq.pending,status.eq.accepted")
       .order("created_at", { ascending: false })
       .limit(15);
 

@@ -24,6 +24,8 @@ type MsgParams = Record<string, string | number | undefined>;
 const API_MESSAGES: Record<PublicLocale, Record<string, string>> = {
   id: {
     applyRateLimit: "Terlalu banyak percobaan pendaftaran dari perangkat Anda. Silakan tunggu 10 menit.",
+    loginRequired: "Silakan login menggunakan akun kamu terlebih dahulu untuk mendaftar.",
+    alreadyApplied: "Akun kamu sudah terdaftar pada \"{target}\".",
     invalidJson: "Format request tidak valid (harus JSON)",
     invalidApplyData: "Data pendaftaran tidak valid",
     captchaUnavailable: "Layanan keamanan captcha server sedang tidak tersedia",
@@ -76,6 +78,8 @@ const API_MESSAGES: Record<PublicLocale, Record<string, string>> = {
   },
   en: {
     applyRateLimit: "Too many registration attempts from your device. Please wait 10 minutes.",
+    loginRequired: "Please log in with your account first to register.",
+    alreadyApplied: "Your account is already registered for \"{target}\".",
     invalidJson: "Invalid request format (must be JSON)",
     invalidApplyData: "Invalid registration data",
     captchaUnavailable: "Server captcha security service is currently unavailable",
@@ -128,6 +132,8 @@ const API_MESSAGES: Record<PublicLocale, Record<string, string>> = {
   },
   ar: {
     applyRateLimit: "محاولات تسجيل كثيرة جدا من جهازك. يرجى الانتظار 10 دقائق.",
+    loginRequired: "يرجى تسجيل الدخول بحسابك أولاً للتسجيل.",
+    alreadyApplied: "حسابك مسجل بالفعل في \"{target}\".",
     invalidJson: "تنسيق الطلب غير صالح (يجب أن يكون JSON)",
     invalidApplyData: "بيانات التسجيل غير صالحة",
     captchaUnavailable: "خدمة التحقق الأمني Captcha غير متاحة حالياً",
@@ -180,6 +186,8 @@ const API_MESSAGES: Record<PublicLocale, Record<string, string>> = {
   },
   fr: {
     applyRateLimit: "Trop de tentatives d'inscription depuis votre appareil. Veuillez patienter 10 minutes.",
+    loginRequired: "Veuillez d'abord vous connecter avec votre compte pour vous inscrire.",
+    alreadyApplied: "Votre compte est déjà inscrit pour « {target} ».",
     invalidJson: "Format de requête invalide (doit être JSON)",
     invalidApplyData: "Données d'inscription invalides",
     captchaUnavailable: "Le service de sécurité captcha du serveur est indisponible",
@@ -232,6 +240,8 @@ const API_MESSAGES: Record<PublicLocale, Record<string, string>> = {
   },
   ja: {
     applyRateLimit: "お使いの端末からの登録試行が多すぎます。10分ほどお待ちください。",
+    loginRequired: "登録するには、先にアカウントでログインしてください。",
+    alreadyApplied: "このアカウントはすでに「{target}」に登録されています。",
     invalidJson: "リクエスト形式が無効です（JSON形式である必要があります）",
     invalidApplyData: "登録データが無効です",
     captchaUnavailable: "サーバーのCaptchaセキュリティサービスが現在利用できません",

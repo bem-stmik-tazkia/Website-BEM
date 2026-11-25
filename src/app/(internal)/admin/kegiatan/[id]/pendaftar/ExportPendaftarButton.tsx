@@ -62,7 +62,12 @@ export default function ExportPendaftarButton({
 
     const rows = applications.map((app) => {
       const date = formatDateWithTime(app.created_at);
-      const statusText = app.status === "rejected" ? "Ditolak" : "Diterima";
+      const statusText =
+        app.status === "rejected"
+          ? "Ditolak"
+          : app.status === "pending"
+            ? "Menunggu"
+            : "Diterima";
       const rowData = [
         `"${date}"`,
         ...(hasItems ? [`"${(app.item_name || "-").replace(/"/g, '""')}"`] : []),
@@ -167,7 +172,11 @@ export default function ExportPendaftarButton({
                           </td>
                         )}
                         <td className="p-3 text-xs whitespace-nowrap">
-                          {app.status === "rejected" ? "Ditolak" : "Diterima"}
+                          {app.status === "rejected"
+                            ? "Ditolak"
+                            : app.status === "pending"
+                              ? "Menunggu"
+                              : "Diterima"}
                         </td>
                         {fields.map((field) => (
                           <td

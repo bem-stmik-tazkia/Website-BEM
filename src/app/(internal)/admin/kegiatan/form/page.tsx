@@ -131,6 +131,7 @@ export default function KegiatanFormPage() {
     speakers: [{ name: "", role: "", photo: "" }],
     max_participants: null,
     allow_multiple_items: true,
+    require_login: typeParam === 'volunteer',
     items: [],
   };
 
@@ -227,6 +228,10 @@ export default function KegiatanFormPage() {
                 ? data.image_url
                 : "",
             allow_multiple_items: data.allow_multiple_items !== false,
+            require_login:
+              typeof data.require_login === "boolean"
+                ? data.require_login
+                : data.type === "volunteer",
             items: cleanItems,
           };
           delete (normalizedData as any).accepted_count;
@@ -1091,6 +1096,34 @@ export default function KegiatanFormPage() {
 
                 {(formData.type === 'volunteer' || (formData.type === 'event' && requiresRegistration)) && (
                   <>
+                    {/* Toggle Wajib Login Akun */}
+                    <div className="pb-4 border-b border-outline-variant/20">
+                      <label className="flex items-center gap-3 p-4 border border-outline-variant/50 rounded-xl cursor-pointer hover:bg-surface-variant/20 transition-colors bg-surface">
+                        <div className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(formData.require_login)}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                require_login: e.target.checked,
+                              }))
+                            }
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-surface-variant/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-bold text-on-surface block">
+                            Wajibkan Login Akun Sebelum Mendaftar
+                          </span>
+                          <span className="text-xs text-on-surface-variant">
+                            Disarankan aktif untuk Open Recruitment / Volunteer agar pendaftaran tercatat ke akun pendaftar (keperluan status &amp; e-sertifikat).
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+
                     {/* Deadline opsional khusus Event dengan pendaftaran */}
                     {formData.type === 'event' && (
                       <div id="field-deadline-event" className="space-y-2 pb-4 border-b border-outline-variant/20">

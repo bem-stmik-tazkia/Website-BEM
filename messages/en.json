@@ -989,7 +989,15 @@
     "leaveModalTitle": "Leave This Form?",
     "leaveModalDesc": "The form data you have entered will be automatically deleted if you leave now.",
     "leaveModalStay": "Continue Filling",
-    "leaveModalConfirm": "Leave & Clear Data"
+    "leaveModalConfirm": "Leave & Clear Data",
+    "loginRequiredTitle": "Account Login Required",
+    "loginRequiredDesc": "To keep applicant data secure and prepare e-certificates at the end of the program, please sign in with your account before filling out this form.",
+    "loginNowBtn": "Sign In with Campus Account",
+    "loggedInAs": "Signed in as",
+    "alreadyRegisteredBadge": "Already Applied",
+    "alreadyRegisteredTitle": "You Have Already Registered",
+    "alreadyRegisteredDesc": "Your account has already submitted a registration for this activity. Please await confirmation from the committee.",
+    "pendingStatusNotice": "Your registration will be recorded as Pending Review and verified by the committee."
   },
   "NewsDetail": {
     "share": "Share",

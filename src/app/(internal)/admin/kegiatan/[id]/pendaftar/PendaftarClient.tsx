@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   FiArrowLeft,
   FiCheckCircle,
+  FiClock,
   FiExternalLink,
   FiImage,
   FiPrinter,
@@ -282,7 +283,11 @@ function PrintableReportDocument({
                   </td>
                 )}
                 <td className="border border-slate-300 p-2 align-top">
-                  {app.status === "rejected" ? "Ditolak" : "Diterima"}
+                  {app.status === "rejected"
+                    ? "Ditolak"
+                    : app.status === "pending"
+                      ? "Menunggu"
+                      : "Diterima"}
                 </td>
                 {fields.map((field) => {
                   const answer = app.responses?.[field.id];
@@ -336,9 +341,9 @@ export default function PendaftarClient({
   const [applications, setApplications] =
     useState<VolunteerApplication[]>(initialApplications);
   const [selectedItemId, setSelectedItemId] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "accepted" | "rejected">(
-    "all"
-  );
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "pending" | "accepted" | "rejected"
+  >("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmDeleteApp, setConfirmDeleteApp] =
@@ -395,9 +400,17 @@ export default function PendaftarClient({
   }, [items, applications]);
 
   const totalAccepted = useMemo(
-    () => applications.filter((a) => a.status !== "rejected").length,
+    () =>
+      applications.filter(
+        (a) => a.status !== "rejected" && a.status !== "pending"
+      ).length,
     [applications]
   );
+  const totalPending = useMemo(
+    () => applications.filter((a) => a.status === "pending").length,
+    [applications]
+  );
+  const totalActiveSlots = totalAccepted + totalPending;
   const totalRejected = useMemo(
     () => applications.filter((a) => a.status === "rejected").length,
     [applications]
@@ -414,19 +427,25 @@ export default function PendaftarClient({
         }
       }
 
-      const appStatus = app.status === "rejected" ? "rejected" : "accepted";
+      const appStatus =
+        app.status === "rejected"
+          ? "rejected"
+          : app.status === "pending"
+            ? "pending"
+            : "accepted";
       if (statusFilter !== "all" && appStatus !== statusFilter) {
         return false;
       }
 
       if (q) {
         const matchItem = (app.item_name || "").toLowerCase().includes(q);
+        const matchEmail = (app.applicant_email || "").toLowerCase().includes(q);
         const matchResponses = Object.values(app.responses || {}).some((val) =>
           String(val || "")
             .toLowerCase()
             .includes(q)
         );
-        if (!matchItem && !matchResponses) return false;
+        if (!matchItem && !matchEmail && !matchResponses) return false;
       }
 
       return true;
@@ -435,7 +454,12 @@ export default function PendaftarClient({
 
   const reportApplications = useMemo(() => {
     return applications.filter((app) => {
-      const appStatus = app.status === "rejected" ? "rejected" : "accepted";
+      const appStatus =
+        app.status === "rejected"
+          ? "rejected"
+          : app.status === "pending"
+            ? "pending"
+            : "accepted";
       if (reportOnlyAccepted && appStatus !== "accepted") return false;
       if (reportItemId !== "all" && app.item_id !== reportItemId) return false;
       return true;
@@ -455,7 +479,9 @@ export default function PendaftarClient({
       success(
         nextStatus === "rejected"
           ? "Pendaftar ditolak. Slot kuota otomatis terbuka kembali."
-          : "Pendaftar diaktifkan kembali dan mengisi slot kuota."
+          : nextStatus === "pending"
+            ? "Status dikembalikan ke Menunggu Review."
+            : "Pendaftar diterima! Status tercatat sebagai Diterima."
       );
       router.refresh();
     } catch (err: any) {
@@ -531,10 +557,10 @@ export default function PendaftarClient({
         </div>
 
         {/* Summary KPI Strip */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-surface rounded-2xl border border-outline-variant/30 p-4 shadow-2xs">
             <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
-              Terisi / Diterima
+              Diterima Admin
             </p>
             <p className="text-2xl font-black text-emerald-600 mt-1">
               {totalAccepted}
@@ -543,7 +569,16 @@ export default function PendaftarClient({
                 : " orang"}
             </p>
             <p className="text-[11px] text-on-surface-variant mt-0.5">
-              Mengisi slot kuota saat ini
+              Slot aktif terpakai: {totalActiveSlots}
+            </p>
+          </div>
+          <div className="bg-surface rounded-2xl border border-outline-variant/30 p-4 shadow-2xs">
+            <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+              Menunggu Review
+            </p>
+            <p className="text-2xl font-black text-amber-600 mt-1">{totalPending} orang</p>
+            <p className="text-[11px] text-on-surface-variant mt-0.5">
+              Perlu konfirmasi Terima / Tolak
             </p>
           </div>
           <div className="bg-surface rounded-2xl border border-outline-variant/30 p-4 shadow-2xs">
@@ -695,10 +730,11 @@ export default function PendaftarClient({
                 </select>
               )}
 
-              <div className="flex items-center bg-background border border-outline-variant/50 rounded-xl p-0.5 text-xs font-bold">
+              <div className="flex flex-wrap items-center bg-background border border-outline-variant/50 rounded-xl p-0.5 text-xs font-bold">
                 {(
                   [
                     ["all", "Semua"],
+                    ["pending", "Menunggu"],
                     ["accepted", "Diterima"],
                     ["rejected", "Ditolak"],
                   ] as const
@@ -756,6 +792,7 @@ export default function PendaftarClient({
                 <tbody className="divide-y divide-outline-variant/20">
                   {filteredApplications.map((app, rowIdx) => {
                     const isRejected = app.status === "rejected";
+                    const isPending = app.status === "pending";
                     const isBusy = busyId === app.id;
                     const firstLabel =
                       String(
@@ -773,14 +810,21 @@ export default function PendaftarClient({
                         className={`transition-colors ${
                           isRejected
                             ? "bg-rose-50/40 hover:bg-rose-50/70 opacity-80"
-                            : "hover:bg-surface-variant/5"
+                            : isPending
+                              ? "bg-amber-50/30 hover:bg-amber-50/60"
+                              : "hover:bg-surface-variant/5"
                         }`}
                       >
                         <td className="p-4 text-xs font-bold text-on-surface-variant">
                           {rowIdx + 1}
                         </td>
                         <td className="p-4 text-xs whitespace-nowrap text-on-surface-variant font-medium">
-                          {formatDateWithTime(app.created_at)}
+                          <div>{formatDateWithTime(app.created_at)}</div>
+                          {app.applicant_email && (
+                            <div className="text-[10px] text-primary font-semibold mt-0.5">
+                              {app.applicant_email}
+                            </div>
+                          )}
                         </td>
                         {hasItems && (
                           <td className="p-4 text-xs whitespace-nowrap">
@@ -793,6 +837,10 @@ export default function PendaftarClient({
                           {isRejected ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 font-bold">
                               <FiXCircle size={12} /> Ditolak
+                            </span>
+                          ) : isPending ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">
+                              <FiClock size={12} /> Menunggu
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 font-bold">
@@ -876,17 +924,18 @@ export default function PendaftarClient({
 
                         <td className="p-4 text-right whitespace-nowrap">
                           <div className="inline-flex items-center gap-1.5">
-                            {isRejected ? (
+                            {(isRejected || isPending) && (
                               <button
                                 type="button"
                                 disabled={isBusy}
                                 onClick={() => handleStatusChange(app, "accepted")}
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white text-xs font-bold transition-colors disabled:opacity-50"
-                                title="Terima kembali & isi slot"
+                                title="Terima pendaftar"
                               >
-                                <FiRotateCcw size={13} /> Terima
+                                <FiCheckCircle size={13} /> Terima
                               </button>
-                            ) : (
+                            )}
+                            {!isRejected && (
                               <button
                                 type="button"
                                 disabled={isBusy}

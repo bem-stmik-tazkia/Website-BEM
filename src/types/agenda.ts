@@ -69,6 +69,7 @@ export interface AgendaKegiatan {
   speakers?: { name: string; role: string; photo: string }[]; // Array of event speakers
   max_participants?: number | null; // Global quota fallback when no sub-items
   allow_multiple_items?: boolean; // For multi-competition events
+  require_login?: boolean; // Require authenticated user account to register
   items?: AgendaItem[]; // Sub-positions (volunteer) or competitions (event)
   accepted_count?: number; // Live filled count across active registrations
 }
@@ -77,13 +78,15 @@ export type KegiatanFormInput = Omit<Partial<AgendaKegiatan>, "items"> & {
   items?: AgendaItemInput[];
 };
 
-export type ApplicationStatus = "accepted" | "rejected";
+export type ApplicationStatus = "pending" | "accepted" | "rejected";
 
 export interface VolunteerApplication {
   id: string;
   agenda_id: string;
   item_id?: string | null;
   item_name?: string | null;
+  user_id?: string | null;
+  applicant_email?: string | null;
   status?: ApplicationStatus;
   batch_id?: string | null;
   responses: Record<string, string>; // Maps field ID to the response value (or file/image URL)

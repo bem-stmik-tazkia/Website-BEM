@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceRoleClient } from "@/lib/auth";
+import { createClient } from "@/utils/supabase/server";
 import { getClientIp, checkRateLimit, createRateLimitResponse } from "@/lib/rateLimit";
 import { isValidImageSignature } from "@/lib/imageValidation";
 import { hasAnyImageField, isDeadlinePassedJakarta } from "@/lib/registration-validation";
@@ -67,17 +68,43 @@ export async function POST(request: NextRequest) {
     }
 
     const serviceClient = getServiceRoleClient();
-    const { data: agenda, error: agendaErr } = await serviceClient
+    let { data: agenda, error: agendaErr } = await serviceClient
       .from("agendas")
-      .select("id, type, is_published, deadline, form_schema")
+      .select("id, type, is_published, deadline, form_schema, require_login")
       .eq("id", agendaId)
       .maybeSingle();
+
+    if (agendaErr && (agendaErr.message || "").toLowerCase().includes("require_login")) {
+      const retryAgenda = await serviceClient
+        .from("agendas")
+        .select("id, type, is_published, deadline, form_schema")
+        .eq("id", agendaId)
+        .maybeSingle();
+      agenda = retryAgenda.data ? { ...retryAgenda.data, require_login: retryAgenda.data.type === "volunteer" } : null;
+      agendaErr = retryAgenda.error;
+    }
 
     if (agendaErr || !agenda || !agenda.is_published) {
       return NextResponse.json(
         { error: getPublicApiMessage(locale, "photoAgendaUnavailable") },
         { status: 403, headers: rateLimitResult.headers }
       );
+    }
+
+    const requiresLogin = Boolean(
+      typeof (agenda as any).require_login === "boolean"
+        ? (agenda as any).require_login
+        : agenda.type === "volunteer"
+    );
+    if (requiresLogin) {
+      const supabaseAuth = await createClient();
+      const { data: { user: authUser } } = await supabaseAuth.auth.getUser();
+      if (!authUser) {
+        return NextResponse.json(
+          { error: getPublicApiMessage(locale, "loginRequired") },
+          { status: 401, headers: rateLimitResult.headers }
+        );
+      }
     }
 
     if (isDeadlinePassedJakarta(agenda.deadline)) {

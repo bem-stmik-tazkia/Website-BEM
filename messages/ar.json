@@ -989,7 +989,15 @@
     "leaveModalTitle": "هل تريد مغادرة النموذج؟",
     "leaveModalDesc": "سيتم حذف بيانات النموذج التي أدخلتها تلقائياً إذا غادرت الآن.",
     "leaveModalStay": "متابعة الملء",
-    "leaveModalConfirm": "مغادرة وحذف البيانات"
+    "leaveModalConfirm": "مغادرة وحذف البيانات",
+    "loginRequiredTitle": "تسجيل الدخول مطلوب",
+    "loginRequiredDesc": "لحفظ بيانات المتقدمين بأمان وإصدار الشهادات الإلكترونية لاحقاً، يرجى تسجيل الدخول بحسابك قبل تعبئة هذا النموذج.",
+    "loginNowBtn": "تسجيل الدخول بحساب الجامعة",
+    "loggedInAs": "مسجل الدخول باسم",
+    "alreadyRegisteredBadge": "مسجل بالفعل",
+    "alreadyRegisteredTitle": "لقد قمت بالتسجيل بالفعل",
+    "alreadyRegisteredDesc": "لقد أرسل حسابك طلباً لهذه الفعالية بالفعل. يرجى انتظار مراجعة اللجنة.",
+    "pendingStatusNotice": "سيتم تسجيل طلبك بحالة قيد المراجعة (Pending) وسيتم التحقق منه من قبل اللجنة."
   },
   "NewsDetail": {
     "share": "مشاركة",

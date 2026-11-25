@@ -989,7 +989,15 @@
     "leaveModalTitle": "フォームから移動しますか？",
     "leaveModalDesc": "このまま移動すると、入力中のフォーム内容は自動的に削除されます。",
     "leaveModalStay": "入力を続ける",
-    "leaveModalConfirm": "移動して削除する"
+    "leaveModalConfirm": "移動して削除する",
+    "loginRequiredTitle": "ログインが必要です",
+    "loginRequiredDesc": "応募者データを安全に管理し、活動終了後の電子証明書を発行するため、フォーム入力前にアカウントへログインしてください。",
+    "loginNowBtn": "キャンパスアカウントでログイン",
+    "loggedInAs": "ログイン中:",
+    "alreadyRegisteredBadge": "応募済み",
+    "alreadyRegisteredTitle": "すでに応募済みです",
+    "alreadyRegisteredDesc": "このアカウントはすでにこの活動へ応募済みです。運営委員会からの確認をお待ちください。",
+    "pendingStatusNotice": "応募は「審査待ち（Pending）」として登録され、運営委員会によって確認されます。"
   },
   "NewsDetail": {
     "share": "シェア",

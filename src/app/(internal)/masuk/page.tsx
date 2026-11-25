@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
-import { sanitizeNextPath } from "@/utils/auth-url";
+import { sanitizeNextPath, STUDENT_ALLOWED_NEXT_PREFIXES } from "@/utils/auth-url";
 
 export default function MasukPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +32,7 @@ export default function MasukPage() {
 
     const params = new URLSearchParams(window.location.search);
     const nextParam = params.get("next");
-    const safeNext = sanitizeNextPath(nextParam, window.location.origin, ["/dashboard"]);
+    const safeNext = sanitizeNextPath(nextParam, window.location.origin, STUDENT_ALLOWED_NEXT_PREFIXES);
     const targetNext = safeNext || "/dashboard/artikel";
 
     const supabase = createClient();
@@ -84,10 +84,10 @@ export default function MasukPage() {
             />
           </div>
           <h1 className="text-2xl font-bold text-on-background mb-1.5">
-            Portal Artikel Mahasiswa
+            Portal Mahasiswa BEM
           </h1>
           <p className="text-sm text-on-surface-variant">
-            Tulis dan kelola artikel mahasiswa Anda.
+            Masuk untuk mendaftar kegiatan/volunteer dan mengelola artikel mahasiswa.
           </p>
         </div>
 

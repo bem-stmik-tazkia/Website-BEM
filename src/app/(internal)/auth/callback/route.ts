@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { sanitizeNextPath } from '@/utils/auth-url';
+import { sanitizeNextPath, STUDENT_ALLOWED_NEXT_PREFIXES } from '@/utils/auth-url';
 
 export async function handleAuthCallback(request: NextRequest, customSupabase?: any) {
   const searchParams = request.nextUrl.searchParams;
@@ -128,8 +128,8 @@ export async function handleAuthCallback(request: NextRequest, customSupabase?: 
     return getErrorRedirect();
   }
 
-  // Akun mahasiswa sah: arahkan ke /dashboard/artikel
-  const safeNext = sanitizeNextPath(nextParam, publicOrigin, ['/dashboard']);
+  // Akun mahasiswa sah: arahkan ke tujuan aman (dashboard atau halaman daftar agenda)
+  const safeNext = sanitizeNextPath(nextParam, publicOrigin, STUDENT_ALLOWED_NEXT_PREFIXES);
   const destination = safeNext || '/dashboard/artikel';
   return NextResponse.redirect(new URL(destination, publicOrigin));
 }

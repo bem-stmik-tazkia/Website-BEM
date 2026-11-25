@@ -3,12 +3,15 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { Link, useRouter } from "@/i18n/routing";
+import NativeLink from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiArrowLeft,
   FiAlertCircle,
   FiAlertTriangle,
   FiCheck,
+  FiCheckCircle,
+  FiClock,
   FiUpload,
   FiLink,
   FiLoader,
@@ -19,6 +22,8 @@ import {
   FiUser,
   FiEdit3,
   FiLogOut,
+  FiLock,
+  FiLogIn,
 } from "react-icons/fi";
 import { AgendaItem, AgendaKegiatan, DynamicFormField } from "@/types/agenda";
 import { hasAnyFormQuestions } from "@/lib/registration-validation";
@@ -290,26 +295,38 @@ export default function ApplyClientForm({
   isClosed,
   isQuotaFull = false,
   preselectedItemId,
+  requiresLogin = false,
+  currentUser = null,
+  existingAppliedItemIds = [],
+  hasExistingAgendaApplication = false,
 }: {
   agenda: AgendaKegiatan;
   isClosed: boolean;
   isQuotaFull?: boolean;
   preselectedItemId?: string;
+  requiresLogin?: boolean;
+  currentUser?: { id: string; email: string; fullName: string } | null;
+  existingAppliedItemIds?: string[];
+  hasExistingAgendaApplication?: boolean;
 }) {
   const [responses, setResponses] = useState<Record<string, string>>({});
   const items: AgendaItem[] = agenda.items || [];
   const hasItems = items.length > 0;
   const isVolunteer = agenda.type === "volunteer";
   const allowMultiple = !isVolunteer && agenda.allow_multiple_items !== false;
+  const appliedItemSet = React.useMemo(
+    () => new Set(existingAppliedItemIds),
+    [existingAppliedItemIds]
+  );
 
   const initialPreselectedIds = React.useMemo(() => {
     if (!hasItems || !preselectedItemId) return [];
     const target = items.find((it) => it.id === preselectedItemId);
-    if (!target) return [];
+    if (!target || appliedItemSet.has(target.id)) return [];
     const isFull =
       typeof target.quota === "number" && (target.filled_count || 0) >= target.quota;
     return isFull ? [] : [target.id];
-  }, [hasItems, items, preselectedItemId]);
+  }, [hasItems, items, preselectedItemId, appliedItemSet]);
 
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>(initialPreselectedIds);
   const [hasModifiedSelection, setHasModifiedSelection] = useState(false);
@@ -533,7 +550,7 @@ export default function ApplyClientForm({
   const toggleItemSelection = (item: AgendaItem) => {
     const isFull =
       typeof item.quota === "number" && (item.filled_count || 0) >= item.quota;
-    if (isFull) return;
+    if (isFull || appliedItemSet.has(item.id)) return;
 
     setItemError(null);
     setHasModifiedSelection(true);
@@ -962,8 +979,54 @@ export default function ApplyClientForm({
                 {isClosed && agenda.deadline ? ` (${t("closedAtLabel")} ${formatDeadlineWib(agenda.deadline, locale)})` : ""}
               </p>
             </div>
+          ) : requiresLogin && !currentUser ? (
+            <div className="bg-primary/5 border border-primary/20 p-6 md:p-8 rounded-2xl flex flex-col items-center text-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                <FiLock size={26} />
+              </div>
+              <div className="max-w-md space-y-1.5">
+                <h3 className="font-extrabold text-lg text-on-surface">
+                  {t("loginRequiredTitle")}
+                </h3>
+                <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
+                  {t("loginRequiredDesc")}
+                </p>
+              </div>
+              <NativeLink
+                href={`/masuk?next=${encodeURIComponent(
+                  `/${locale}/agenda/${agenda.id}/apply${
+                    preselectedItemId ? `?item=${preselectedItemId}` : ""
+                  }`
+                )}`}
+                className="inline-flex items-center gap-2 bg-primary text-white font-bold text-sm px-6 py-3 rounded-xl hover:bg-primary/90 transition-all shadow-md"
+              >
+                <FiLogIn size={16} /> {t("loginNowBtn")}
+              </NativeLink>
+            </div>
+          ) : !hasItems && hasExistingAgendaApplication ? (
+            <div className="bg-emerald-50 text-emerald-800 p-6 rounded-2xl border border-emerald-200 flex flex-col items-center text-center gap-2">
+              <FiCheckCircle size={32} className="text-emerald-600" />
+              <h3 className="font-bold text-lg">{t("alreadyRegisteredTitle")}</h3>
+              <p className="text-sm opacity-90 max-w-md">{t("alreadyRegisteredDesc")}</p>
+            </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+              {currentUser && (
+                <div className="p-3.5 rounded-xl bg-primary/5 border border-primary/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2 text-on-surface">
+                    <FiUser size={14} className="text-primary shrink-0" />
+                    <span>
+                      {t("loggedInAs")}:{" "}
+                      <strong className="font-bold">
+                        {currentUser.email || currentUser.fullName}
+                      </strong>
+                    </span>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full font-semibold w-fit">
+                    <FiClock size={12} className="shrink-0" /> {t("pendingStatusNotice")}
+                  </span>
+                </div>
+              )}
               {/* PILIHAN POSISI / CABANG LOMBA */}
               {hasItems && (
                 <div
@@ -997,6 +1060,8 @@ export default function ApplyClientForm({
                       const filled = item.filled_count || 0;
                       const hasQuota = typeof item.quota === "number";
                       const isFull = hasQuota && filled >= item.quota!;
+                      const isAlreadyApplied = appliedItemSet.has(item.id);
+                      const isDisabled = isFull || isAlreadyApplied;
                       const remaining = hasQuota ? Math.max(0, item.quota! - filled) : null;
                       const isChecked = selectedItemIds.includes(item.id);
                       const pct =
@@ -1008,10 +1073,10 @@ export default function ApplyClientForm({
                         <button
                           key={item.id}
                           type="button"
-                          disabled={isFull}
+                          disabled={isDisabled}
                           onClick={() => toggleItemSelection(item)}
                           className={`text-left p-3.5 rounded-xl border transition-all flex flex-col justify-between gap-2 ${
-                            isFull
+                            isDisabled
                               ? "bg-surface-variant/30 border-outline-variant/30 opacity-60 cursor-not-allowed"
                               : isChecked
                               ? "bg-surface border-primary ring-2 ring-primary/25 shadow-xs"
@@ -1053,12 +1118,16 @@ export default function ApplyClientForm({
 
                             <span
                               className={`shrink-0 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
-                                isFull
+                                isAlreadyApplied
+                                  ? "bg-primary/15 text-primary"
+                                  : isFull
                                   ? "bg-rose-100 text-rose-700"
                                   : "bg-emerald-100 text-emerald-700"
                               }`}
                             >
-                              {isFull
+                              {isAlreadyApplied
+                                ? t("alreadyRegisteredBadge")
+                                : isFull
                                 ? t("fullBadge")
                                 : hasQuota
                                 ? t("leftBadge", { count: remaining ?? 0 })

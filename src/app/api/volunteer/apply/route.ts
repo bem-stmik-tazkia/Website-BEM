@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { getServiceRoleClient } from "@/lib/auth";
+import { createClient } from "@/utils/supabase/server";
 import { getClientIp, checkRateLimit, createRateLimitResponse } from "@/lib/rateLimit";
 import { sendVolunteerAppliedNotification } from "@/lib/telegram";
 import {
@@ -116,11 +117,21 @@ export async function POST(req: Request) {
     // 4. Ambil Definisi Form, Sub-Item, & Status Agenda dari Database Server
     const supabaseAdmin = getServiceRoleClient();
 
-    const { data: agenda, error: agendaError } = await supabaseAdmin
+    let { data: agenda, error: agendaError } = await supabaseAdmin
       .from("agendas")
-      .select("id, title, slug, is_published, deadline, form_schema, type, max_participants, allow_multiple_items")
+      .select("id, title, slug, is_published, deadline, form_schema, type, max_participants, allow_multiple_items, require_login")
       .eq("id", agendaId)
       .maybeSingle();
+
+    if (agendaError && (agendaError.message || "").toLowerCase().includes("require_login")) {
+      const retryAgenda = await supabaseAdmin
+        .from("agendas")
+        .select("id, title, slug, is_published, deadline, form_schema, type, max_participants, allow_multiple_items")
+        .eq("id", agendaId)
+        .maybeSingle();
+      agenda = retryAgenda.data ? { ...retryAgenda.data, require_login: retryAgenda.data.type === "volunteer" } : null;
+      agendaError = retryAgenda.error;
+    }
 
     if (agendaError || !agenda) {
       return NextResponse.json(
@@ -133,6 +144,25 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: getPublicApiMessage(locale, "agendaNotPublished") },
         { status: 403, headers: rateLimitResult.headers }
+      );
+    }
+
+    // Verifikasi sesi login (boleh mahasiswa maupun admin untuk testing)
+    const supabaseAuth = await createClient();
+    const {
+      data: { user: authUser },
+    } = await supabaseAuth.auth.getUser();
+
+    const requiresLogin = Boolean(
+      typeof (agenda as any).require_login === "boolean"
+        ? (agenda as any).require_login
+        : agenda.type === "volunteer"
+    );
+
+    if (requiresLogin && !authUser) {
+      return NextResponse.json(
+        { error: getPublicApiMessage(locale, "loginRequired") },
+        { status: 401, headers: rateLimitResult.headers }
       );
     }
 
@@ -243,11 +273,27 @@ export async function POST(req: Request) {
         p_portofolio_url: extractedPortofolioUrl,
         p_batch_id: null,
         p_responses_by_item: responsesByItem,
+        p_user_id: authUser?.id || null,
+        p_applicant_email: authUser?.email || null,
+        p_status: "pending",
       }
     );
 
     if (rpcError) {
       const msg = rpcError.message || "";
+      if (msg.includes("LOGIN_REQUIRED")) {
+        return NextResponse.json(
+          { error: getPublicApiMessage(locale, "loginRequired") },
+          { status: 401, headers: rateLimitResult.headers }
+        );
+      }
+      if (msg.includes("ALREADY_APPLIED:")) {
+        const appliedTarget = msg.split("ALREADY_APPLIED:")[1]?.trim() || agenda.title;
+        return NextResponse.json(
+          { error: getPublicApiMessage(locale, "alreadyApplied", { target: appliedTarget }) },
+          { status: 409, headers: rateLimitResult.headers }
+        );
+      }
       if (msg.includes("QUOTA_FULL:")) {
         const fullTarget = msg.split("QUOTA_FULL:")[1]?.trim() || agenda.title;
         return NextResponse.json(
