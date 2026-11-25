@@ -1,0 +1,286 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" role="img" aria-label="Poster Bawaan Open Recruitment BEM STMIK Tazkia">
+  <defs>
+    <!-- Gradien Background Dominan Vibrant Orange Mulus Tanpa Garis Kasar -->
+    <linearGradient id="op-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C2410C" />
+      <stop offset="45%" stop-color="#EA580C" />
+      <stop offset="100%" stop-color="#9A3412" />
+    </linearGradient>
+
+    <!-- Gradien Pelat Highlight Deep Navy -->
+    <linearGradient id="op-navy" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#172E66" />
+      <stop offset="100%" stop-color="#071330" />
+    </linearGradient>
+
+    <!-- Gradien Inti Hub Deep Navy Glow -->
+    <linearGradient id="op-hub" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A" />
+      <stop offset="55%" stop-color="#0F2458" />
+      <stop offset="100%" stop-color="#06102B" />
+    </linearGradient>
+
+    <!-- Gradien Ring &amp; Teks Fire Orange-Gold -->
+    <linearGradient id="op-fire" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="50%" stop-color="#FDBA74" />
+      <stop offset="100%" stop-color="#F97316" />
+    </linearGradient>
+
+    <!-- Aura Glow Amber Hangat (Sisi Kiri) -->
+    <radialGradient id="op-aura1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FDE047" stop-opacity="0.45" />
+      <stop offset="52%" stop-color="#FB923C" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#EA580C" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Aura Depth Deep Navy Lembut (Sisi Kanan) -->
+    <radialGradient id="op-aura2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#071330" stop-opacity="0.62" />
+      <stop offset="55%" stop-color="#0F2458" stop-opacity="0.28" />
+      <stop offset="100%" stop-color="#0F2458" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Gradien Kilau Diagonal -->
+    <linearGradient id="op-shimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0" />
+      <stop offset="50%" stop-color="#FFF7ED" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Pola Dot Matrix Putih Halus -->
+    <pattern id="op-dots" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="4" r="1.35" fill="#FFEDD5" fill-opacity="0.24" />
+    </pattern>
+
+    <!-- Shadow Lembut untuk Judul &amp; Node -->
+    <filter id="op-shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#071330" flood-opacity="0.36" />
+    </filter>
+
+    <clipPath id="op-clip">
+      <rect width="800" height="450" />
+    </clipPath>
+  </defs>
+
+  <style><![CDATA[
+    .op-aura-move { animation: op-breathe 8s ease-in-out infinite alternate; }
+    .op-dots-move { animation: op-dotDrift 12s linear infinite; }
+    .op-radar1 { transform-origin: 605px 225px; animation: op-radarPulse 3.3s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+    .op-radar2 { transform-origin: 605px 225px; animation: op-radarPulse 3.3s cubic-bezier(0.16, 1, 0.3, 1) 1.1s infinite; }
+    .op-radar3 { transform-origin: 605px 225px; animation: op-radarPulse 3.3s cubic-bezier(0.16, 1, 0.3, 1) 2.2s infinite; }
+    .op-ring-spin { transform-origin: 605px 225px; animation: op-spin 18s linear infinite; }
+    .op-ring-rev { transform-origin: 605px 225px; animation: op-spinRev 12s linear infinite; }
+    .op-wire { stroke-dasharray: 8 8; animation: op-flow 1.4s linear infinite; }
+    .op-hub-float { transform-origin: 605px 225px; animation: op-hubBob 3.8s ease-in-out infinite; }
+    .op-sound1 { animation: op-waveOut 1.6s ease-out infinite; }
+    .op-sound2 { animation: op-waveOut 1.6s ease-out 0.4s infinite; }
+    .op-sound3 { animation: op-waveOut 1.6s ease-out 0.8s infinite; }
+    .op-node1 { animation: op-floatNode 4.0s ease-in-out infinite; }
+    .op-node2 { animation: op-floatNode 4.6s ease-in-out 0.9s infinite; }
+    .op-node3 { animation: op-floatNode 3.7s ease-in-out 1.8s infinite; }
+    .op-node4 { animation: op-floatNode 4.3s ease-in-out 0.4s infinite; }
+    .op-scan { animation: op-scanBar 3.8s ease-in-out infinite; }
+    .op-sheen { animation: op-sweep 6.2s ease-in-out infinite; }
+    .op-chev1 { animation: op-chevPulse 1.5s ease-in-out infinite; }
+    .op-chev2 { animation: op-chevPulse 1.5s ease-in-out 0.25s infinite; }
+    .op-chev3 { animation: op-chevPulse 1.5s ease-in-out 0.5s infinite; }
+    .op-plus-rise1 { animation: op-floatUp 6s linear infinite; }
+    .op-plus-rise2 { animation: op-floatUp 7.5s linear 2.5s infinite; }
+    .op-plus-rise3 { animation: op-floatUp 5.5s linear 4s infinite; }
+    .op-bar-slide { animation: op-accentMove 3.2s ease-in-out infinite alternate; }
+
+    @keyframes op-breathe {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(-24px, 16px) scale(1.14); }
+    }
+    @keyframes op-dotDrift {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(28px, -28px); }
+    }
+    @keyframes op-radarPulse {
+      0% { transform: scale(0.36); opacity: 0.9; stroke-width: 3px; }
+      100% { transform: scale(1.48); opacity: 0; stroke-width: 0.7px; }
+    }
+    @keyframes op-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes op-spinRev {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+    @keyframes op-flow {
+      from { stroke-dashoffset: 32; }
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes op-hubBob {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-10px) scale(1.04); }
+    }
+    @keyframes op-waveOut {
+      0% { opacity: 0; transform: translateX(-4px) scale(0.85); }
+      35% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(12px) scale(1.18); }
+    }
+    @keyframes op-floatNode {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-11px); }
+    }
+    @keyframes op-scanBar {
+      0% { transform: translateX(-240px); }
+      100% { transform: translateX(860px); }
+    }
+    @keyframes op-sweep {
+      0%, 56% { transform: translateX(-320px) skewX(-24deg); opacity: 0; }
+      70% { opacity: 1; }
+      95% { transform: translateX(1080px) skewX(-24deg); opacity: 0.85; }
+      100% { transform: translateX(1080px) skewX(-24deg); opacity: 0; }
+    }
+    @keyframes op-chevPulse {
+      0%, 100% { opacity: 0.3; transform: translateX(0px); }
+      50% { opacity: 1; transform: translateX(6px); }
+    }
+    @keyframes op-floatUp {
+      0% { transform: translateY(30px); opacity: 0; }
+      20% { opacity: 0.9; }
+      80% { opacity: 0.75; }
+      100% { transform: translateY(-350px); opacity: 0; }
+    }
+    @keyframes op-accentMove {
+      0% { transform: translateX(0px); }
+      100% { transform: translateX(56px); }
+    }
+  ]]></style>
+
+  <g clip-path="url(#op-clip)">
+    <!-- 1. Background Dominan Vibrant Orange Mulus -->
+    <rect width="800" height="450" fill="url(#op-bg)" />
+
+    <!-- 2. Pola Dot Matrix Halus Bergerak -->
+    <g class="op-dots-move">
+      <rect x="-28" y="0" width="860" height="510" fill="url(#op-dots)" />
+    </g>
+
+    <!-- 3. Cahaya Aura Amber &amp; Depth Navy Lembut Tanpa Garis Potong -->
+    <circle class="op-aura-move" cx="200" cy="115" r="245" fill="url(#op-aura1)" />
+    <circle class="op-aura-move" cx="620" cy="235" r="275" fill="url(#op-aura2)" />
+
+    <!-- 4. Garis Sudut Arsitektural Deep Navy -->
+    <path d="M24 52 L24 24 L52 24" fill="none" stroke="#071330" stroke-opacity="0.82" stroke-width="2.8" stroke-linecap="round" />
+    <path d="M776 398 L776 426 L748 426" fill="none" stroke="#FFF7ED" stroke-opacity="0.72" stroke-width="2.6" stroke-linecap="round" />
+
+    <!-- 5. Partikel '+' &amp; Berlian Melayang Naik -->
+    <g stroke-width="2.3" stroke-linecap="round">
+      <g transform="translate(442, 415)">
+        <g class="op-plus-rise1" stroke="#071330">
+          <line x1="-6" y1="0" x2="6" y2="0" />
+          <line x1="0" y1="-6" x2="0" y2="6" />
+        </g>
+      </g>
+      <g transform="translate(748, 425)">
+        <g class="op-plus-rise2" stroke="#FFEDD5">
+          <line x1="-5" y1="0" x2="5" y2="0" />
+          <line x1="0" y1="-5" x2="0" y2="5" />
+        </g>
+      </g>
+      <g class="op-plus-rise3">
+        <rect x="506" y="425" width="7" height="7" rx="1.5" fill="#FDE047" transform="rotate(45 509 428)" />
+      </g>
+    </g>
+
+    <!-- 6. VISUAL KANAN: RADAR NAVY + TARGET RING + HUB MEGAFON NAVY + KANDIDAT -->
+    <g>
+      <circle class="op-radar1" cx="605" cy="225" r="132" fill="none" stroke="#071330" />
+      <circle class="op-radar2" cx="605" cy="225" r="132" fill="none" stroke="#FFF7ED" />
+      <circle class="op-radar3" cx="605" cy="225" r="132" fill="none" stroke="#FDBA74" />
+
+      <g class="op-ring-spin">
+        <circle cx="605" cy="225" r="144" fill="none" stroke="#071330" stroke-opacity="0.58" stroke-width="2" stroke-dasharray="18 12" />
+        <circle cx="749" cy="225" r="5.5" fill="#FFF7ED" stroke="#071330" stroke-width="2" />
+        <circle cx="461" cy="225" r="4.5" fill="#FDE047" />
+      </g>
+      <g class="op-ring-rev">
+        <circle cx="605" cy="225" r="106" fill="none" stroke="#FFEDD5" stroke-opacity="0.45" stroke-width="1.5" stroke-dasharray="6 10" />
+      </g>
+
+      <!-- Garis Koneksi Energi Antar Anggota Tim -->
+      <line class="op-wire" x1="605" y1="225" x2="496" y2="128" stroke="#071330" stroke-opacity="0.82" stroke-width="2.4" />
+      <line class="op-wire" x1="605" y1="225" x2="716" y2="132" stroke="#FFF7ED" stroke-opacity="0.85" stroke-width="2.2" />
+      <line class="op-wire" x1="605" y1="225" x2="702" y2="332" stroke="#FDBA74" stroke-opacity="0.9" stroke-width="2.2" />
+      <line class="op-wire" x1="605" y1="225" x2="504" y2="324" stroke="#071330" stroke-opacity="0.8" stroke-width="2.2" />
+
+      <!-- Node Kandidat 1 (Kiri Atas) -->
+      <g class="op-node1" filter="url(#op-shadow)">
+        <circle cx="496" cy="128" r="25" fill="url(#op-navy)" stroke="#FDBA74" stroke-width="2.2" />
+        <circle cx="496" cy="122" r="6" fill="#FFFFFF" />
+        <path d="M485 138 C485 132 507 132 507 138" fill="#FDBA74" />
+      </g>
+
+      <!-- Node Kandidat 2 (Kanan Atas + Centang Orange) -->
+      <g class="op-node2" filter="url(#op-shadow)">
+        <circle cx="716" cy="132" r="27" fill="url(#op-navy)" stroke="#FFFFFF" stroke-width="2.2" />
+        <circle cx="716" cy="125" r="6.5" fill="#FFFFFF" />
+        <path d="M704 143 C704 136 728 136 728 143" fill="#FB923C" />
+        <circle cx="736" cy="113" r="9.5" fill="#F97316" stroke="#071330" stroke-width="2.2" />
+        <path d="M732 113 L735 116 L740 110" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      </g>
+
+      <!-- Node Kandidat 3 (Kanan Bawah) -->
+      <g class="op-node3" filter="url(#op-shadow)">
+        <circle cx="702" cy="332" r="24" fill="url(#op-navy)" stroke="#FB923C" stroke-width="2.2" />
+        <circle cx="702" cy="326" r="5.5" fill="#FFEDD5" />
+        <path d="M692 341 C692 335.5 712 335.5 712 341" fill="#FFEDD5" />
+      </g>
+
+      <!-- Node 4 (Kiri Bawah: Badge "+ JOIN US") -->
+      <g class="op-node4" filter="url(#op-shadow)">
+        <rect x="458" y="308" width="92" height="32" rx="16" fill="#071330" stroke="#FDBA74" stroke-width="1.8" />
+        <text x="504" y="328" text-anchor="middle" fill="#FFFFFF" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11.5" font-weight="800" letter-spacing="0.9">+ JOIN US</text>
+      </g>
+
+      <!-- Pusat Hub Rekrutmen Deep Navy &amp; Megafon -->
+      <g class="op-hub-float" filter="url(#op-shadow)">
+        <circle cx="605" cy="225" r="60" fill="#071330" fill-opacity="0.94" stroke="url(#op-fire)" stroke-width="3.2" />
+        <circle cx="605" cy="225" r="47" fill="url(#op-hub)" stroke="#3B82F6" stroke-opacity="0.35" stroke-width="1.2" />
+
+        <g transform="translate(579, 202)">
+          <path d="M8 18 L29 8 L29 34 L8 24 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" />
+          <rect x="3" y="17" width="6.5" height="8.5" rx="2.2" fill="#FB923C" />
+          <path d="M11 25 L14 36 L19.5 36 L16.5 26 Z" fill="#FDBA74" />
+          <path class="op-sound1" d="M35 15 C39 18 39 24 35 27" fill="none" stroke="#FB923C" stroke-width="2.6" stroke-linecap="round" />
+          <path class="op-sound2" d="M40 10 C46 15 46 27 40 32" fill="none" stroke="#FDBA74" stroke-width="2.2" stroke-linecap="round" />
+          <path class="op-sound3" d="M45 6 C52 13 52 29 45 36" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" />
+        </g>
+      </g>
+    </g>
+
+    <!-- 7. KONTEN KIRI BERSIH: LANGSUNG JUDUL BOLD ORANGE x NAVY -->
+    <g>
+      <text x="52" y="186" fill="#FFFFFF" filter="url(#op-shadow)" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="54" font-weight="800" letter-spacing="-1">WE ARE</text>
+
+      <g filter="url(#op-shadow)">
+        <rect x="48" y="204" width="376" height="68" rx="16" fill="url(#op-navy)" stroke="#FDBA74" stroke-opacity="0.65" stroke-width="1.8" />
+        <text x="66" y="254" fill="url(#op-fire)" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="43" font-weight="800" letter-spacing="-0.6">RECRUITING!</text>
+      </g>
+
+      <g transform="translate(52, 296)">
+        <rect x="0" y="5" width="136" height="6" rx="3" fill="#071330" fill-opacity="0.45" />
+        <rect class="op-bar-slide" x="0" y="5" width="80" height="6" rx="3" fill="#071330" />
+
+        <g transform="translate(156, 0)" fill="none" stroke="#071330" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path class="op-chev1" d="M0 0 L8 8 L0 16" />
+          <path class="op-chev2" d="M12 0 L20 8 L12 16" stroke="#FFF7ED" />
+          <path class="op-chev3" d="M24 0 L32 8 L24 16" stroke="#FDE047" />
+        </g>
+      </g>
+    </g>
+
+    <!-- 8. Garis Scan Energi Deep Navy di Bagian Bawah -->
+    <rect x="0" y="444" width="800" height="6" fill="#071330" />
+    <rect class="op-scan" x="0" y="444" width="220" height="6" rx="3" fill="url(#op-fire)" />
+
+    <!-- 9. Sapuan Cahaya Kilau Diagonal -->
+    <rect class="op-sheen" x="0" y="-40" width="170" height="530" fill="url(#op-shimmer)" />
+  </g>
+</svg>

@@ -24,6 +24,12 @@ import AgendaCalendarView from "@/components/agenda/AgendaCalendarView";
 import AgendaUpcomingPast from "@/components/agenda/AgendaUpcomingPast";
 import AgendaTourClient from "@/components/agenda/AgendaTourClient";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
+import {
+  getDefaultPosterBgClass,
+  getKegiatanPosterUrl,
+  isDefaultPosterPath,
+  isSvgImageUrl,
+} from "@/lib/default-posters";
 
 // Helper: parse tanggal sebagai local date agar tidak terkena UTC timezone shift
 function parseDateLocal(dateStr: string): Date {
@@ -536,35 +542,44 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                         }`}
                       >
                         {/* Image */}
-                        <div className="h-44 md:h-48 overflow-hidden bg-surface-variant relative shrink-0">
-                          <Image
-                            src={agenda.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"}
-                            alt={agenda.title}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
-                              statusType === "done" ? "grayscale-[25%] group-hover:grayscale-0" : ""
-                            }`}
-                          />
-                          <div className="absolute top-3.5 left-3.5 bg-surface/90 backdrop-blur-sm text-secondary text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider">
-                            {agenda.category}
-                          </div>
-                          {statusType === "live" && (
-                            <div className="absolute top-3.5 right-3.5 bg-red-500 text-white text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-md">
-                              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" /> {t("statusLive").toUpperCase()}
+                        {(() => {
+                          const eventPoster = getKegiatanPosterUrl(agenda.image_url, "event");
+                          const isDefault = isDefaultPosterPath(eventPoster);
+                          return (
+                            <div className={`h-44 md:h-48 overflow-hidden relative shrink-0 ${isDefault ? getDefaultPosterBgClass("event") : "bg-surface-variant"}`}>
+                              <Image
+                                src={eventPoster}
+                                alt={agenda.title}
+                                fill
+                                unoptimized={isSvgImageUrl(eventPoster)}
+                                sizes="(max-width: 768px) 100vw, 50vw"
+                                className={`w-full h-full group-hover:scale-105 transition-transform duration-500 ${
+                                  isDefault ? "object-contain" : "object-cover"
+                                } ${
+                                  statusType === "done" ? "grayscale-[25%] group-hover:grayscale-0" : ""
+                                }`}
+                              />
+                              <div className="absolute top-3.5 left-3.5 bg-surface/90 backdrop-blur-sm text-secondary text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider">
+                                {agenda.category}
+                              </div>
+                              {statusType === "live" && (
+                                <div className="absolute top-3.5 right-3.5 bg-red-500 text-white text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-md">
+                                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" /> {t("statusLive").toUpperCase()}
+                                </div>
+                              )}
+                              {statusType === "done" && (
+                                <div className="absolute top-3.5 right-3.5 bg-surface/90 backdrop-blur-md text-on-surface-variant border border-outline-variant/30 text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                  <FiCheckCircle size={12} className="text-emerald-500" /> {t("statusDone")}
+                                </div>
+                              )}
+                              {statusType === "upcoming" && (
+                                <div className="absolute top-3.5 right-3.5 bg-primary/90 backdrop-blur-md text-white text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
+                                  <FiClock size={12} /> {t("statusUpcoming")}
+                                </div>
+                              )}
                             </div>
-                          )}
-                          {statusType === "done" && (
-                            <div className="absolute top-3.5 right-3.5 bg-surface/90 backdrop-blur-md text-on-surface-variant border border-outline-variant/30 text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                              <FiCheckCircle size={12} className="text-emerald-500" /> {t("statusDone")}
-                            </div>
-                          )}
-                          {statusType === "upcoming" && (
-                            <div className="absolute top-3.5 right-3.5 bg-primary/90 backdrop-blur-md text-white text-[10px] md:text-xs font-bold px-2.5 py-1 md:py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
-                              <FiClock size={12} /> {t("statusUpcoming")}
-                            </div>
-                          )}
-                        </div>
+                          );
+                        })()}
 
                         {/* Content */}
                         <div className="p-4 md:p-6 flex flex-col flex-grow">
@@ -760,29 +775,38 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                       isClosed ? "opacity-85 hover:opacity-100" : ""
                     }`}>
                       {/* Image */}
-                      <div className="relative aspect-[4/3] rounded-t-3xl overflow-hidden bg-surface-variant group-hover:shadow-inner">
-                        <Image
-                          src={vol.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"}
-                          alt={vol.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
-                            isClosed ? "grayscale-[25%] group-hover:grayscale-0" : ""
-                          }`}
-                          draggable={false}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                        {vol.is_urgent && !isClosed && (
-                          <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                            <FiClock size={10} /> {t("urgent")}
-                          </span>
-                        )}
-                        {isClosed && (
-                          <span className="absolute top-3 right-3 bg-surface/90 backdrop-blur-md text-on-surface-variant border border-outline-variant/30 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                            <FiCheckCircle size={10} className="text-emerald-500" /> {t("closedPosition")}
-                          </span>
-                        )}
-                      </div>
+                      {(() => {
+                        const volPoster = getKegiatanPosterUrl(vol.image_url, "volunteer");
+                        const isDefault = isDefaultPosterPath(volPoster);
+                        return (
+                          <div className={`relative aspect-[4/3] rounded-t-3xl overflow-hidden group-hover:shadow-inner ${isDefault ? getDefaultPosterBgClass("volunteer") : "bg-surface-variant"}`}>
+                            <Image
+                              src={volPoster}
+                              alt={vol.title}
+                              fill
+                              unoptimized={isSvgImageUrl(volPoster)}
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                              className={`w-full h-full group-hover:scale-105 transition-transform duration-500 ${
+                                isDefault ? "object-contain" : "object-cover"
+                              } ${
+                                isClosed ? "grayscale-[25%] group-hover:grayscale-0" : ""
+                              }`}
+                              draggable={false}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                            {vol.is_urgent && !isClosed && (
+                              <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                                <FiClock size={10} /> {t("urgent")}
+                              </span>
+                            )}
+                            {isClosed && (
+                              <span className="absolute top-3 right-3 bg-surface/90 backdrop-blur-md text-on-surface-variant border border-outline-variant/30 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                                <FiCheckCircle size={10} className="text-emerald-500" /> {t("closedPosition")}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       <div className="p-4 md:p-6 flex flex-col flex-grow">
                         <span className="text-[10px] font-bold text-secondary uppercase tracking-wider block mb-1 md:mb-2">{vol.category}</span>

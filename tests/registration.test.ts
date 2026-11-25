@@ -14,6 +14,13 @@ import {
   splitDeadlineWib,
 } from "../src/lib/registration-utils";
 import {
+  DEFAULT_POSTERS,
+  getDefaultPosterPath,
+  getKegiatanPosterUrl,
+  isDefaultPosterPath,
+  isSvgImageUrl,
+} from "../src/lib/default-posters";
+import {
   aggregateAgendaItemsAndCounts,
   hasAnyFormQuestions,
   hasAnyImageField,
@@ -567,4 +574,28 @@ test("isDeadlinePassedJakarta respects exact WIB closing hour down to the minute
 
   assert.equal(isDeadlinePassedJakarta(deadline17Wib, beforeClose), false);
   assert.equal(isDeadlinePassedJakarta(deadline17Wib, afterClose), true);
+});
+
+test("default poster helpers resolve event vs volunteer SVGs and preserve custom images", () => {
+  assert.equal(getDefaultPosterPath("event"), DEFAULT_POSTERS.event);
+  assert.equal(getDefaultPosterPath("volunteer"), DEFAULT_POSTERS.volunteer);
+  assert.equal(getDefaultPosterPath("dokumentasi"), DEFAULT_POSTERS.event);
+
+  assert.equal(getKegiatanPosterUrl(null, "volunteer"), DEFAULT_POSTERS.volunteer);
+  assert.equal(getKegiatanPosterUrl("", "event"), DEFAULT_POSTERS.event);
+  assert.equal(
+    getKegiatanPosterUrl("   ", "event", ["https://example.com/gal1.webp"]),
+    "https://example.com/gal1.webp"
+  );
+  assert.equal(
+    getKegiatanPosterUrl("https://example.com/custom.webp", "volunteer"),
+    "https://example.com/custom.webp"
+  );
+
+  assert.equal(isDefaultPosterPath("/posters/default-oprec.svg"), true);
+  assert.equal(isDefaultPosterPath("https://bem.stmik.tazkia.ac.id/posters/default-event.svg"), true);
+  assert.equal(isDefaultPosterPath("https://example.com/custom.webp"), false);
+
+  assert.equal(isSvgImageUrl("/posters/default-event.svg?v=1"), true);
+  assert.equal(isSvgImageUrl("https://example.com/photo.webp"), false);
 });

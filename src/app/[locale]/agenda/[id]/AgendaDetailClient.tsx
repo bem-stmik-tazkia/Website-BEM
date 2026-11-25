@@ -36,6 +36,11 @@ import { AgendaKegiatan } from "@/types/agenda";
 import { hasAnyFormQuestions, isDeadlinePassedJakarta } from "@/lib/registration-validation";
 import { formatDateToIndo, formatDateLocalized, formatDeadlineWib } from "@/utils/dateFormatter";
 import { translateContent } from "@/utils/translate";
+import {
+  getDefaultPosterBgClass,
+  getKegiatanPosterUrl,
+  isDefaultPosterPath,
+} from "@/lib/default-posters";
 
 function GoogleDriveFolderCard({ url, folderId }: { url: string; folderId: string }) {
   const t = useTranslations("AgendaDetail");
@@ -503,15 +508,27 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
         >
           {/* Background Image Carousel */}
           <AnimatePresence mode="popLayout">
-            <motion.div
-              key={currentBannerIndex}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1 }}
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url('${validGallery.length > 0 ? validGallery[currentBannerIndex] : (agenda.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80")}')` }}
-            />
+            {(() => {
+              const bannerSrc =
+                validGallery.length > 0
+                  ? validGallery[currentBannerIndex]
+                  : getKegiatanPosterUrl(agenda.image_url, agenda.type, agenda.gallery);
+              const isDefault = validGallery.length === 0 && isDefaultPosterPath(bannerSrc);
+              return (
+                <motion.img
+                  key={`${currentBannerIndex}-${bannerSrc}`}
+                  src={bannerSrc}
+                  alt={agenda.title}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1 }}
+                  className={`absolute inset-0 w-full h-full object-cover object-center ${
+                    isDefault ? getDefaultPosterBgClass(agenda.type) : ""
+                  }`}
+                />
+              );
+            })()}
           </AnimatePresence>
           
           {/* Gradient Overlay for Text Readability */}

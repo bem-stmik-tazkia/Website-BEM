@@ -6,6 +6,11 @@ import { motion } from "framer-motion";
 import { FiCalendar, FiImage, FiFolder, FiVideo } from "react-icons/fi";
 import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo } from "@/utils/dateFormatter";
+import {
+  getDefaultPosterBgClass,
+  getKegiatanPosterUrl,
+  isDefaultPosterPath,
+} from "@/lib/default-posters";
 
 export default function DokumentasiClient({ data }: { data: AgendaKegiatan[] }) {
   // Filter for published items with documentation (photos or video/drive):
@@ -48,8 +53,9 @@ export default function DokumentasiClient({ data }: { data: AgendaKegiatan[] }) 
         {dokumentasiList.length > 0 ? (
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
             {dokumentasiList.map((item, index) => {
-              // Use the first gallery image as the cover, or fallback to main image
-              const coverImage = (item.gallery && item.gallery.length > 0) ? item.gallery[0] : item.image_url;
+              // Use the first gallery image as the cover, or fallback to main/default image
+              const coverImage = getKegiatanPosterUrl(item.image_url, item.type || "event", item.gallery);
+              const isDefault = isDefaultPosterPath(coverImage);
               const photoCount = Array.isArray(item.gallery) ? item.gallery.filter(Boolean).length : 0;
               const isDrive = item.video_url && item.video_url.includes("drive.google.com");
 
@@ -66,11 +72,13 @@ export default function DokumentasiClient({ data }: { data: AgendaKegiatan[] }) 
                     className="group block bg-surface rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:ring-2 hover:ring-primary/40 transition-all duration-300 relative"
                   >
                     {/* Image */}
-                    <div className="relative overflow-hidden bg-surface-variant">
+                    <div className={`relative overflow-hidden ${isDefault ? getDefaultPosterBgClass(item.type || "event") : "bg-surface-variant"}`}>
                       <img 
-                        src={coverImage || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} 
+                        src={coverImage} 
                         alt={item.title} 
-                        className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700" 
+                        className={`w-full group-hover:scale-105 transition-transform duration-700 ${
+                          isDefault ? "aspect-video object-contain" : "h-auto object-cover"
+                        }`}
                         loading="lazy"
                       />
                       

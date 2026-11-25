@@ -2,12 +2,17 @@ import React from "react";
 import Link from "next/link";
 import { getKegiatans, deleteKegiatan } from "@/app/(internal)/admin/kegiatan/actions";
 import { requireAdmin } from "@/lib/auth";
-import { FiPlus, FiEdit2, FiTrash2, FiImage, FiAlertTriangle, FiCheckCircle } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiTrash2, FiAlertTriangle, FiCheckCircle } from "react-icons/fi";
 import { revalidatePath } from "next/cache";
 import DeleteButton from "@/app/(internal)/admin/kegiatan/DeleteButton";
 import BroadcastKegiatanButton from "@/app/(internal)/admin/kegiatan/BroadcastKegiatanButton";
 import AddDocumentationButton from "./AddDocumentationButton";
 import { formatDateToIndo } from "@/utils/dateFormatter";
+import {
+  getDefaultPosterBgClass,
+  getKegiatanPosterUrl,
+  isDefaultPosterPath,
+} from "@/lib/default-posters";
 
 const getEventStatus = (item: any) => {
   if (!item.date) return "Akan Datang";
@@ -98,13 +103,29 @@ export default async function DokumentasiAdminPage() {
                   <tr key={item.id} className="hover:bg-surface-variant/10 transition-colors">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-surface-variant/50 overflow-hidden shrink-0 flex items-center justify-center">
-                          {(item.image_url || (item.gallery && item.gallery.length > 0 ? item.gallery[0] : null)) ? (
-                            <img src={item.image_url || (item.gallery && item.gallery[0]) || ""} alt={item.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <FiImage className="text-on-surface-variant/50 text-xl" />
-                          )}
-                        </div>
+                        {(() => {
+                          const thumbUrl = getKegiatanPosterUrl(
+                            item.image_url,
+                            item.type || "event",
+                            item.gallery
+                          );
+                          const isDefault = isDefaultPosterPath(thumbUrl);
+                          return (
+                            <div
+                              className={`w-12 h-12 rounded-xl overflow-hidden shrink-0 flex items-center justify-center ${
+                                isDefault
+                                  ? getDefaultPosterBgClass(item.type || "event")
+                                  : "bg-surface-variant/50"
+                              }`}
+                            >
+                              <img
+                                src={thumbUrl}
+                                alt={item.title}
+                                className={`w-full h-full ${isDefault ? "object-contain" : "object-cover"}`}
+                              />
+                            </div>
+                          );
+                        })()}
                         <div>
                           <p className="font-bold text-sm text-on-surface line-clamp-1">{item.title}</p>
                           <p className="text-xs text-on-surface-variant">{item.category}</p>

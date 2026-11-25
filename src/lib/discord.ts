@@ -10,6 +10,7 @@ import {
   formatWibDateTime,
   formatWibDeadline,
 } from "@/lib/notification-utils";
+import { isDefaultPosterPath, isSvgImageUrl } from "@/lib/default-posters";
 import type { BeritaNotificationPayload } from "@/lib/telegram";
 
 export type DiscordChannelTarget = "berita" | "pengumuman";
@@ -464,7 +465,11 @@ export async function sendDiscordKegiatanNotification(
       inline: false,
     });
   }
-  const validImageUrl = isValidHttpUrl(kegiatan.image_url) || isValidHttpUrl(galleryFirst);
+  const rawCandidateImage =
+    !isDefaultPosterPath(kegiatan.image_url) && !isSvgImageUrl(kegiatan.image_url)
+      ? kegiatan.image_url
+      : null;
+  const validImageUrl = isValidHttpUrl(rawCandidateImage) || isValidHttpUrl(galleryFirst);
 
   const cleanDesc = truncateText(stripHtml(kegiatan.description || ""), 360);
   const descBody = cleanDesc

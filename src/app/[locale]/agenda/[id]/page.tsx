@@ -2,9 +2,16 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { getKegiatanById, getVolunteerParticipantCount } from "@/app/(internal)/admin/kegiatan/actions";
 import AgendaDetailClient from "./AgendaDetailClient";
+import {
+  DEFAULT_OG_RASTER_IMAGE,
+  isDefaultPosterPath,
+  isSvgImageUrl,
+} from "@/lib/default-posters";
 
 function getValidOgImage(url?: string | null): string {
-  if (!url) return "https://bem.stmik.tazkia.ac.id/images/logo2.webp";
+  if (!url || isDefaultPosterPath(url) || isSvgImageUrl(url)) {
+    return DEFAULT_OG_RASTER_IMAGE;
+  }
   const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
   if (driveMatch && driveMatch[1]) {
     return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1200`;

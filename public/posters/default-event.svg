@@ -1,0 +1,292 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" role="img" aria-label="Poster Bawaan Agenda dan Event BEM STMIK Tazkia">
+  <defs>
+    <!-- Gradien Background Dominan Deep Royal Navy Mulus -->
+    <linearGradient id="ev-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#040B1F" />
+      <stop offset="48%" stop-color="#0F2458" />
+      <stop offset="100%" stop-color="#081538" />
+    </linearGradient>
+
+    <!-- Aura Glow Biru Sapphire Halus -->
+    <radialGradient id="ev-orb1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.42" />
+      <stop offset="55%" stop-color="#1D4ED8" stop-opacity="0.16" />
+      <stop offset="100%" stop-color="#0F2458" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Aura Glow Vibrant Orange Hangat -->
+    <radialGradient id="ev-orb2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F97316" stop-opacity="0.52" />
+      <stop offset="55%" stop-color="#EA580C" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#EA580C" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Gradien Pelat Highlight Vibrant Orange -->
+    <linearGradient id="ev-orange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDBA74" />
+      <stop offset="45%" stop-color="#F97316" />
+      <stop offset="100%" stop-color="#EA580C" />
+    </linearGradient>
+
+    <!-- Gradien Emas-Oranye untuk Piala dan Kilau -->
+    <linearGradient id="ev-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="50%" stop-color="#FDBA74" />
+      <stop offset="100%" stop-color="#F97316" />
+    </linearGradient>
+
+    <!-- Gradien Kartu Kalender Glassmorphism Premium -->
+    <linearGradient id="ev-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A" stop-opacity="0.78" />
+      <stop offset="100%" stop-color="#071330" stop-opacity="0.92" />
+    </linearGradient>
+
+    <!-- Gradien Kilau Cahaya Diagonal -->
+    <linearGradient id="ev-shimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0" />
+      <stop offset="50%" stop-color="#FFF7ED" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Pola Dot Matrix Halus Tanpa Garis Kasar -->
+    <pattern id="ev-dots" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="4" r="1.25" fill="#93C5FD" fill-opacity="0.22" />
+    </pattern>
+
+    <!-- Drop Shadow Dalam dan Bersih -->
+    <filter id="ev-shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#020617" flood-opacity="0.48" />
+    </filter>
+
+    <clipPath id="ev-clip">
+      <rect width="800" height="450" rx="0" />
+    </clipPath>
+  </defs>
+
+  <style><![CDATA[
+    .ev-orb-a { animation: ev-driftA 8.5s ease-in-out infinite alternate; }
+    .ev-orb-b { animation: ev-driftB 10.5s ease-in-out infinite alternate; }
+    .ev-dots-move { animation: ev-dotSlide 14s linear infinite; }
+    .ev-pulse1 { transform-origin: 605px 225px; animation: ev-ringPulse 3.6s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+    .ev-pulse2 { transform-origin: 605px 225px; animation: ev-ringPulse 3.6s cubic-bezier(0.16, 1, 0.3, 1) 1.8s infinite; }
+    .ev-orbit-cw { transform-origin: 605px 225px; animation: ev-spin 20s linear infinite; }
+    .ev-orbit-ccw { transform-origin: 605px 225px; animation: ev-spinRev 13s linear infinite; }
+    .ev-float-card { animation: ev-bob 4.2s ease-in-out infinite; }
+    .ev-float-trophy { animation: ev-bobTrophy 3.6s ease-in-out infinite; }
+    .ev-float-pill { animation: ev-bobPill 4.5s ease-in-out 0.6s infinite; }
+    .ev-spark1 { transform-box: fill-box; transform-origin: center; animation: ev-twinkle 2.4s ease-in-out infinite; }
+    .ev-spark2 { transform-box: fill-box; transform-origin: center; animation: ev-twinkle 3.1s ease-in-out 0.8s infinite; }
+    .ev-spark3 { transform-box: fill-box; transform-origin: center; animation: ev-twinkle 2.7s ease-in-out 1.4s infinite; }
+    .ev-day-hi1 { animation: ev-cellGlow 3.2s ease-in-out infinite; }
+    .ev-day-hi2 { animation: ev-cellGlow 3.2s ease-in-out 1.1s infinite; }
+    .ev-day-hi3 { animation: ev-cellGlow 3.2s ease-in-out 2.2s infinite; }
+    .ev-rise1 { animation: ev-riseUp 6.8s linear infinite; }
+    .ev-rise2 { animation: ev-riseUp 8.5s linear 2.2s infinite; }
+    .ev-rise3 { animation: ev-riseUp 6.2s linear 4.0s infinite; }
+    .ev-sheen { animation: ev-sweep 6.4s ease-in-out infinite; }
+    .ev-bar-glow { animation: ev-barSlide 3.4s ease-in-out infinite alternate; }
+    .ev-chev1 { animation: ev-chevPulse 1.5s ease-in-out infinite; }
+    .ev-chev2 { animation: ev-chevPulse 1.5s ease-in-out 0.25s infinite; }
+    .ev-chev3 { animation: ev-chevPulse 1.5s ease-in-out 0.5s infinite; }
+    .ev-scan { animation: ev-scanBar 4.2s ease-in-out infinite; }
+
+    @keyframes ev-driftA {
+      0% { transform: translate(0px, 0px) scale(1); }
+      100% { transform: translate(40px, 24px) scale(1.14); }
+    }
+    @keyframes ev-driftB {
+      0% { transform: translate(0px, 0px) scale(1); }
+      100% { transform: translate(-36px, -22px) scale(1.14); }
+    }
+    @keyframes ev-dotSlide {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-28px, -28px); }
+    }
+    @keyframes ev-ringPulse {
+      0% { transform: scale(0.45); opacity: 0.78; stroke-width: 2.5px; }
+      100% { transform: scale(1.38); opacity: 0; stroke-width: 0.6px; }
+    }
+    @keyframes ev-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes ev-spinRev {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+    @keyframes ev-bob {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-11px); }
+    }
+    @keyframes ev-bobTrophy {
+      0%, 100% { transform: translateY(0px) rotate(-4deg); }
+      50% { transform: translateY(-14px) rotate(5deg); }
+    }
+    @keyframes ev-bobPill {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-9px); }
+    }
+    @keyframes ev-twinkle {
+      0%, 100% { transform: scale(0.65) rotate(0deg); opacity: 0.4; }
+      50% { transform: scale(1.3) rotate(45deg); opacity: 1; }
+    }
+    @keyframes ev-cellGlow {
+      0%, 100% { fill-opacity: 0.3; }
+      50% { fill-opacity: 1; }
+    }
+    @keyframes ev-riseUp {
+      0% { transform: translateY(40px); opacity: 0; }
+      20% { opacity: 0.85; }
+      80% { opacity: 0.7; }
+      100% { transform: translateY(-380px); opacity: 0; }
+    }
+    @keyframes ev-sweep {
+      0%, 56% { transform: translateX(-320px) skewX(-24deg); opacity: 0; }
+      70% { opacity: 1; }
+      95% { transform: translateX(1080px) skewX(-24deg); opacity: 0.85; }
+      100% { transform: translateX(1080px) skewX(-24deg); opacity: 0; }
+    }
+    @keyframes ev-barSlide {
+      0% { transform: translateX(0px); }
+      100% { transform: translateX(56px); }
+    }
+    @keyframes ev-chevPulse {
+      0%, 100% { opacity: 0.3; transform: translateX(0px); }
+      50% { opacity: 1; transform: translateX(6px); }
+    }
+    @keyframes ev-scanBar {
+      0% { transform: translateX(-240px); }
+      100% { transform: translateX(860px); }
+    }
+  ]]></style>
+
+  <g clip-path="url(#ev-clip)">
+    <!-- 1. Latar Belakang Gradien Navy Mulus -->
+    <rect width="800" height="450" fill="url(#ev-bg)" />
+
+    <!-- 2. Dot Matrix Halus Bergerak -->
+    <g class="ev-dots-move">
+      <rect x="0" y="0" width="860" height="510" fill="url(#ev-dots)" />
+    </g>
+
+    <!-- 3. Aura Cahaya Berlapis Navy &amp; Vibrant Orange -->
+    <circle class="ev-orb-a" cx="170" cy="110" r="240" fill="url(#ev-orb1)" />
+    <circle class="ev-orb-b" cx="620" cy="245" r="235" fill="url(#ev-orb2)" />
+    <circle class="ev-orb-a" cx="560" cy="120" r="175" fill="url(#ev-orb1)" />
+
+    <!-- 4. Aksen Sudut Halus -->
+    <path d="M24 52 L24 24 L52 24" fill="none" stroke="#F97316" stroke-opacity="0.75" stroke-width="2.6" stroke-linecap="round" />
+    <path d="M776 398 L776 426 L748 426" fill="none" stroke="#FB923C" stroke-opacity="0.7" stroke-width="2.6" stroke-linecap="round" />
+
+    <!-- 5. Partikel Cahaya Melayang Naik -->
+    <g>
+      <circle class="ev-rise1" cx="445" cy="430" r="3.8" fill="#FB923C" />
+      <g class="ev-rise2">
+        <rect x="735" y="420" width="7" height="7" rx="1.5" fill="#FEF08A" transform="rotate(45 738 423)" />
+      </g>
+      <circle class="ev-rise3" cx="515" cy="440" r="2.8" fill="#FFFFFF" />
+      <circle class="ev-rise2" cx="320" cy="440" r="3.2" fill="#F97316" />
+    </g>
+
+    <!-- 6. VISUAL KANAN UPGRADED: PULSA CAHAYA + ORBIT GANDA + KALENDER 3D + PIALA + LIVE BADGE -->
+    <g>
+      <!-- Gelombang Pulse Halus -->
+      <circle class="ev-pulse1" cx="605" cy="225" r="132" fill="none" stroke="#F97316" />
+      <circle class="ev-pulse2" cx="605" cy="225" r="132" fill="none" stroke="#60A5FA" />
+
+      <!-- Orbit Luar Berputar Searah Jarum Jam -->
+      <g class="ev-orbit-cw">
+        <circle cx="605" cy="225" r="152" fill="none" stroke="#FB923C" stroke-opacity="0.42" stroke-width="1.8" stroke-dasharray="16 11" />
+        <circle cx="757" cy="225" r="6.5" fill="#F97316" stroke="#FFF7ED" stroke-width="2" />
+        <circle cx="453" cy="225" r="4.8" fill="#FEF08A" />
+      </g>
+
+      <!-- Orbit Dalam Berputar Berlawanan -->
+      <g class="ev-orbit-ccw">
+        <circle cx="605" cy="225" r="118" fill="none" stroke="#93C5FD" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="5 9" />
+        <circle cx="605" cy="107" r="5.5" fill="#FDBA74" />
+        <circle cx="605" cy="343" r="4.5" fill="#60A5FA" />
+      </g>
+
+      <!-- Kartu Kalender 3D Glassmorphism Melayang -->
+      <g class="ev-float-card" filter="url(#ev-shadow)">
+        <rect x="522" y="138" width="166" height="172" rx="26" fill="url(#ev-glass)" stroke="url(#ev-orange)" stroke-width="2.2" />
+        <!-- Header Kalender Gradien Orange -->
+        <path d="M522 164 C522 149.6 533.6 138 548 138 L662 138 C676.4 138 688 149.6 688 164 L688 186 L522 186 Z" fill="url(#ev-orange)" />
+        <!-- Ring Pengait Kalender -->
+        <rect x="556" y="124" width="12" height="28" rx="6" fill="#FFF7ED" stroke="#0F2458" stroke-width="1.5" />
+        <rect x="642" y="124" width="12" height="28" rx="6" fill="#FFF7ED" stroke="#0F2458" stroke-width="1.5" />
+        <!-- Aksen Garis Header -->
+        <circle cx="605" cy="164" r="4" fill="#071330" />
+        <rect x="577" y="161" width="18" height="6" rx="3" fill="#FFF7ED" fill-opacity="0.9" />
+        <rect x="615" y="161" width="18" height="6" rx="3" fill="#FFF7ED" fill-opacity="0.9" />
+
+        <!-- Grid Tanggal dengan Highlight Menyala -->
+        <rect x="543" y="204" width="24" height="20" rx="6" fill="#FFFFFF" fill-opacity="0.16" />
+        <rect class="ev-day-hi1" x="575" y="204" width="24" height="20" rx="6" fill="#F97316" />
+        <rect x="607" y="204" width="24" height="20" rx="6" fill="#FFFFFF" fill-opacity="0.16" />
+        <rect x="639" y="204" width="24" height="20" rx="6" fill="#FFFFFF" fill-opacity="0.16" />
+
+        <rect x="543" y="234" width="24" height="20" rx="6" fill="#FFFFFF" fill-opacity="0.16" />
+        <rect x="575" y="234" width="24" height="20" rx="6" fill="#FFFFFF" fill-opacity="0.16" />
+        <rect class="ev-day-hi2" x="607" y="234" width="24" height="20" rx="6" fill="#FEF08A" />
+        <rect x="639" y="234" width="24" height="20" rx="6" fill="#FFFFFF" fill-opacity="0.16" />
+
+        <rect x="543" y="264" width="24" height="20" rx="6" fill="#FFFFFF" fill-opacity="0.16" />
+        <rect x="575" y="264" width="24" height="20" rx="6" fill="#FFFFFF" fill-opacity="0.16" />
+        <rect x="607" y="264" width="24" height="20" rx="6" fill="#FFFFFF" fill-opacity="0.16" />
+        <rect class="ev-day-hi3" x="639" y="264" width="24" height="20" rx="6" fill="#FB923C" />
+      </g>
+
+      <!-- Medali Piala Emas-Oranye Melayang (Kanan Atas) -->
+      <g class="ev-float-trophy" filter="url(#ev-shadow)">
+        <circle cx="692" cy="140" r="33" fill="#071330" stroke="url(#ev-gold)" stroke-width="3" />
+        <path d="M678 127 H706 V136 C706 144 700 150 692 150 C684 150 678 144 678 136 Z" fill="url(#ev-gold)" />
+        <path d="M678 130 H672 C672 137 675 140 679 140" fill="none" stroke="#FDBA74" stroke-width="2.4" stroke-linecap="round" />
+        <path d="M706 130 H712 C712 137 709 140 705 140" fill="none" stroke="#FDBA74" stroke-width="2.4" stroke-linecap="round" />
+        <rect x="689" y="149" width="6" height="7" fill="#EA580C" />
+        <rect x="681" y="155" width="22" height="5" rx="2.5" fill="#FEF08A" />
+      </g>
+
+      <!-- Pill Badge Melayang "LIVE EVENT" -->
+      <g class="ev-float-pill" filter="url(#ev-shadow)">
+        <rect x="462" y="298" width="110" height="32" rx="16" fill="#071330" stroke="url(#ev-orange)" stroke-width="2" />
+        <text x="517" y="318.5" text-anchor="middle" fill="#FFF7ED" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" font-weight="800" letter-spacing="0.9">★ LIVE EVENT</text>
+      </g>
+
+      <!-- Bintang Sparkle Berkelip -->
+      <path class="ev-spark1" d="M484 128 L488 138 L498 142 L488 146 L484 156 L480 146 L470 142 L480 138 Z" fill="#FB923C" />
+      <path class="ev-spark2" d="M726 286 L729 293 L736 296 L729 299 L726 306 L723 299 L716 296 L723 293 Z" fill="#FEF08A" />
+      <path class="ev-spark3" d="M510 350 L512.5 356 L518.5 358.5 L512.5 361 L510 367 L507.5 361 L501.5 358.5 L507.5 356 Z" fill="#FFFFFF" />
+    </g>
+
+    <!-- 7. KONTEN KIRI UPGRADED: BERSIH, LANGSUNG JUDUL BOLD -->
+    <g>
+      <text x="52" y="186" fill="#FFFFFF" filter="url(#ev-shadow)" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="52" font-weight="800" letter-spacing="-1">AGENDA &amp;</text>
+
+      <g filter="url(#ev-shadow)">
+        <rect x="48" y="204" width="376" height="68" rx="16" fill="url(#ev-orange)" stroke="#FED7AA" stroke-opacity="0.7" stroke-width="1.8" />
+        <text x="66" y="253" fill="#071330" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="40" font-weight="800" letter-spacing="-0.6">EVENT KAMPUS</text>
+      </g>
+
+      <!-- Garis Aksen Kinetik + Chevron Berdenyut -->
+      <g transform="translate(52, 296)">
+        <rect x="0" y="5" width="136" height="6" rx="3" fill="#1E3A8A" />
+        <rect class="ev-bar-glow" x="0" y="5" width="80" height="6" rx="3" fill="url(#ev-orange)" />
+
+        <g transform="translate(156, 0)" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path class="ev-chev1" d="M0 0 L8 8 L0 16" stroke="#EA580C" />
+          <path class="ev-chev2" d="M12 0 L20 8 L12 16" stroke="#FB923C" />
+          <path class="ev-chev3" d="M24 0 L32 8 L24 16" stroke="#FEF08A" />
+        </g>
+      </g>
+    </g>
+
+    <!-- 8. Garis Scan Energi Bawah -->
+    <rect x="0" y="444" width="800" height="6" fill="#040B1F" />
+    <rect class="ev-scan" x="0" y="444" width="220" height="6" rx="3" fill="url(#ev-orange)" />
+
+    <!-- 9. Sapuan Cahaya Kilau Diagonal -->
+    <rect class="ev-sheen" x="0" y="-40" width="170" height="530" fill="url(#ev-shimmer)" />
+  </g>
+</svg>

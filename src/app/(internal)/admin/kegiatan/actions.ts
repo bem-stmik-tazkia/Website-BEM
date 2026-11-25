@@ -14,6 +14,7 @@ import {
 } from "@/lib/registration-utils";
 import { hasAnyFormQuestions } from "@/lib/registration-validation";
 import type { SupabaseServerClient } from "@/lib/auth";
+import { isDefaultPosterPath } from "@/lib/default-posters";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -287,7 +288,10 @@ export async function saveKegiatan(
       date: data.date || null,
       end_date: data.end_date || null,
       location: data.location || null,
-      image_url: data.image_url || "",
+      image_url:
+        data.image_url && !isDefaultPosterPath(data.image_url)
+          ? data.image_url.trim() || null
+          : null,
       registration_link: data.registration_link || "",
       description: data.description || "",
       category: data.category || "",

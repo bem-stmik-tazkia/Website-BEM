@@ -5,6 +5,12 @@ import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import SafeLottie from "@/components/ui/SafeLottie";
+import {
+  getDefaultPosterBgClass,
+  getKegiatanPosterUrl,
+  isDefaultPosterPath,
+  isSvgImageUrl,
+} from "@/lib/default-posters";
 
 // ============================================================
 // DATA (Now fetched dynamically)
@@ -93,7 +99,12 @@ function DocCard({ item }: { item: any }) {
           alt={item.judul}
           fill
           priority
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          unoptimized={isSvgImageUrl(item.image)}
+          className={`transition-transform duration-500 group-hover:scale-105 ${
+            isDefaultPosterPath(item.image)
+              ? `${getDefaultPosterBgClass("event")} object-contain`
+              : "object-cover"
+          }`}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
 
@@ -258,7 +269,7 @@ export default function DokumentasiClient({ initialData }: { initialData: any[] 
         mediaCount: photosCount,
         video_url: item.video_url || null,
         hasVideo: typeof item.video_url === 'string' && item.video_url.trim().length > 0,
-        image: item.image_url || ((item.gallery && item.gallery.length > 0) ? item.gallery[0] : "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"),
+        image: getKegiatanPosterUrl(item.image_url, item.type || "event", item.gallery),
         tags: [(item.category || "event").toLowerCase(), "semua"]
       };
     });

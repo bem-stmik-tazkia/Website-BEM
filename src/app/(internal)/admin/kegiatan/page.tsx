@@ -8,6 +8,11 @@ import DeleteButton from "./DeleteButton";
 import BroadcastKegiatanButton from "./BroadcastKegiatanButton";
 import { formatDateToIndo, formatDeadlineWib } from "@/utils/dateFormatter";
 import { hasAnyFormQuestions, isDeadlinePassedJakarta } from "@/lib/registration-validation";
+import {
+  getDefaultPosterBgClass,
+  getKegiatanPosterUrl,
+  isDefaultPosterPath,
+} from "@/lib/default-posters";
 
 const getEventStatus = (item: any) => {
   if (item.type === 'volunteer') {
@@ -178,13 +183,25 @@ export default async function KegiatanAdminPage({
                   <tr key={item.id} className="hover:bg-surface-variant/10 transition-colors">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-surface-variant/50 overflow-hidden shrink-0 flex items-center justify-center">
-                          {item.image_url ? (
-                            <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <FiCalendar className="text-on-surface-variant/50 text-xl" />
-                          )}
-                        </div>
+                        {(() => {
+                          const thumbUrl = getKegiatanPosterUrl(item.image_url, item.type);
+                          const isDefault = isDefaultPosterPath(thumbUrl);
+                          return (
+                            <div
+                              className={`w-12 h-12 rounded-xl overflow-hidden shrink-0 flex items-center justify-center ${
+                                isDefault
+                                  ? getDefaultPosterBgClass(item.type)
+                                  : "bg-surface-variant/50"
+                              }`}
+                            >
+                              <img
+                                src={thumbUrl}
+                                alt={item.title}
+                                className={`w-full h-full ${isDefault ? "object-contain" : "object-cover"}`}
+                              />
+                            </div>
+                          );
+                        })()}
                         <div>
                           <p className="font-bold text-sm text-on-surface line-clamp-1">{item.title}</p>
                           <p className="text-xs text-on-surface-variant">{item.category}</p>

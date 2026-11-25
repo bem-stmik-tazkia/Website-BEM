@@ -12,6 +12,12 @@ import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 import { AgendaKegiatan } from "@/types/agenda";
 import { formatDateToIndo, formatDeadlineWib } from "@/utils/dateFormatter";
+import {
+  getDefaultPosterBgClass,
+  getKegiatanPosterUrl,
+  isDefaultPosterPath,
+  isSvgImageUrl,
+} from "@/lib/default-posters";
 
 // --- MAIN COMPONENT ---
 
@@ -346,10 +352,22 @@ export default function EventVolunteer({
                     if (info.offset.x > 40) prevLive();
                   }}
                 >
-                  <div
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 pointer-events-none"
-                    style={{ backgroundImage: `url('${liveEvents[activeLive].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"}')` }}
-                  />
+                  {(() => {
+                    const livePoster = getKegiatanPosterUrl(liveEvents[activeLive].image_url, "event");
+                    const isDefault = isDefaultPosterPath(livePoster);
+                    return (
+                      <Image
+                        src={livePoster}
+                        alt={liveEvents[activeLive].title}
+                        fill
+                        unoptimized={isSvgImageUrl(livePoster)}
+                        sizes="100vw"
+                        className={`w-full h-full transition-transform duration-700 group-hover:scale-105 pointer-events-none ${
+                          isDefault ? `${getDefaultPosterBgClass("event")} object-cover` : "object-cover"
+                        }`}
+                      />
+                    );
+                  })()}
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/75 to-primary/20 pointer-events-none" />
 
                   {/* Content */}
@@ -512,7 +530,25 @@ export default function EventVolunteer({
                         }
                       }}
                     >
-                      <Image src={upcomingEvents[active].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={upcomingEvents[active].title} fill sizes="(max-width: 768px) 100vw, 33vw" className="w-full h-full object-cover select-none" draggable={false} />
+                      {(() => {
+                        const upcomingPoster = getKegiatanPosterUrl(upcomingEvents[active].image_url, "event");
+                        const isDefault = isDefaultPosterPath(upcomingPoster);
+                        return (
+                          <Image
+                            src={upcomingPoster}
+                            alt={upcomingEvents[active].title}
+                            fill
+                            unoptimized={isSvgImageUrl(upcomingPoster)}
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className={`w-full h-full select-none ${
+                              isDefault
+                                ? `${getDefaultPosterBgClass("event")} object-contain object-top pt-2 pb-14`
+                                : "object-cover"
+                            }`}
+                            draggable={false}
+                          />
+                        );
+                      })()}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                       <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-20">
                         {(translatedUpcoming[active] ?? upcomingEvents[active]).category}
@@ -648,7 +684,25 @@ export default function EventVolunteer({
                         }
                       }}
                     >
-                      <Image src={volunteerOpportunities[activeVol].image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={volunteerOpportunities[activeVol].title} fill sizes="(max-width: 768px) 100vw, 33vw" className="w-full h-full object-cover select-none" draggable={false} />
+                      {(() => {
+                        const volPoster = getKegiatanPosterUrl(volunteerOpportunities[activeVol].image_url, "volunteer");
+                        const isDefault = isDefaultPosterPath(volPoster);
+                        return (
+                          <Image
+                            src={volPoster}
+                            alt={volunteerOpportunities[activeVol].title}
+                            fill
+                            unoptimized={isSvgImageUrl(volPoster)}
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className={`w-full h-full select-none ${
+                              isDefault
+                                ? `${getDefaultPosterBgClass("volunteer")} object-contain object-top pt-2 pb-14`
+                                : "object-cover"
+                            }`}
+                            draggable={false}
+                          />
+                        );
+                      })()}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
                       
                       {/* Loading Overlay */}
@@ -802,7 +856,25 @@ export default function EventVolunteer({
                         }
                       }}
                     >
-                      <Image src={pastEvents[activePast].image_url || pastEvents[activePast].gallery?.[0] || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80"} alt={pastEvents[activePast].title} fill sizes="(max-width: 768px) 100vw, 33vw" className="w-full h-full object-cover grayscale select-none" draggable={false} />
+                      {(() => {
+                        const pastPoster = getKegiatanPosterUrl(pastEvents[activePast].image_url, "event", pastEvents[activePast].gallery);
+                        const isDefault = isDefaultPosterPath(pastPoster);
+                        return (
+                          <Image
+                            src={pastPoster}
+                            alt={pastEvents[activePast].title}
+                            fill
+                            unoptimized={isSvgImageUrl(pastPoster)}
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className={`w-full h-full grayscale select-none ${
+                              isDefault
+                                ? `${getDefaultPosterBgClass("event")} object-contain object-top pt-2 pb-12`
+                                : "object-cover"
+                            }`}
+                            draggable={false}
+                          />
+                        );
+                      })()}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
                       <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-sm text-secondary text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm z-20">
                         {(translatedPast[activePast] ?? pastEvents[activePast]).category}

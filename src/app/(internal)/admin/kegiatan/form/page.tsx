@@ -14,6 +14,7 @@ import { createClient } from "@/utils/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
 import { combineDeadlineWib, splitDeadlineWib } from "@/lib/registration-utils";
 import { formatDeadlineWib } from "@/utils/dateFormatter";
+import { getDefaultPosterPath, isDefaultPosterPath } from "@/lib/default-posters";
 
 const DEADLINE_TIME_PRESETS = ["17:00", "21:00", "23:59"] as const;
 
@@ -221,6 +222,10 @@ export default function KegiatanFormPage() {
           setExpandedExtraMap(initialExpanded);
           const normalizedData: KegiatanFormInput = {
             ...data,
+            image_url:
+              data.image_url && !isDefaultPosterPath(data.image_url)
+                ? data.image_url
+                : "",
             allow_multiple_items: data.allow_multiple_items !== false,
             items: cleanItems,
           };
@@ -353,8 +358,6 @@ export default function KegiatanFormPage() {
     
     // --- VALIDASI FORM CUSTOM ---
     const newErrors: Record<string, string> = {};
-    
-    if (!formData.image_url?.trim()) newErrors.image_url = "Poster / Gambar Header wajib diisi";
 
     if (formData.type === 'event' || formData.type === 'dokumentasi') {
       if (!formData.title?.trim()) newErrors.title = "Judul kegiatan wajib diisi";
@@ -637,7 +640,7 @@ export default function KegiatanFormPage() {
             {formData.type === "volunteer" ? (
               <ol className="list-decimal list-inside space-y-0.5 text-emerald-900/90">
                 <li>
-                  Isi <strong>Poster</strong>, <strong>Judul Program Oprec</strong> (misal: <em>Oprec Panitia Tazkia Fest</em>), <strong>Kategori</strong>, dan <strong>Deadline</strong>.
+                  Isi <strong>Judul Program Oprec</strong> (misal: <em>Oprec Panitia Tazkia Fest</em>), <strong>Kategori</strong>, dan <strong>Deadline</strong> (<strong>Poster</strong> opsional — otomatis pakai poster animasi bawaan jika kosong).
                 </li>
                 <li>
                   Jika membuka banyak posisi (A, B, dst.), klik <strong>+ Tambah Posisi</strong> lalu isi nama &amp; jumlah orang yang dibutuhkan di tiap posisi.
@@ -652,7 +655,7 @@ export default function KegiatanFormPage() {
             ) : (
               <ol className="list-decimal list-inside space-y-0.5 text-blue-900/90">
                 <li>
-                  Isi <strong>Poster</strong>, <strong>Judul Event / Lomba</strong>, <strong>Tanggal</strong>, <strong>Jam</strong>, dan <strong>Lokasi</strong>.
+                  Isi <strong>Judul Event / Lomba</strong>, <strong>Tanggal</strong>, <strong>Jam</strong>, dan <strong>Lokasi</strong> (<strong>Poster</strong> opsional — otomatis pakai poster animasi bawaan jika kosong).
                 </li>
                 <li>
                   Jika butuh pendaftaran peserta atau berisi berbagai cabang lomba, aktifkan toggle <strong>Wajibkan Pendaftaran (RSVP / Lomba)</strong> di bagian Detail Ekstra.
@@ -776,8 +779,11 @@ export default function KegiatanFormPage() {
             <h3 className="text-lg font-bold text-on-surface border-b border-outline-variant/30 pb-2">Informasi Dasar</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-              <div id="field-image_url" className="md:col-span-4 space-y-2">
-                <label className="text-sm font-bold text-on-surface">Poster / Gambar Header <span className="text-red-500">*</span></label>
+              <div id="field-image_url" className="md:col-span-4 space-y-3">
+                <label className="text-sm font-bold text-on-surface flex items-center gap-1.5">
+                  <span>Poster / Gambar Header</span>
+                  <span className="font-normal text-on-surface-variant text-xs">(Opsional)</span>
+                </label>
                 <ImageUpload 
                   value={formData.image_url || ""}
                   onChange={(url) => {
@@ -789,6 +795,38 @@ export default function KegiatanFormPage() {
                   folder="kegiatan"
                   className="w-full"
                 />
+                {!formData.image_url?.trim() && (
+                  <div className="p-3 rounded-2xl border border-outline-variant/40 bg-background space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                          formData.type === "volunteer"
+                            ? "bg-orange-50 text-orange-700 border-orange-200"
+                            : "bg-blue-50 text-[#0F2458] border-blue-200"
+                        }`}
+                      >
+                        {formData.type === "volunteer"
+                          ? "Poster Bawaan Oprec (Animasi)"
+                          : "Poster Bawaan Event (Animasi)"}
+                      </span>
+                      <span className="text-[10px] text-on-surface-variant">16:9 SVG</span>
+                    </div>
+                    <div className="aspect-video w-full rounded-xl overflow-hidden border border-outline-variant/30 shadow-xs bg-[#071330]">
+                      <img
+                        src={getDefaultPosterPath(formData.type)}
+                        alt={
+                          formData.type === "volunteer"
+                            ? "Preview Poster Bawaan Oprec"
+                            : "Preview Poster Bawaan Event"
+                        }
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                      Karena foto tidak diupload, sistem otomatis menampilkan poster animasi ini di halaman publik.
+                    </p>
+                  </div>
+                )}
                 {formErrors.image_url && <p className="text-xs text-red-500 mt-1">{formErrors.image_url}</p>}
               </div>
 
