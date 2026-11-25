@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { getKegiatans, deleteKegiatan } from "./actions";
 import { requireAdmin } from "@/lib/auth";
-import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiClock, FiCheckCircle, FiXCircle } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiClock, FiCheckCircle, FiXCircle, FiUsers } from "react-icons/fi";
 import { revalidatePath } from "next/cache";
 import DeleteButton from "./DeleteButton";
 import BroadcastKegiatanButton from "./BroadcastKegiatanButton";
@@ -89,12 +89,20 @@ export default async function KegiatanAdminPage({
             <Link href="/admin/kegiatan?filter=agenda" className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === "agenda" ? "bg-blue-50 text-blue-600" : "text-on-surface-variant hover:text-blue-600"}`}>Agenda</Link>
             <Link href="/admin/kegiatan?filter=volunteer" className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === "volunteer" ? "bg-emerald-50 text-emerald-600" : "text-on-surface-variant hover:text-emerald-600"}`}>Oprec</Link>
           </div>
-          <Link 
-            href="/admin/kegiatan/form" 
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all hover:shadow-md"
-          >
-            <FiPlus size={18} /> <span className="hidden sm:inline">Tambah Kegiatan</span>
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link 
+              href="/admin/kegiatan/form?type=event" 
+              className="flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all hover:shadow-md"
+            >
+              <FiPlus size={17} /> <span>Tambah Event / Lomba</span>
+            </Link>
+            <Link 
+              href="/admin/kegiatan/form?type=volunteer" 
+              className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all hover:shadow-md"
+            >
+              <FiUsers size={16} /> <span>Tambah Oprec / Volunteer</span>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -113,8 +121,28 @@ export default async function KegiatanAdminPage({
             <tbody className="divide-y divide-outline-variant/30">
               {kegiatans.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-on-surface-variant">
-                    Belum ada data kegiatan.
+                  <td colSpan={5} className="p-10 text-center text-on-surface-variant space-y-3">
+                    <p className="font-semibold text-on-surface">
+                      {filter === "volunteer"
+                        ? "Belum ada Open Recruitment / Volunteer."
+                        : filter === "agenda"
+                        ? "Belum ada Agenda / Event / Lomba."
+                        : "Belum ada data kegiatan."}
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <Link
+                        href="/admin/kegiatan/form?type=event"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold bg-primary/10 text-primary px-3.5 py-2 rounded-xl hover:bg-primary hover:text-white transition-colors"
+                      >
+                        <FiPlus size={14} /> Buat Event / Lomba
+                      </Link>
+                      <Link
+                        href="/admin/kegiatan/form?type=volunteer"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-50 text-emerald-700 px-3.5 py-2 rounded-xl hover:bg-emerald-600 hover:text-white transition-colors"
+                      >
+                        <FiUsers size={14} /> Buat Oprec / Volunteer
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ) : (

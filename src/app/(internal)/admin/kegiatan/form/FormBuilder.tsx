@@ -14,12 +14,14 @@ import {
   FiMenu,
   FiList,
   FiX,
+  FiZap,
 } from "react-icons/fi";
 import { DynamicFieldType, DynamicFormField } from "@/types/agenda";
 
 interface FormBuilderProps {
   fields: DynamicFormField[];
   onChange: (fields: DynamicFormField[]) => void;
+  mode?: "event" | "volunteer";
 }
 
 const DEFAULT_LABELS: Record<DynamicFieldType, string> = {
@@ -33,7 +35,44 @@ const DEFAULT_LABELS: Record<DynamicFieldType, string> = {
   image: "Upload Foto / Gambar",
 };
 
-export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
+function createTemplateFields(templateKey: "oprec" | "lomba" | "rsvp"): DynamicFormField[] {
+  const ts = Date.now();
+  const prodiOpts = ["Teknik Informatika", "Sistem Informasi"];
+
+  if (templateKey === "oprec") {
+    return [
+      { id: `field_${ts}_1`, type: "text", label: "Nama Lengkap", required: true, placeholder: "Contoh: Ahmad Fauzi" },
+      { id: `field_${ts}_2`, type: "number", label: "NIM", required: true, placeholder: "Contoh: 24101001" },
+      { id: `field_${ts}_3`, type: "select", label: "Program Studi", required: true, placeholder: "Pilih Program Studi", options: prodiOpts },
+      { id: `field_${ts}_4`, type: "tel", label: "Nomor WhatsApp Aktif", required: true, placeholder: "81234567890" },
+      { id: `field_${ts}_5`, type: "image", label: "Pas Foto / Foto Diri", required: true },
+      { id: `field_${ts}_6`, type: "textarea", label: "Alasan Bergabung & Pengalaman", required: true, placeholder: "Ceritakan singkat motivasi dan pengalamanmu..." },
+      { id: `field_${ts}_7`, type: "file", label: "Link CV / Portofolio (Jika Ada)", required: false, placeholder: "https://drive.google.com/..." },
+    ];
+  }
+
+  if (templateKey === "lomba") {
+    return [
+      { id: `field_${ts}_1`, type: "text", label: "Nama Lengkap / Ketua Tim", required: true, placeholder: "Contoh: Siti Rahmawati" },
+      { id: `field_${ts}_2`, type: "text", label: "Nama Tim & Anggota (Isi '-' jika lomba individu)", required: false, placeholder: "Tim Tazkia — 1. Andi, 2. Budi" },
+      { id: `field_${ts}_3`, type: "number", label: "NIM", required: true, placeholder: "Contoh: 24101001" },
+      { id: `field_${ts}_4`, type: "select", label: "Program Studi", required: true, placeholder: "Pilih Program Studi", options: prodiOpts },
+      { id: `field_${ts}_5`, type: "tel", label: "Nomor WhatsApp Aktif", required: true, placeholder: "81234567890" },
+      { id: `field_${ts}_6`, type: "image", label: "Foto KTM / Kartu Mahasiswa", required: true },
+      { id: `field_${ts}_7`, type: "file", label: "Link Karya / Berkas Pendaftaran", required: false, placeholder: "https://drive.google.com/..." },
+    ];
+  }
+
+  return [
+    { id: `field_${ts}_1`, type: "text", label: "Nama Lengkap", required: true, placeholder: "Contoh: Ahmad Fauzi" },
+    { id: `field_${ts}_2`, type: "number", label: "NIM", required: true, placeholder: "Contoh: 24101001" },
+    { id: `field_${ts}_3`, type: "select", label: "Program Studi", required: true, placeholder: "Pilih Program Studi", options: prodiOpts },
+    { id: `field_${ts}_4`, type: "email", label: "Alamat Email", required: true, placeholder: "nama@student.tazkia.ac.id" },
+    { id: `field_${ts}_5`, type: "tel", label: "Nomor WhatsApp Aktif", required: true, placeholder: "81234567890" },
+  ];
+}
+
+export default function FormBuilder({ fields, onChange, mode = "event" }: FormBuilderProps) {
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -94,6 +133,15 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
     }, 100);
   };
 
+  const applyTemplate = (templateKey: "oprec" | "lomba" | "rsvp") => {
+    if (fields.length > 0) {
+      if (!confirm("Pertanyaan yang sudah ada akan diganti dengan template ini. Lanjutkan?")) {
+        return;
+      }
+    }
+    onChange(createTemplateFields(templateKey));
+  };
+
   const removeField = (id: string) => {
     onChange(fields.filter((f) => f.id !== id));
   };
@@ -130,10 +178,14 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div>
           <label className="text-sm font-bold text-on-surface block">
-            Penyusun Formulir (Dynamic Form Builder)
+            Penyusun Formulir Pendaftaran (Form Builder)
           </label>
           <p className="text-xs text-on-surface-variant">
-            Susun pertanyaan formulir bersama yang diisi pendaftar. Kolom Pilihan Posisi / Cabang Lomba akan tampil otomatis di bagian atas formulir.
+            Susun pertanyaan yang harus diisi pendaftar.{" "}
+            <strong className="text-on-surface">
+              Kolom pilih {mode === "volunteer" ? "Posisi" : "Cabang Lomba"} tidak perlu dibuat di sini
+            </strong>{" "}
+            karena otomatis muncul di paling atas jika kamu mengisinya di bagian atas.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -204,9 +256,50 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
         </div>
       </div>
 
+      {/* Template Cepat 1 Klik */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-primary/5 border border-primary/20">
+        <div className="flex items-center gap-2 text-xs text-on-surface">
+          <FiZap className="text-secondary shrink-0" size={16} />
+          <span>
+            <strong>Template Cepat (1 Klik):</strong> Isi otomatis daftar pertanyaan standar lalu edit seperlunya.
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {mode === "volunteer" ? (
+            <button
+              type="button"
+              onClick={() => applyTemplate("oprec")}
+              className="text-xs font-bold bg-emerald-600 text-white px-3.5 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors shadow-2xs"
+            >
+              ⚡ Pakai Template Form Oprec / Volunteer
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => applyTemplate("lomba")}
+                className="text-xs font-bold bg-primary text-white px-3.5 py-1.5 rounded-lg hover:bg-primary/90 transition-colors shadow-2xs"
+              >
+                🏆 Pakai Template Form Lomba
+              </button>
+              <button
+                type="button"
+                onClick={() => applyTemplate("rsvp")}
+                className="text-xs font-bold bg-surface border border-primary/30 text-primary px-3.5 py-1.5 rounded-lg hover:bg-primary/10 transition-colors"
+              >
+                🎟️ Pakai Template Event / Seminar
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
       {fields.length === 0 ? (
-        <div className="p-8 border border-dashed border-outline-variant/50 rounded-xl text-center text-on-surface-variant bg-surface-variant/10 text-sm">
-          Belum ada pertanyaan. Tambahkan pertanyaan untuk formulir pendaftaran ini.
+        <div className="p-8 border border-dashed border-outline-variant/50 rounded-xl text-center text-on-surface-variant bg-surface-variant/10 text-sm space-y-2">
+          <p className="font-bold text-on-surface">Belum ada pertanyaan formulir.</p>
+          <p className="text-xs">
+            Klik tombol <strong>Template Cepat</strong> di atas untuk mengisi otomatis dalam 1 klik, atau tambahkan pertanyaan satu per satu.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">

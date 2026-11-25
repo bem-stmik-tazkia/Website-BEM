@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiSave, FiArrowLeft, FiAlertCircle, FiUpload, FiPlus, FiTrash2, FiChevronUp, FiChevronDown, FiLayers } from "react-icons/fi";
+import { FiSave, FiArrowLeft, FiAlertCircle, FiUpload, FiPlus, FiTrash2, FiChevronUp, FiChevronDown, FiLayers, FiCalendar, FiUsers, FiInfo } from "react-icons/fi";
 import Link from "next/link";
 import { getKegiatanById, saveKegiatan } from "../actions";
 import { motion, AnimatePresence } from "framer-motion";
@@ -61,8 +61,10 @@ export default function KegiatanFormPage() {
   const [sendBlast, setSendBlast] = useState(false);
   const [isBlasting, setIsBlasting] = useState(false);
 
+  const draftScope = id || typeParam || fromParam || 'new';
+
   useEffect(() => {
-    const draftKey = `kegiatan_draft_${id || 'new'}`;
+    const draftKey = `kegiatan_draft_${draftScope}`;
 
     if (!id) {
       // Untuk form BARU: hanya muat draft jika user sedang refresh halaman
@@ -73,7 +75,11 @@ export default function KegiatanFormPage() {
         const saved = localStorage.getItem(draftKey);
         if (saved) {
           try {
-            setFormData(JSON.parse(saved));
+            const parsed = JSON.parse(saved);
+            if (typeParam === 'event' || typeParam === 'volunteer') {
+              parsed.type = typeParam;
+            }
+            setFormData(parsed);
             if (!toastShown.current) {
               toast("Draft tersimpan dimuat ulang.", "success");
               toastShown.current = true;
@@ -132,16 +138,16 @@ export default function KegiatanFormPage() {
         setIsFetching(false);
       });
     }
-  }, [id, toast]);
+  }, [id, toast, draftScope, typeParam]);
 
   // Simpan draft ke localStorage + set sessionStorage flag agar tau user sedang mid-session
   useEffect(() => {
     if (isFetching) return;
-    const draftKey = `kegiatan_draft_${id || 'new'}`;
+    const draftKey = `kegiatan_draft_${draftScope}`;
     localStorage.setItem(draftKey, JSON.stringify(formData));
     // Tandai bahwa user sedang aktif mengisi form ini
     sessionStorage.setItem(`kegiatan_form_session_${draftKey}`, "1");
-  }, [formData, id, isFetching]);
+  }, [formData, draftScope, isFetching]);
 
   const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
 
@@ -297,7 +303,9 @@ export default function KegiatanFormPage() {
       });
     }
 
-    if (registrationActive && formData.form_schema && formData.form_schema.length > 0) {
+    if (registrationActive && (!formData.form_schema || formData.form_schema.length === 0)) {
+      newErrors.form_schema = "Tambahkan minimal 1 pertanyaan formulir (atau klik tombol Template Cepat).";
+    } else if (registrationActive && formData.form_schema && formData.form_schema.length > 0) {
       const hasInvalidSelect = formData.form_schema.some(
         (f) =>
           f.type === "select" &&
@@ -374,7 +382,7 @@ export default function KegiatanFormPage() {
         sendDiscord: Boolean(sendDiscord && formData.is_published),
       });
       
-      const draftKey = `kegiatan_draft_${id || 'new'}`;
+      const draftKey = `kegiatan_draft_${draftScope}`;
       localStorage.removeItem(draftKey);
       sessionStorage.removeItem(`kegiatan_form_session_${draftKey}`);
 
@@ -449,40 +457,165 @@ export default function KegiatanFormPage() {
         </button>
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-on-surface">
-            {isDokumentasi ? (id ? "Edit Dokumentasi" : "Tambah Dokumentasi") : (id ? "Edit Kegiatan" : "Tambah Kegiatan")}
+            {isDokumentasi
+              ? id
+                ? "Edit Dokumentasi"
+                : "Tambah Dokumentasi"
+              : formData.type === "volunteer"
+              ? id
+                ? "Edit Open Recruitment / Volunteer"
+                : "Tambah Open Recruitment (Oprec / Volunteer)"
+              : id
+              ? "Edit Agenda / Event / Lomba"
+              : "Tambah Agenda / Event / Lomba"}
           </h1>
-          <p className="text-sm text-on-surface-variant mt-1">Lengkapi form di bawah ini.</p>
+          <p className="text-sm text-on-surface-variant mt-1">
+            {isDokumentasi
+              ? "Lengkapi foto dan detail dokumentasi kegiatan di bawah ini."
+              : formData.type === "volunteer"
+              ? "Buat lowongan panitia, staf BEM, atau relawan — mendukung multi-posisi & kuota per posisi."
+              : "Jadwalkan event, seminar, atau lomba kampus — aktifkan pendaftaran jika butuh form RSVP atau cabang lomba."}
+          </p>
         </div>
       </div>
+
+      {!isDokumentasi && (
+        <div
+          className={`rounded-2xl border p-4 md:p-5 flex items-start gap-3.5 ${
+            formData.type === "volunteer"
+              ? "bg-emerald-50/70 border-emerald-200 text-emerald-950"
+              : "bg-blue-50/70 border-blue-200 text-blue-950"
+          }`}
+        >
+          <div
+            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+              formData.type === "volunteer"
+                ? "bg-emerald-600 text-white"
+                : "bg-primary text-white"
+            }`}
+          >
+            <FiInfo size={18} />
+          </div>
+          <div className="text-xs leading-relaxed space-y-1">
+            <p className="font-extrabold text-sm">
+              {formData.type === "volunteer"
+                ? "Panduan Cepat Buat Open Recruitment (Oprec):"
+                : "Panduan Cepat Buat Event / Lomba:"}
+            </p>
+            {formData.type === "volunteer" ? (
+              <ol className="list-decimal list-inside space-y-0.5 text-emerald-900/90">
+                <li>
+                  Isi <strong>Poster</strong>, <strong>Judul Program Oprec</strong> (misal: <em>Oprec Panitia Tazkia Fest</em>), <strong>Kategori</strong>, dan <strong>Deadline</strong>.
+                </li>
+                <li>
+                  Jika membuka banyak posisi (A, B, dst.), klik <strong>+ Tambah Posisi</strong> lalu isi nama &amp; jumlah orang yang dibutuhkan di tiap posisi.
+                </li>
+                <li>
+                  Di bagian <strong>Form Builder</strong>, cukup klik <strong>Template Form Oprec / Volunteer</strong> (1 klik) untuk mengisi pertanyaan standar otomatis.
+                </li>
+                <li>
+                  Aktifkan toggle <strong>Live (Ditampilkan)</strong> agar langsung muncul di halaman publik &amp; bisa didaftari mahasiswa.
+                </li>
+              </ol>
+            ) : (
+              <ol className="list-decimal list-inside space-y-0.5 text-blue-900/90">
+                <li>
+                  Isi <strong>Poster</strong>, <strong>Judul Event / Lomba</strong>, <strong>Tanggal</strong>, <strong>Jam</strong>, dan <strong>Lokasi</strong>.
+                </li>
+                <li>
+                  Jika butuh pendaftaran peserta atau berisi berbagai cabang lomba, aktifkan toggle <strong>Wajibkan Pendaftaran (RSVP / Lomba)</strong> di bagian Detail Ekstra.
+                </li>
+                <li>
+                  Tambahkan <strong>Cabang Lomba</strong> (opsional) lalu klik <strong>Template Form Lomba / Event</strong> di Form Builder.
+                </li>
+                <li>
+                  Aktifkan toggle <strong>Live (Ditampilkan)</strong> agar event tampil di website &amp; bisa didaftari.
+                </li>
+              </ol>
+            )}
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="bg-surface border border-outline-variant/30 rounded-2xl overflow-hidden shadow-sm">
         <div className="p-6 md:p-8 space-y-8">
           
           {/* Tipe & Status */}
-          <div className={`grid grid-cols-1 gap-6 ${!isDokumentasi ? 'md:grid-cols-2' : ''}`}>
+          <div className={`grid grid-cols-1 gap-6 ${!isDokumentasi ? 'lg:grid-cols-12' : ''}`}>
             {!isDokumentasi && (
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-on-surface">Tipe Kegiatan</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="type" value="event" checked={formData.type === 'event'} onChange={handleChange} className="w-4 h-4 text-primary focus:ring-primary" />
-                    <span className="text-sm text-on-surface">Agenda / Event</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="type" value="volunteer" checked={formData.type === 'volunteer'} onChange={handleChange} className="w-4 h-4 text-primary focus:ring-primary" />
-                    <span className="text-sm text-on-surface">Open Recruitment</span>
-                  </label>
+              <div className="lg:col-span-7 space-y-2">
+                <label className="text-sm font-bold text-on-surface block">Pilih Tipe Kegiatan</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, type: "event" }))}
+                    className={`text-left p-3.5 rounded-xl border transition-all flex items-start gap-3 ${
+                      formData.type === "event"
+                        ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                        : "border-outline-variant/40 hover:border-primary/40 bg-background"
+                    }`}
+                  >
+                    <div
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                        formData.type === "event"
+                          ? "bg-primary text-white"
+                          : "bg-surface-variant/50 text-on-surface-variant"
+                      }`}
+                    >
+                      <FiCalendar size={17} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-on-surface">Agenda / Event / Lomba</p>
+                      <p className="text-[11px] text-on-surface-variant mt-0.5">
+                        Seminar, acara kampus, atau lomba multi-cabang.
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, type: "volunteer" }))}
+                    className={`text-left p-3.5 rounded-xl border transition-all flex items-start gap-3 ${
+                      formData.type === "volunteer"
+                        ? "border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20"
+                        : "border-outline-variant/40 hover:border-emerald-500/40 bg-background"
+                    }`}
+                  >
+                    <div
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                        formData.type === "volunteer"
+                          ? "bg-emerald-600 text-white"
+                          : "bg-surface-variant/50 text-on-surface-variant"
+                      }`}
+                    >
+                      <FiUsers size={17} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-on-surface">Open Recruitment (Oprec)</p>
+                      <p className="text-[11px] text-on-surface-variant mt-0.5">
+                        Rekrutmen panitia, pengurus, atau relawan.
+                      </p>
+                    </div>
+                  </button>
                 </div>
               </div>
             )}
 
-            <div className="space-y-2">
-              <div className="flex flex-col gap-3 mt-1">
+            <div className={!isDokumentasi ? "lg:col-span-5 space-y-2" : "space-y-2"}>
+              <label className="text-sm font-bold text-on-surface block">Status Publikasi</label>
+              <div className="flex flex-col gap-3 p-3.5 rounded-xl border border-outline-variant/40 bg-background">
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" name="is_published" checked={formData.is_published || false} onChange={handleChange} className="sr-only peer" />
                   <div className="w-11 h-6 bg-surface-variant/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  <span className="ml-3 text-sm font-bold text-on-surface">{formData.is_published ? "Live (Ditampilkan)" : "Draft (Disembunyikan)"}</span>
+                  <span className="ml-3 text-sm font-bold text-on-surface">
+                    {formData.is_published ? "Live (Tampil di Website)" : "Draft (Belum Ditampilkan)"}
+                  </span>
                 </label>
+                {!formData.is_published && (
+                  <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded-lg">
+                    Saat ini masih <strong>Draft</strong> (hanya terlihat di Admin). Nyalakan toggle di atas agar mahasiswa bisa melihat &amp; mendaftar.
+                  </p>
+                )}
                 
                 {formData.is_published && (
                   <>
@@ -529,8 +662,29 @@ export default function KegiatanFormPage() {
 
               <div className="md:col-span-8 space-y-6">
                 <div id="field-title" className="space-y-2">
-                  <label className="text-sm font-bold text-on-surface">Judul Kegiatan / Posisi <span className="text-red-500">*</span></label>
-                  <input type="text" name="title" value={formData.title || ""} onChange={handleChange} className={`w-full bg-background border ${formErrors.title ? "border-red-500 bg-red-50" : "border-outline-variant/50"} rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} placeholder="Contoh: BEM Mengajar 2026 atau Web Developer" />
+                  <label className="text-sm font-bold text-on-surface">
+                    {formData.type === "volunteer"
+                      ? "Judul Program Open Recruitment"
+                      : "Judul Kegiatan / Lomba"}{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={formData.title || ""}
+                    onChange={handleChange}
+                    className={`w-full bg-background border ${formErrors.title ? "border-red-500 bg-red-50" : "border-outline-variant/50"} rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`}
+                    placeholder={
+                      formData.type === "volunteer"
+                        ? "Contoh: Oprec Panitia Tazkia Fest 2026 atau Web Developer BEM"
+                        : "Contoh: Tazkia Tech Fest 2026 atau Seminar Teknologi"
+                    }
+                  />
+                  {formData.type === "volunteer" && (
+                    <p className="text-[11px] text-on-surface-variant">
+                      Jika membuka lebih dari 1 posisi (Posisi A, B, dst.), tulis nama acara/rekrutmen utamanya di sini, lalu isi daftar posisi beserta kuotanya di bagian <strong>Daftar Posisi</strong> di bawah.
+                    </p>
+                  )}
                   {formErrors.title && <p className="text-xs text-red-500 mt-1">{formErrors.title}</p>}
                 </div>
 
@@ -571,9 +725,11 @@ export default function KegiatanFormPage() {
 
           <hr className="border-outline-variant/20" />
 
-          {/* Waktu & Lokasi */}
+          {/* Waktu & Lokasi / Batas Waktu */}
           <div className="space-y-6">
-            <h3 className="text-lg font-bold text-on-surface border-b border-outline-variant/30 pb-2">Waktu & Lokasi</h3>
+            <h3 className="text-lg font-bold text-on-surface border-b border-outline-variant/30 pb-2">
+              {formData.type === "volunteer" ? "Batas Waktu & Prioritas" : "Waktu & Lokasi"}
+            </h3>
             
             {formData.type === 'event' || formData.type === 'dokumentasi' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -740,8 +896,8 @@ export default function KegiatanFormPage() {
                         <div className="w-11 h-6 bg-surface-variant/50 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                       </div>
                       <div>
-                        <span className="text-sm font-bold text-on-surface block">Wajibkan Pendaftaran (RSVP)</span>
-                        <span className="text-xs text-on-surface-variant">Buka form pendaftaran kustom dan fitur kuota untuk event ini.</span>
+                        <span className="text-sm font-bold text-on-surface block">Wajibkan Pendaftaran (RSVP / Lomba)</span>
+                        <span className="text-xs text-on-surface-variant">Aktifkan untuk membuka formulir pendaftaran peserta, cabang lomba, dan fitur kuota.</span>
                       </div>
                     </label>
                   </div>
@@ -1054,6 +1210,7 @@ export default function KegiatanFormPage() {
                     <div id="field-form-builder" className="space-y-2 pb-4 border-b border-outline-variant/20">
                       <FormBuilder 
                         fields={formData.form_schema || []} 
+                        mode={formData.type === "volunteer" ? "volunteer" : "event"}
                         onChange={(newFields) => {
                           setFormData(prev => ({...prev, form_schema: newFields}));
                           if (formErrors.form_schema) {
@@ -1211,7 +1368,15 @@ export default function KegiatanFormPage() {
             ) : (
               <FiSave size={18} />
             )}
-            {isLoading ? "Menyimpan..." : isBlasting ? "Mengirim Email..." : "Simpan Kegiatan"}
+            {isLoading
+              ? "Menyimpan..."
+              : isBlasting
+              ? "Mengirim Email..."
+              : formData.type === "volunteer"
+              ? "Simpan Open Recruitment"
+              : isDokumentasi
+              ? "Simpan Dokumentasi"
+              : "Simpan Kegiatan"}
           </button>
         </div>
       </form>
