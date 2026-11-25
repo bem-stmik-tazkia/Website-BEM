@@ -105,6 +105,48 @@ export function isAllowedDocumentUrl(
 }
 
 /**
+ * Checks whether an agenda has at least one question in either its common form_schema
+ * or in any sub-item's extra_fields.
+ */
+export function hasAnyFormQuestions(
+  formSchema?: DynamicFormField[] | null,
+  items?: Array<{ extra_fields?: DynamicFormField[] | null }> | null
+): boolean {
+  if (Array.isArray(formSchema) && formSchema.length > 0) return true;
+  if (
+    Array.isArray(items) &&
+    items.some((it) => Array.isArray(it.extra_fields) && it.extra_fields.length > 0)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Checks whether an agenda has at least one image upload field in either its common
+ * form_schema or in any sub-item's extra_fields.
+ */
+export function hasAnyImageField(
+  formSchema?: DynamicFormField[] | null,
+  items?: Array<{ extra_fields?: DynamicFormField[] | null }> | null
+): boolean {
+  if (Array.isArray(formSchema) && formSchema.some((f) => f?.type === "image")) {
+    return true;
+  }
+  if (
+    Array.isArray(items) &&
+    items.some(
+      (it) =>
+        Array.isArray(it.extra_fields) &&
+        it.extra_fields.some((f) => f?.type === "image")
+    )
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Validates selected sub-items (positions for Oprec / competitions for Events).
  */
 export function validateItemSelection(params: {
@@ -147,8 +189,69 @@ export function validateItemSelection(params: {
   return { valid: true, selectedItemIds: deduped };
 }
 
+function validateSingleFieldValue(
+  field: DynamicFormField,
+  rawValue: unknown,
+  itemNamePrefix?: string
+): { valid: true; value: string; portofolioUrl?: string } | { valid: false; error: string } {
+  const prefix = itemNamePrefix ? `${itemNamePrefix} — ` : "";
+  const value = typeof rawValue === "string" ? rawValue.trim() : "";
+
+  if (field.required && !value) {
+    return { valid: false, error: `${prefix}Kolom '${field.label}' wajib diisi` };
+  }
+
+  if (!value) {
+    return { valid: true, value: "" };
+  }
+
+  if (field.type === "file" || field.type === "image") {
+    const urlCheck = isAllowedDocumentUrl(value, {
+      allowOwnStorageImage: field.type === "image",
+    });
+    if (!urlCheck.valid) {
+      return { valid: false, error: `${prefix}Kolom '${field.label}': ${urlCheck.reason}` };
+    }
+    return { valid: true, value, portofolioUrl: value.slice(0, 500) };
+  }
+
+  if (field.type === "select") {
+    const opts = Array.isArray(field.options)
+      ? field.options.map((o) => o.trim()).filter(Boolean)
+      : [];
+    if (opts.length > 0 && !opts.includes(value)) {
+      return {
+        valid: false,
+        error: `${prefix}Pilihan pada kolom '${field.label}' tidak valid`,
+      };
+    }
+    return { valid: true, value };
+  }
+
+  if (value.length > 3000) {
+    return {
+      valid: false,
+      error: `${prefix}Kolom '${field.label}' melebihi batas maksimal 3000 karakter`,
+    };
+  }
+  if (field.type === "number" && !/^-?\d+$/.test(value)) {
+    return {
+      valid: false,
+      error: `${prefix}Kolom '${field.label}' harus berupa angka yang valid`,
+    };
+  }
+  if (field.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    return {
+      valid: false,
+      error: `${prefix}Kolom '${field.label}' harus berupa alamat email yang valid`,
+    };
+  }
+
+  return { valid: true, value };
+}
+
 /**
- * Validates user answers against the agenda's dynamic form_schema.
+ * Validates user answers against a flat form_schema (legacy single-form mode).
  */
 export function validateRegistrationResponses(
   formSchema: DynamicFormField[],
@@ -168,58 +271,101 @@ export function validateRegistrationResponses(
   let extractedPortofolioUrl: string | null = null;
 
   for (const field of formSchema) {
-    const rawValue = responses[field.id];
-    const value = typeof rawValue === "string" ? rawValue.trim() : "";
-
-    if (field.required && !value) {
-      return { valid: false, error: `Kolom '${field.label}' wajib diisi` };
-    }
-
-    if (value) {
-      if (field.type === "file" || field.type === "image") {
-        const urlCheck = isAllowedDocumentUrl(value, {
-          allowOwnStorageImage: field.type === "image",
-        });
-        if (!urlCheck.valid) {
-          return { valid: false, error: `Kolom '${field.label}': ${urlCheck.reason}` };
-        }
-        if (!extractedPortofolioUrl) {
-          extractedPortofolioUrl = value.slice(0, 500);
-        }
-      } else if (field.type === "select") {
-        const opts = Array.isArray(field.options)
-          ? field.options.map((o) => o.trim()).filter(Boolean)
-          : [];
-        if (opts.length > 0 && !opts.includes(value)) {
-          return {
-            valid: false,
-            error: `Pilihan pada kolom '${field.label}' tidak valid`,
-          };
-        }
-      } else {
-        if (value.length > 3000) {
-          return {
-            valid: false,
-            error: `Kolom '${field.label}' melebihi batas maksimal 3000 karakter`,
-          };
-        }
-        if (field.type === "number" && !/^-?\d+$/.test(value)) {
-          return {
-            valid: false,
-            error: `Kolom '${field.label}' harus berupa angka yang valid`,
-          };
-        }
-        if (field.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          return {
-            valid: false,
-            error: `Kolom '${field.label}' harus berupa alamat email yang valid`,
-          };
-        }
-      }
+    const check = validateSingleFieldValue(field, responses[field.id]);
+    if (!check.valid) return check;
+    if (check.portofolioUrl && !extractedPortofolioUrl) {
+      extractedPortofolioUrl = check.portofolioUrl;
     }
   }
 
   return { valid: true, extractedPortofolioUrl };
+}
+
+/**
+ * Validates common form_schema PLUS per-selected-item extra_fields,
+ * returning clean per-item response maps so each competition/position row
+ * stores only common answers + its own extra answers.
+ */
+export function validateMultiItemRegistrationResponses(params: {
+  commonSchema: DynamicFormField[];
+  selectedItems: Array<{
+    id: string;
+    name: string;
+    extra_fields?: DynamicFormField[] | null;
+  }>;
+  responses: Record<string, string>;
+}):
+  | {
+      valid: true;
+      responsesByItem: Record<string, Record<string, string>>;
+      extractedPortofolioUrl: string | null;
+      mergedFieldsForSummary: Array<{ label: string; value: string }>;
+    }
+  | { valid: false; error: string } {
+  const { commonSchema, selectedItems, responses } = params;
+
+  const allowedKeys = new Set<string>(commonSchema.map((f) => f.id));
+  for (const item of selectedItems) {
+    for (const ef of item.extra_fields || []) {
+      allowedKeys.add(ef.id);
+    }
+  }
+
+  for (const submittedKey of Object.keys(responses)) {
+    if (!allowedKeys.has(submittedKey)) {
+      return {
+        valid: false,
+        error: `Field '${submittedKey}' tidak terdaftar dalam formulir pilihan yang dipilih`,
+      };
+    }
+  }
+
+  let extractedPortofolioUrl: string | null = null;
+  const commonValues: Record<string, string> = {};
+  const mergedFieldsForSummary: Array<{ label: string; value: string }> = [];
+
+  for (const field of commonSchema) {
+    const check = validateSingleFieldValue(field, responses[field.id]);
+    if (!check.valid) return check;
+    if (check.value) {
+      commonValues[field.id] = check.value;
+      mergedFieldsForSummary.push({ label: field.label, value: check.value });
+    }
+    if (check.portofolioUrl && !extractedPortofolioUrl) {
+      extractedPortofolioUrl = check.portofolioUrl;
+    }
+  }
+
+  const responsesByItem: Record<string, Record<string, string>> = {};
+
+  for (const item of selectedItems) {
+    const itemResponses: Record<string, string> = { ...commonValues };
+    const extras = Array.isArray(item.extra_fields) ? item.extra_fields : [];
+
+    for (const ef of extras) {
+      const check = validateSingleFieldValue(ef, responses[ef.id], item.name);
+      if (!check.valid) return check;
+      if (check.value) {
+        itemResponses[ef.id] = check.value;
+        mergedFieldsForSummary.push({
+          label: `[${item.name}] ${ef.label}`,
+          value: check.value,
+        });
+      }
+      if (check.portofolioUrl && !extractedPortofolioUrl) {
+        extractedPortofolioUrl = check.portofolioUrl;
+      }
+    }
+
+    responsesByItem[item.id] = itemResponses;
+  }
+
+  return {
+    valid: true,
+    responsesByItem,
+    extractedPortofolioUrl,
+    mergedFieldsForSummary,
+  };
 }
 
 /**
@@ -258,6 +404,7 @@ export function aggregateAgendaItemsAndCounts<T extends Partial<AgendaKegiatan>>
   for (const raw of items) {
     const enrichedItem: AgendaItem = {
       ...raw,
+      extra_fields: Array.isArray(raw.extra_fields) ? raw.extra_fields : [],
       filled_count: itemAcceptedMap.get(raw.id) || 0,
       rejected_count: itemRejectedMap.get(raw.id) || 0,
     };

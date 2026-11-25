@@ -60,6 +60,7 @@ export default function KegiatanFormPage() {
   const [sendDiscord, setSendDiscord] = useState(!id);
   const [sendBlast, setSendBlast] = useState(false);
   const [isBlasting, setIsBlasting] = useState(false);
+  const [expandedExtraMap, setExpandedExtraMap] = useState<Record<number, boolean>>({});
 
   const draftScope = id || typeParam || fromParam || 'new';
 
@@ -117,9 +118,17 @@ export default function KegiatanFormPage() {
                 quota: it.quota ?? null,
                 participant_type: it.participant_type === "tim" ? "tim" : "individu",
                 rulebook_url: it.rulebook_url || "",
+                extra_fields: Array.isArray(it.extra_fields) ? it.extra_fields : [],
                 sort_order: it.sort_order ?? idx,
               }))
             : [];
+          const initialExpanded: Record<number, boolean> = {};
+          cleanItems.forEach((it, idx) => {
+            if (it.extra_fields && it.extra_fields.length > 0) {
+              initialExpanded[idx] = true;
+            }
+          });
+          setExpandedExtraMap(initialExpanded);
           const normalizedData: KegiatanFormInput = {
             ...data,
             allow_multiple_items: data.allow_multiple_items !== false,
@@ -128,9 +137,12 @@ export default function KegiatanFormPage() {
           delete (normalizedData as any).accepted_count;
           setFormData(normalizedData);
           setInitialData(JSON.parse(JSON.stringify(normalizedData)));
+          const hasAnyExtra = cleanItems.some(
+            (it) => Array.isArray(it.extra_fields) && it.extra_fields.length > 0
+          );
           if (
             data.type === 'event' &&
-            ((data.form_schema && data.form_schema.length > 0) || cleanItems.length > 0)
+            ((data.form_schema && data.form_schema.length > 0) || cleanItems.length > 0 || hasAnyExtra)
           ) {
             setRequiresRegistration(true);
           }
@@ -303,10 +315,21 @@ export default function KegiatanFormPage() {
       });
     }
 
-    if (registrationActive && (!formData.form_schema || formData.form_schema.length === 0)) {
-      newErrors.form_schema = "Tambahkan minimal 1 pertanyaan formulir (atau klik tombol Template Cepat).";
-    } else if (registrationActive && formData.form_schema && formData.form_schema.length > 0) {
-      const hasInvalidSelect = formData.form_schema.some(
+    const itemsList = formData.items || [];
+    const hasMainSchema = Boolean(formData.form_schema && formData.form_schema.length > 0);
+    const allItemsHaveExtra =
+      itemsList.length > 0 &&
+      itemsList.every((it) => Array.isArray(it.extra_fields) && it.extra_fields.length > 0);
+
+    if (registrationActive && !hasMainSchema && !allItemsHaveExtra) {
+      newErrors.form_schema =
+        "Tambahkan minimal 1 pertanyaan di Form Utama, atau isi Pertanyaan Khusus pada setiap cabang lomba/posisi.";
+    } else if (registrationActive) {
+      const allFields = [
+        ...(formData.form_schema || []),
+        ...itemsList.flatMap((it) => it.extra_fields || []),
+      ];
+      const hasInvalidSelect = allFields.some(
         (f) =>
           f.type === "select" &&
           (!Array.isArray(f.options) || f.options.filter((o) => o.trim()).length === 0)
@@ -354,6 +377,17 @@ export default function KegiatanFormPage() {
           ? { ...f, options: (f.options || []).map((o) => o.trim()).filter(Boolean) }
           : f
       );
+    }
+
+    if (dataToSave.items) {
+      dataToSave.items = dataToSave.items.map((it) => ({
+        ...it,
+        extra_fields: (it.extra_fields || []).map((f) =>
+          f.type === "select"
+            ? { ...f, options: (f.options || []).map((o) => o.trim()).filter(Boolean) }
+            : f
+        ),
+      }));
     }
 
     // Jika Wajib Pendaftaran dinonaktifkan pada Event, hapus form_schema, kuota, dan cabang lomba
@@ -951,6 +985,7 @@ export default function KegiatanFormPage() {
                                 quota: null,
                                 participant_type: "individu" as const,
                                 rulebook_url: "",
+                                extra_fields: [],
                                 sort_order: (formData.items || []).length,
                               },
                             ];
@@ -1177,6 +1212,72 @@ export default function KegiatanFormPage() {
                                       {formErrors[`item_${idx}_rulebook`] && (
                                         <p className="text-xs text-red-500">{formErrors[`item_${idx}_rulebook`]}</p>
                                       )}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Pertanyaan Khusus per Lomba / Posisi */}
+                                <div className="pt-2 border-t border-outline-variant/30">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExpandedExtraMap((prev) => ({
+                                        ...prev,
+                                        [idx]: !prev[idx],
+                                      }))
+                                    }
+                                    className="w-full flex items-center justify-between gap-2 py-2 px-3 rounded-xl bg-background border border-outline-variant/40 hover:border-primary/50 transition-colors text-left"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-bold text-on-surface">
+                                        {formData.type === "volunteer"
+                                          ? "Pertanyaan Khusus Posisi Ini (Opsional)"
+                                          : "Pertanyaan Khusus Lomba Ini (Opsional)"}
+                                      </span>
+                                      <span
+                                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                                          (item.extra_fields?.length || 0) > 0
+                                            ? "bg-primary/15 text-primary"
+                                            : "bg-surface-variant/60 text-on-surface-variant"
+                                        }`}
+                                      >
+                                        {item.extra_fields?.length || 0} pertanyaan
+                                      </span>
+                                    </div>
+                                    <span className="text-xs font-bold text-primary flex items-center gap-1">
+                                      {expandedExtraMap[idx] ? (
+                                        <>
+                                          Tutup <FiChevronUp size={14} />
+                                        </>
+                                      ) : (
+                                        <>
+                                          Atur Form Khusus <FiChevronDown size={14} />
+                                        </>
+                                      )}
+                                    </span>
+                                  </button>
+
+                                  {expandedExtraMap[idx] && (
+                                    <div className="mt-3 p-3.5 rounded-xl bg-surface border border-outline-variant/30">
+                                      <FormBuilder
+                                        compact
+                                        idPrefix={`extra_${idx}_`}
+                                        title={`Pertanyaan Khusus: ${item.name || `#${idx + 1}`}`}
+                                        subtitle="Pertanyaan ini hanya muncul jika peserta memilih cabang/posisi ini."
+                                        fields={item.extra_fields || []}
+                                        onChange={(newExtra) => {
+                                          const arr = [...(formData.items || [])];
+                                          arr[idx] = { ...arr[idx], extra_fields: newExtra };
+                                          setFormData((prev) => ({ ...prev, items: arr }));
+                                          if (formErrors.form_schema) {
+                                            setFormErrors((prev) => {
+                                              const n = { ...prev };
+                                              delete n.form_schema;
+                                              return n;
+                                            });
+                                          }
+                                        }}
+                                      />
                                     </div>
                                   )}
                                 </div>

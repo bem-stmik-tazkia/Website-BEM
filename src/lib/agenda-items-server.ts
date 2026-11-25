@@ -28,7 +28,7 @@ export async function enrichAgendasWithItemsAndCounts<T extends Partial<AgendaKe
   const [itemsRes, appsRes] = await Promise.all([
     serviceClient
       .from("agenda_items")
-      .select("id, agenda_id, name, description, quota, participant_type, rulebook_url, sort_order, created_at, updated_at")
+      .select("id, agenda_id, name, description, quota, participant_type, rulebook_url, extra_fields, sort_order, created_at, updated_at")
       .in("agenda_id", agendaIds)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),

@@ -9,10 +9,13 @@ import {
 } from "../src/lib/registration-utils";
 import {
   aggregateAgendaItemsAndCounts,
+  hasAnyFormQuestions,
+  hasAnyImageField,
   isAllowedDocumentUrl,
   isDeadlinePassedJakarta,
   isHostnameAllowed,
   validateItemSelection,
+  validateMultiItemRegistrationResponses,
   validateRegistrationResponses,
 } from "../src/lib/registration-validation";
 import type { AgendaItem, AgendaKegiatan, DynamicFormField } from "../src/types/agenda";
@@ -331,4 +334,155 @@ test("aggregateAgendaItemsAndCounts excludes rejected applications from filled_c
 
   assert.equal(enriched[1].items?.length, 0);
   assert.equal(enriched[1].accepted_count, 1);
+});
+
+// -----------------------------------------------------------------------------
+// 7. Per-Competition / Per-Position Extra Fields Validation & Helpers
+// -----------------------------------------------------------------------------
+test("hasAnyFormQuestions and hasAnyImageField inspect both common schema and item extra_fields", () => {
+  const textField: DynamicFormField = {
+    id: "common_name",
+    type: "text",
+    label: "Nama",
+    required: true,
+  };
+  const extraTextField: DynamicFormField = {
+    id: "extra_team",
+    type: "text",
+    label: "Nama Tim",
+    required: true,
+  };
+  const extraImageField: DynamicFormField = {
+    id: "extra_photo",
+    type: "image",
+    label: "Foto Karya",
+    required: true,
+  };
+
+  assert.equal(hasAnyFormQuestions([], []), false);
+  assert.equal(hasAnyFormQuestions([], [{ extra_fields: [] }]), false);
+  assert.equal(hasAnyFormQuestions([], [{ extra_fields: [extraTextField] }]), true);
+  assert.equal(hasAnyImageField([], [{ extra_fields: [extraTextField] }]), false);
+  assert.equal(hasAnyImageField([textField], [{ extra_fields: [extraImageField] }]), true);
+});
+
+test("validateMultiItemRegistrationResponses validates common + per-item extra fields and isolates responsesByItem", () => {
+  const prevUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://myproj.supabase.co";
+
+  try {
+    const commonSchema: DynamicFormField[] = [
+      { id: "c_name", type: "text", label: "Nama Ketua", required: true },
+      { id: "c_nim", type: "number", label: "NIM", required: true },
+    ];
+    const itemA = {
+      id: "lomba-uiux",
+      name: "UI/UX Design",
+      extra_fields: [
+        { id: "extra_figma", type: "file" as const, label: "Link Figma", required: true },
+      ],
+    };
+    const itemB = {
+      id: "lomba-foto",
+      name: "Fotografi",
+      extra_fields: [
+        { id: "extra_photo", type: "image" as const, label: "Karya Foto", required: true },
+      ],
+    };
+    const itemUnselected = {
+      id: "lomba-coding",
+      name: "Web Dev",
+      extra_fields: [
+        { id: "extra_github", type: "file" as const, label: "Repo GitHub", required: true },
+      ],
+    };
+
+    const photoUrl =
+      "https://myproj.supabase.co/storage/v1/object/public/public_images/pendaftaran/evt1/karya.webp";
+
+    // 1. Mixed common + multiple selected items isolates each item's responses
+    const mixedValid = validateMultiItemRegistrationResponses({
+      commonSchema,
+      selectedItems: [itemA, itemB],
+      responses: {
+        c_name: "Alya Putri",
+        c_nim: "202401002",
+        extra_figma: "https://figma.com/file/abc123",
+        extra_photo: photoUrl,
+      },
+    });
+
+    assert.equal(mixedValid.valid, true);
+    if (mixedValid.valid) {
+      assert.deepEqual(mixedValid.responsesByItem[itemA.id], {
+        c_name: "Alya Putri",
+        c_nim: "202401002",
+        extra_figma: "https://figma.com/file/abc123",
+      });
+      assert.deepEqual(mixedValid.responsesByItem[itemB.id], {
+        c_name: "Alya Putri",
+        c_nim: "202401002",
+        extra_photo: photoUrl,
+      });
+      assert.equal(
+        mixedValid.mergedFieldsForSummary.some((f) => f.label === "[UI/UX Design] Link Figma"),
+        true
+      );
+      assert.equal(
+        mixedValid.mergedFieldsForSummary.some((f) => f.label === "[Fotografi] Karya Foto"),
+        true
+      );
+    }
+
+    // 2. Reject missing required extra field on one selected item
+    const missingExtra = validateMultiItemRegistrationResponses({
+      commonSchema,
+      selectedItems: [itemA, itemB],
+      responses: {
+        c_name: "Alya Putri",
+        c_nim: "202401002",
+        extra_figma: "https://figma.com/file/abc123",
+        extra_photo: "",
+      },
+    });
+    assert.equal(missingExtra.valid, false);
+
+    // 3. Reject stale/injected key belonging to an unselected item
+    const unselectedKey = validateMultiItemRegistrationResponses({
+      commonSchema,
+      selectedItems: [itemA],
+      responses: {
+        c_name: "Alya Putri",
+        c_nim: "202401002",
+        extra_figma: "https://figma.com/file/abc123",
+        [itemUnselected.extra_fields[0].id]: "https://github.com/org/repo",
+      },
+    });
+    assert.equal(unselectedKey.valid, false);
+
+    // 4. 100% separate per-item form when commonSchema is empty
+    const separateFormOnly = validateMultiItemRegistrationResponses({
+      commonSchema: [],
+      selectedItems: [itemA, itemB],
+      responses: {
+        extra_figma: "https://figma.com/file/xyz",
+        extra_photo: photoUrl,
+      },
+    });
+    assert.equal(separateFormOnly.valid, true);
+    if (separateFormOnly.valid) {
+      assert.deepEqual(separateFormOnly.responsesByItem[itemA.id], {
+        extra_figma: "https://figma.com/file/xyz",
+      });
+      assert.deepEqual(separateFormOnly.responsesByItem[itemB.id], {
+        extra_photo: photoUrl,
+      });
+    }
+  } finally {
+    if (prevUrl === undefined) {
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    } else {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = prevUrl;
+    }
+  }
 });

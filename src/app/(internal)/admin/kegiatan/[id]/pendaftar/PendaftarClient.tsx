@@ -34,6 +34,41 @@ import {
   getRegistrationImagePreviewUrl,
   getSafeHttpsUrl,
 } from "@/lib/registration-utils";
+import { hasAnyImageField } from "@/lib/registration-validation";
+
+interface DisplayFormField extends DynamicFormField {
+  itemId?: string;
+  itemTag?: string;
+}
+
+function buildDisplayFields(
+  commonFields: DynamicFormField[],
+  items: AgendaItem[],
+  filterItemId: string
+): DisplayFormField[] {
+  const result: DisplayFormField[] = [...commonFields];
+  const seenIds = new Set(commonFields.map((f) => f.id));
+
+  const targetItems =
+    filterItemId === "all"
+      ? items
+      : items.filter((it) => it.id === filterItemId);
+
+  for (const item of targetItems) {
+    for (const extra of item.extra_fields || []) {
+      if (!seenIds.has(extra.id)) {
+        seenIds.add(extra.id);
+        result.push({
+          ...extra,
+          itemId: item.id,
+          itemTag: filterItemId === "all" ? item.name : undefined,
+        });
+      }
+    }
+  }
+
+  return result;
+}
 
 const formatDateWithTime = (dateStr: string) => {
   const date = new Date(dateStr);
@@ -156,7 +191,7 @@ function PrintableReportDocument({
   itemLabel: string;
   hasItems: boolean;
   itemStats: Array<AgendaItem & { filled_count: number; remaining: number | null }>;
-  fields: DynamicFormField[];
+  fields: DisplayFormField[];
   applications: VolunteerApplication[];
   onlyAccepted: boolean;
   includePhotos: boolean;
@@ -227,7 +262,12 @@ function PrintableReportDocument({
               <th className="border border-slate-300 p-2 text-left">Status</th>
               {fields.map((f) => (
                 <th key={f.id} className="border border-slate-300 p-2 text-left">
-                  {f.label}
+                  <div>{f.label}</div>
+                  {f.itemTag && (
+                    <div className="text-[9px] font-semibold text-blue-700 mt-0.5">
+                      [{f.itemTag}]
+                    </div>
+                  )}
                 </th>
               ))}
             </tr>
@@ -246,12 +286,17 @@ function PrintableReportDocument({
                 </td>
                 {fields.map((field) => {
                   const answer = app.responses?.[field.id];
+                  const notApplicable =
+                    !answer && Boolean(field.itemId) && app.item_id !== field.itemId;
                   const isImg =
                     includePhotos &&
+                    !notApplicable &&
                     (field.type === "image" || Boolean(getRegistrationImagePreviewUrl(answer)));
                   return (
                     <td key={field.id} className="border border-slate-300 p-2 align-top">
-                      {isImg ? (
+                      {notApplicable ? (
+                        <span className="text-slate-300">—</span>
+                      ) : isImg ? (
                         <PrintPhotoCell url={answer} label={field.label} />
                       ) : (
                         <span className="break-words">{answer || "-"}</span>
@@ -308,11 +353,27 @@ export default function PendaftarClient({
   const [reportItemId, setReportItemId] = useState<string>("all");
   const [reportIncludePhotos, setReportIncludePhotos] = useState(true);
 
-  const fields: DynamicFormField[] = agenda.form_schema || [];
-  const items: AgendaItem[] = agenda.items || [];
+  const fields: DynamicFormField[] = useMemo(
+    () => agenda.form_schema || [],
+    [agenda.form_schema]
+  );
+  const items: AgendaItem[] = useMemo(
+    () => agenda.items || [],
+    [agenda.items]
+  );
   const hasItems = items.length > 0 || applications.some((a) => Boolean(a.item_name));
   const itemLabel = agenda.type === "volunteer" ? "Posisi" : "Cabang Lomba";
-  const hasImageFields = fields.some((f) => f.type === "image");
+  const hasImageFields = hasAnyImageField(fields, items);
+
+  const displayFields = useMemo(
+    () => buildDisplayFields(fields, items, selectedItemId),
+    [fields, items, selectedItemId]
+  );
+
+  const reportFields = useMemo(
+    () => buildDisplayFields(fields, items, reportItemId),
+    [fields, items, reportItemId]
+  );
 
   // Compute live item statistics directly from applications state
   const itemStats = useMemo(() => {
@@ -461,7 +522,7 @@ export default function PendaftarClient({
             </button>
             <ExportPendaftarButton
               applications={filteredApplications}
-              fields={fields}
+              fields={displayFields}
               agendaTitle={agenda.title}
               hasItems={hasItems}
               itemLabel={itemLabel}
@@ -679,9 +740,14 @@ export default function PendaftarClient({
                     <th className="p-4 font-bold">Waktu Submit</th>
                     {hasItems && <th className="p-4 font-bold">{itemLabel}</th>}
                     <th className="p-4 font-bold">Status</th>
-                    {fields.map((field) => (
+                    {displayFields.map((field) => (
                       <th key={field.id} className="p-4 font-bold">
-                        {field.label}
+                        <div>{field.label}</div>
+                        {field.itemTag && (
+                          <div className="text-[10px] font-semibold text-primary normal-case mt-0.5">
+                            [{field.itemTag}]
+                          </div>
+                        )}
                       </th>
                     ))}
                     <th className="p-4 font-bold text-right">Aksi</th>
@@ -735,19 +801,33 @@ export default function PendaftarClient({
                           )}
                         </td>
 
-                        {fields.map((field) => {
+                        {displayFields.map((field) => {
                           const answer = app.responses?.[field.id];
+                          const notApplicable =
+                            !answer && Boolean(field.itemId) && app.item_id !== field.itemId;
                           const safeLink = getSafeHttpsUrl(answer);
                           const isImageField =
-                            field.type === "image" ||
-                            Boolean(getRegistrationImagePreviewUrl(answer));
+                            !notApplicable &&
+                            (field.type === "image" ||
+                              Boolean(getRegistrationImagePreviewUrl(answer)));
 
                           return (
                             <td
                               key={field.id}
                               className="p-4 text-sm text-on-surface max-w-[260px]"
                             >
-                              {isImageField ? (
+                              {notApplicable ? (
+                                <span
+                                  className="text-on-surface-variant/35 text-xs"
+                                  title={
+                                    field.itemTag
+                                      ? `Pertanyaan khusus untuk ${field.itemTag}`
+                                      : "Tidak berlaku untuk pilihan ini"
+                                  }
+                                >
+                                  —
+                                </span>
+                              ) : isImageField ? (
                                 <ThumbnailCell
                                   url={answer}
                                   label={`${field.label} - ${firstLabel}`}
@@ -989,8 +1069,12 @@ export default function PendaftarClient({
                     agendaTitle={agenda.title}
                     itemLabel={itemLabel}
                     hasItems={hasItems}
-                    itemStats={itemStats}
-                    fields={fields}
+                    itemStats={
+                      reportItemId === "all"
+                        ? itemStats
+                        : itemStats.filter((it) => it.id === reportItemId)
+                    }
+                    fields={reportFields}
                     applications={reportApplications}
                     onlyAccepted={reportOnlyAccepted}
                     includePhotos={reportIncludePhotos}
@@ -1028,8 +1112,12 @@ export default function PendaftarClient({
           agendaTitle={agenda.title}
           itemLabel={itemLabel}
           hasItems={hasItems}
-          itemStats={itemStats}
-          fields={fields}
+          itemStats={
+            reportItemId === "all"
+              ? itemStats
+              : itemStats.filter((it) => it.id === reportItemId)
+          }
+          fields={reportFields}
           applications={reportApplications}
           onlyAccepted={reportOnlyAccepted}
           includePhotos={reportIncludePhotos}

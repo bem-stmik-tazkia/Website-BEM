@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import DeleteButton from "./DeleteButton";
 import BroadcastKegiatanButton from "./BroadcastKegiatanButton";
 import { formatDateToIndo } from "@/utils/dateFormatter";
+import { hasAnyFormQuestions } from "@/lib/registration-validation";
 
 const getEventStatus = (item: any) => {
   if (item.type === 'volunteer') {
@@ -249,7 +250,7 @@ export default async function KegiatanAdminPage({
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {(item.type === 'volunteer' || (item.type === 'event' && ((item.form_schema && item.form_schema.length > 0) || (item.items && item.items.length > 0)))) && (
+                        {(item.type === 'volunteer' || (item.type === 'event' && hasAnyFormQuestions(item.form_schema, item.items))) && (
                           <Link
                             href={`/admin/kegiatan/${item.id}/pendaftar`}
                             className={`h-8 px-3 rounded-lg flex items-center justify-center transition-colors text-xs font-bold ${

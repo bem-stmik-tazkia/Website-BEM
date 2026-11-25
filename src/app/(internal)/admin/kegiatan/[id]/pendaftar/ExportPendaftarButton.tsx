@@ -28,9 +28,13 @@ const formatDateWithTime = (dateStr: string) => {
   return `${day} ${month} ${year}, ${hours}:${minutes}`;
 };
 
+interface ExportField extends DynamicFormField {
+  itemTag?: string;
+}
+
 interface ExportPendaftarButtonProps {
   applications: VolunteerApplication[];
-  fields: DynamicFormField[];
+  fields: ExportField[];
   agendaTitle: string;
   hasItems?: boolean;
   itemLabel?: string;
@@ -50,7 +54,10 @@ export default function ExportPendaftarButton({
       "Waktu Submit",
       ...(hasItems ? [`"${itemLabel.replace(/"/g, '""')}"`] : []),
       "Status",
-      ...fields.map((f) => `"${f.label.replace(/"/g, '""')}"`),
+      ...fields.map((f) => {
+        const label = f.itemTag ? `${f.label} [${f.itemTag}]` : f.label;
+        return `"${label.replace(/"/g, '""')}"`;
+      }),
     ];
 
     const rows = applications.map((app) => {
@@ -138,7 +145,12 @@ export default function ExportPendaftarButton({
                       <th className="p-3 font-bold border-b border-outline-variant/30">Status</th>
                       {fields.map((field) => (
                         <th key={field.id} className="p-3 font-bold border-b border-outline-variant/30">
-                          {field.label}
+                          <div>{field.label}</div>
+                          {field.itemTag && (
+                            <div className="text-[10px] font-semibold text-primary normal-case mt-0.5">
+                              [{field.itemTag}]
+                            </div>
+                          )}
                         </th>
                       ))}
                     </tr>

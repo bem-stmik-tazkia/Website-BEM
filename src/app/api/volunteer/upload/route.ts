@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServiceRoleClient } from "@/lib/auth";
 import { getClientIp, checkRateLimit, createRateLimitResponse } from "@/lib/rateLimit";
 import { isValidImageSignature } from "@/lib/imageValidation";
-import { isDeadlinePassedJakarta } from "@/lib/registration-validation";
+import { hasAnyImageField, isDeadlinePassedJakarta } from "@/lib/registration-validation";
+import type { DynamicFormField } from "@/types/agenda";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
@@ -83,8 +84,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const formSchema = Array.isArray(agenda.form_schema) ? agenda.form_schema : [];
-    const hasImageField = formSchema.some((f: any) => f?.type === "image");
+    const formSchema: DynamicFormField[] = Array.isArray(agenda.form_schema)
+      ? agenda.form_schema
+      : [];
+    const { data: agendaItems } = await serviceClient
+      .from("agenda_items")
+      .select("extra_fields")
+      .eq("agenda_id", agendaId);
+
+    const hasImageField = hasAnyImageField(
+      formSchema,
+      (agendaItems as Array<{ extra_fields?: DynamicFormField[] | null }>) || []
+    );
     if (!hasImageField) {
       return NextResponse.json(
         { error: "Formulir kegiatan ini tidak memiliki kolom upload gambar." },

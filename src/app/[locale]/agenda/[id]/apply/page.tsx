@@ -1,16 +1,14 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import { getKegiatanById, getVolunteerParticipantCount } from "@/app/(internal)/admin/kegiatan/actions";
-import { isDeadlinePassedJakarta } from "@/lib/registration-validation";
+import { hasAnyFormQuestions, isDeadlinePassedJakarta } from "@/lib/registration-validation";
 import ApplyClientForm from "./ApplyClientForm";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string; locale: string }> }) {
   const { id, locale } = await params;
   const agenda = await getKegiatanById(id);
   const { getAlternates } = await import("@/utils/seo");
-  const hasRegistration =
-    (agenda?.form_schema && agenda.form_schema.length > 0) ||
-    (agenda?.items && agenda.items.length > 0);
+  const hasRegistration = hasAnyFormQuestions(agenda?.form_schema, agenda?.items);
 
   if (!agenda || (agenda.type !== "volunteer" && !(agenda.type === "event" && hasRegistration))) {
     return { title: "Pendaftaran Tidak Ditemukan - BEM STMIK Tazkia" };
@@ -34,9 +32,7 @@ export default async function ApplyPage({
   const preselectedItemId = resolvedSearchParams?.item;
 
   const agenda = await getKegiatanById(id);
-  const hasRegistration =
-    (agenda?.form_schema && agenda.form_schema.length > 0) ||
-    (agenda?.items && agenda.items.length > 0);
+  const hasRegistration = hasAnyFormQuestions(agenda?.form_schema, agenda?.items);
 
   if (!agenda || (agenda.type !== "volunteer" && !(agenda.type === "event" && hasRegistration))) {
     notFound();

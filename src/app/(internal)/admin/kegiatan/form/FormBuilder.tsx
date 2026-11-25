@@ -22,6 +22,10 @@ interface FormBuilderProps {
   fields: DynamicFormField[];
   onChange: (fields: DynamicFormField[]) => void;
   mode?: "event" | "volunteer";
+  compact?: boolean;
+  title?: string;
+  subtitle?: string;
+  idPrefix?: string;
 }
 
 const DEFAULT_LABELS: Record<DynamicFieldType, string> = {
@@ -72,7 +76,15 @@ function createTemplateFields(templateKey: "oprec" | "lomba" | "rsvp"): DynamicF
   ];
 }
 
-export default function FormBuilder({ fields, onChange, mode = "event" }: FormBuilderProps) {
+export default function FormBuilder({
+  fields,
+  onChange,
+  mode = "event",
+  compact = false,
+  title,
+  subtitle,
+  idPrefix = "field_",
+}: FormBuilderProps) {
   const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -112,7 +124,7 @@ export default function FormBuilder({ fields, onChange, mode = "event" }: FormBu
   };
 
   const addField = (type: DynamicFieldType) => {
-    const newId = `field_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const newId = `${idPrefix}${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const newField: DynamicFormField = {
       id: newId,
       type,
@@ -174,21 +186,30 @@ export default function FormBuilder({ fields, onChange, mode = "event" }: FormBu
   };
 
   return (
-    <div className="space-y-4">
+    <div className={compact ? "space-y-3" : "space-y-4"}>
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div>
-          <label className="text-sm font-bold text-on-surface block">
-            Penyusun Formulir Pendaftaran (Form Builder)
+          <label className={`${compact ? "text-xs" : "text-sm"} font-bold text-on-surface block`}>
+            {title ||
+              (compact
+                ? "Pertanyaan Khusus Tambahan"
+                : "Form Utama (Berlaku untuk Semua Pilihan)")}
           </label>
           <p className="text-xs text-on-surface-variant">
-            Susun pertanyaan yang harus diisi pendaftar.{" "}
-            <strong className="text-on-surface">
-              Kolom pilih {mode === "volunteer" ? "Posisi" : "Cabang Lomba"} tidak perlu dibuat di sini
-            </strong>{" "}
-            karena otomatis muncul di paling atas jika kamu mengisinya di bagian atas.
+            {subtitle ||
+              (compact ? (
+                "Hanya muncul jika pendaftar memilih item ini."
+              ) : (
+                <>
+                  Susun pertanyaan umum untuk semua pendaftar (atau kosongkan jika tiap cabang lomba memakai form masing-masing).{" "}
+                  <strong className="text-on-surface">
+                    Kolom pilih {mode === "volunteer" ? "Posisi" : "Cabang Lomba"} muncul otomatis.
+                  </strong>
+                </>
+              ))}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           <button
             type="button"
             onClick={() => addField("text")}
@@ -256,50 +277,62 @@ export default function FormBuilder({ fields, onChange, mode = "event" }: FormBu
         </div>
       </div>
 
-      {/* Template Cepat 1 Klik */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-primary/5 border border-primary/20">
-        <div className="flex items-center gap-2 text-xs text-on-surface">
-          <FiZap className="text-secondary shrink-0" size={16} />
-          <span>
-            <strong>Template Cepat (1 Klik):</strong> Isi otomatis daftar pertanyaan standar lalu edit seperlunya.
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {mode === "volunteer" ? (
-            <button
-              type="button"
-              onClick={() => applyTemplate("oprec")}
-              className="text-xs font-bold bg-emerald-600 text-white px-3.5 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors shadow-2xs"
-            >
-              ⚡ Pakai Template Form Oprec / Volunteer
-            </button>
-          ) : (
-            <>
+      {/* Template Cepat 1 Klik (hanya untuk Form Utama) */}
+      {!compact && (
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-primary/5 border border-primary/20">
+          <div className="flex items-center gap-2 text-xs text-on-surface">
+            <FiZap className="text-secondary shrink-0" size={16} />
+            <span>
+              <strong>Template Cepat (1 Klik):</strong> Isi otomatis daftar pertanyaan standar lalu edit seperlunya.
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {mode === "volunteer" ? (
               <button
                 type="button"
-                onClick={() => applyTemplate("lomba")}
-                className="text-xs font-bold bg-primary text-white px-3.5 py-1.5 rounded-lg hover:bg-primary/90 transition-colors shadow-2xs"
+                onClick={() => applyTemplate("oprec")}
+                className="text-xs font-bold bg-emerald-600 text-white px-3.5 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors shadow-2xs"
               >
-                🏆 Pakai Template Form Lomba
+                ⚡ Pakai Template Form Oprec / Volunteer
               </button>
-              <button
-                type="button"
-                onClick={() => applyTemplate("rsvp")}
-                className="text-xs font-bold bg-surface border border-primary/30 text-primary px-3.5 py-1.5 rounded-lg hover:bg-primary/10 transition-colors"
-              >
-                🎟️ Pakai Template Event / Seminar
-              </button>
-            </>
-          )}
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => applyTemplate("lomba")}
+                  className="text-xs font-bold bg-primary text-white px-3.5 py-1.5 rounded-lg hover:bg-primary/90 transition-colors shadow-2xs"
+                >
+                  🏆 Pakai Template Form Lomba
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyTemplate("rsvp")}
+                  className="text-xs font-bold bg-surface border border-primary/30 text-primary px-3.5 py-1.5 rounded-lg hover:bg-primary/10 transition-colors"
+                >
+                  🎟️ Pakai Template Event / Seminar
+                </button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {fields.length === 0 ? (
-        <div className="p-8 border border-dashed border-outline-variant/50 rounded-xl text-center text-on-surface-variant bg-surface-variant/10 text-sm space-y-2">
-          <p className="font-bold text-on-surface">Belum ada pertanyaan formulir.</p>
-          <p className="text-xs">
-            Klik tombol <strong>Template Cepat</strong> di atas untuk mengisi otomatis dalam 1 klik, atau tambahkan pertanyaan satu per satu.
-          </p>
+        <div
+          className={`${
+            compact ? "p-4 text-xs" : "p-8 text-sm space-y-2"
+          } border border-dashed border-outline-variant/50 rounded-xl text-center text-on-surface-variant bg-surface-variant/10`}
+        >
+          {compact ? (
+            <p>Belum ada pertanyaan khusus. Klik tombol tipe pertanyaan di atas jika cabang ini butuh isian tambahan.</p>
+          ) : (
+            <>
+              <p className="font-bold text-on-surface">Belum ada pertanyaan di Form Utama.</p>
+              <p className="text-xs">
+                Klik <strong>Template Cepat</strong> di atas, tambah pertanyaan satu per satu, atau kosongkan bila setiap cabang lomba punya pertanyaan khusus masing-masing.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className="space-y-3">

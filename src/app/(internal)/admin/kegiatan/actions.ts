@@ -3,10 +3,11 @@
 import { createClient } from "@/utils/supabase/server";
 import { requireAdmin, getServiceRoleClient } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { AgendaItemInput, AgendaKegiatan, ApplicationStatus, KegiatanFormInput } from "@/types/agenda";
+import { AgendaItemInput, AgendaKegiatan, ApplicationStatus, DynamicFormField, KegiatanFormInput } from "@/types/agenda";
 import { sendDiscordKegiatanNotification } from "@/lib/discord";
 import { enrichAgendasWithItemsAndCounts } from "@/lib/agenda-items-server";
 import { isOwnRegistrationStorageUrl } from "@/lib/registration-utils";
+import { hasAnyFormQuestions } from "@/lib/registration-validation";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -71,6 +72,24 @@ export async function getKegiatanById(idOrSlug: string) {
   return enriched;
 }
 
+function sanitizeExtraFields(fields?: DynamicFormField[]): DynamicFormField[] {
+  if (!Array.isArray(fields)) return [];
+  return fields
+    .filter((f) => f && typeof f.id === "string" && typeof f.label === "string")
+    .map((f) => ({
+      ...f,
+      label: f.label.trim() || "Pertanyaan",
+      placeholder: f.placeholder?.trim() || "",
+      ...(f.type === "select"
+        ? {
+            options: Array.isArray(f.options)
+              ? f.options.map((o) => o.trim()).filter(Boolean)
+              : [],
+          }
+        : {}),
+    }));
+}
+
 async function syncAgendaItems(
   agendaId: string,
   incomingItems: AgendaItemInput[]
@@ -88,6 +107,7 @@ async function syncAgendaItems(
           : null,
       participant_type: item.participant_type === "tim" ? "tim" : "individu",
       rulebook_url: item.rulebook_url?.trim() || null,
+      extra_fields: sanitizeExtraFields(item.extra_fields),
       sort_order: idx,
     }))
     .filter((item) => item.name.length > 0);
@@ -132,6 +152,7 @@ async function syncAgendaItems(
           quota: item.quota,
           participant_type: item.participant_type,
           rulebook_url: item.rulebook_url,
+          extra_fields: item.extra_fields,
           sort_order: item.sort_order,
           updated_at: new Date().toISOString(),
         })
@@ -151,6 +172,7 @@ async function syncAgendaItems(
       quota: item.quota,
       participant_type: item.participant_type,
       rulebook_url: item.rulebook_url,
+      extra_fields: item.extra_fields,
       sort_order: item.sort_order,
     }));
 
@@ -239,8 +261,7 @@ export async function saveKegiatan(
     const isRegistrationEnabled =
       savedKegiatan.type === "volunteer" ||
       (savedKegiatan.type === "event" &&
-        Array.isArray(savedKegiatan.form_schema) &&
-        savedKegiatan.form_schema.length > 0);
+        hasAnyFormQuestions(savedKegiatan.form_schema, validItems));
     await syncAgendaItems(
       savedKegiatan.id,
       isRegistrationEnabled ? validItems : []
@@ -256,9 +277,10 @@ export async function saveKegiatan(
     try {
       discordResult = await sendDiscordKegiatanNotification({
         ...enrichedSaved,
-        hasRegistrationForm:
-          Array.isArray(enrichedSaved.form_schema) &&
-          enrichedSaved.form_schema.length > 0,
+        hasRegistrationForm: hasAnyFormQuestions(
+          enrichedSaved.form_schema,
+          enrichedSaved.items
+        ),
       });
     } catch (discordErr) {
       console.warn("[saveKegiatan] Gagal mengirim notif Discord:", discordErr);

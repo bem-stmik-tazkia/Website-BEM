@@ -33,6 +33,7 @@ import {
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/components/ui/Toast";
 import { AgendaKegiatan } from "@/types/agenda";
+import { hasAnyFormQuestions } from "@/lib/registration-validation";
 import { formatDateToIndo, formatDateLocalized } from "@/utils/dateFormatter";
 import { translateContent } from "@/utils/translate";
 
@@ -249,7 +250,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
 
   const items = rawAgenda.items || [];
   const hasItems = items.length > 0;
-  const hasRegistration = (agenda.form_schema && agenda.form_schema.length > 0) || hasItems;
+  const hasRegistration = hasAnyFormQuestions(agenda.form_schema, items);
 
   const jakartaTodayStr = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Jakarta",

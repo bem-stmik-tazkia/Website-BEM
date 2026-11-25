@@ -8,6 +8,7 @@ import {
   DiscordChannelTarget,
 } from "@/lib/discord";
 import { enrichAgendasWithItemsAndCounts } from "@/lib/agenda-items-server";
+import { hasAnyFormQuestions } from "@/lib/registration-validation";
 
 /**
  * GET: Returns sanitized Discord webhook configuration status (never exposes URLs).
@@ -142,9 +143,10 @@ export async function POST(req: Request) {
       const [enrichedAgenda] = await enrichAgendasWithItemsAndCounts([agenda]);
       const result = await sendDiscordKegiatanNotification({
         ...enrichedAgenda,
-        hasRegistrationForm:
-          (Array.isArray(enrichedAgenda.form_schema) && enrichedAgenda.form_schema.length > 0) ||
-          (Array.isArray(enrichedAgenda.items) && enrichedAgenda.items.length > 0),
+        hasRegistrationForm: hasAnyFormQuestions(
+          enrichedAgenda.form_schema,
+          enrichedAgenda.items
+        ),
       });
       if (!result.ok) {
         return NextResponse.json(

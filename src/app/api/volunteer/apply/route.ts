@@ -5,9 +5,11 @@ import { getServiceRoleClient } from "@/lib/auth";
 import { getClientIp, checkRateLimit, createRateLimitResponse } from "@/lib/rateLimit";
 import { sendVolunteerAppliedNotification } from "@/lib/telegram";
 import {
+  hasAnyFormQuestions,
   isDeadlinePassedJakarta,
   isHostnameAllowed,
   validateItemSelection,
+  validateMultiItemRegistrationResponses,
   validateRegistrationResponses,
 } from "@/lib/registration-validation";
 import type { DynamicFormField } from "@/types/agenda";
@@ -23,8 +25,8 @@ const requestSchema = z.object({
   itemIds: z.array(z.string().uuid("Pilihan posisi/lomba tidak valid")).max(20).optional(),
   turnstileToken: z.string().min(1, "Verifikasi Captcha wajib disertakan"),
   responses: z.record(z.string(), z.string()).refine(
-    (obj) => Object.keys(obj).length <= 50,
-    "Jumlah respon melebihi batas yang diizinkan (maksimal 50 field)"
+    (obj) => Object.keys(obj).length <= 80,
+    "Jumlah respon melebihi batas yang diizinkan (maksimal 80 field)"
   ),
 });
 
@@ -131,7 +133,29 @@ export async function POST(req: Request) {
       ? agenda.form_schema
       : [];
 
-    if (formSchema.length === 0) {
+    // Ambil sub-items (posisi / cabang lomba) beserta extra_fields jika tersedia
+    const { data: agendaItems, error: itemsError } = await supabaseAdmin
+      .from("agenda_items")
+      .select("id, name, quota, extra_fields")
+      .eq("agenda_id", agendaId)
+      .order("sort_order", { ascending: true });
+
+    if (itemsError) {
+      console.error("[volunteer/apply] Error reading agenda_items:", itemsError.message);
+      return NextResponse.json(
+        { error: "Gagal memeriksa posisi/cabang pendaftaran" },
+        { status: 500, headers: rateLimitResult.headers }
+      );
+    }
+
+    const items = (agendaItems || []) as Array<{
+      id: string;
+      name: string;
+      quota: number | null;
+      extra_fields?: DynamicFormField[] | null;
+    }>;
+
+    if (!hasAnyFormQuestions(formSchema, items)) {
       return NextResponse.json(
         { error: "Pendaftaran untuk kegiatan ini tidak dibuka (tidak ada formulir pendaftaran)" },
         { status: 400, headers: rateLimitResult.headers }
@@ -145,25 +169,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Ambil sub-items (posisi / cabang lomba) jika tersedia
-    const { data: agendaItems, error: itemsError } = await supabaseAdmin
-      .from("agenda_items")
-      .select("id, name, quota")
-      .eq("agenda_id", agendaId)
-      .order("sort_order", { ascending: true });
-
-    if (itemsError) {
-      console.error("[volunteer/apply] Error reading agenda_items:", itemsError.message);
-      return NextResponse.json(
-        { error: "Gagal memeriksa posisi/cabang pendaftaran" },
-        { status: 500, headers: rateLimitResult.headers }
-      );
-    }
-
     const selectionValidation = validateItemSelection({
       agendaType: agenda.type,
       allowMultipleItems: agenda.allow_multiple_items,
-      availableItems: agendaItems || [],
+      availableItems: items,
       requestedItemIds,
     });
     if (!selectionValidation.valid) {
@@ -173,13 +182,43 @@ export async function POST(req: Request) {
       );
     }
 
-    // 5. Validasi Responses Terhadap Form Schema Server
-    const responseValidation = validateRegistrationResponses(formSchema, responses);
-    if (!responseValidation.valid) {
-      return NextResponse.json(
-        { error: responseValidation.error },
-        { status: 400, headers: rateLimitResult.headers }
-      );
+    const selectedItems = items.filter((it) =>
+      selectionValidation.selectedItemIds.includes(it.id)
+    );
+
+    // 5. Validasi Responses Terhadap Form Utama + Pertanyaan Khusus Item Terpilih
+    let extractedPortofolioUrl: string | null = null;
+    let responsesByItem: Record<string, Record<string, string>> | null = null;
+    let formattedFieldsForTelegram: Array<{ label: string; value: string }> = [];
+
+    if (selectedItems.length > 0) {
+      const multiCheck = validateMultiItemRegistrationResponses({
+        commonSchema: formSchema,
+        selectedItems,
+        responses,
+      });
+      if (!multiCheck.valid) {
+        return NextResponse.json(
+          { error: multiCheck.error },
+          { status: 400, headers: rateLimitResult.headers }
+        );
+      }
+      responsesByItem = multiCheck.responsesByItem;
+      extractedPortofolioUrl = multiCheck.extractedPortofolioUrl;
+      formattedFieldsForTelegram = multiCheck.mergedFieldsForSummary;
+    } else {
+      const singleCheck = validateRegistrationResponses(formSchema, responses);
+      if (!singleCheck.valid) {
+        return NextResponse.json(
+          { error: singleCheck.error },
+          { status: 400, headers: rateLimitResult.headers }
+        );
+      }
+      extractedPortofolioUrl = singleCheck.extractedPortofolioUrl;
+      formattedFieldsForTelegram = formSchema.map((field) => ({
+        label: field.label,
+        value: typeof responses[field.id] === "string" ? responses[field.id].trim() : "",
+      }));
     }
 
     // 6. Simpan Pendaftaran Secara Atomik (Lock Kuota via RPC)
@@ -192,8 +231,9 @@ export async function POST(req: Request) {
             ? selectionValidation.selectedItemIds
             : null,
         p_responses: responses,
-        p_portofolio_url: responseValidation.extractedPortofolioUrl,
+        p_portofolio_url: extractedPortofolioUrl,
         p_batch_id: null,
+        p_responses_by_item: responsesByItem,
       }
     );
 
@@ -249,17 +289,12 @@ export async function POST(req: Request) {
 
     // 7. Kirim notifikasi teknis ke Telegram internal pengurus (non-blocking)
     try {
-      const formattedFields = formSchema.map((field) => ({
-        label: field.label,
-        value: typeof responses[field.id] === "string" ? responses[field.id].trim() : "",
-      }));
-
       await sendVolunteerAppliedNotification({
         agendaId: agenda.id,
         agendaTitle: agenda.title || "Kegiatan BEM",
         agendaType: agenda.type,
         selectedItems: itemNames,
-        fields: formattedFields,
+        fields: formattedFieldsForTelegram,
         totalParticipants: totalAccepted,
       });
     } catch (teleErr) {

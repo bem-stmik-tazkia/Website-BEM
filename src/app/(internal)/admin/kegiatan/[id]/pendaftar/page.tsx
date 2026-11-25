@@ -2,6 +2,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { getKegiatanById, getVolunteerApplications } from "../../actions";
 import PendaftarClient from "./PendaftarClient";
+import { hasAnyFormQuestions } from "@/lib/registration-validation";
 
 export const metadata = {
   title: "Kelola Pendaftar - BEM STMIK Tazkia Admin",
@@ -15,9 +16,7 @@ export default async function KelolaPendaftarPage({
   const { id } = await params;
   const agenda = await getKegiatanById(id);
 
-  const hasRegistration =
-    (agenda?.form_schema && agenda.form_schema.length > 0) ||
-    (agenda?.items && agenda.items.length > 0);
+  const hasRegistration = hasAnyFormQuestions(agenda?.form_schema, agenda?.items);
 
   if (
     !agenda ||

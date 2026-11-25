@@ -16,13 +16,34 @@ import {
   FiUsers,
   FiUser,
 } from "react-icons/fi";
-import { AgendaItem, AgendaKegiatan } from "@/types/agenda";
+import { AgendaItem, AgendaKegiatan, DynamicFormField } from "@/types/agenda";
+import { hasAnyFormQuestions } from "@/lib/registration-validation";
 import { formatDateToIndo } from "@/utils/dateFormatter";
 import { useToast } from "@/components/ui/Toast";
 import SafeLottie from "@/components/ui/SafeLottie";
 import { useTranslations } from "next-intl";
 import { compressImage } from "@/lib/imageCompression";
 import { getRegistrationImagePreviewUrl } from "@/lib/registration-utils";
+
+function getRemainingCooldownMinutes(keys: string[], cooldownMinutes: number): number | null {
+  const now = Date.now();
+  const cooldownMs = cooldownMinutes * 60 * 1000;
+  for (const key of keys) {
+    const lastSubmitTime = localStorage.getItem(key);
+    if (lastSubmitTime) {
+      const timeDiff = now - parseInt(lastSubmitTime, 10);
+      if (timeDiff < cooldownMs) {
+        return Math.ceil((cooldownMs - timeDiff) / 60000);
+      }
+    }
+  }
+  return null;
+}
+
+function recordCooldownTimestamps(keys: string[]) {
+  const nowStr = Date.now().toString();
+  keys.forEach((key) => localStorage.setItem(key, nowStr));
+}
 
 function PublicImageField({
   fieldId,
@@ -291,6 +312,23 @@ export default function ApplyClientForm({
   const t = useTranslations("ApplyForm");
 
   const fields = agenda.form_schema || [];
+  const selectedItems = items.filter((it) => selectedItemIds.includes(it.id));
+  const activeExtraFields = selectedItems.flatMap((it) => it.extra_fields || []);
+  const allActiveFields = [...fields, ...activeExtraFields];
+  const hasAnyItemExtraFields = items.some((it) => (it.extra_fields || []).length > 0);
+  const hasConfiguredQuestions = hasAnyFormQuestions(fields, items);
+  const selectedItemSections = selectedItems.reduce<
+    Array<{ item: AgendaItem; extra: DynamicFormField[]; startNum: number }>
+  >((acc, item) => {
+    const extra = item.extra_fields || [];
+    if (extra.length === 0) return acc;
+    const prevEnd =
+      acc.length > 0
+        ? acc[acc.length - 1].startNum + acc[acc.length - 1].extra.length
+        : fields.length;
+    acc.push({ item, extra, startNum: prevEnd });
+    return acc;
+  }, []);
 
   useEffect(() => {
     try {
@@ -338,31 +376,23 @@ export default function ApplyClientForm({
     }
 
     // Cooldown per item (atau per agenda jika tanpa sub-item)
-    const cooldownMinutes = 3;
     const cooldownKeys = hasItems
       ? selectedItemIds.map((id) => `last_volunteer_submit_${agenda.id}_${id}`)
       : [`last_volunteer_submit_${agenda.id}`];
 
-    for (const key of cooldownKeys) {
-      const lastSubmitTime = localStorage.getItem(key);
-      if (lastSubmitTime) {
-        const timeDiff = Date.now() - parseInt(lastSubmitTime, 10);
-        if (timeDiff < cooldownMinutes * 60 * 1000) {
-          showErrorToast(
-            `Tunggu ${Math.ceil(
-              (cooldownMinutes * 60 * 1000 - timeDiff) / 60000
-            )} menit sebelum mendaftar ulang pada pilihan yang sama.`
-          );
-          return;
-        }
-      }
+    const waitMinutes = getRemainingCooldownMinutes(cooldownKeys, 3);
+    if (waitMinutes !== null) {
+      showErrorToast(
+        `Tunggu ${waitMinutes} menit sebelum mendaftar ulang pada pilihan yang sama.`
+      );
+      return;
     }
 
     // Validate required fields and formats
     const newInvalidFields: Record<string, string> = {};
     let firstInvalidId: string | null = null;
 
-    for (const field of fields) {
+    for (const field of allActiveFields) {
       const value = responses[field.id] || "";
 
       if (field.required && !value) {
@@ -428,13 +458,21 @@ export default function ApplyClientForm({
     setInvalidFields({});
 
     try {
+      const activeFieldIds = new Set(allActiveFields.map((f) => f.id));
+      const filteredResponses: Record<string, string> = {};
+      for (const [key, val] of Object.entries(responses)) {
+        if (activeFieldIds.has(key)) {
+          filteredResponses[key] = val;
+        }
+      }
+
       const res = await fetch("/api/volunteer/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           agendaId: agenda.id,
           itemIds: hasItems ? selectedItemIds : undefined,
-          responses,
+          responses: filteredResponses,
           turnstileToken,
         }),
       });
@@ -450,8 +488,7 @@ export default function ApplyClientForm({
       setIsSuccess(true);
       showSuccessToast(t("successToast"));
 
-      const nowStr = Date.now().toString();
-      cooldownKeys.forEach((key) => localStorage.setItem(key, nowStr));
+      recordCooldownTimestamps(cooldownKeys);
 
       try {
         localStorage.removeItem(`draft_agenda_${agenda.id}`);
@@ -488,6 +525,174 @@ export default function ApplyClientForm({
         return updated;
       });
     }
+  };
+
+  const renderFormField = (field: DynamicFormField, displayNumber: number) => {
+    const errorMsg = invalidFields[field.id];
+    const isInvalid = !!errorMsg;
+    return (
+      <div
+        key={field.id}
+        id={`field-wrapper-${field.id}`}
+        className={`space-y-2 transition-all duration-300 p-4 -mx-4 rounded-2xl border ${
+          isInvalid
+            ? "bg-red-50/50 border-red-400"
+            : "border-transparent bg-transparent"
+        }`}
+      >
+        <label
+          className={`text-sm font-bold flex gap-1 items-center ${
+            isInvalid ? "text-red-700" : "text-on-surface"
+          }`}
+        >
+          {displayNumber}. {field.label}
+          {field.required ? (
+            <span className="text-red-500">*</span>
+          ) : (
+            <span className="text-on-surface-variant/60 font-normal text-xs ml-1">
+              ({t("optional")})
+            </span>
+          )}
+        </label>
+
+        {["text", "number", "email"].includes(field.type) && (
+          <input
+            type={field.type}
+            required={field.required}
+            maxLength={field.type === "number" ? 20 : 100}
+            value={responses[field.id] || ""}
+            onChange={(e) => handleChange(field.id, e.target.value)}
+            placeholder={field.placeholder || t("placeholderText")}
+            className={`w-full bg-background border rounded-xl px-4 py-3 text-sm outline-none transition-colors ${
+              isInvalid
+                ? "border-red-400 focus:border-red-500"
+                : "border-outline-variant/50 focus:border-primary"
+            }`}
+          />
+        )}
+
+        {field.type === "tel" && (
+          <div
+            className={`flex w-full bg-background border rounded-xl overflow-hidden transition-colors ${
+              isInvalid
+                ? "border-red-400 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500"
+                : "border-outline-variant/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
+            }`}
+          >
+            <div className="flex items-center justify-center px-4 bg-surface-variant/30 text-sm font-bold border-r border-inherit">
+              +62
+            </div>
+            <input
+              type="tel"
+              required={field.required}
+              maxLength={15}
+              value={
+                responses[field.id]
+                  ? responses[field.id].replace(/^\+62/, "")
+                  : ""
+              }
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, "");
+                if (val) {
+                  handleChange(field.id, `+62${val}`);
+                } else {
+                  handleChange(field.id, "");
+                }
+              }}
+              placeholder={field.placeholder || t("placeholderPhone")}
+              className="flex-1 bg-transparent px-4 py-3 text-sm outline-none w-full"
+            />
+          </div>
+        )}
+
+        {field.type === "textarea" && (
+          <textarea
+            required={field.required}
+            maxLength={500}
+            value={responses[field.id] || ""}
+            onChange={(e) => handleChange(field.id, e.target.value)}
+            placeholder={field.placeholder || t("placeholderText")}
+            className={`w-full bg-background border rounded-xl px-4 py-3 text-sm outline-none min-h-[120px] transition-colors ${
+              isInvalid
+                ? "border-red-400 focus:border-red-500"
+                : "border-outline-variant/50 focus:border-primary"
+            }`}
+          />
+        )}
+
+        {field.type === "select" && (
+          <select
+            required={field.required}
+            value={responses[field.id] || ""}
+            onChange={(e) => handleChange(field.id, e.target.value)}
+            className={`w-full bg-background border rounded-xl px-4 py-3 text-sm outline-none transition-colors ${
+              isInvalid
+                ? "border-red-400 focus:border-red-500"
+                : "border-outline-variant/50 focus:border-primary"
+            }`}
+          >
+            <option value="">
+              {field.placeholder || "-- Pilih Jawaban --"}
+            </option>
+            {(field.options || [])
+              .map((o) => o.trim())
+              .filter(Boolean)
+              .map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+          </select>
+        )}
+
+        {field.type === "file" && (
+          <div className="space-y-1.5">
+            <input
+              type="url"
+              id={field.id}
+              required={field.required}
+              maxLength={500}
+              value={responses[field.id] || ""}
+              onChange={(e) => handleChange(field.id, e.target.value)}
+              placeholder={
+                field.placeholder ||
+                "https://drive.google.com/... atau https://notion.so/..."
+              }
+              className={`w-full bg-background border rounded-xl px-4 py-3 text-sm outline-none transition-colors ${
+                isInvalid
+                  ? "border-red-400 focus:border-red-500"
+                  : "border-outline-variant/50 focus:border-primary"
+              }`}
+            />
+            <p className="text-[11px] text-on-surface-variant flex items-start gap-1.5">
+              <span className="shrink-0">🔗</span>
+              <span>
+                Lampirkan tautan publik (Google Drive, Notion, GitHub, LinkedIn, Figma, Canva, atau OneDrive). Pastikan izin akses dibuka untuk publik. Wajib diawali <code>https://</code> (maks. 500 karakter).
+              </span>
+            </p>
+          </div>
+        )}
+
+        {field.type === "image" && (
+          <PublicImageField
+            fieldId={field.id}
+            agendaId={agenda.id}
+            value={responses[field.id] || ""}
+            placeholder={field.placeholder}
+            isInvalid={isInvalid}
+            onChange={(val) => handleChange(field.id, val)}
+            onErrorToast={showErrorToast}
+          />
+        )}
+
+        {isInvalid && (
+          <div className="text-red-600 text-xs font-bold flex items-center gap-1.5 mt-2">
+            <FiAlertCircle size={14} />
+            {t("questionError")} {errorMsg}
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (isSuccess) {
@@ -720,178 +925,55 @@ export default function ApplyClientForm({
                 </div>
               )}
 
-              {fields.length === 0 ? (
+              {!hasConfiguredQuestions ? (
                 <div className="text-center p-8 bg-surface-variant/20 rounded-xl text-on-surface-variant text-sm">
                   {t("noQuestions")}
                 </div>
               ) : (
-                fields.map((field, idx) => {
-                  const errorMsg = invalidFields[field.id];
-                  const isInvalid = !!errorMsg;
-                  return (
+                <>
+                  {fields.length > 0 && (
+                    <div className="space-y-4">
+                      {hasAnyItemExtraFields && (
+                        <div className="pb-1 border-b border-outline-variant/20">
+                          <h3 className="text-xs font-extrabold uppercase tracking-wider text-on-surface-variant">
+                            Informasi Umum Pendaftar
+                          </h3>
+                        </div>
+                      )}
+                      {fields.map((field, idx) => renderFormField(field, idx + 1))}
+                    </div>
+                  )}
+
+                  {hasItems && hasAnyItemExtraFields && selectedItems.length === 0 && (
+                    <div className="p-4 rounded-xl bg-surface-variant/20 border border-dashed border-outline-variant/50 text-xs text-on-surface-variant text-center">
+                      Pilih {isVolunteer ? "posisi" : "cabang lomba"} di atas untuk menampilkan pertanyaan khusus sesuai pilihanmu.
+                    </div>
+                  )}
+
+                  {selectedItemSections.map(({ item, extra, startNum }) => (
                     <div
-                      key={field.id}
-                      id={`field-wrapper-${field.id}`}
-                      className={`space-y-2 transition-all duration-300 p-4 -mx-4 rounded-2xl border ${
-                        isInvalid
-                          ? "bg-red-50/50 border-red-400"
-                          : "border-transparent bg-transparent"
-                      }`}
+                      key={item.id}
+                      className="p-5 rounded-2xl border border-primary/25 bg-primary/[0.03] space-y-4"
                     >
-                      <label
-                        className={`text-sm font-bold flex gap-1 items-center ${
-                          isInvalid ? "text-red-700" : "text-on-surface"
-                        }`}
-                      >
-                        {idx + 1}. {field.label}
-                        {field.required ? (
-                          <span className="text-red-500">*</span>
-                        ) : (
-                          <span className="text-on-surface-variant/60 font-normal text-xs ml-1">
-                            ({t("optional")})
-                          </span>
-                        )}
-                      </label>
-
-                      {["text", "number", "email"].includes(field.type) && (
-                        <input
-                          type={field.type}
-                          required={field.required}
-                          maxLength={field.type === "number" ? 20 : 100}
-                          value={responses[field.id] || ""}
-                          onChange={(e) => handleChange(field.id, e.target.value)}
-                          placeholder={field.placeholder || t("placeholderText")}
-                          className={`w-full bg-background border rounded-xl px-4 py-3 text-sm outline-none transition-colors ${
-                            isInvalid
-                              ? "border-red-400 focus:border-red-500"
-                              : "border-outline-variant/50 focus:border-primary"
-                          }`}
-                        />
-                      )}
-
-                      {field.type === "tel" && (
-                        <div
-                          className={`flex w-full bg-background border rounded-xl overflow-hidden transition-colors ${
-                            isInvalid
-                              ? "border-red-400 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500"
-                              : "border-outline-variant/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
-                          }`}
-                        >
-                          <div className="flex items-center justify-center px-4 bg-surface-variant/30 text-sm font-bold border-r border-inherit">
-                            +62
-                          </div>
-                          <input
-                            type="tel"
-                            required={field.required}
-                            maxLength={15}
-                            value={
-                              responses[field.id]
-                                ? responses[field.id].replace(/^\+62/, "")
-                                : ""
-                            }
-                            onChange={(e) => {
-                              const val = e.target.value.replace(/\D/g, "");
-                              if (val) {
-                                handleChange(field.id, `+62${val}`);
-                              } else {
-                                handleChange(field.id, "");
-                              }
-                            }}
-                            placeholder={field.placeholder || t("placeholderPhone")}
-                            className="flex-1 bg-transparent px-4 py-3 text-sm outline-none w-full"
-                          />
-                        </div>
-                      )}
-
-                      {field.type === "textarea" && (
-                        <textarea
-                          required={field.required}
-                          maxLength={500}
-                          value={responses[field.id] || ""}
-                          onChange={(e) => handleChange(field.id, e.target.value)}
-                          placeholder={field.placeholder || t("placeholderText")}
-                          className={`w-full bg-background border rounded-xl px-4 py-3 text-sm outline-none min-h-[120px] transition-colors ${
-                            isInvalid
-                              ? "border-red-400 focus:border-red-500"
-                              : "border-outline-variant/50 focus:border-primary"
-                          }`}
-                        />
-                      )}
-
-                      {field.type === "select" && (
-                        <select
-                          required={field.required}
-                          value={responses[field.id] || ""}
-                          onChange={(e) => handleChange(field.id, e.target.value)}
-                          className={`w-full bg-background border rounded-xl px-4 py-3 text-sm outline-none transition-colors ${
-                            isInvalid
-                              ? "border-red-400 focus:border-red-500"
-                              : "border-outline-variant/50 focus:border-primary"
-                          }`}
-                        >
-                          <option value="">
-                            {field.placeholder || "-- Pilih Jawaban --"}
-                          </option>
-                          {(field.options || [])
-                            .map((o) => o.trim())
-                            .filter(Boolean)
-                            .map((opt) => (
-                              <option key={opt} value={opt}>
-                                {opt}
-                              </option>
-                            ))}
-                        </select>
-                      )}
-
-                      {field.type === "file" && (
-                        <div className="space-y-1.5">
-                          <input
-                            type="url"
-                            id={field.id}
-                            required={field.required}
-                            maxLength={500}
-                            value={responses[field.id] || ""}
-                            onChange={(e) => handleChange(field.id, e.target.value)}
-                            placeholder={
-                              field.placeholder ||
-                              "https://drive.google.com/... atau https://notion.so/..."
-                            }
-                            className={`w-full bg-background border rounded-xl px-4 py-3 text-sm outline-none transition-colors ${
-                              isInvalid
-                                ? "border-red-400 focus:border-red-500"
-                                : "border-outline-variant/50 focus:border-primary"
-                            }`}
-                          />
-                          <p className="text-[11px] text-on-surface-variant flex items-start gap-1.5">
-                            <span className="shrink-0">🔗</span>
-                            <span>
-                              Lampirkan tautan publik (Google Drive, Notion, GitHub, LinkedIn, Figma, Canva, atau OneDrive). Pastikan izin akses dibuka untuk publik. Wajib diawali <code>https://</code> (maks. 500 karakter).
-                            </span>
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-primary/15">
+                        <div>
+                          <p className="text-[11px] font-extrabold uppercase tracking-wider text-primary">
+                            Pertanyaan Khusus {isVolunteer ? "Posisi" : "Cabang Lomba"}
                           </p>
+                          <h3 className="text-base font-extrabold text-on-surface">
+                            {item.name}
+                          </h3>
                         </div>
-                      )}
-
-                      {field.type === "image" && (
-                        <PublicImageField
-                          fieldId={field.id}
-                          agendaId={agenda.id}
-                          value={responses[field.id] || ""}
-                          placeholder={field.placeholder}
-                          isInvalid={isInvalid}
-                          onChange={(val) => handleChange(field.id, val)}
-                          onErrorToast={showErrorToast}
-                        />
-                      )}
-
-                      {isInvalid && (
-                        <div className="text-red-600 text-xs font-bold flex items-center gap-1.5 mt-2">
-                          <FiAlertCircle size={14} />
-                          {t("questionError")} {errorMsg}
-                        </div>
+                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+                          {extra.length} Pertanyaan
+                        </span>
+                      </div>
+                      {extra.map((field, eIdx) =>
+                        renderFormField(field, startNum + eIdx + 1)
                       )}
                     </div>
-                  );
-                })
+                  ))}
+                </>
               )}
 
               {/* Cloudflare Turnstile Captcha */}
@@ -915,7 +997,7 @@ export default function ApplyClientForm({
                 )}
                 <button
                   type="submit"
-                  disabled={isSubmitting || fields.length === 0 || !turnstileToken}
+                  disabled={isSubmitting || !hasConfiguredQuestions || !turnstileToken}
                   className="ml-auto bg-primary text-white font-bold px-8 py-3.5 rounded-xl hover:bg-primary/90 transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isSubmitting ? (

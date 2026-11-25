@@ -25,6 +25,7 @@ export interface AgendaItem {
   quota: number | null;
   participant_type: "individu" | "tim";
   rulebook_url?: string | null;
+  extra_fields?: DynamicFormField[]; // Pertanyaan tambahan khusus cabang lomba / posisi ini
   sort_order: number;
   created_at?: string;
   updated_at?: string;
@@ -39,6 +40,7 @@ export interface AgendaItemInput {
   quota: number | null;
   participant_type?: "individu" | "tim";
   rulebook_url?: string | null;
+  extra_fields?: DynamicFormField[];
   sort_order?: number;
 }
 
