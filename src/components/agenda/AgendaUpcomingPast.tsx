@@ -5,8 +5,9 @@ import { FiClock, FiMapPin, FiArrowRight, FiCheckCircle, FiBriefcase, FiImage } 
 import Link from "next/link";
 import Image from "next/image";
 import { AgendaKegiatan } from "@/types/agenda";
-import { formatDateToIndo } from "@/utils/dateFormatter";
-import { useTranslations } from "next-intl";
+import { formatDateToIndo, formatDeadlineWib } from "@/utils/dateFormatter";
+import { isDeadlinePassedJakarta } from "@/lib/registration-validation";
+import { useLocale, useTranslations } from "next-intl";
 import SafeLottie from "@/components/ui/SafeLottie";
 
 interface AgendaUpcomingPastProps {
@@ -34,6 +35,7 @@ function parseDateLocal(dateStr: string): Date {
 
 export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: AgendaUpcomingPastProps) {
   const t = useTranslations("AgendaPage");
+  const locale = useLocale();
   
   const today = useMemo(() => {
     const d = new Date();
@@ -50,6 +52,9 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
 
   const upcomingAgendas = useMemo(
     () => agendasWithColor.filter((a) => {
+      if (isVolunteer) {
+        return !isDeadlinePassedJakarta(a.deadline || a.end_date, now);
+      }
       const end = a.end_date ? parseDateLocal(a.end_date) : (a.date ? parseDateLocal(a.date) : null);
       if (!end || end < today) return false;
       // Jika event berakhir hari ini, cek apakah sudah lewat jam selesainya
@@ -66,11 +71,14 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
       const db = b.date ? parseDateLocal(b.date).getTime() : 0;
       return da - db;
     }),
-    [agendasWithColor, today, now]
+    [agendasWithColor, today, now, isVolunteer]
   );
 
   const pastAgendas = useMemo(
     () => agendasWithColor.filter((a) => {
+      if (isVolunteer) {
+        return isDeadlinePassedJakarta(a.deadline || a.end_date, now);
+      }
       const end = a.end_date ? parseDateLocal(a.end_date) : (a.date ? parseDateLocal(a.date) : null);
       if (!end) return false;
       if (end < today) return true; // Tanggal sudah lewat
@@ -88,7 +96,7 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
       const db = b.date ? parseDateLocal(b.date).getTime() : 0;
       return db - da; // Yang terbaru selesai di paling atas
     }),
-    [agendasWithColor, today, now]
+    [agendasWithColor, today, now, isVolunteer]
   );
 
   const formatDateRange = (agenda: AgendaKegiatan) => {
@@ -186,7 +194,9 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                         {agenda.title}
                         </p>
                         <p className="text-[10px] text-on-surface-variant leading-tight mt-0.5">
-                        {isVolunteer && agenda.end_date ? `Batas: ${formatDateToIndo(agenda.end_date)}` : formatDateRange(agenda)}
+                        {isVolunteer && (agenda.deadline || agenda.end_date)
+                          ? `Batas: ${formatDeadlineWib(agenda.deadline || agenda.end_date, locale)}`
+                          : formatDateRange(agenda)}
                         </p>
                     </div>
                     
@@ -268,7 +278,9 @@ export default function AgendaUpcomingPast({ agendas, isVolunteer = false }: Age
                           {agenda.title}
                         </p>
                         <p className="text-[10px] text-on-surface-variant leading-tight mt-0.5">
-                          {isVolunteer && agenda.end_date ? `Batas: ${formatDateToIndo(agenda.end_date)}` : formatDateRange(agenda)}
+                          {isVolunteer && (agenda.deadline || agenda.end_date)
+                            ? `Batas: ${formatDeadlineWib(agenda.deadline || agenda.end_date, locale)}`
+                            : formatDateRange(agenda)}
                         </p>
                       </div>
 

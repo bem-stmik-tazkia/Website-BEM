@@ -158,3 +158,83 @@ export function formatAgendaSaveErrorMessage(err: unknown): string {
 
   return raw.trim() || "Terjadi kesalahan saat menyimpan data ke database.";
 }
+
+/**
+ * Parses a registration deadline string into an exact closing Date instant.
+ * Legacy date-only values ("YYYY-MM-DD") default to 23:59:59 WIB (+07:00).
+ * Local datetime strings without offset ("YYYY-MM-DDTHH:mm") are treated as WIB (+07:00).
+ */
+export function parseDeadlineInstant(deadline?: string | null): Date | null {
+  if (!deadline || typeof deadline !== "string") return null;
+  const trimmed = deadline.trim();
+  if (!trimmed) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const parsed = new Date(`${trimmed}T23:59:59+07:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const localMatch = trimmed.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::(\d{2}))?$/);
+  if (localMatch) {
+    const sec = localMatch[3] || (localMatch[2] === "23:59" ? "59" : "00");
+    const parsed = new Date(`${localMatch[1]}T${localMatch[2]}:${sec}+07:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const parsed = new Date(trimmed);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+/**
+ * Splits a deadline (YYYY-MM-DD or ISO timestamp) into Asia/Jakarta date (YYYY-MM-DD)
+ * and time (HH:mm) parts for form inputs.
+ */
+export function splitDeadlineWib(deadline?: string | null): { date: string; time: string } {
+  if (!deadline || typeof deadline !== "string" || !deadline.trim()) {
+    return { date: "", time: "23:59" };
+  }
+  const trimmed = deadline.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return { date: trimmed, time: "23:59" };
+  }
+
+  const instant = parseDeadlineInstant(trimmed);
+  if (!instant) {
+    return { date: trimmed.split("T")[0] || "", time: "23:59" };
+  }
+
+  const datePart = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(instant);
+
+  const rawTime = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Jakarta",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(instant);
+
+  const normalizedTime = rawTime.startsWith("24:") ? `00:${rawTime.slice(3)}` : rawTime;
+  return { date: datePart, time: normalizedTime };
+}
+
+/**
+ * Combines a calendar date (YYYY-MM-DD) and closing time (HH:mm) in Asia/Jakarta (+07:00)
+ * into an ISO-8601 timestamp string for storage.
+ */
+export function combineDeadlineWib(
+  dateStr?: string | null,
+  timeStr?: string | null
+): string | null {
+  const cleanDate = (dateStr || "").trim().split("T")[0];
+  if (!cleanDate || !/^\d{4}-\d{2}-\d{2}$/.test(cleanDate)) {
+    return null;
+  }
+  const cleanTime = (timeStr || "").trim();
+  const validTime = /^([01]\d|2[0-3]):([0-5]\d)$/.test(cleanTime) ? cleanTime : "23:59";
+  const sec = validTime === "23:59" ? "59" : "00";
+  return `${cleanDate}T${validTime}:${sec}+07:00`;
+}

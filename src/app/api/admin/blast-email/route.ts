@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import { verifyAdminApi } from '@/lib/auth';
 import { Resend } from 'resend';
+import { formatWibDate, formatWibDeadline } from '@/lib/notification-utils';
+
+function escapeHtml(value: string): string {
+  return (value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 export async function POST(req: Request) {
     try {
@@ -14,7 +24,7 @@ export async function POST(req: Request) {
         const resend = new Resend(process.env.RESEND_API_KEY || "re_dummy");
         
         const body = await req.json();
-        const { title, type, date, location, description } = body;
+        const { title, type, date, end_date, time_range, deadline, location, description } = body;
 
         if (!title || !description) {
             return NextResponse.json(
@@ -42,7 +52,16 @@ export async function POST(req: Request) {
 
         // 2. Siapkan konten email
         const typeLabel = type === 'volunteer' ? 'Open Recruitment' : 'Agenda BEM';
-        const formattedDate = date ? new Date(date).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '-';
+        const formattedDate = date
+          ? end_date && end_date !== date
+            ? `${formatWibDate(date)} – ${formatWibDate(end_date)}`
+            : formatWibDate(date)
+          : '-';
+        const formattedDeadline = deadline ? formatWibDeadline(deadline) : null;
+        const safeTitle = escapeHtml(String(title));
+        const safeDescription = escapeHtml(String(description));
+        const safeLocation = escapeHtml(String(location || '-'));
+        const safeTimeRange = time_range ? escapeHtml(String(time_range)) : '';
         
         const htmlContent = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -51,13 +70,15 @@ export async function POST(req: Request) {
                 </div>
                 <div style="padding: 20px;">
                     <span style="background-color: #e0e7ff; color: #3730a3; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">${typeLabel}</span>
-                    <h3 style="color: #111827; margin-top: 15px;">${title}</h3>
+                    <h3 style="color: #111827; margin-top: 15px;">${safeTitle}</h3>
                     
-                    <p style="color: #4b5563; line-height: 1.6; white-space: pre-wrap;">${description}</p>
+                    <p style="color: #4b5563; line-height: 1.6; white-space: pre-wrap;">${safeDescription}</p>
                     
                     <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                        <p style="margin: 5px 0;"><strong>📅 Tanggal:</strong> ${formattedDate}</p>
-                        <p style="margin: 5px 0;"><strong>📍 Lokasi:</strong> ${location || '-'}</p>
+                        ${type !== 'volunteer' ? `<p style="margin: 5px 0;"><strong>📅 Tanggal:</strong> ${formattedDate}</p>` : ''}
+                        ${type !== 'volunteer' && safeTimeRange ? `<p style="margin: 5px 0;"><strong>🕒 Waktu:</strong> ${safeTimeRange}</p>` : ''}
+                        ${formattedDeadline ? `<p style="margin: 5px 0;"><strong>⏳ Batas Pendaftaran:</strong> ${formattedDeadline}</p>` : ''}
+                        ${type !== 'volunteer' ? `<p style="margin: 5px 0;"><strong>📍 Lokasi:</strong> ${safeLocation}</p>` : ''}
                     </div>
                     
                     <div style="margin-top: 30px; text-align: center;">

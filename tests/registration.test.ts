@@ -3,12 +3,15 @@ import assert from "node:assert/strict";
 import { isValidImageSignature } from "../src/lib/imageValidation";
 import {
   buildBaseAgendaSlug,
+  combineDeadlineWib,
   extractGoogleDriveFileId,
   formatAgendaSaveErrorMessage,
   getRegistrationImagePreviewUrl,
   getSafeHttpsUrl,
   isOwnRegistrationStorageUrl,
+  parseDeadlineInstant,
   parsePositiveQuota,
+  splitDeadlineWib,
 } from "../src/lib/registration-utils";
 import {
   aggregateAgendaItemsAndCounts,
@@ -531,4 +534,37 @@ test("formatAgendaSaveErrorMessage converts raw Postgres/auth errors into clear 
     formatAgendaSaveErrorMessage(new Error("Unauthorized: Sesi tidak valid")),
     /Sesi admin/i
   );
+});
+
+// -----------------------------------------------------------------------------
+// 9. Deadline Timestamp & Closing Hour (WIB / Asia/Jakarta)
+// -----------------------------------------------------------------------------
+test("splitDeadlineWib and combineDeadlineWib round-trip dates and closing hours including 07:00 WIB", () => {
+  assert.deepEqual(splitDeadlineWib(null), { date: "", time: "23:59" });
+  assert.deepEqual(splitDeadlineWib("2026-11-27"), { date: "2026-11-27", time: "23:59" });
+
+  const combined17 = combineDeadlineWib("2026-11-27", "17:00");
+  assert.equal(combined17, "2026-11-27T17:00:00+07:00");
+  assert.deepEqual(splitDeadlineWib(combined17), { date: "2026-11-27", time: "17:00" });
+
+  // 07:00 WIB === 00:00:00Z must NOT be confused with a legacy midnight date
+  const combined07 = combineDeadlineWib("2026-11-27", "07:00");
+  assert.equal(combined07, "2026-11-27T07:00:00+07:00");
+  assert.deepEqual(splitDeadlineWib("2026-11-27T00:00:00+00:00"), {
+    date: "2026-11-27",
+    time: "07:00",
+  });
+
+  const combined2359 = combineDeadlineWib("2026-11-27", "23:59");
+  assert.equal(combined2359, "2026-11-27T23:59:59+07:00");
+  assert.equal(parseDeadlineInstant("2026-11-27")?.toISOString(), "2026-11-27T16:59:59.000Z");
+});
+
+test("isDeadlinePassedJakarta respects exact WIB closing hour down to the minute", () => {
+  const deadline17Wib = "2026-11-25T17:00:00+07:00"; // 10:00:00 UTC
+  const beforeClose = new Date("2026-11-25T09:59:59.000Z"); // 16:59:59 WIB
+  const afterClose = new Date("2026-11-25T10:00:01.000Z"); // 17:00:01 WIB
+
+  assert.equal(isDeadlinePassedJakarta(deadline17Wib, beforeClose), false);
+  assert.equal(isDeadlinePassedJakarta(deadline17Wib, afterClose), true);
 });

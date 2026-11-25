@@ -17,7 +17,9 @@ import {
 } from "react-icons/fi";
 import SafeLottie from "@/components/ui/SafeLottie";
 import { AgendaKegiatan } from "@/types/agenda";
-import { formatDateToIndo } from "@/utils/dateFormatter";
+import { formatDateToIndo, formatDeadlineWib } from "@/utils/dateFormatter";
+import { parseDeadlineInstant } from "@/lib/registration-utils";
+import { isDeadlinePassedJakarta } from "@/lib/registration-validation";
 import AgendaCalendarView from "@/components/agenda/AgendaCalendarView";
 import AgendaUpcomingPast from "@/components/agenda/AgendaUpcomingPast";
 import AgendaTourClient from "@/components/agenda/AgendaTourClient";
@@ -157,10 +159,7 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
 
   const getVolunteerStatusType = (deadlineStr?: string | null): "open" | "closed" => {
     if (!deadlineStr) return "open";
-    const deadlineDate = parseDateLocal(deadlineStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return deadlineDate >= today ? "open" : "closed";
+    return isDeadlinePassedJakarta(deadlineStr) ? "closed" : "open";
   };
 
   // Kumpulan semua agenda & volunteer yang dipublikasikan (termasuk yang sudah lewat)
@@ -266,8 +265,8 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
         const isClosedA = stA === "closed";
         const isClosedB = stB === "closed";
 
-        const timeA = a.deadline ? parseDateLocal(a.deadline).getTime() : 0;
-        const timeB = b.deadline ? parseDateLocal(b.deadline).getTime() : 0;
+        const timeA = a.deadline ? (parseDeadlineInstant(a.deadline)?.getTime() ?? 0) : 0;
+        const timeB = b.deadline ? (parseDeadlineInstant(b.deadline)?.getTime() ?? 0) : 0;
 
         if (volunteerStatusFilter === "closed") return timeB - timeA;
         if (volunteerStatusFilter === "open") return timeA - timeB;
@@ -586,6 +585,12 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
                             <span className="flex items-center gap-2">
                               <FiMapPin size={13} className="text-primary shrink-0" /> {agenda.location}
                             </span>
+                            {agenda.deadline && (
+                              <span className="flex items-center gap-2 text-amber-700 font-semibold">
+                                <FiClock size={13} className="shrink-0" />
+                                {t("deadline")} {formatDeadlineWib(agenda.deadline, locale)}
+                              </span>
+                            )}
                             {agenda.items && agenda.items.length > 0 && (
                               <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full w-fit mt-1">
                                 {agenda.items.length} {t("competitionsBadge")}
@@ -801,7 +806,7 @@ function AgendaPageContent({ data }: { data: AgendaKegiatan[] }) {
 
                         <div className="flex items-center gap-1.5 text-xs text-on-surface-variant mb-4 md:mb-5">
                           <FiClock size={13} className={isClosed ? "text-on-surface-variant" : "text-primary"} />
-                          <span>{t("deadline")} <span className="font-semibold text-on-background">{vol.deadline}</span></span>
+                          <span>{t("deadline")} <span className="font-semibold text-on-background">{formatDeadlineWib(vol.deadline, locale)}</span></span>
                         </div>
 
                         <Link

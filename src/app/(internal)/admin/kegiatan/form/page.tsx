@@ -12,6 +12,93 @@ import { useToast } from "@/components/ui/Toast";
 import FormBuilder from "./FormBuilder";
 import { createClient } from "@/utils/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
+import { combineDeadlineWib, splitDeadlineWib } from "@/lib/registration-utils";
+import { formatDeadlineWib } from "@/utils/dateFormatter";
+
+const DEADLINE_TIME_PRESETS = ["17:00", "21:00", "23:59"] as const;
+
+function DeadlineDateTimeField({
+  value,
+  onChange,
+  hasError = false,
+  optional = false,
+}: {
+  value?: string | null;
+  onChange: (nextValue: string) => void;
+  hasError?: boolean;
+  optional?: boolean;
+}) {
+  const { date, time } = splitDeadlineWib(value);
+
+  const handleDateChange = (nextDate: string) => {
+    if (!nextDate) {
+      onChange("");
+      return;
+    }
+    onChange(combineDeadlineWib(nextDate, time || "23:59") || "");
+  };
+
+  const handleTimeChange = (nextTime: string) => {
+    if (!date) return;
+    onChange(combineDeadlineWib(date, nextTime || "23:59") || "");
+  };
+
+  return (
+    <div className="space-y-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold text-on-surface-variant block">
+            Tanggal Tutup {!optional && <span className="text-red-500">*</span>}
+          </span>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => handleDateChange(e.target.value)}
+            className={`w-full bg-background border ${
+              hasError ? "border-red-500 bg-red-50" : "border-outline-variant/50"
+            } rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`}
+          />
+        </div>
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold text-on-surface-variant block">
+            Sampai Jam (WIB)
+          </span>
+          <input
+            type="time"
+            value={date ? time : ""}
+            disabled={!date}
+            onChange={(e) => handleTimeChange(e.target.value)}
+            className="w-full bg-background border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          />
+        </div>
+      </div>
+
+      {date && (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span className="text-primary font-semibold">
+            Ditutup otomatis: {formatDeadlineWib(value)}
+          </span>
+          <div className="flex items-center gap-1.5">
+            {DEADLINE_TIME_PRESETS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => handleTimeChange(preset)}
+                className={`px-2 py-0.5 rounded-lg text-[11px] font-bold border transition-colors ${
+                  time === preset
+                    ? "bg-primary text-white border-primary"
+                    : "bg-surface text-on-surface-variant border-outline-variant/50 hover:border-primary"
+                }`}
+              >
+                {preset} WIB
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function KegiatanFormPage() {
   const router = useRouter();
@@ -109,7 +196,10 @@ export default function KegiatanFormPage() {
         if (data) {
           if (data.date) data.date = data.date.split('T')[0];
           if (data.end_date) data.end_date = data.end_date.split('T')[0];
-          if (data.deadline) data.deadline = data.deadline.split('T')[0];
+          if (data.deadline) {
+            const { date: dlDate, time: dlTime } = splitDeadlineWib(data.deadline);
+            data.deadline = combineDeadlineWib(dlDate, dlTime) || "";
+          }
           const cleanItems: AgendaItemInput[] = Array.isArray(data.items)
             ? data.items.map((it, idx) => ({
                 id: it.id,
@@ -446,6 +536,9 @@ export default function KegiatanFormPage() {
               title: dataToSave.title,
               type: dataToSave.type,
               date: dataToSave.date,
+              end_date: dataToSave.end_date,
+              time_range: dataToSave.time_range,
+              deadline: dataToSave.deadline,
               location: dataToSave.location,
               description: dataToSave.description
             })
@@ -782,8 +875,9 @@ export default function KegiatanFormPage() {
                   <input type="date" name="end_date" value={formData.end_date || ""} onChange={handleChange} min={formData.date || ""} className={`w-full bg-background border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} />
                 </div>
                 <div id="field-time_range" className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-bold text-on-surface">Rentang Waktu <span className="text-red-500">*</span></label>
+                  <label className="text-sm font-bold text-on-surface">Rentang Waktu (Jam Acara WIB) <span className="text-red-500">*</span></label>
                   <input type="text" name="time_range" value={formData.time_range || ""} onChange={handleChange} className={`w-full bg-background border ${formErrors.time_range ? "border-red-500 bg-red-50" : "border-outline-variant/50"} rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} placeholder="Contoh: 08:00 - 15:00 WIB" />
+                  <p className="text-xs text-on-surface-variant">Cantumkan jam mulai hingga selesai agar status Live/Selesai di website & notifikasi akurat.</p>
                   {formErrors.time_range && <p className="text-xs text-red-500 mt-1">{formErrors.time_range}</p>}
                 </div>
                 <div id="field-speakers" className="space-y-4 md:col-span-2 border-t border-outline-variant/30 pt-4 mt-2">
@@ -891,13 +985,28 @@ export default function KegiatanFormPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 <div id="field-deadline" className="space-y-2">
-                  <label className="text-sm font-bold text-on-surface">Deadline Pendaftaran <span className="text-red-500">*</span></label>
-                  <input type="date" name="deadline" value={formData.deadline || ""} onChange={handleChange} className={`w-full bg-background border ${formErrors.deadline ? "border-red-500 bg-red-50" : "border-outline-variant/50"} rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors`} />
+                  <label className="text-sm font-bold text-on-surface">
+                    Deadline Pendaftaran &amp; Jam Tutup (WIB) <span className="text-red-500">*</span>
+                  </label>
+                  <DeadlineDateTimeField
+                    value={formData.deadline}
+                    hasError={Boolean(formErrors.deadline)}
+                    onChange={(nextVal) => {
+                      setFormData((prev) => ({ ...prev, deadline: nextVal }));
+                      if (formErrors.deadline) {
+                        setFormErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.deadline;
+                          return next;
+                        });
+                      }
+                    }}
+                  />
                   {formErrors.deadline && <p className="text-xs text-red-500 mt-1">{formErrors.deadline}</p>}
                 </div>
-                <div className="space-y-2 pb-2">
+                <div className="space-y-2 md:pt-6">
                   <label className="flex items-center gap-2 cursor-pointer bg-red-50 text-red-600 px-4 py-3 rounded-xl border border-red-200 hover:bg-red-100 transition-colors">
                     <input type="checkbox" name="is_urgent" checked={formData.is_urgent || false} onChange={handleChange} className="w-4 h-4 text-red-600 focus:ring-red-500 rounded" />
                     <span className="text-sm font-bold">Tandai sebagai URGENT (Segera)</span>
@@ -948,17 +1057,19 @@ export default function KegiatanFormPage() {
                     {formData.type === 'event' && (
                       <div id="field-deadline-event" className="space-y-2 pb-4 border-b border-outline-variant/20">
                         <label className="text-sm font-bold text-on-surface">
-                          Batas Pendaftaran (Deadline) <span className="font-normal text-on-surface-variant text-xs">(Opsional)</span>
+                          Batas Pendaftaran &amp; Jam Tutup (WIB) <span className="font-normal text-on-surface-variant text-xs">(Opsional)</span>
                         </label>
-                        <input
-                          type="date"
-                          name="deadline"
-                          value={formData.deadline || ""}
-                          onChange={handleChange}
-                          className="w-full md:w-1/2 bg-background border border-outline-variant/50 rounded-xl px-4 py-3 text-sm focus:border-primary outline-none transition-colors"
-                        />
+                        <div className="max-w-xl">
+                          <DeadlineDateTimeField
+                            optional
+                            value={formData.deadline}
+                            onChange={(nextVal) =>
+                              setFormData((prev) => ({ ...prev, deadline: nextVal }))
+                            }
+                          />
+                        </div>
                         <p className="text-xs text-on-surface-variant">
-                          Pendaftaran lomba/event akan otomatis ditutup setelah melewati tanggal ini. Kosongkan jika dibuka hingga hari pelaksanaan.
+                          Pendaftaran lomba/event otomatis ditutup melewati tanggal dan jam tutup di atas (WIB). Kosongkan jika dibuka hingga hari pelaksanaan.
                         </p>
                       </div>
                     )}

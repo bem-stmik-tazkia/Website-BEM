@@ -8,6 +8,7 @@ import {
   truncateText,
   formatWibDate,
   formatWibDateTime,
+  formatWibDeadline,
 } from "@/lib/notification-utils";
 import type { BeritaNotificationPayload } from "@/lib/telegram";
 
@@ -390,7 +391,7 @@ export async function sendDiscordKegiatanNotification(
   if (typeKey === "volunteer") {
     fields.push({
       name: "⏳ Batas Pendaftaran",
-      value: kegiatan.deadline ? formatWibDate(kegiatan.deadline) : "Terbuka",
+      value: kegiatan.deadline ? formatWibDeadline(kegiatan.deadline) : "Terbuka",
       inline: true,
     });
     if (kegiatan.max_participants) {
@@ -429,6 +430,13 @@ export async function sendDiscordKegiatanNotification(
           : "Wajib RSVP di Website",
         inline: true,
       });
+      if (kegiatan.deadline) {
+        fields.push({
+          name: "⏳ Batas Pendaftaran",
+          value: formatWibDeadline(kegiatan.deadline),
+          inline: true,
+        });
+      }
     }
     if (typeKey === "dokumentasi") {
       const photoCount = Array.isArray(kegiatan.gallery)

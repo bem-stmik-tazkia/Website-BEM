@@ -6,17 +6,13 @@ import { FiPlus, FiEdit2, FiCalendar, FiCheckCircle, FiXCircle, FiUsers } from "
 import { revalidatePath } from "next/cache";
 import DeleteButton from "./DeleteButton";
 import BroadcastKegiatanButton from "./BroadcastKegiatanButton";
-import { formatDateToIndo } from "@/utils/dateFormatter";
-import { hasAnyFormQuestions } from "@/lib/registration-validation";
+import { formatDateToIndo, formatDeadlineWib } from "@/utils/dateFormatter";
+import { hasAnyFormQuestions, isDeadlinePassedJakarta } from "@/lib/registration-validation";
 
 const getEventStatus = (item: any) => {
   if (item.type === 'volunteer') {
     if (!item.deadline) return "Buka";
-    const deadlineDate = new Date(item.deadline);
-    const today = new Date();
-    deadlineDate.setHours(0,0,0,0);
-    today.setHours(0,0,0,0);
-    return deadlineDate >= today ? "Pendaftaran Buka" : "Ditutup";
+    return isDeadlinePassedJakarta(item.deadline) ? "Ditutup" : "Pendaftaran Buka";
   }
 
   if (!item.date) return "Akan Datang";
@@ -226,10 +222,15 @@ export default async function KegiatanAdminPage({
                         <div className="text-xs text-on-surface-variant">
                           <p className="font-medium text-on-surface">{formatDateToIndo(item.date)}</p>
                           <p>{item.time_range}</p>
+                          {item.deadline && (
+                            <p className="text-[11px] font-semibold text-amber-700 mt-0.5">
+                              Tutup daftar: {formatDeadlineWib(item.deadline)}
+                            </p>
+                          )}
                         </div>
                       ) : (
                         <div className="text-xs text-on-surface-variant">
-                          <p className="font-medium text-on-surface">{formatDateToIndo(item.deadline)}</p>
+                          <p className="font-medium text-on-surface">{formatDeadlineWib(item.deadline)}</p>
                           {item.is_urgent && <span className="text-[10px] font-bold text-red-500">SEGERA</span>}
                         </div>
                       )}

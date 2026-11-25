@@ -1,5 +1,5 @@
 import type { AgendaItem, AgendaKegiatan, DynamicFormField } from "../types/agenda";
-import { isOwnRegistrationStorageUrl } from "./registration-utils";
+import { isOwnRegistrationStorageUrl, parseDeadlineInstant } from "./registration-utils";
 
 export const ALLOWED_ROOT_DOMAINS = [
   "drive.google.com",
@@ -16,21 +16,16 @@ export const ALLOWED_ROOT_DOMAINS = [
 
 /**
  * Checks whether a registration deadline (YYYY-MM-DD or ISO timestamp) has passed
- * based on the current calendar date in Asia/Jakarta (WIB).
+ * in Asia/Jakarta (WIB), honoring exact closing hours and minutes.
+ * Date-only deadlines remain open through 23:59:59 WIB of that calendar day.
  */
 export function isDeadlinePassedJakarta(
   deadline?: string | null,
   now: Date = new Date()
 ): boolean {
-  if (!deadline) return false;
-  const deadlineDateStr = deadline.split("T")[0];
-  const jakartaTodayStr = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Jakarta",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
-  return jakartaTodayStr > deadlineDateStr;
+  const instant = parseDeadlineInstant(deadline);
+  if (!instant) return false;
+  return now.getTime() > instant.getTime();
 }
 
 export function isHostnameAllowed(hostname: string): boolean {

@@ -33,8 +33,8 @@ import {
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/components/ui/Toast";
 import { AgendaKegiatan } from "@/types/agenda";
-import { hasAnyFormQuestions } from "@/lib/registration-validation";
-import { formatDateToIndo, formatDateLocalized } from "@/utils/dateFormatter";
+import { hasAnyFormQuestions, isDeadlinePassedJakarta } from "@/lib/registration-validation";
+import { formatDateToIndo, formatDateLocalized, formatDeadlineWib } from "@/utils/dateFormatter";
 import { translateContent } from "@/utils/translate";
 
 function GoogleDriveFolderCard({ url, folderId }: { url: string; folderId: string }) {
@@ -252,15 +252,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
   const hasItems = items.length > 0;
   const hasRegistration = hasAnyFormQuestions(agenda.form_schema, items);
 
-  const jakartaTodayStr = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Jakarta",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-  const isDeadlinePassed = Boolean(
-    agenda.deadline && jakartaTodayStr > agenda.deadline.split("T")[0]
-  );
+  const isDeadlinePassed = isDeadlinePassedJakarta(agenda.deadline);
 
   const maxQuota = agenda.max_participants;
   const totalItemFilled = items.reduce((s, it) => s + (it.filled_count || 0), 0);
@@ -544,6 +536,9 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
               <span className="flex items-center gap-2">
                 <FiCalendar className="text-[var(--color-secondary)] shrink-0" size={16} /> 
                 {(() => {
+                  if (agenda.type === "volunteer" && agenda.deadline) {
+                    return formatDeadlineWib(agenda.deadline, locale);
+                  }
                   const startDate = agenda.date || agenda.deadline;
                   if (!startDate) return "-";
                   const startOpt: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
@@ -626,6 +621,11 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
                      {!hasItems && ` (${t("totalRegistrants")}: ${effectiveParticipantCount})`}
                    </p>
                 )}
+                {hasRegistration && agenda.deadline && (
+                  <p className={`text-xs mt-0.5 font-medium ${isLive ? 'text-red-100' : 'text-on-surface-variant'}`}>
+                    {t("deadline")} <strong className={isLive ? 'text-white' : 'text-on-surface'}>{formatDeadlineWib(agenda.deadline, locale)}</strong>
+                  </p>
+                )}
               </div>
             </div>
             
@@ -684,6 +684,11 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
                       : t("unlimitedQuota")}
                   {!hasItems && ` (${t("totalRegistrants")}: ${effectiveParticipantCount})`}
                 </p>
+                {agenda.deadline && (
+                  <p className="text-xs mt-0.5 text-emerald-100">
+                    {t("deadline")} <strong className="text-white">{formatDeadlineWib(agenda.deadline, locale)}</strong>
+                  </p>
+                )}
               </div>
             </div>
             

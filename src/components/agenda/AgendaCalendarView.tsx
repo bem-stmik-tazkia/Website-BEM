@@ -5,8 +5,9 @@ import { FiChevronLeft, FiChevronRight, FiClock, FiMapPin, FiArrowRight, FiCalen
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { AgendaKegiatan } from "@/types/agenda";
-import { formatDateToIndo } from "@/utils/dateFormatter";
-import { useTranslations } from "next-intl";
+import { formatDateToIndo, formatDeadlineWib } from "@/utils/dateFormatter";
+import { isDeadlinePassedJakarta } from "@/lib/registration-validation";
+import { useLocale, useTranslations } from "next-intl";
 import SafeLottie from "@/components/ui/SafeLottie";
 
 interface AgendaCalendarViewProps {
@@ -40,6 +41,7 @@ function parseDateLocal(dateStr: string): Date {
 
 export default function AgendaCalendarView({ agendas, isVolunteer = false }: AgendaCalendarViewProps) {
   const t = useTranslations("AgendaPage");
+  const locale = useLocale();
   const daysOfWeek: string[] = t.raw("daysOfWeek");
   const monthNames: string[] = t.raw("monthNames");
 
@@ -291,7 +293,9 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
                 const color = EVENT_COLORS[agenda.colorIdx];
                 const now = new Date();
                 const end = agenda.end_date ? parseDateLocal(agenda.end_date) : (agenda.date ? parseDateLocal(agenda.date) : today);
-                const isPast = end < today;
+                const isPast = isVolunteer
+                  ? isDeadlinePassedJakarta(agenda.deadline || agenda.end_date, now)
+                  : end < today;
 
                 // Hitung isLive: hanya saat jam acara berlangsung
                 let isLive = false;
@@ -342,6 +346,11 @@ export default function AgendaCalendarView({ agendas, isVolunteer = false }: Age
                       {agenda.title}
                     </h4>
                     <div className="flex flex-col gap-0.5 text-xs text-on-surface-variant">
+                      {isVolunteer && agenda.deadline && (
+                        <span className="flex items-center gap-1.5">
+                          <FiClock size={11} className={color.text} /> Tutup: {formatDeadlineWib(agenda.deadline, locale)}
+                        </span>
+                      )}
                       {agenda.time_range && (
                         <span className="flex items-center gap-1.5">
                           <FiClock size={11} className={color.text} /> {agenda.time_range}

@@ -1,3 +1,5 @@
+import { parseDeadlineInstant, splitDeadlineWib } from "@/lib/registration-utils";
+
 /**
  * Shared formatting and URL helpers for server-side notification providers
  * (Telegram & Discord).
@@ -81,4 +83,16 @@ export function formatWibDateTime(dateInput?: string | Date | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/**
+ * Formats a registration deadline in full Indonesian format including closing hour in WIB
+ * (e.g. "Jumat, 27 November 2026 • 17:00 WIB").
+ */
+export function formatWibDeadline(deadlineInput?: string | null): string {
+  const instant = parseDeadlineInstant(deadlineInput);
+  if (!instant) return "-";
+  const dateText = formatWibDate(instant);
+  const { time } = splitDeadlineWib(deadlineInput);
+  return `${dateText} • ${time} WIB`;
 }

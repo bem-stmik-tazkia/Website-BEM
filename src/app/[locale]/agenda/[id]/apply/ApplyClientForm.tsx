@@ -18,7 +18,7 @@ import {
 } from "react-icons/fi";
 import { AgendaItem, AgendaKegiatan, DynamicFormField } from "@/types/agenda";
 import { hasAnyFormQuestions } from "@/lib/registration-validation";
-import { formatDateToIndo } from "@/utils/dateFormatter";
+import { formatDeadlineWib } from "@/utils/dateFormatter";
 import { useToast } from "@/components/ui/Toast";
 import SafeLottie from "@/components/ui/SafeLottie";
 import { useTranslations } from "next-intl";
@@ -762,7 +762,7 @@ export default function ApplyClientForm({
               : isQuotaFull
               ? t("fullMsg")
               : agenda.deadline
-              ? `${t("deadlineMsg")}: ${formatDateToIndo(agenda.deadline)}`
+              ? `${t("deadlineMsg")}: ${formatDeadlineWib(agenda.deadline)}`
               : t("fillBelow")}
           </p>
         </div>
@@ -775,7 +775,10 @@ export default function ApplyClientForm({
               <h3 className="font-bold text-lg mb-1">
                 {isQuotaFull ? t("quotaFull") : t("regClosed")}
               </h3>
-              <p className="text-sm opacity-80">{t("cannotSubmit")}</p>
+              <p className="text-sm opacity-80">
+                {t("cannotSubmit")}
+                {isClosed && agenda.deadline ? ` (Ditutup: ${formatDeadlineWib(agenda.deadline)})` : ""}
+              </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6" noValidate>

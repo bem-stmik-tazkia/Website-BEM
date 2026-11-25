@@ -11,7 +11,7 @@ import { useTranslatedList } from "@/hooks/useTranslatedContent";
 
 
 import { AgendaKegiatan } from "@/types/agenda";
-import { formatDateToIndo } from "@/utils/dateFormatter";
+import { formatDateToIndo, formatDeadlineWib } from "@/utils/dateFormatter";
 
 // --- MAIN COMPONENT ---
 
@@ -670,7 +670,7 @@ export default function EventVolunteer({
                         <div className="flex flex-wrap items-center gap-2 text-[10px] text-white/70 mb-3">
                           <span className="flex items-center gap-1">
                             <FiClock size={11} className="text-secondary" />
-                            <span>{t("deadline")}: <span className="font-semibold text-white">{formatDateToIndo(volunteerOpportunities[activeVol].deadline)}</span></span>
+                            <span>{t("deadline")}: <span className="font-semibold text-white">{formatDeadlineWib(volunteerOpportunities[activeVol].deadline, locale)}</span></span>
                           </span>
                           {volunteerOpportunities[activeVol].items && volunteerOpportunities[activeVol].items.length > 0 && (
                             <span className="bg-emerald-500/80 text-white font-bold px-2 py-0.5 rounded-full">

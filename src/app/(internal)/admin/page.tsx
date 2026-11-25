@@ -1,9 +1,14 @@
 import React from "react";
 import { createClient } from "@/utils/supabase/server";
 import { getServiceRoleClient } from "@/lib/auth";
+import { isDeadlinePassedJakarta } from "@/lib/registration-validation";
 import AdminDashboardClient from "./AdminDashboardClient";
 
 export const revalidate = 0; // Disable static caching for admin
+
+function getDaysSince(createdAt: string): number {
+  return Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24));
+}
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
@@ -47,8 +52,7 @@ export default async function AdminDashboardPage() {
   const latestBerita = latestBeritaRes?.data || null;
   let daysSinceLastBerita = 0;
   if (latestBerita && latestBerita.created_at) {
-    const diffMs = Date.now() - new Date(latestBerita.created_at).getTime();
-    daysSinceLastBerita = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    daysSinceLastBerita = getDaysSince(latestBerita.created_at);
   } else if (!latestBerita) {
     daysSinceLastBerita = 999;
   }
@@ -77,11 +81,7 @@ export default async function AdminDashboardPage() {
     let isEnded = false;
 
     if (item.type === "volunteer") {
-      if (item.deadline) {
-        const dDate = new Date(item.deadline);
-        dDate.setHours(0, 0, 0, 0);
-        if (dDate < today) isEnded = true;
-      }
+      isEnded = isDeadlinePassedJakarta(item.deadline, now);
     } else {
       if (item.date) {
         const eDate = new Date(item.date);

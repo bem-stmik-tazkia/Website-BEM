@@ -1,5 +1,6 @@
 import { getKegiatans } from "@/app/(internal)/admin/kegiatan/actions";
 import { AgendaKegiatan } from "@/types/agenda";
+import { isDeadlinePassedJakarta } from "@/lib/registration-validation";
 import EventVolunteer from "./EventVolunteer";
 import { unstable_noStore as noStore } from "next/cache";
 
@@ -64,12 +65,7 @@ export default async function EventVolunteerServer() {
         upcomingEvents.push(agenda);
       }
     } else if (agenda.type === "volunteer") {
-      const deadlineDate = agenda.deadline
-        ? new Date(agenda.deadline)
-        : new Date();
-      deadlineDate.setHours(0, 0, 0, 0);
-
-      if (deadlineDate.getTime() >= today.getTime()) {
+      if (!isDeadlinePassedJakarta(agenda.deadline)) {
         volunteerOpportunities.push(agenda);
       }
     }
