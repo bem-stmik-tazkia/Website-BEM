@@ -571,6 +571,9 @@ export interface AdminVolunteerBellNotif {
   author: string;
   created_at: string;
   href: string;
+  agendaType?: string;
+  agendaTitle?: string;
+  itemName?: string | null;
 }
 
 export async function fetchRecentVolunteerApplicationsForBell(
@@ -620,6 +623,9 @@ export async function fetchRecentVolunteerApplicationsForBell(
         author: typeof firstTextVal === "string" ? firstTextVal : "Mahasiswa",
         created_at: app.created_at,
         href: `/admin/kegiatan/${app.agenda_id}/pendaftar`,
+        agendaType: agenda?.type || "event",
+        agendaTitle: agenda?.title || "Kegiatan BEM",
+        itemName: app.item_name || null,
       };
     });
   } catch (err) {

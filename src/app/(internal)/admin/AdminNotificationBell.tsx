@@ -15,22 +15,158 @@ interface Notification {
   author: string;
   created_at: string;
   href?: string;
+  saranCategory?: string;
+  saranText?: string;
+  agendaType?: string;
+  agendaTitle?: string;
+  itemName?: string | null;
 }
 
-function timeAgo(dateStr: string): string {
+type BellLocale = "id" | "en" | "ar" | "fr" | "ja";
+
+const BELL_I18N: Record<BellLocale, {
+  justNow: string;
+  minutesAgo: (n: number) => string;
+  hoursAgo: (n: number) => string;
+  daysAgo: (n: number) => string;
+  saranLabel: string;
+  artikelLabel: string;
+  volunteerLabel: string;
+  aduanPrefix: string;
+  saranPrefix: string;
+  oprecPrefix: string;
+  eventPrefix: string;
+  anonAuthor: string;
+  studentAuthor: string;
+  bellTitle: string;
+  headerTitle: string;
+  markAllRead: string;
+  emptyText: string;
+  byLabel: string;
+}> = {
+  id: {
+    justNow: "Baru saja",
+    minutesAgo: (n) => `${n} menit lalu`,
+    hoursAgo: (n) => `${n} jam lalu`,
+    daysAgo: (n) => `${n} hari lalu`,
+    saranLabel: "Kotak Saran",
+    artikelLabel: "Artikel Baru",
+    volunteerLabel: "Pendaftar",
+    aduanPrefix: "Aduan",
+    saranPrefix: "Saran",
+    oprecPrefix: "Pendaftar Oprec",
+    eventPrefix: "Pendaftar Event",
+    anonAuthor: "Anonim",
+    studentAuthor: "Mahasiswa",
+    bellTitle: "Notifikasi Pengajuan & Kotak Saran",
+    headerTitle: "Notifikasi Masuk",
+    markAllRead: "Tandai terbaca",
+    emptyText: "Semua notifikasi sudah dibaca!",
+    byLabel: "oleh",
+  },
+  en: {
+    justNow: "Just now",
+    minutesAgo: (n) => `${n}m ago`,
+    hoursAgo: (n) => `${n}h ago`,
+    daysAgo: (n) => `${n}d ago`,
+    saranLabel: "Feedback Box",
+    artikelLabel: "New Article",
+    volunteerLabel: "Registrant",
+    aduanPrefix: "Complaint",
+    saranPrefix: "Feedback",
+    oprecPrefix: "Oprec Registrant",
+    eventPrefix: "Event Registrant",
+    anonAuthor: "Anonymous",
+    studentAuthor: "Student",
+    bellTitle: "Submission & Feedback Notifications",
+    headerTitle: "Incoming Notifications",
+    markAllRead: "Mark all read",
+    emptyText: "All notifications have been read!",
+    byLabel: "by",
+  },
+  ar: {
+    justNow: "الآن",
+    minutesAgo: (n) => `منذ ${n} دقيقة`,
+    hoursAgo: (n) => `منذ ${n} ساعة`,
+    daysAgo: (n) => `منذ ${n} يوم`,
+    saranLabel: "صندوق الملاحظات",
+    artikelLabel: "مقال جديد",
+    volunteerLabel: "مسجل",
+    aduanPrefix: "شكوى",
+    saranPrefix: "ملاحظة",
+    oprecPrefix: "متقدم تطوع",
+    eventPrefix: "مسجل فعالية",
+    anonAuthor: "مجهول",
+    studentAuthor: "طالب",
+    bellTitle: "إشعارات التقديم والملاحظات",
+    headerTitle: "الإشعارات الواردة",
+    markAllRead: "تحديد كمقروء",
+    emptyText: "تمت قراءة جميع الإشعارات!",
+    byLabel: "بواسطة",
+  },
+  fr: {
+    justNow: "À l'instant",
+    minutesAgo: (n) => `il y a ${n} min`,
+    hoursAgo: (n) => `il y a ${n} h`,
+    daysAgo: (n) => `il y a ${n} j`,
+    saranLabel: "Boîte à suggestions",
+    artikelLabel: "Nouvel article",
+    volunteerLabel: "Inscrit",
+    aduanPrefix: "Plainte",
+    saranPrefix: "Suggestion",
+    oprecPrefix: "Candidat Oprec",
+    eventPrefix: "Inscrit événement",
+    anonAuthor: "Anonyme",
+    studentAuthor: "Étudiant",
+    bellTitle: "Notifications d'inscriptions et suggestions",
+    headerTitle: "Notifications reçues",
+    markAllRead: "Tout marquer lu",
+    emptyText: "Toutes les notifications ont été lues !",
+    byLabel: "par",
+  },
+  ja: {
+    justNow: "たった今",
+    minutesAgo: (n) => `${n}分前`,
+    hoursAgo: (n) => `${n}時間前`,
+    daysAgo: (n) => `${n}日前`,
+    saranLabel: "意見箱",
+    artikelLabel: "新着記事",
+    volunteerLabel: "応募者",
+    aduanPrefix: "苦情",
+    saranPrefix: "意見",
+    oprecPrefix: "スタッフ応募",
+    eventPrefix: "イベント申込",
+    anonAuthor: "匿名",
+    studentAuthor: "学生",
+    bellTitle: "応募・意見箱の通知",
+    headerTitle: "新着通知",
+    markAllRead: "すべて既読にする",
+    emptyText: "すべての通知を確認しました！",
+    byLabel: "投稿者:",
+  },
+};
+
+function resolveBellLocale(locale?: string): BellLocale {
+  const base = (locale || "id").toLowerCase().split("-")[0];
+  if (base === "en" || base === "ar" || base === "fr" || base === "ja" || base === "id") {
+    return base;
+  }
+  return "id";
+}
+
+function timeAgo(dateStr: string, copy: (typeof BELL_I18N)[BellLocale]): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  if (mins < 1) return "Baru saja";
-  if (mins < 60) return `${mins} menit lalu`;
-  if (hours < 24) return `${hours} jam lalu`;
-  return `${days} hari lalu`;
+  if (mins < 1) return copy.justNow;
+  if (mins < 60) return copy.minutesAgo(mins);
+  if (hours < 24) return copy.hoursAgo(hours);
+  return copy.daysAgo(days);
 }
 
 const TYPE_CONFIG: Record<string, any> = {
   saran: {
-    label: "Kotak Saran",
     icon: FiMessageSquare,
     bg: "bg-purple-50 dark:bg-purple-950/40",
     iconColor: "text-purple-500",
@@ -39,7 +175,6 @@ const TYPE_CONFIG: Record<string, any> = {
     dot: "bg-purple-400",
   },
   artikel: {
-    label: "Artikel Baru",
     icon: FiBookOpen,
     bg: "bg-blue-50 dark:bg-blue-950/40",
     iconColor: "text-blue-500",
@@ -48,7 +183,6 @@ const TYPE_CONFIG: Record<string, any> = {
     dot: "bg-blue-400",
   },
   volunteer: {
-    label: "Pendaftar",
     icon: FiUsers,
     bg: "bg-emerald-50 dark:bg-emerald-950/40",
     iconColor: "text-emerald-500",
@@ -58,7 +192,8 @@ const TYPE_CONFIG: Record<string, any> = {
   },
 };
 
-export default function AdminNotificationBell({ isScrolled, isHome }: { isScrolled?: boolean; isHome?: boolean }) {
+export default function AdminNotificationBell({ isScrolled, isHome, locale }: { isScrolled?: boolean; isHome?: boolean; locale?: string }) {
+  const copy = BELL_I18N[resolveBellLocale(locale)];
   const supabase = createClient();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
@@ -100,9 +235,11 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
         id: s.id,
         type: "saran",
         title: `${s.kategori === 'aduan' ? 'Aduan' : 'Saran'}: ${s.pesan || s.subjek || ''}`,
-        author: s.nama || "Anonim",
+        author: s.nama || "",
         created_at: s.created_at,
         href: "/admin/saran-aduan",
+        saranCategory: s.kategori,
+        saranText: s.pesan || s.subjek || '',
       }));
 
       const combined = [...mappedSaran, ...filteredArticles, ...(volunteerNotifs || [])].sort(
@@ -209,7 +346,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
       {/* Bell Button */}
       <button
         onClick={handleOpen}
-        title="Notifikasi Pengajuan & Kotak Saran"
+        title={copy.bellTitle}
         className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all ${
           open
             ? (isScrolled || !isHome
@@ -263,7 +400,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
             <div className="flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 border-b border-outline-variant/20 bg-surface-variant/20">
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                 <FiBell size={15} className="text-primary shrink-0" />
-                <span className="text-xs sm:text-sm font-bold text-on-surface truncate">Notifikasi Masuk</span>
+                <span className="text-xs sm:text-sm font-bold text-on-surface truncate">{copy.headerTitle}</span>
                 {count > 0 && (
                   <span className="text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full bg-red-500 text-white shrink-0 animate-pulse">
                     {count}
@@ -281,7 +418,7 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
                 }`}
               >
                 <FiCheck size={13} />
-                <span>Tandai terbaca</span>
+                <span>{copy.markAllRead}</span>
               </button>
             </div>
 
@@ -292,12 +429,28 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
                   <div className="w-12 h-12 rounded-full bg-surface-variant/30 flex items-center justify-center">
                     <FiCheck size={22} className="text-green-500" />
                   </div>
-                  <p className="text-sm font-medium">Semua notifikasi sudah dibaca!</p>
+                  <p className="text-sm font-medium">{copy.emptyText}</p>
                 </div>
               ) : (
                 notifications.map((notif) => {
                   const cfg = TYPE_CONFIG[notif.type];
                   const Icon = cfg.icon;
+                  const typeLabel =
+                    notif.type === "saran"
+                      ? copy.saranLabel
+                      : notif.type === "artikel"
+                        ? copy.artikelLabel
+                        : copy.volunteerLabel;
+                  const displayTitle =
+                    notif.type === "saran"
+                      ? `${notif.saranCategory === "aduan" ? copy.aduanPrefix : copy.saranPrefix}: ${notif.saranText || ""}`
+                      : notif.type === "volunteer" && notif.agendaTitle
+                        ? `${notif.agendaType === "volunteer" ? copy.oprecPrefix : copy.eventPrefix}: ${notif.agendaTitle}${notif.itemName ? ` (${notif.itemName})` : ""}`
+                        : notif.title;
+                  const displayAuthor =
+                    notif.author ||
+                    (notif.type === "saran" ? copy.anonAuthor : copy.studentAuthor);
+
                   return (
                     <Link
                       key={notif.id}
@@ -316,20 +469,20 @@ export default function AdminNotificationBell({ isScrolled, isHome }: { isScroll
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-sm font-bold text-on-surface line-clamp-1 group-hover:text-primary transition-colors">
-                            {notif.title}
+                            {displayTitle}
                           </p>
                           <span
                             className={`shrink-0 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full text-white ${cfg.badge} uppercase tracking-wide`}
                           >
-                            {cfg.label}
+                            {typeLabel}
                           </span>
                         </div>
                         <p className="text-xs text-on-surface-variant mt-0.5">
-                          oleh{" "}
-                          <span className="font-semibold text-on-surface">{notif.author}</span>
+                          {copy.byLabel}{" "}
+                          <span className="font-semibold text-on-surface">{displayAuthor}</span>
                         </p>
                         <p className="text-[11px] text-on-surface-variant/70 mt-1">
-                          {timeAgo(notif.created_at)}
+                          {timeAgo(notif.created_at, copy)}
                         </p>
                       </div>
 

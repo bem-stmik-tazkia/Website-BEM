@@ -4,6 +4,7 @@ import { getServiceRoleClient } from '@/lib/auth';
 import { checkRateLimit, getClientIp, createRateLimitResponse } from '@/lib/rateLimit';
 import { getSecret } from '@/lib/secrets';
 import { sendSaranAduanNotification } from '@/lib/telegram';
+import { getLocaleFromRequest, getPublicApiMessage } from '@/lib/public-api-i18n';
 
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 
@@ -12,25 +13,27 @@ const saranSchema = z.object({
   nama: z
     .string()
     .trim()
-    .max(150, "Nama pengirim maksimal 150 karakter")
+    .max(150)
     .optional()
     .nullable(),
   kategori: z
     .string()
     .trim()
-    .min(1, "Kategori wajib diisi")
-    .max(100, "Kategori maksimal 100 karakter"),
+    .min(1)
+    .max(100),
   deskripsi: z
     .string()
     .trim()
-    .min(1, "Pesan saran atau aduan tidak boleh kosong")
-    .max(5000, "Pesan saran atau aduan maksimal 5000 karakter"),
+    .min(1)
+    .max(5000),
   turnstileToken: z
     .string()
-    .min(1, "Token verifikasi captcha wajib disertakan"),
+    .min(1),
+  locale: z.string().max(16).optional(),
 });
 
 export async function POST(req: Request) {
+  const headerLocale = getLocaleFromRequest(req);
   try {
     // 0a. Rate Limiting per IP: Maksimal 5 pengiriman per 10 menit per IP (x-vercel-forwarded-for)
     const clientIp = getClientIp(req);
@@ -41,7 +44,7 @@ export async function POST(req: Request) {
 
     if (!ipRateLimit.success) {
       return createRateLimitResponse(
-        "Terlalu banyak pengiriman pesan dari perangkat Anda. Silakan tunggu 10 menit sebelum mengirim saran baru.",
+        getPublicApiMessage(headerLocale, "saranRateLimitIp"),
         ipRateLimit
       );
     }
@@ -54,7 +57,7 @@ export async function POST(req: Request) {
 
     if (!globalRateLimit.success) {
       return createRateLimitResponse(
-        "Batas penerimaan aspirasi harian telah tercapai. Silakan coba kembali besok.",
+        getPublicApiMessage(headerLocale, "saranRateLimitGlobal"),
         globalRateLimit
       );
     }
@@ -65,16 +68,21 @@ export async function POST(req: Request) {
       rawBody = await req.json();
     } catch {
       return NextResponse.json(
-        { error: "Format request tidak valid (harus JSON)" },
+        { error: getPublicApiMessage(headerLocale, "invalidJson") },
         { status: 400, headers: ipRateLimit.headers }
       );
     }
 
+    const explicitLocale =
+      rawBody && typeof rawBody === "object" && "locale" in rawBody && typeof (rawBody as any).locale === "string"
+        ? (rawBody as any).locale
+        : null;
+    const locale = getLocaleFromRequest(req, explicitLocale);
+
     const parseResult = saranSchema.safeParse(rawBody);
     if (!parseResult.success) {
-      const firstError = parseResult.error.issues[0]?.message || "Input tidak valid";
       return NextResponse.json(
-        { error: firstError },
+        { error: getPublicApiMessage(locale, "saranInvalidInput") },
         { status: 400, headers: ipRateLimit.headers }
       );
     }
@@ -97,7 +105,7 @@ export async function POST(req: Request) {
       const outcome = await verifyRes.json();
       if (!outcome.success) {
         return NextResponse.json(
-          { error: "Verifikasi captcha gagal. Silakan coba lagi." },
+          { error: getPublicApiMessage(locale, "saranCaptchaFailed") },
           { status: 400, headers: ipRateLimit.headers }
         );
       }
@@ -110,7 +118,7 @@ export async function POST(req: Request) {
     } catch (confErr: any) {
       console.error("[saran-aduan] Supabase config error:", confErr.message);
       return NextResponse.json(
-        { error: "Konfigurasi server belum lengkap untuk menerima aduan." },
+        { error: getPublicApiMessage(locale, "saranConfigError") },
         { status: 500 }
       );
     }
@@ -130,7 +138,7 @@ export async function POST(req: Request) {
     if (insertError) {
       console.error("[saran-aduan] Supabase insert error:", insertError.message);
       return NextResponse.json(
-        { error: "Gagal menyimpan pesan saran ke database." },
+        { error: getPublicApiMessage(locale, "saranSaveError") },
         { status: 500 }
       );
     }

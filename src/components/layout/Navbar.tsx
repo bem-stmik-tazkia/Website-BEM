@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "@/i18n/routing";
 import NativeLink from "next/link";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/routing";
 import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid, FiEdit3, FiSettings } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,6 +33,7 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const locale = useLocale();
   const isHome = pathname === "/";
   const supabase = createClient();
 
@@ -294,7 +295,7 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
             
             <LanguageSwitcher />
             {userProfile && userProfile.role === 'admin' && (
-              <AdminNotificationBell isScrolled={isScrolled} isHome={isHome} />
+              <AdminNotificationBell isScrolled={isScrolled} isHome={isHome} locale={locale} />
             )}
             {userProfile && userProfile.role === 'mahasiswa' && (
               <StudentNotificationBell isScrolled={isScrolled} isHome={isHome} />

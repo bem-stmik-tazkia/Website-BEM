@@ -1,5 +1,6 @@
 import type { AgendaItem, AgendaKegiatan, DynamicFormField } from "../types/agenda";
 import { isOwnRegistrationStorageUrl, parseDeadlineInstant } from "./registration-utils";
+import { getPublicApiMessage, type PublicLocale } from "./public-api-i18n";
 
 export const ALLOWED_ROOT_DOMAINS = [
   "drive.google.com",
@@ -37,16 +38,17 @@ export function isHostnameAllowed(hostname: string): boolean {
 
 export function isAllowedDocumentUrl(
   urlString: string,
-  options?: { allowOwnStorageImage?: boolean }
+  options?: { allowOwnStorageImage?: boolean; locale?: PublicLocale | string | null }
 ): { valid: boolean; reason?: string; url?: URL } {
+  const loc = options?.locale;
   if (urlString.length > 500) {
-    return { valid: false, reason: "Tautan dokumen maksimal 500 karakter" };
+    return { valid: false, reason: getPublicApiMessage(loc, "urlMaxLength") };
   }
 
   if (/[\s\x00-\x1F\x7F]/.test(urlString)) {
     return {
       valid: false,
-      reason: "Tautan tidak boleh mengandung spasi atau karakter kontrol",
+      reason: getPublicApiMessage(loc, "urlNoSpaces"),
     };
   }
 
@@ -54,27 +56,27 @@ export function isAllowedDocumentUrl(
   try {
     parsed = new URL(urlString);
   } catch {
-    return { valid: false, reason: "Format tautan dokumen tidak valid" };
+    return { valid: false, reason: getPublicApiMessage(loc, "urlInvalidFormat") };
   }
 
   if (parsed.protocol !== "https:") {
     return {
       valid: false,
-      reason: "Tautan dokumen wajib menggunakan protokol https://",
+      reason: getPublicApiMessage(loc, "urlHttpsRequired"),
     };
   }
 
   if (parsed.username || parsed.password) {
     return {
       valid: false,
-      reason: "Tautan tidak boleh memuat kredensial username/password",
+      reason: getPublicApiMessage(loc, "urlNoCredentials"),
     };
   }
 
   if (parsed.port !== "" && parsed.port !== "443") {
     return {
       valid: false,
-      reason: "Tautan tidak boleh menggunakan port non-default",
+      reason: getPublicApiMessage(loc, "urlInvalidPort"),
     };
   }
 
@@ -82,7 +84,7 @@ export function isAllowedDocumentUrl(
   const isIpv4 = /^(\d{1,3}\.){3}\d{1,3}$/.test(host);
   const isIpv6 = host.startsWith("[") || host.includes(":");
   if (isIpv4 || isIpv6) {
-    return { valid: false, reason: "Hostname tidak boleh berupa alamat IP" };
+    return { valid: false, reason: getPublicApiMessage(loc, "urlNoIp") };
   }
 
   if (options?.allowOwnStorageImage && isOwnRegistrationStorageUrl(urlString)) {
@@ -92,7 +94,7 @@ export function isAllowedDocumentUrl(
   if (!isHostnameAllowed(host)) {
     return {
       valid: false,
-      reason: `Domain '${host}' tidak diizinkan. Harap lampirkan tautan dari Google Drive/Docs, Notion, GitHub, LinkedIn, Figma, Canva, atau OneDrive.`,
+      reason: getPublicApiMessage(loc, "urlDomainNotAllowed", { host }),
     };
   }
 
@@ -149,8 +151,9 @@ export function validateItemSelection(params: {
   allowMultipleItems?: boolean | null;
   availableItems: Array<{ id: string; name: string; quota?: number | null }>;
   requestedItemIds: string[];
+  locale?: PublicLocale | string | null;
 }): { valid: true; selectedItemIds: string[] } | { valid: false; error: string } {
-  const { agendaType, allowMultipleItems, availableItems, requestedItemIds } = params;
+  const { agendaType, allowMultipleItems, availableItems, requestedItemIds, locale } = params;
   const deduped = Array.from(new Set(requestedItemIds.filter(Boolean)));
 
   if (availableItems.length === 0) {
@@ -162,22 +165,22 @@ export function validateItemSelection(params: {
       valid: false,
       error:
         agendaType === "volunteer"
-          ? "Silakan pilih posisi yang ingin dilamar"
-          : "Silakan pilih minimal 1 cabang lomba yang ingin diikuti",
+          ? getPublicApiMessage(locale, "selectPosition")
+          : getPublicApiMessage(locale, "selectCompetition"),
     };
   }
 
   if ((agendaType === "volunteer" || allowMultipleItems === false) && deduped.length > 1) {
     return {
       valid: false,
-      error: "Kamu hanya diperbolehkan memilih 1 pilihan pada kegiatan ini",
+      error: getPublicApiMessage(locale, "singleItemOnly"),
     };
   }
 
   const validItemIds = new Set(availableItems.map((i) => i.id));
   for (const reqId of deduped) {
     if (!validItemIds.has(reqId)) {
-      return { valid: false, error: "Pilihan posisi / cabang lomba tidak valid" };
+      return { valid: false, error: getPublicApiMessage(locale, "invalidItemChoice") };
     }
   }
 
@@ -187,13 +190,17 @@ export function validateItemSelection(params: {
 function validateSingleFieldValue(
   field: DynamicFormField,
   rawValue: unknown,
-  itemNamePrefix?: string
+  itemNamePrefix?: string,
+  locale?: PublicLocale | string | null
 ): { valid: true; value: string; portofolioUrl?: string } | { valid: false; error: string } {
   const prefix = itemNamePrefix ? `${itemNamePrefix} — ` : "";
   const value = typeof rawValue === "string" ? rawValue.trim() : "";
 
   if (field.required && !value) {
-    return { valid: false, error: `${prefix}Kolom '${field.label}' wajib diisi` };
+    return {
+      valid: false,
+      error: getPublicApiMessage(locale, "fieldRequired", { prefix, label: field.label }),
+    };
   }
 
   if (!value) {
@@ -203,9 +210,17 @@ function validateSingleFieldValue(
   if (field.type === "file" || field.type === "image") {
     const urlCheck = isAllowedDocumentUrl(value, {
       allowOwnStorageImage: field.type === "image",
+      locale,
     });
     if (!urlCheck.valid) {
-      return { valid: false, error: `${prefix}Kolom '${field.label}': ${urlCheck.reason}` };
+      return {
+        valid: false,
+        error: getPublicApiMessage(locale, "fieldDocError", {
+          prefix,
+          label: field.label,
+          reason: urlCheck.reason,
+        }),
+      };
     }
     return { valid: true, value, portofolioUrl: value.slice(0, 500) };
   }
@@ -217,7 +232,10 @@ function validateSingleFieldValue(
     if (opts.length > 0 && !opts.includes(value)) {
       return {
         valid: false,
-        error: `${prefix}Pilihan pada kolom '${field.label}' tidak valid`,
+        error: getPublicApiMessage(locale, "fieldInvalidSelect", {
+          prefix,
+          label: field.label,
+        }),
       };
     }
     return { valid: true, value };
@@ -226,19 +244,25 @@ function validateSingleFieldValue(
   if (value.length > 3000) {
     return {
       valid: false,
-      error: `${prefix}Kolom '${field.label}' melebihi batas maksimal 3000 karakter`,
+      error: getPublicApiMessage(locale, "fieldMaxLength", { prefix, label: field.label }),
     };
   }
   if (field.type === "number" && !/^-?\d+$/.test(value)) {
     return {
       valid: false,
-      error: `${prefix}Kolom '${field.label}' harus berupa angka yang valid`,
+      error: getPublicApiMessage(locale, "fieldInvalidNumber", {
+        prefix,
+        label: field.label,
+      }),
     };
   }
   if (field.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
     return {
       valid: false,
-      error: `${prefix}Kolom '${field.label}' harus berupa alamat email yang valid`,
+      error: getPublicApiMessage(locale, "fieldInvalidEmail", {
+        prefix,
+        label: field.label,
+      }),
     };
   }
 
@@ -250,7 +274,8 @@ function validateSingleFieldValue(
  */
 export function validateRegistrationResponses(
   formSchema: DynamicFormField[],
-  responses: Record<string, string>
+  responses: Record<string, string>,
+  locale?: PublicLocale | string | null
 ): { valid: true; extractedPortofolioUrl: string | null } | { valid: false; error: string } {
   const formSchemaMap = new Map(formSchema.map((field) => [field.id, field]));
 
@@ -258,7 +283,7 @@ export function validateRegistrationResponses(
     if (!formSchemaMap.has(submittedKey)) {
       return {
         valid: false,
-        error: `Field '${submittedKey}' tidak terdaftar dalam formulir pendaftaran kegiatan ini`,
+        error: getPublicApiMessage(locale, "fieldUnknown", { key: submittedKey }),
       };
     }
   }
@@ -266,7 +291,7 @@ export function validateRegistrationResponses(
   let extractedPortofolioUrl: string | null = null;
 
   for (const field of formSchema) {
-    const check = validateSingleFieldValue(field, responses[field.id]);
+    const check = validateSingleFieldValue(field, responses[field.id], undefined, locale);
     if (!check.valid) return check;
     if (check.portofolioUrl && !extractedPortofolioUrl) {
       extractedPortofolioUrl = check.portofolioUrl;
@@ -289,6 +314,7 @@ export function validateMultiItemRegistrationResponses(params: {
     extra_fields?: DynamicFormField[] | null;
   }>;
   responses: Record<string, string>;
+  locale?: PublicLocale | string | null;
 }):
   | {
       valid: true;
@@ -297,7 +323,7 @@ export function validateMultiItemRegistrationResponses(params: {
       mergedFieldsForSummary: Array<{ label: string; value: string }>;
     }
   | { valid: false; error: string } {
-  const { commonSchema, selectedItems, responses } = params;
+  const { commonSchema, selectedItems, responses, locale } = params;
 
   const allowedKeys = new Set<string>(commonSchema.map((f) => f.id));
   for (const item of selectedItems) {
@@ -310,7 +336,7 @@ export function validateMultiItemRegistrationResponses(params: {
     if (!allowedKeys.has(submittedKey)) {
       return {
         valid: false,
-        error: `Field '${submittedKey}' tidak terdaftar dalam formulir pilihan yang dipilih`,
+        error: getPublicApiMessage(locale, "fieldUnknown", { key: submittedKey }),
       };
     }
   }
@@ -320,7 +346,7 @@ export function validateMultiItemRegistrationResponses(params: {
   const mergedFieldsForSummary: Array<{ label: string; value: string }> = [];
 
   for (const field of commonSchema) {
-    const check = validateSingleFieldValue(field, responses[field.id]);
+    const check = validateSingleFieldValue(field, responses[field.id], undefined, locale);
     if (!check.valid) return check;
     if (check.value) {
       commonValues[field.id] = check.value;
@@ -338,7 +364,7 @@ export function validateMultiItemRegistrationResponses(params: {
     const extras = Array.isArray(item.extra_fields) ? item.extra_fields : [];
 
     for (const ef of extras) {
-      const check = validateSingleFieldValue(ef, responses[ef.id], item.name);
+      const check = validateSingleFieldValue(ef, responses[ef.id], item.name, locale);
       if (!check.valid) return check;
       if (check.value) {
         itemResponses[ef.id] = check.value;

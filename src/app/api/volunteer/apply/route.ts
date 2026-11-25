@@ -13,6 +13,7 @@ import {
   validateRegistrationResponses,
 } from "@/lib/registration-validation";
 import type { DynamicFormField } from "@/types/agenda";
+import { getLocaleFromRequest, getPublicApiMessage } from "@/lib/public-api-i18n";
 
 export { isHostnameAllowed };
 
@@ -20,17 +21,18 @@ const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 
 // Skema dasar request pendaftaran
 const requestSchema = z.object({
-  agendaId: z.string().uuid("Agenda ID tidak valid"),
+  agendaId: z.string().uuid(),
   itemId: z.string().uuid().optional(),
-  itemIds: z.array(z.string().uuid("Pilihan posisi/lomba tidak valid")).max(20).optional(),
-  turnstileToken: z.string().min(1, "Verifikasi Captcha wajib disertakan"),
+  itemIds: z.array(z.string().uuid()).max(20).optional(),
+  turnstileToken: z.string().min(1),
+  locale: z.string().max(16).optional(),
   responses: z.record(z.string(), z.string()).refine(
-    (obj) => Object.keys(obj).length <= 80,
-    "Jumlah respon melebihi batas yang diizinkan (maksimal 80 field)"
+    (obj) => Object.keys(obj).length <= 80
   ),
 });
 
 export async function POST(req: Request) {
+  const headerLocale = getLocaleFromRequest(req);
   try {
     // 1. Rate Limiting (Maksimal 5 pengiriman pendaftaran per 10 menit per IP)
     const clientIp = getClientIp(req);
@@ -41,7 +43,7 @@ export async function POST(req: Request) {
 
     if (!rateLimitResult.success) {
       return createRateLimitResponse(
-        "Terlalu banyak percobaan pendaftaran dari perangkat Anda. Silakan tunggu 10 menit.",
+        getPublicApiMessage(headerLocale, "applyRateLimit"),
         rateLimitResult
       );
     }
@@ -52,16 +54,21 @@ export async function POST(req: Request) {
       rawBody = await req.json();
     } catch {
       return NextResponse.json(
-        { error: "Format request tidak valid (harus JSON)" },
+        { error: getPublicApiMessage(headerLocale, "invalidJson") },
         { status: 400, headers: rateLimitResult.headers }
       );
     }
 
+    const explicitLocale =
+      rawBody && typeof rawBody === "object" && "locale" in rawBody && typeof (rawBody as any).locale === "string"
+        ? (rawBody as any).locale
+        : null;
+    const locale = getLocaleFromRequest(req, explicitLocale);
+
     const parseResult = requestSchema.safeParse(rawBody);
     if (!parseResult.success) {
-      const firstIssue = parseResult.error.issues[0];
       return NextResponse.json(
-        { error: firstIssue?.message || "Data pendaftaran tidak valid" },
+        { error: getPublicApiMessage(locale, "invalidApplyData") },
         { status: 400, headers: rateLimitResult.headers }
       );
     }
@@ -75,7 +82,7 @@ export async function POST(req: Request) {
     if (!TURNSTILE_SECRET_KEY) {
       console.error("[volunteer/apply] TURNSTILE_SECRET_KEY belum dikonfigurasi di server.");
       return NextResponse.json(
-        { error: "Layanan keamanan captcha server sedang tidak tersedia" },
+        { error: getPublicApiMessage(locale, "captchaUnavailable") },
         { status: 500, headers: rateLimitResult.headers }
       );
     }
@@ -94,14 +101,14 @@ export async function POST(req: Request) {
     } catch (fetchErr) {
       console.error("[volunteer/apply] Gagal menghubungi Turnstile siteverify:", fetchErr);
       return NextResponse.json(
-        { error: "Gagal memverifikasi captcha. Silakan coba kembali." },
+        { error: getPublicApiMessage(locale, "captchaVerifyError") },
         { status: 502, headers: rateLimitResult.headers }
       );
     }
 
     if (!outcome?.success) {
       return NextResponse.json(
-        { error: "Verifikasi Captcha gagal. Silakan muat ulang halaman dan coba lagi." },
+        { error: getPublicApiMessage(locale, "captchaFailed") },
         { status: 400, headers: rateLimitResult.headers }
       );
     }
@@ -117,14 +124,14 @@ export async function POST(req: Request) {
 
     if (agendaError || !agenda) {
       return NextResponse.json(
-        { error: "Kegiatan / agenda tidak ditemukan" },
+        { error: getPublicApiMessage(locale, "agendaNotFound") },
         { status: 404, headers: rateLimitResult.headers }
       );
     }
 
     if (!agenda.is_published) {
       return NextResponse.json(
-        { error: "Pendaftaran untuk kegiatan ini tidak dibuka atau belum dipublikasikan" },
+        { error: getPublicApiMessage(locale, "agendaNotPublished") },
         { status: 403, headers: rateLimitResult.headers }
       );
     }
@@ -143,7 +150,7 @@ export async function POST(req: Request) {
     if (itemsError) {
       console.error("[volunteer/apply] Error reading agenda_items:", itemsError.message);
       return NextResponse.json(
-        { error: "Gagal memeriksa posisi/cabang pendaftaran" },
+        { error: getPublicApiMessage(locale, "itemsCheckFailed") },
         { status: 500, headers: rateLimitResult.headers }
       );
     }
@@ -157,14 +164,14 @@ export async function POST(req: Request) {
 
     if (!hasAnyFormQuestions(formSchema, items)) {
       return NextResponse.json(
-        { error: "Pendaftaran untuk kegiatan ini tidak dibuka (tidak ada formulir pendaftaran)" },
+        { error: getPublicApiMessage(locale, "noRegistrationForm") },
         { status: 400, headers: rateLimitResult.headers }
       );
     }
 
     if (isDeadlinePassedJakarta(agenda.deadline)) {
       return NextResponse.json(
-        { error: "Pendaftaran untuk kegiatan ini sudah ditutup" },
+        { error: getPublicApiMessage(locale, "registrationClosed") },
         { status: 400, headers: rateLimitResult.headers }
       );
     }
@@ -174,6 +181,7 @@ export async function POST(req: Request) {
       allowMultipleItems: agenda.allow_multiple_items,
       availableItems: items,
       requestedItemIds,
+      locale,
     });
     if (!selectionValidation.valid) {
       return NextResponse.json(
@@ -196,6 +204,7 @@ export async function POST(req: Request) {
         commonSchema: formSchema,
         selectedItems,
         responses,
+        locale,
       });
       if (!multiCheck.valid) {
         return NextResponse.json(
@@ -207,7 +216,7 @@ export async function POST(req: Request) {
       extractedPortofolioUrl = multiCheck.extractedPortofolioUrl;
       formattedFieldsForTelegram = multiCheck.mergedFieldsForSummary;
     } else {
-      const singleCheck = validateRegistrationResponses(formSchema, responses);
+      const singleCheck = validateRegistrationResponses(formSchema, responses, locale);
       if (!singleCheck.valid) {
         return NextResponse.json(
           { error: singleCheck.error },
@@ -242,13 +251,13 @@ export async function POST(req: Request) {
       if (msg.includes("QUOTA_FULL:")) {
         const fullTarget = msg.split("QUOTA_FULL:")[1]?.trim() || agenda.title;
         return NextResponse.json(
-          { error: `Maaf, kuota untuk "${fullTarget}" sudah terisi penuh.` },
+          { error: getPublicApiMessage(locale, "quotaFull", { target: fullTarget }) },
           { status: 409, headers: rateLimitResult.headers }
         );
       }
       if (msg.includes("DEADLINE_PASSED")) {
         return NextResponse.json(
-          { error: "Pendaftaran untuk kegiatan ini sudah ditutup." },
+          { error: getPublicApiMessage(locale, "registrationClosed") },
           { status: 400, headers: rateLimitResult.headers }
         );
       }
@@ -258,14 +267,14 @@ export async function POST(req: Request) {
         msg.includes("MULTIPLE_ITEMS_NOT_ALLOWED")
       ) {
         return NextResponse.json(
-          { error: "Pilihan posisi / cabang lomba tidak valid." },
+          { error: getPublicApiMessage(locale, "invalidItemChoice") },
           { status: 400, headers: rateLimitResult.headers }
         );
       }
 
       console.error("[volunteer/apply] RPC submit_agenda_registration error:", msg);
       return NextResponse.json(
-        { error: "Gagal menyimpan data pendaftaran. Silakan coba kembali." },
+        { error: getPublicApiMessage(locale, "saveApplyFailed") },
         { status: 500, headers: rateLimitResult.headers }
       );
     }
@@ -304,7 +313,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: "Pendaftaran berhasil dikirim",
+        message: getPublicApiMessage(locale, "applySuccess"),
         selectedItems: itemNames,
       },
       { status: 201, headers: rateLimitResult.headers }
@@ -312,7 +321,7 @@ export async function POST(req: Request) {
   } catch (err: any) {
     console.error("[volunteer/apply] Unexpected error:", err);
     return NextResponse.json(
-      { error: "Terjadi kesalahan internal server" },
+      { error: getPublicApiMessage(headerLocale, "internalServerError") },
       { status: 500 }
     );
   }

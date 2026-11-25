@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Turnstile } from "@marsidev/react-turnstile";
 
 
@@ -26,6 +26,7 @@ export default function SaranAduan() {
   const [successMsg, setSuccessMsg] = useState("");
   const supabase = createClient();
   const t = useTranslations("Feedback");
+  const locale = useLocale();
 
   const DUMMY_CHATS = [
     t("dummyChats.0"),
@@ -135,7 +136,8 @@ export default function SaranAduan() {
       const timeDiff = Date.now() - parseInt(lastSubmitTime, 10);
       const cooldownMinutes = 10;
       if (timeDiff < cooldownMinutes * 60 * 1000) {
-        setErrorMsg(`Tunggu sekitar ${Math.ceil((cooldownMinutes * 60 * 1000 - timeDiff) / 60000)} menit lagi sebelum mengirim saran baru.`);
+        const remainingMinutes = Math.ceil((cooldownMinutes * 60 * 1000 - timeDiff) / 60000);
+        setErrorMsg(t("errorCooldown", { minutes: remainingMinutes }));
         return;
       }
     }
@@ -153,14 +155,15 @@ export default function SaranAduan() {
           nama: finalNama,
           kategori,
           deskripsi,
-          turnstileToken
+          turnstileToken,
+          locale,
         })
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Terjadi kesalahan sistem");
+        throw new Error(data.error || t("errorSystem"));
       }
 
       setSuccessMsg(t("successSent"));
@@ -179,7 +182,7 @@ export default function SaranAduan() {
       }, 5000);
     } catch (error: any) {
       console.error("Error submitting:", error);
-      setErrorMsg(t("errorSystem"));
+      setErrorMsg(error?.message || t("errorSystem"));
     } finally {
       setIsLoading(false);
     }
