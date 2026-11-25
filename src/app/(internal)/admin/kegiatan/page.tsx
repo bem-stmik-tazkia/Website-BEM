@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { getKegiatans, deleteKegiatan } from "./actions";
 import { requireAdmin } from "@/lib/auth";
-import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiClock, FiCheckCircle, FiXCircle, FiUsers } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiCalendar, FiCheckCircle, FiXCircle, FiUsers } from "react-icons/fi";
 import { revalidatePath } from "next/cache";
 import DeleteButton from "./DeleteButton";
 import BroadcastKegiatanButton from "./BroadcastKegiatanButton";
@@ -78,31 +78,66 @@ export default async function KegiatanAdminPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {/* Header Row */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-on-surface">Kelola Kegiatan</h1>
-          <p className="text-sm text-on-surface-variant mt-1">Atur daftar Agenda dan Open Recruitment BEM.</p>
+          <p className="text-sm text-on-surface-variant mt-1">
+            Atur daftar Agenda, Event Lomba, dan Open Recruitment BEM.
+          </p>
         </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="bg-surface border border-outline-variant/30 rounded-xl p-1 flex">
-            <Link href="/admin/kegiatan" className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === "semua" ? "bg-primary/10 text-primary" : "text-on-surface-variant hover:text-primary"}`}>Semua</Link>
-            <Link href="/admin/kegiatan?filter=agenda" className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === "agenda" ? "bg-blue-50 text-blue-600" : "text-on-surface-variant hover:text-blue-600"}`}>Agenda</Link>
-            <Link href="/admin/kegiatan?filter=volunteer" className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${filter === "volunteer" ? "bg-emerald-50 text-emerald-600" : "text-on-surface-variant hover:text-emerald-600"}`}>Oprec</Link>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link 
-              href="/admin/kegiatan/form?type=event" 
-              className="flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all hover:shadow-md"
-            >
-              <FiPlus size={17} /> <span>Tambah Event / Lomba</span>
-            </Link>
-            <Link 
-              href="/admin/kegiatan/form?type=volunteer" 
-              className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all hover:shadow-md"
-            >
-              <FiUsers size={16} /> <span>Tambah Oprec / Volunteer</span>
-            </Link>
-          </div>
+
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <Link
+            href="/admin/kegiatan/form?type=event"
+            className="inline-flex items-center justify-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all hover:shadow-md whitespace-nowrap"
+          >
+            <FiPlus size={17} />
+            <span>Tambah Event / Lomba</span>
+          </Link>
+          <Link
+            href="/admin/kegiatan/form?type=volunteer"
+            className="inline-flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all hover:shadow-md whitespace-nowrap"
+          >
+            <FiUsers size={16} />
+            <span>Tambah Oprec / Volunteer</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Filter Tabs Row */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="bg-surface border border-outline-variant/30 rounded-xl p-1 inline-flex items-center gap-1">
+          <Link
+            href="/admin/kegiatan"
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+              filter === "semua"
+                ? "bg-primary/10 text-primary"
+                : "text-on-surface-variant hover:text-primary"
+            }`}
+          >
+            Semua
+          </Link>
+          <Link
+            href="/admin/kegiatan?filter=agenda"
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+              filter === "agenda"
+                ? "bg-blue-50 text-blue-600"
+                : "text-on-surface-variant hover:text-blue-600"
+            }`}
+          >
+            Agenda &amp; Lomba
+          </Link>
+          <Link
+            href="/admin/kegiatan?filter=volunteer"
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+              filter === "volunteer"
+                ? "bg-emerald-50 text-emerald-600"
+                : "text-on-surface-variant hover:text-emerald-600"
+            }`}
+          >
+            Oprec / Volunteer
+          </Link>
         </div>
       </div>
 
@@ -121,27 +156,23 @@ export default async function KegiatanAdminPage({
             <tbody className="divide-y divide-outline-variant/30">
               {kegiatans.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-10 text-center text-on-surface-variant space-y-3">
-                    <p className="font-semibold text-on-surface">
-                      {filter === "volunteer"
-                        ? "Belum ada Open Recruitment / Volunteer."
-                        : filter === "agenda"
-                        ? "Belum ada Agenda / Event / Lomba."
-                        : "Belum ada data kegiatan."}
-                    </p>
-                    <div className="flex flex-wrap justify-center gap-2">
-                      <Link
-                        href="/admin/kegiatan/form?type=event"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold bg-primary/10 text-primary px-3.5 py-2 rounded-xl hover:bg-primary hover:text-white transition-colors"
-                      >
-                        <FiPlus size={14} /> Buat Event / Lomba
-                      </Link>
-                      <Link
-                        href="/admin/kegiatan/form?type=volunteer"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-50 text-emerald-700 px-3.5 py-2 rounded-xl hover:bg-emerald-600 hover:text-white transition-colors"
-                      >
-                        <FiUsers size={14} /> Buat Oprec / Volunteer
-                      </Link>
+                  <td colSpan={5} className="p-12 text-center text-on-surface-variant">
+                    <div className="flex flex-col items-center gap-2.5">
+                      <div className="w-14 h-14 bg-surface-variant/50 rounded-full flex items-center justify-center">
+                        <FiCalendar className="text-2xl text-on-surface-variant/50" />
+                      </div>
+                      <p className="font-bold text-on-surface">
+                        {filter === "volunteer"
+                          ? "Belum ada Open Recruitment / Volunteer"
+                          : filter === "agenda"
+                          ? "Belum ada Agenda / Event / Lomba"
+                          : "Belum ada data kegiatan"}
+                      </p>
+                      <p className="text-xs max-w-md">
+                        {filter === "volunteer"
+                          ? "Klik tombol \"Tambah Oprec / Volunteer\" di kanan atas untuk membuat open recruitment baru."
+                          : "Pilih tombol \"Tambah Event / Lomba\" atau \"Tambah Oprec / Volunteer\" di kanan atas untuk mulai menambahkan."}
+                      </p>
                     </div>
                   </td>
                 </tr>
