@@ -450,7 +450,15 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
               </div>
             ) : (
               <NativeLink
-                href="/masuk"
+                href={
+                  pathname &&
+                  (pathname.startsWith("/agenda") ||
+                    pathname.startsWith("/artikel") ||
+                    pathname.startsWith("/dashboard") ||
+                    pathname.startsWith("/profil"))
+                    ? `/masuk?next=${encodeURIComponent(`/${locale}${pathname}`)}`
+                    : "/masuk"
+                }
                 className={`inline-flex items-center justify-center px-3.5 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold rounded-full border transition-all ${
                   isScrolled
                     ? "border-primary/30 text-primary hover:bg-primary/5"

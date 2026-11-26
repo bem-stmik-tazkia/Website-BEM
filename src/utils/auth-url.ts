@@ -2,6 +2,7 @@ export const STUDENT_ALLOWED_NEXT_PREFIXES = [
   "/dashboard",
   "/profil",
   "/agenda",
+  "/artikel",
   "/id/dashboard",
   "/en/dashboard",
   "/ar/dashboard",
@@ -17,6 +18,11 @@ export const STUDENT_ALLOWED_NEXT_PREFIXES = [
   "/ar/agenda",
   "/fr/agenda",
   "/ja/agenda",
+  "/id/artikel",
+  "/en/artikel",
+  "/ar/artikel",
+  "/fr/artikel",
+  "/ja/artikel",
 ];
 
 /**

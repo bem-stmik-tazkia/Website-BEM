@@ -91,6 +91,9 @@ export async function POST(req: Request) {
     const formData = new URLSearchParams();
     formData.append("secret", TURNSTILE_SECRET_KEY);
     formData.append("response", turnstileToken);
+    if (clientIp && clientIp !== "unknown-ip" && clientIp !== "127.0.0.1") {
+      formData.append("remoteip", clientIp);
+    }
 
     let outcome: any;
     try {

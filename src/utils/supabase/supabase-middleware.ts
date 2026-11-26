@@ -153,7 +153,8 @@ export async function updateSession(request: NextRequest, customSupabase?: any) 
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/masuk';
-      url.searchParams.set('next', request.nextUrl.pathname);
+      url.search = '';
+      url.searchParams.set('next', `${request.nextUrl.pathname}${request.nextUrl.search}`);
       return NextResponse.redirect(url);
     }
 
@@ -175,7 +176,6 @@ export async function updateSession(request: NextRequest, customSupabase?: any) 
   // 5. Handle /masuk route — jika sudah login, langsung alihkan ke dashboard / admin
   if (isMasukRoute) {
     if (user) {
-      const url = request.nextUrl.clone();
       const nextParam = request.nextUrl.searchParams.get('next');
 
       let isUserAdmin = false;
@@ -192,14 +192,12 @@ export async function updateSession(request: NextRequest, customSupabase?: any) 
       }
 
       if (isUserAdmin) {
-        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/admin']);
-        url.pathname = safeNext || '/admin';
+        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/admin', ...STUDENT_ALLOWED_NEXT_PREFIXES]);
+        return NextResponse.redirect(new URL(safeNext || '/admin', request.url));
       } else {
         const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, STUDENT_ALLOWED_NEXT_PREFIXES);
-        url.pathname = safeNext || '/dashboard';
+        return NextResponse.redirect(new URL(safeNext || '/dashboard', request.url));
       }
-      url.searchParams.delete('next');
-      return NextResponse.redirect(url);
     }
     return supabaseResponse;
   }
@@ -215,7 +213,6 @@ export async function updateSession(request: NextRequest, customSupabase?: any) 
     }
 
     if (user) {
-      const url = request.nextUrl.clone();
       const nextParam = request.nextUrl.searchParams.get('next');
 
       let isUserAdmin = false;
@@ -232,14 +229,12 @@ export async function updateSession(request: NextRequest, customSupabase?: any) 
       }
 
       if (isUserAdmin) {
-        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/admin']);
-        url.pathname = safeNext || '/admin';
+        const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, ['/admin', ...STUDENT_ALLOWED_NEXT_PREFIXES]);
+        return NextResponse.redirect(new URL(safeNext || '/admin', request.url));
       } else {
         const safeNext = sanitizeNextPath(nextParam, request.nextUrl.origin, STUDENT_ALLOWED_NEXT_PREFIXES);
-        url.pathname = safeNext || '/dashboard';
+        return NextResponse.redirect(new URL(safeNext || '/dashboard', request.url));
       }
-      url.searchParams.delete('next');
-      return NextResponse.redirect(url);
     }
 
     const bypassCookie = request.cookies.get('maintenance_bypass')?.value;

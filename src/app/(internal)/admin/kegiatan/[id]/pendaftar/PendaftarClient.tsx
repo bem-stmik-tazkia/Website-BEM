@@ -8,9 +8,10 @@ import {
   FiCheckCircle,
   FiClock,
   FiExternalLink,
+  FiEye,
   FiImage,
+  FiMail,
   FiPrinter,
-  FiRotateCcw,
   FiSearch,
   FiTrash2,
   FiUsers,
@@ -69,6 +70,25 @@ function buildDisplayFields(
   }
 
   return result;
+}
+
+const HIDDEN_TABLE_FIELD_LABEL_REGEX =
+  /alasan|pengalaman|telp|telepon|whatsapp|\bwa\b|no\.?\s*hp|nomor\s*hp|motivasi|deskripsi|portofolio|berkas|dokumen|\bcv\b|tautan|link/i;
+
+function isCompactTableField(field: DisplayFormField): boolean {
+  if (
+    field.type === "textarea" ||
+    field.type === "tel" ||
+    field.type === "file" ||
+    field.type === "image" ||
+    field.type === "email"
+  ) {
+    return false;
+  }
+  if (HIDDEN_TABLE_FIELD_LABEL_REGEX.test(field.label || "")) {
+    return false;
+  }
+  return true;
 }
 
 const formatDateWithTime = (dateStr: string) => {
@@ -348,6 +368,7 @@ export default function PendaftarClient({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmDeleteApp, setConfirmDeleteApp] =
     useState<VolunteerApplication | null>(null);
+  const [detailApp, setDetailApp] = useState<VolunteerApplication | null>(null);
   const [zoomPhoto, setZoomPhoto] = useState<{
     src: string;
     href: string;
@@ -374,6 +395,14 @@ export default function PendaftarClient({
     () => buildDisplayFields(fields, items, selectedItemId),
     [fields, items, selectedItemId]
   );
+
+  // Kolom ringkas untuk tabel utama (kolom panjang seperti alasan, telp, pengalaman tampil di modal Detail)
+  const tableFields = useMemo(() => {
+    const compact = displayFields.filter(isCompactTableField);
+    return compact.length > 0 ? compact.slice(0, 4) : displayFields.slice(0, 3);
+  }, [displayFields]);
+
+  const hiddenTableFieldCount = Math.max(0, displayFields.length - tableFields.length);
 
   const reportFields = useMemo(
     () => buildDisplayFields(fields, items, reportItemId),
@@ -475,6 +504,9 @@ export default function PendaftarClient({
       await updateVolunteerApplicationStatus(app.id, agenda.id, nextStatus);
       setApplications((prev) =>
         prev.map((row) => (row.id === app.id ? { ...row, status: nextStatus } : row))
+      );
+      setDetailApp((prev) =>
+        prev && prev.id === app.id ? { ...prev, status: nextStatus } : prev
       );
       success(
         nextStatus === "rejected"
@@ -769,15 +801,15 @@ export default function PendaftarClient({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[900px]">
+              <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-surface-variant/20 text-on-surface-variant text-xs uppercase tracking-wider">
-                    <th className="p-4 font-bold">No</th>
-                    <th className="p-4 font-bold">Waktu Submit</th>
-                    {hasItems && <th className="p-4 font-bold">{itemLabel}</th>}
-                    <th className="p-4 font-bold">Status</th>
-                    {displayFields.map((field) => (
-                      <th key={field.id} className="p-4 font-bold">
+                    <th className="p-3.5 sm:p-4 font-bold">No</th>
+                    <th className="p-3.5 sm:p-4 font-bold">Waktu Submit</th>
+                    {hasItems && <th className="p-3.5 sm:p-4 font-bold">{itemLabel}</th>}
+                    <th className="p-3.5 sm:p-4 font-bold">Status</th>
+                    {tableFields.map((field) => (
+                      <th key={field.id} className="p-3.5 sm:p-4 font-bold">
                         <div>{field.label}</div>
                         {field.itemTag && (
                           <div className="text-[10px] font-semibold text-primary normal-case mt-0.5">
@@ -786,7 +818,14 @@ export default function PendaftarClient({
                         )}
                       </th>
                     ))}
-                    <th className="p-4 font-bold text-right">Aksi</th>
+                    <th className="p-3.5 sm:p-4 font-bold text-right">
+                      Aksi
+                      {hiddenTableFieldCount > 0 && (
+                        <span className="block text-[10px] font-normal normal-case text-on-surface-variant/75">
+                          +{hiddenTableFieldCount} detail
+                        </span>
+                      )}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/20">
@@ -849,7 +888,7 @@ export default function PendaftarClient({
                           )}
                         </td>
 
-                        {displayFields.map((field) => {
+                        {tableFields.map((field) => {
                           const answer = app.responses?.[field.id];
                           const notApplicable =
                             !answer && Boolean(field.itemId) && app.item_id !== field.itemId;
@@ -862,7 +901,7 @@ export default function PendaftarClient({
                           return (
                             <td
                               key={field.id}
-                              className="p-4 text-sm text-on-surface max-w-[260px]"
+                              className="p-3.5 sm:p-4 text-sm text-on-surface max-w-[220px]"
                             >
                               {notApplicable ? (
                                 <span
@@ -922,8 +961,16 @@ export default function PendaftarClient({
                           );
                         })}
 
-                        <td className="p-4 text-right whitespace-nowrap">
+                        <td className="p-3.5 sm:p-4 text-right whitespace-nowrap">
                           <div className="inline-flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setDetailApp(app)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                              title="Lihat jawaban lengkap (alasan, no. telp, pengalaman, dll)"
+                            >
+                              <FiEye size={13} /> Detail
+                            </button>
                             {(isRejected || isPending) && (
                               <button
                                 type="button"
@@ -966,6 +1013,195 @@ export default function PendaftarClient({
             </div>
           )}
         </div>
+
+        {/* Detail Modal Pendaftar Lengkap */}
+        {detailApp && (() => {
+          const matchedItem = detailApp.item_id
+            ? items.find((it) => it.id === detailApp.item_id)
+            : null;
+          const detailFields: DisplayFormField[] = [
+            ...fields,
+            ...(matchedItem?.extra_fields || []).map((ef) => ({
+              ...ef,
+              itemId: matchedItem?.id,
+              itemTag: matchedItem?.name,
+            })),
+          ];
+          const isRejected = detailApp.status === "rejected";
+          const isPending = detailApp.status === "pending";
+          const isBusy = busyId === detailApp.id;
+          const applicantTitle = String(
+            Object.values(detailApp.responses || {}).find(
+              (v) =>
+                typeof v === "string" &&
+                v.trim().length > 0 &&
+                !v.startsWith("http")
+            ) || "Detail Pendaftar"
+          );
+
+          return (
+            <div
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+              onClick={() => setDetailApp(null)}
+            >
+              <div
+                className="bg-surface rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-outline-variant/30 flex flex-col max-h-[90vh]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="p-5 sm:p-6 border-b border-outline-variant/20 bg-surface-variant/15 flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      {detailApp.item_name && (
+                        <span className="px-2.5 py-0.5 rounded-lg bg-primary/10 text-primary text-xs font-bold">
+                          {detailApp.item_name}
+                        </span>
+                      )}
+                      {isRejected ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">
+                          <FiXCircle size={12} /> Ditolak
+                        </span>
+                      ) : isPending ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
+                          <FiClock size={12} /> Menunggu
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
+                          <FiCheckCircle size={12} /> Diterima
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-extrabold text-on-surface truncate">
+                      {applicantTitle}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-on-surface-variant mt-1">
+                      <span>Submit: {formatDateWithTime(detailApp.created_at)}</span>
+                      {detailApp.applicant_email && (
+                        <span className="inline-flex items-center gap-1 text-primary font-semibold">
+                          <FiMail size={12} /> {detailApp.applicant_email}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDetailApp(null)}
+                    className="p-2 rounded-full hover:bg-surface-variant/50 shrink-0"
+                  >
+                    <FiX size={18} />
+                  </button>
+                </div>
+
+                {/* Modal Body: Seluruh Isian Form */}
+                <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-3.5">
+                  {detailFields.map((field, idx) => {
+                    const answer = detailApp.responses?.[field.id];
+                    const safeLink = getSafeHttpsUrl(answer);
+                    const isImageField =
+                      Boolean(answer) &&
+                      (field.type === "image" ||
+                        Boolean(getRegistrationImagePreviewUrl(answer)));
+
+                    return (
+                      <div
+                        key={field.id}
+                        className="p-3.5 rounded-2xl bg-surface-variant/15 border border-outline-variant/25 space-y-1.5"
+                      >
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+                          <span>
+                            {idx + 1}. {field.label}
+                          </span>
+                          {field.itemTag && (
+                            <span className="text-primary normal-case font-semibold">
+                              [{field.itemTag}]
+                            </span>
+                          )}
+                        </p>
+
+                        {isImageField ? (
+                          <ThumbnailCell
+                            url={answer}
+                            label={`${field.label} - ${applicantTitle}`}
+                            onZoom={(src, href, title) =>
+                              setZoomPhoto({ src, href, title })
+                            }
+                          />
+                        ) : field.type === "file" ? (
+                          safeLink ? (
+                            <a
+                              href={safeLink.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-primary bg-primary/10 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/20 transition-colors break-all"
+                            >
+                              <span>{safeLink.href}</span>
+                              <FiExternalLink size={12} className="shrink-0" />
+                            </a>
+                          ) : (
+                            <p className="text-xs text-on-surface-variant/60 italic">
+                              {answer || "Kosong"}
+                            </p>
+                          )
+                        ) : field.type === "tel" && answer ? (
+                          <a
+                            href={`https://wa.me/${answer.replace(/[^\d]/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 hover:underline"
+                          >
+                            <span>{answer}</span>
+                            <FiExternalLink size={12} />
+                          </a>
+                        ) : (
+                          <p className="text-sm text-on-surface whitespace-pre-wrap break-words leading-relaxed">
+                            {answer || (
+                              <span className="text-on-surface-variant/50 italic text-xs">
+                                Kosong
+                              </span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Modal Footer: Aksi Cepat Terima / Tolak */}
+                <div className="p-4 sm:p-5 border-t border-outline-variant/20 bg-surface flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    {(isRejected || isPending) && (
+                      <button
+                        type="button"
+                        disabled={isBusy}
+                        onClick={() => handleStatusChange(detailApp, "accepted")}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-bold transition-colors disabled:opacity-50"
+                      >
+                        <FiCheckCircle size={14} /> Terima Pendaftar
+                      </button>
+                    )}
+                    {!isRejected && (
+                      <button
+                        type="button"
+                        disabled={isBusy}
+                        onClick={() => handleStatusChange(detailApp, "rejected")}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 text-white hover:bg-amber-600 text-xs font-bold transition-colors disabled:opacity-50"
+                      >
+                        <FiXCircle size={14} /> Tolak
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDetailApp(null)}
+                    className="px-4 py-2 rounded-xl border border-outline-variant/50 text-xs font-bold text-on-surface hover:bg-surface-variant/30"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Lightbox Zoom Foto */}
         {zoomPhoto && (

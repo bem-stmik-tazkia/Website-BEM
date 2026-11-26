@@ -316,7 +316,8 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
 
       if (authError || !user) {
         toast(t("sessionExpired"), "error");
-        router.push("/masuk");
+        const nextUrl = typeof window !== "undefined" ? encodeURIComponent(window.location.pathname) : "";
+        window.location.assign(nextUrl ? `/masuk?next=${nextUrl}` : "/masuk");
         return;
       }
 

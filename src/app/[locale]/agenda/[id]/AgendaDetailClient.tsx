@@ -157,14 +157,24 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
     }
   };
 
-  const getShareUrl = () => {
-    if (typeof window === "undefined") return "";
+  const getShareUrl = React.useCallback(() => {
+    if (typeof window === "undefined") {
+      return `https://bem.stmik.tazkia.ac.id/${locale}/agenda/${rawAgenda.id}`;
+    }
     // Jika sedang di localhost, gunakan domain production agar crawler WhatsApp & medsos bisa mengambil preview banner
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
       return `https://bem.stmik.tazkia.ac.id${window.location.pathname}`;
     }
     return window.location.href;
-  };
+  }, [locale, rawAgenda.id]);
+
+  const [shareUrl, setShareUrl] = React.useState(
+    `https://bem.stmik.tazkia.ac.id/${locale}/agenda/${rawAgenda.id}`
+  );
+
+  React.useEffect(() => {
+    setShareUrl(getShareUrl());
+  }, [getShareUrl]);
 
   const handleShare = async () => {
     if (!agenda) return;
@@ -1121,7 +1131,7 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
             </div>
             <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 z-10 w-full md:w-auto">
               <a
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${t("shareText", { title: agenda.title })}\n${getShareUrl()}`)}`}
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${t("shareText", { title: agenda.title })}\n${shareUrl}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#25D366] text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:bg-[#20ba59] transition-all duration-300 shrink-0 cursor-pointer active:scale-95 text-sm"

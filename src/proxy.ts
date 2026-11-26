@@ -18,6 +18,19 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(cleanUrl);
   }
 
+  // 0b. Jika Supabase OAuth fallback ke Site URL (/ atau /<locale>) membawa ?code=...,
+  // teruskan ke /auth/callback agar cookie auth_next & PKCE tetap diproses ke halaman tujuan.
+  if (
+    (pathname === '/' || /^\/(?:id|en|ar|fr|ja)\/?$/.test(pathname)) &&
+    (request.nextUrl.searchParams.has('code') ||
+      ((request.nextUrl.searchParams.has('error') || request.nextUrl.searchParams.has('error_code')) &&
+        request.cookies.has('auth_flow')))
+  ) {
+    const callbackUrl = request.nextUrl.clone();
+    callbackUrl.pathname = '/auth/callback';
+    return NextResponse.redirect(callbackUrl);
+  }
+
   // 1. Jalankan Supabase middleware untuk proteksi route, auth, dan refresh token
   const supabaseResponse = await updateSession(request);
   

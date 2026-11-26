@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
+import { sanitizeNextPath, STUDENT_ALLOWED_NEXT_PREFIXES } from "@/utils/auth-url";
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
   unauthorized: "Akses ditolak. Akun Google Anda tidak terdaftar sebagai administrator BEM.",
@@ -53,14 +54,22 @@ export default function LoginPage() {
     setError(null);
 
     const params = new URLSearchParams(window.location.search);
-    const nextPath = params.get('next') || '/admin';
+    const safeNext = sanitizeNextPath(params.get("next"), window.location.origin, [
+      "/admin",
+      ...STUDENT_ALLOWED_NEXT_PREFIXES,
+    ]);
+    const nextPath = safeNext || "/admin";
+
+    // Simpan tujuan redirect di cookie (bukan query param redirectTo) agar selalu lolos allowlist Redirect URL Supabase
+    document.cookie = `auth_next=${encodeURIComponent(nextPath)}; path=/; max-age=600; SameSite=Lax`;
+    document.cookie = `auth_flow=admin; path=/; max-age=600; SameSite=Lax`;
 
     const supabase = createClient();
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+        redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: {
           prompt: 'select_account',
         },

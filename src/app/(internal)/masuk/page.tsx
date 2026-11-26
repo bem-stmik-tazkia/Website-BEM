@@ -35,12 +35,16 @@ export default function MasukPage() {
     const safeNext = sanitizeNextPath(nextParam, window.location.origin, STUDENT_ALLOWED_NEXT_PREFIXES);
     const targetNext = safeNext || "/dashboard";
 
+    // Simpan tujuan redirect di cookie (bukan query param redirectTo) agar selalu lolos allowlist Redirect URL Supabase
+    document.cookie = `auth_next=${encodeURIComponent(targetNext)}; path=/; max-age=600; SameSite=Lax`;
+    document.cookie = `auth_flow=student; path=/; max-age=600; SameSite=Lax`;
+
     const supabase = createClient();
 
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(targetNext)}`,
+        redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: {
           prompt: "select_account",
         },

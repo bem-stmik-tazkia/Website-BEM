@@ -732,14 +732,14 @@ export default function ApplyClientForm({
       <div
         key={field.id}
         id={`field-wrapper-${field.id}`}
-        className={`space-y-2 transition-all duration-300 p-4 -mx-4 rounded-2xl border ${
+        className={`space-y-2 transition-all duration-300 p-3 sm:p-4 sm:-mx-4 rounded-2xl border ${
           isInvalid
             ? "bg-red-50/50 border-red-400"
             : "border-transparent bg-transparent"
         }`}
       >
         <label
-          className={`text-sm font-bold flex gap-1 items-center ${
+          className={`text-sm font-bold flex flex-wrap gap-1 items-baseline break-words ${
             isInvalid ? "text-red-700" : "text-on-surface"
           }`}
         >
@@ -798,7 +798,7 @@ export default function ApplyClientForm({
                 }
               }}
               placeholder={field.placeholder || t("placeholderPhone")}
-              className="flex-1 bg-transparent px-4 py-3 text-sm outline-none w-full"
+              className="flex-1 min-w-0 bg-transparent px-3 sm:px-4 py-3 text-sm outline-none w-full"
             />
           </div>
         )}
@@ -935,8 +935,8 @@ export default function ApplyClientForm({
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-5">
-      <div className="mb-6">
+    <div className="max-w-3xl mx-auto px-3 sm:px-5 pb-24 lg:pb-8">
+      <div className="mb-4 sm:mb-6">
         <button
           type="button"
           onClick={() => requestLeave(`/agenda/${agenda.id}`)}
@@ -948,14 +948,14 @@ export default function ApplyClientForm({
 
       <div className="bg-surface rounded-2xl md:rounded-3xl border border-outline-variant/30 shadow-lg overflow-hidden">
         {/* HEADER */}
-        <div className="bg-primary p-6 md:p-8 text-white">
-          <span className="inline-block bg-white/20 text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider mb-4">
+        <div className="bg-primary p-5 sm:p-6 md:p-8 text-white">
+          <span className="inline-block bg-white/20 text-white text-[10px] md:text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider mb-3 sm:mb-4">
             {t("formLabel")}
           </span>
-          <h1 className="text-2xl md:text-3xl font-extrabold mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold mb-2 break-words leading-tight">
             {displayTitle}
           </h1>
-          <p className="text-white/80 text-sm">
+          <p className="text-white/80 text-xs sm:text-sm">
             {isClosed
               ? t("closedMsg")
               : isQuotaFull
@@ -967,7 +967,7 @@ export default function ApplyClientForm({
         </div>
 
         {/* BODY */}
-        <div className="p-6 md:p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {isClosed || isQuotaFull ? (
             <div className="bg-red-50 text-red-600 p-6 rounded-xl border border-red-200 flex flex-col items-center text-center">
               <FiAlertCircle size={32} className="mb-3" />
@@ -1003,7 +1003,7 @@ export default function ApplyClientForm({
                 <FiLogIn size={16} /> {t("loginNowBtn")}
               </NativeLink>
             </div>
-          ) : !hasItems && hasExistingAgendaApplication ? (
+          ) : (!hasItems && hasExistingAgendaApplication) || (hasItems && !allowMultiple && appliedItemSet.size > 0) ? (
             <div className="bg-emerald-50 text-emerald-800 p-6 rounded-2xl border border-emerald-200 flex flex-col items-center text-center gap-2">
               <FiCheckCircle size={32} className="text-emerald-600" />
               <h3 className="font-bold text-lg">{t("alreadyRegisteredTitle")}</h3>
@@ -1012,18 +1012,19 @@ export default function ApplyClientForm({
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6" noValidate>
               {currentUser && (
-                <div className="p-3.5 rounded-xl bg-primary/5 border border-primary/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-2 text-on-surface">
-                    <FiUser size={14} className="text-primary shrink-0" />
-                    <span>
+                <div className="p-3 sm:p-3.5 rounded-xl bg-primary/5 border border-primary/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs overflow-hidden">
+                  <div className="flex items-start sm:items-center gap-2 text-on-surface min-w-0 w-full sm:w-auto">
+                    <FiUser size={14} className="text-primary shrink-0 mt-0.5 sm:mt-0" />
+                    <span className="min-w-0 flex-1 break-words leading-relaxed">
                       {t("loggedInAs")}:{" "}
-                      <strong className="font-bold">
+                      <strong className="font-bold break-all">
                         {currentUser.email || currentUser.fullName}
                       </strong>
                     </span>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full font-semibold w-fit">
-                    <FiClock size={12} className="shrink-0" /> {t("pendingStatusNotice")}
+                  <span className="inline-flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1.5 sm:py-1 rounded-xl sm:rounded-full font-semibold w-full sm:w-fit max-w-full leading-snug shrink-0">
+                    <FiClock size={12} className="shrink-0" />
+                    <span>{t("pendingStatusNotice")}</span>
                   </span>
                 </div>
               )}
@@ -1031,7 +1032,7 @@ export default function ApplyClientForm({
               {hasItems && (
                 <div
                   id="field-wrapper-items"
-                  className={`p-4 md:p-5 rounded-2xl border space-y-3 transition-colors ${
+                  className={`p-3.5 sm:p-4 md:p-5 rounded-2xl border space-y-3 transition-colors ${
                     itemError
                       ? "bg-red-50/50 border-red-400"
                       : "bg-primary/5 border-primary/20"
@@ -1097,7 +1098,7 @@ export default function ApplyClientForm({
                                 {isChecked && <FiCheck size={11} />}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-bold text-sm text-on-surface leading-snug">
+                                <p className="font-bold text-sm text-on-surface leading-snug break-words">
                                   {item.name}
                                 </p>
                                 {agenda.type === "event" && (
@@ -1142,7 +1143,7 @@ export default function ApplyClientForm({
                           )}
 
                           <div className="w-full space-y-1 pt-1">
-                            <div className="flex justify-between text-[11px] font-semibold text-on-surface-variant">
+                            <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] font-semibold text-on-surface-variant">
                               <span>
                                 {t("filledLabel")} <strong className="text-on-surface">{filled}</strong>
                                 {hasQuota ? ` / ${item.quota}` : ""}
@@ -1207,18 +1208,18 @@ export default function ApplyClientForm({
                   {selectedItemSections.map(({ item, extra, startNum }) => (
                     <div
                       key={item.id}
-                      className="p-5 rounded-2xl border border-primary/25 bg-primary/[0.03] space-y-4"
+                      className="p-4 sm:p-5 rounded-2xl border border-primary/25 bg-primary/[0.03] space-y-4"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-primary/15">
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-[11px] font-extrabold uppercase tracking-wider text-primary">
                             {isVolunteer ? t("specialQuestionsVol") : t("specialQuestionsComp")}
                           </p>
-                          <h3 className="text-base font-extrabold text-on-surface">
+                          <h3 className="text-base font-extrabold text-on-surface break-words">
                             {item.name}
                           </h3>
                         </div>
-                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary shrink-0">
                           {t("questionsCount", { count: extra.length })}
                         </span>
                       </div>
@@ -1231,7 +1232,7 @@ export default function ApplyClientForm({
               )}
 
               {/* Cloudflare Turnstile Captcha */}
-              <div className="flex justify-center w-full my-4 min-h-[65px]">
+              <div className="flex justify-center w-full my-4 min-h-[65px] overflow-x-auto">
                 <Turnstile
                   ref={turnstileRef}
                   siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
@@ -1253,7 +1254,7 @@ export default function ApplyClientForm({
                 <button
                   type="submit"
                   disabled={isSubmitting || !hasConfiguredQuestions || !turnstileToken}
-                  className="ml-auto bg-primary text-white font-bold px-8 py-3.5 rounded-xl hover:bg-primary/90 transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="w-full sm:w-auto sm:ml-auto bg-primary text-white font-bold px-8 py-3.5 rounded-xl hover:bg-primary/90 transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
