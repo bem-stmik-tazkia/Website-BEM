@@ -200,6 +200,22 @@ function PrintPhotoCell({ url, label }: { url: unknown; label: string }) {
   );
 }
 
+function resolveReportLayout(
+  fields: DisplayFormField[],
+  includePhotos: boolean,
+  layoutMode: "auto" | "card" | "table"
+): "card" | "table" {
+  if (layoutMode !== "auto") return layoutMode;
+  const hasLongOrImageFields = fields.some(
+    (f) =>
+      f.type === "textarea" ||
+      f.type === "image" ||
+      f.type === "file" ||
+      HIDDEN_TABLE_FIELD_LABEL_REGEX.test(f.label || "")
+  );
+  return fields.length > 5 || hasLongOrImageFields || includePhotos ? "card" : "table";
+}
+
 function PrintableReportDocument({
   agendaTitle,
   itemLabel,
@@ -209,6 +225,7 @@ function PrintableReportDocument({
   applications,
   onlyAccepted,
   includePhotos,
+  layoutMode = "auto",
 }: {
   agendaTitle: string;
   itemLabel: string;
@@ -218,7 +235,10 @@ function PrintableReportDocument({
   applications: VolunteerApplication[];
   onlyAccepted: boolean;
   includePhotos: boolean;
+  layoutMode?: "auto" | "card" | "table";
 }) {
+  const resolvedLayout = resolveReportLayout(fields, includePhotos, layoutMode);
+
   return (
     <div className="bg-white text-slate-900 space-y-5">
       <div className="border-b-2 border-slate-800 pb-3 flex items-start justify-between gap-4">
@@ -232,7 +252,7 @@ function PrintableReportDocument({
             {onlyAccepted ? " (Status: Diterima)" : ""}
           </p>
         </div>
-        <div className="text-right text-[11px] text-slate-500">
+        <div className="text-right text-[11px] text-slate-500 shrink-0">
           Dicetak:{" "}
           {new Date().toLocaleDateString("id-ID", {
             day: "numeric",
@@ -243,7 +263,7 @@ function PrintableReportDocument({
       </div>
 
       {itemStats.length > 0 && (
-        <div>
+        <div className="break-inside-avoid">
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
             Ringkasan Kuota per {itemLabel}
           </h4>
@@ -276,76 +296,193 @@ function PrintableReportDocument({
         </div>
       )}
 
-      <div className="overflow-x-auto print:overflow-visible">
-        <table className="w-full text-xs border-collapse border border-slate-300">
-          <thead>
-            <tr className="bg-slate-100">
-              <th className="border border-slate-300 p-2 text-left">No</th>
-              {hasItems && <th className="border border-slate-300 p-2 text-left">{itemLabel}</th>}
-              <th className="border border-slate-300 p-2 text-left">Status</th>
-              {fields.map((f) => (
-                <th key={f.id} className="border border-slate-300 p-2 text-left">
-                  <div>{f.label}</div>
-                  {f.itemTag && (
-                    <div className="text-[9px] font-semibold text-blue-700 mt-0.5">
-                      [{f.itemTag}]
+      {applications.length === 0 ? (
+        <div className="border border-slate-300 rounded-xl p-6 text-center text-xs text-slate-500">
+          Tidak ada data pendaftar pada filter laporan ini.
+        </div>
+      ) : resolvedLayout === "card" ? (
+        <div className="space-y-3.5">
+          {applications.map((app, idx) => {
+            const title = getApplicantDisplayLabel(app, `Pendaftar #${idx + 1}`);
+            const statusText =
+              app.status === "rejected"
+                ? "Ditolak"
+                : app.status === "pending"
+                  ? "Menunggu"
+                  : "Diterima";
+            const statusBadgeClass =
+              app.status === "rejected"
+                ? "bg-rose-100 text-rose-700 border-rose-200"
+                : app.status === "pending"
+                  ? "bg-amber-100 text-amber-800 border-amber-200"
+                  : "bg-emerald-100 text-emerald-700 border-emerald-200";
+
+            const applicableFields = fields.filter(
+              (field) => !(field.itemId && app.item_id !== field.itemId && !app.responses?.[field.id])
+            );
+            const photoFields = includePhotos
+              ? applicableFields.filter(
+                  (f) =>
+                    f.type === "image" ||
+                    Boolean(getRegistrationImagePreviewUrl(app.responses?.[f.id]))
+                )
+              : [];
+            const nonPhotoFields = applicableFields.filter((f) => !photoFields.includes(f));
+            const shortFields = nonPhotoFields.filter((f) => {
+              const ans = String(app.responses?.[f.id] || "");
+              return f.type !== "textarea" && f.type !== "file" && ans.length <= 80;
+            });
+            const longFields = nonPhotoFields.filter((f) => !shortFields.includes(f));
+
+            return (
+              <div
+                key={app.id}
+                className="border border-slate-300 rounded-xl p-3.5 bg-white break-inside-avoid page-break-inside-avoid"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2.5 border-b border-slate-200">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-slate-800 text-white text-[10px] font-bold">
+                      #{idx + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-slate-900 leading-tight">{title}</p>
+                      <p className="text-[10px] text-slate-500">
+                        Submit: {formatDateWithTime(app.created_at)}
+                        {app.applicant_email ? ` • ${app.applicant_email}` : ""}
+                      </p>
                     </div>
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {applications.map((app, idx) => (
-              <tr key={app.id} className="break-inside-avoid">
-                <td className="border border-slate-300 p-2 align-top font-bold">{idx + 1}</td>
-                {hasItems && (
-                  <td className="border border-slate-300 p-2 align-top font-semibold">
-                    {app.item_name || "-"}
-                  </td>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {hasItems && (
+                      <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-bold">
+                        {app.item_name || "-"}
+                      </span>
+                    )}
+                    <span className={`px-2 py-0.5 rounded-md border text-[10px] font-bold ${statusBadgeClass}`}>
+                      {statusText}
+                    </span>
+                  </div>
+                </div>
+
+                {shortFields.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mb-2">
+                    {shortFields.map((field) => (
+                      <div key={field.id} className="min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                          {field.label}
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-900 break-words">
+                          {app.responses?.[field.id] || "-"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 )}
-                <td className="border border-slate-300 p-2 align-top">
-                  {app.status === "rejected"
-                    ? "Ditolak"
-                    : app.status === "pending"
-                      ? "Menunggu"
-                      : "Diterima"}
-                </td>
-                {fields.map((field) => {
-                  const answer = app.responses?.[field.id];
-                  const notApplicable =
-                    !answer && Boolean(field.itemId) && app.item_id !== field.itemId;
-                  const isImg =
-                    includePhotos &&
-                    !notApplicable &&
-                    (field.type === "image" || Boolean(getRegistrationImagePreviewUrl(answer)));
-                  return (
-                    <td key={field.id} className="border border-slate-300 p-2 align-top">
-                      {notApplicable ? (
-                        <span className="text-slate-300">—</span>
-                      ) : isImg ? (
-                        <PrintPhotoCell url={answer} label={field.label} />
-                      ) : (
-                        <span className="break-words">{answer || "-"}</span>
-                      )}
+
+                {longFields.length > 0 && (
+                  <div className="space-y-1.5 mt-2">
+                    {longFields.map((field) => {
+                      const val = app.responses?.[field.id];
+                      const safeUrl = getSafeHttpsUrl(val);
+                      return (
+                        <div
+                          key={field.id}
+                          className="bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1.5"
+                        >
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                            {field.label}
+                          </p>
+                          <p className="text-[11px] text-slate-800 whitespace-pre-wrap break-words leading-snug">
+                            {safeUrl ? safeUrl.href : val || "-"}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {photoFields.length > 0 && (
+                  <div className="flex flex-wrap gap-3 mt-2.5 pt-2 border-t border-slate-200/70">
+                    {photoFields.map((field) => (
+                      <div key={field.id} className="space-y-1">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                          {field.label}
+                        </p>
+                        <PrintPhotoCell url={app.responses?.[field.id]} label={field.label} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="overflow-x-auto print:overflow-visible">
+          <table className="w-full text-[10px] leading-snug border-collapse border border-slate-300">
+            <thead>
+              <tr className="bg-slate-100">
+                <th className="border border-slate-300 p-1.5 text-left w-8">No</th>
+                <th className="border border-slate-300 p-1.5 text-left">Waktu</th>
+                {hasItems && <th className="border border-slate-300 p-1.5 text-left">{itemLabel}</th>}
+                <th className="border border-slate-300 p-1.5 text-left">Status</th>
+                {fields.map((f) => (
+                  <th key={f.id} className="border border-slate-300 p-1.5 text-left">
+                    <div>{f.label}</div>
+                    {f.itemTag && (
+                      <div className="text-[8px] font-semibold text-blue-700 mt-0.5">
+                        [{f.itemTag}]
+                      </div>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {applications.map((app, idx) => (
+                <tr key={app.id} className="break-inside-avoid">
+                  <td className="border border-slate-300 p-1.5 align-top font-bold">{idx + 1}</td>
+                  <td className="border border-slate-300 p-1.5 align-top whitespace-nowrap">
+                    {formatDateWithTime(app.created_at)}
+                  </td>
+                  {hasItems && (
+                    <td className="border border-slate-300 p-1.5 align-top font-semibold">
+                      {app.item_name || "-"}
                     </td>
-                  );
-                })}
-              </tr>
-            ))}
-            {applications.length === 0 && (
-              <tr>
-                <td
-                  colSpan={fields.length + (hasItems ? 3 : 2)}
-                  className="border border-slate-300 p-6 text-center text-slate-500"
-                >
-                  Tidak ada data pendaftar pada filter laporan ini.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                  )}
+                  <td className="border border-slate-300 p-1.5 align-top whitespace-nowrap">
+                    {app.status === "rejected"
+                      ? "Ditolak"
+                      : app.status === "pending"
+                        ? "Menunggu"
+                        : "Diterima"}
+                  </td>
+                  {fields.map((field) => {
+                    const answer = app.responses?.[field.id];
+                    const notApplicable =
+                      !answer && Boolean(field.itemId) && app.item_id !== field.itemId;
+                    const isImg =
+                      includePhotos &&
+                      !notApplicable &&
+                      (field.type === "image" || Boolean(getRegistrationImagePreviewUrl(answer)));
+                    return (
+                      <td key={field.id} className="border border-slate-300 p-1.5 align-top">
+                        {notApplicable ? (
+                          <span className="text-slate-300">—</span>
+                        ) : isImg ? (
+                          <PrintPhotoCell url={answer} label={field.label} />
+                        ) : (
+                          <span className="break-words whitespace-pre-wrap">{answer || "-"}</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -402,6 +539,7 @@ export default function PendaftarClient({
   const [reportOnlyAccepted, setReportOnlyAccepted] = useState(true);
   const [reportItemId, setReportItemId] = useState<string>("all");
   const [reportIncludePhotos, setReportIncludePhotos] = useState(true);
+  const [reportLayout, setReportLayout] = useState<"auto" | "card" | "table">("auto");
 
   const fields: DynamicFormField[] = useMemo(
     () => agenda.form_schema || [],
@@ -630,6 +768,7 @@ export default function PendaftarClient({
               agendaTitle={agenda.title}
               hasItems={hasItems}
               itemLabel={itemLabel}
+              itemStats={itemStats}
             />
           </div>
         </div>
@@ -1539,6 +1678,29 @@ export default function PendaftarClient({
                     ))}
                   </select>
                 )}
+
+                <div className="flex items-center gap-1 bg-surface border border-outline-variant/50 rounded-lg p-0.5 ml-auto">
+                  {(
+                    [
+                      ["auto", "Otomatis"],
+                      ["card", "Kartu A4"],
+                      ["table", "Tabel Landscape"],
+                    ] as const
+                  ).map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setReportLayout(mode)}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                        reportLayout === mode
+                          ? "bg-primary text-white"
+                          : "text-on-surface-variant hover:text-on-surface"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Preview Body */}
@@ -1557,6 +1719,7 @@ export default function PendaftarClient({
                     applications={reportApplications}
                     onlyAccepted={reportOnlyAccepted}
                     includePhotos={reportIncludePhotos}
+                    layoutMode={reportLayout}
                   />
                 </div>
               </div>
@@ -1586,7 +1749,12 @@ export default function PendaftarClient({
       {/* ============================================================ */}
       {/* DEDICATED PRINT LAYOUT (Visible ONLY when printing to PDF)    */}
       {/* ============================================================ */}
-      <div className="hidden print:block bg-white text-black p-4">
+      <style media="print">{`@page { size: A4 ${
+        resolveReportLayout(reportFields, reportIncludePhotos, reportLayout) === "table"
+          ? "landscape"
+          : "portrait"
+      }; margin: 10mm; }`}</style>
+      <div className="hidden print:block bg-white text-black p-2">
         <PrintableReportDocument
           agendaTitle={agenda.title}
           itemLabel={itemLabel}
@@ -1600,6 +1768,7 @@ export default function PendaftarClient({
           applications={reportApplications}
           onlyAccepted={reportOnlyAccepted}
           includePhotos={reportIncludePhotos}
+          layoutMode={reportLayout}
         />
       </div>
     </>

@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/client";
 import { FiTrash2, FiMessageSquare, FiEye, FiX, FiLink, FiHelpCircle, FiChevronDown, FiCopy, FiDownload, FiExternalLink, FiShield } from "react-icons/fi";
 import { useToast } from "@/components/ui/Toast";
 import { getExcelViewUrl } from "./actions";
+import { downloadXlsxWorkbook } from "@/lib/excel-export";
 
 const GOOGLE_SCRIPT_CODE = `function doPost(e) {
   try {
@@ -140,8 +141,9 @@ export default function SaranAduanAdminPage() {
       return;
     }
 
-    const headers = ["Tanggal", "Nama Pengirim", "Kategori", "Deskripsi"];
-    const rows = saranList.map((item) => [
+    const headers = ["No", "Tanggal", "Nama Pengirim", "Kategori", "Pesan"];
+    const rows = saranList.map((item, idx) => [
+      idx + 1,
       new Date(item.created_at).toLocaleString("id-ID", {
         day: "numeric",
         month: "long",
@@ -154,30 +156,16 @@ export default function SaranAduanAdminPage() {
       item.pesan || "-",
     ]);
 
-    const escapeCsv = (val: string) => {
-      if (val === null || val === undefined) return '""';
-      const str = String(val).replace(/"/g, '""');
-      return `"${str}"`;
-    };
-
-    const csvContent =
-      "\uFEFF" +
-      [headers, ...rows]
-        .map((row) => row.map(escapeCsv).join(","))
-        .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
     const today = new Date().toISOString().split("T")[0];
-    link.setAttribute("href", url);
-    link.setAttribute("download", `kotak_saran_aduan_${today}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    downloadXlsxWorkbook(`kotak_saran_aduan_${today}`, [
+      {
+        name: "Kotak Saran Aduan",
+        headers,
+        rows,
+      },
+    ]);
 
-    toast("Data berhasil diexport ke file Excel!", "success");
+    toast("Data berhasil diexport ke file Excel (.xlsx)!", "success");
   };
 
   return (
@@ -194,10 +182,10 @@ export default function SaranAduanAdminPage() {
           <button
             onClick={handleExportExcel}
             className="flex items-center gap-2 bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2.5 rounded-xl font-bold text-sm transition-colors shadow-soft w-fit cursor-pointer"
-            title="Download seluruh data ke file Excel (.csv)"
+            title="Download seluruh data ke file Excel (.xlsx)"
           >
             <FiDownload size={18} />
-            Export Excel
+            Export Excel (.xlsx)
           </button>
           <button onClick={() => setIsSettingsOpen(true)} className="flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2.5 rounded-xl font-bold text-sm transition-colors border border-primary/20 shadow-soft w-fit cursor-pointer">
             <FiLink size={18} />
