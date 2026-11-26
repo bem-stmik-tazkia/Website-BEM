@@ -5,6 +5,14 @@ import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations, useLocale } from "next-intl";
 import { Turnstile } from "@marsidev/react-turnstile";
+import {
+  FiAlertCircle,
+  FiCheckCircle,
+  FiChevronDown,
+  FiMessageSquare,
+  FiSend,
+  FiUser,
+} from "react-icons/fi";
 
 
 
@@ -220,7 +228,7 @@ export default function SaranAduan() {
                         className={`px-4 py-3.5 rounded-2xl rounded-bl-sm shadow-sm border max-w-[280px] bg-surface/90 backdrop-blur-md flex gap-3 items-start relative z-0 ${colorClass}`}
                       >
                         <div className="w-8 h-8 rounded-full bg-white/60 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                          <span className="material-symbols-outlined text-[18px] opacity-80">person</span>
+                          <FiUser className="w-4 h-4 opacity-80" aria-hidden="true" />
                         </div>
                         <div>
                           <p className="text-xs md:text-sm font-bold leading-relaxed">{DUMMY_CHATS[bubble.textIdx]}</p>
@@ -248,7 +256,7 @@ export default function SaranAduan() {
             <div className="flex flex-col gap-4 md:gap-6">
               <div className="flex items-start gap-3.5 md:gap-4 p-3 md:p-4 rounded-2xl bg-surface/40 border border-outline-variant/20">
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-primary/10 text-primary shadow-sm flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[20px] md:text-[24px]">lightbulb</span>
+                  <FiMessageSquare className="w-5 h-5 md:w-6 md:h-6" aria-hidden="true" />
                 </div>
                 <div>
                   <h3 className="font-headline-sm text-sm md:text-base font-bold text-on-background mb-1">{t("constructiveTitle")}</h3>
@@ -258,7 +266,7 @@ export default function SaranAduan() {
               
               <div className="flex items-start gap-3.5 md:gap-4 p-3 md:p-4 rounded-2xl bg-surface/40 border border-outline-variant/20">
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-secondary/10 text-secondary shadow-sm flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[20px] md:text-[24px]">report</span>
+                  <FiAlertCircle className="w-5 h-5 md:w-6 md:h-6" aria-hidden="true" />
                 </div>
                 <div>
                   <h3 className="font-headline-sm text-sm md:text-base font-bold text-on-background mb-1">{t("facilityTitle")}</h3>
@@ -291,7 +299,7 @@ export default function SaranAduan() {
                     <option value="aduan">{t("catComplaint")}</option>
                     <option value="lainnya">{t("catOther")}</option>
                   </select>
-                  <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[18px]">expand_more</span>
+                  <FiChevronDown className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none" aria-hidden="true" />
                 </div>
               </div>
 
@@ -308,7 +316,7 @@ export default function SaranAduan() {
               {/* Custom Error Message */}
               {errorMsg && (
                 <div className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm font-bold border border-red-200 animate-fade-in">
-                  <span className="material-symbols-outlined text-[18px]">error</span>
+                  <FiAlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                   {errorMsg}
                 </div>
               )}
@@ -316,7 +324,7 @@ export default function SaranAduan() {
               {/* Custom Success Message */}
               {successMsg && (
                 <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-3 rounded-xl text-sm font-bold border border-green-200 animate-fade-in">
-                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                  <FiCheckCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                   {successMsg}
                 </div>
               )}
@@ -346,7 +354,7 @@ export default function SaranAduan() {
               className="mt-2 flex w-full justify-center rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-white shadow-soft transition-all hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed items-center gap-2 group cursor-pointer relative overflow-hidden"
             >
               {isLoading ? t("btnSending") : t("btnSend")}
-              {!isLoading && <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">send</span>}
+              {!isLoading && <FiSend className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />}
             </button>
               
               <p className="text-[10px] md:text-xs text-center text-on-surface-variant">

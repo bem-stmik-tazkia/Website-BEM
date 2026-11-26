@@ -49,15 +49,15 @@ export interface TelegramConfig {
  */
 export async function getTelegramConfig(): Promise<TelegramConfig> {
   const supabase = getAdminSupabaseClient();
-  const botToken = await getSecret("telegram_bot_token");
-  const chatId = await getSecret("telegram_chat_id");
   let notifEnabled = true;
   let techNotifEnabled = true;
   let reminderEnabled = true;
   let lastReminderSentAt: string | null = null;
 
-  try {
-    const { data, error } = await supabase
+  const [botToken, chatId, settingsResult] = await Promise.all([
+    getSecret("telegram_bot_token"),
+    getSecret("telegram_chat_id"),
+    supabase
       .from("system_settings")
       .select("key, value")
       .in("key", [
@@ -65,8 +65,11 @@ export async function getTelegramConfig(): Promise<TelegramConfig> {
         "telegram_tech_notif_enabled",
         "telegram_berita_reminder_enabled",
         "telegram_last_reminder_sent_at",
-      ]);
+      ]),
+  ]);
 
+  try {
+    const { data, error } = settingsResult;
     if (!error && data) {
       const map = data.reduce(
         (acc, curr) => ({ ...acc, [curr.key]: curr.value }),
@@ -131,6 +134,7 @@ export async function sendTelegramMessage(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(6000),
     });
 
     const data = await res.json();
@@ -186,6 +190,7 @@ export async function sendTelegramPhoto(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(6000),
     });
 
     const data = await res.json();

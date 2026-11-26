@@ -16,6 +16,7 @@ import {
   FiRefreshCw,
   FiLink,
   FiFileText,
+  FiPhone,
   FiTrash2
 } from "react-icons/fi";
 import { SiDiscord } from "react-icons/si";
@@ -829,7 +830,7 @@ export default function SystemSettingsPage() {
         <div className="bg-surface rounded-2xl border border-outline-variant/30 shadow-sm p-6">
           <div className="flex items-center gap-3 mb-6 pb-6 border-b border-outline-variant/20">
             <div className="bg-primary/10 text-primary p-3 rounded-2xl">
-              <span className="material-symbols-outlined text-[24px]">support_agent</span>
+              <FiPhone size={22} aria-hidden="true" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-on-surface">

@@ -44,6 +44,7 @@ export async function saveKabinetProfile(
 
     try {
       revalidatePath("/kabinet");
+      revalidatePath("/[locale]/kabinet", "page");
       revalidatePath("/admin/kabinet");
       revalidateTag("kabinet", "max");
     } catch (revalErr) {

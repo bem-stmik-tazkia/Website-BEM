@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { requireAdmin, getServiceRoleClient } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { after } from "next/server";
 import { AgendaItemInput, AgendaKegiatan, ApplicationStatus, DynamicFormField, KegiatanFormInput } from "@/types/agenda";
 import { sendDiscordKegiatanNotification } from "@/lib/discord";
 import { sendVolunteerModeratedNotification } from "@/lib/telegram";
@@ -79,10 +80,27 @@ function revalidateAllAgendaPaths(agendaId?: string, slug?: string | null) {
       revalidatePath(`/[locale]/agenda/${slug}`, "page");
       revalidatePath(`/[locale]/agenda/${slug}/apply`, "page");
     }
-    revalidatePath("/", "layout");
+    revalidatePath("/", "page");
+    revalidatePath("/[locale]", "page");
     revalidateTag("agenda", "max");
   } catch (err) {
     console.warn("[revalidateAllAgendaPaths] Non-fatal cache revalidation warning:", err);
+  }
+}
+
+function revalidateVolunteerApplicationPaths(agendaId: string) {
+  try {
+    revalidateTag("agenda", "max");
+    revalidatePath("/admin/kegiatan");
+    revalidatePath(`/admin/kegiatan/${agendaId}/pendaftar`);
+    revalidatePath("/agenda");
+    revalidatePath("/[locale]/agenda", "page");
+    revalidatePath(`/[locale]/agenda/${agendaId}`, "page");
+    revalidatePath(`/[locale]/agenda/${agendaId}/apply`, "page");
+    revalidatePath("/[locale]/dashboard", "page");
+    revalidatePath("/[locale]/dashboard/kegiatan", "page");
+  } catch (err) {
+    console.warn("[revalidateVolunteerApplicationPaths] Non-fatal cache revalidation warning:", err);
   }
 }
 
@@ -478,7 +496,7 @@ export async function updateVolunteerApplicationStatus(
   agendaId: string,
   status: ApplicationStatus
 ) {
-  const { user, supabase } = await requireAdmin();
+  const { user } = await requireAdmin();
   const service = getServiceRoleClient();
 
   const { data: appRow, error: fetchErr } = await service
@@ -509,41 +527,46 @@ export async function updateVolunteerApplicationStatus(
   }
 
   if (status === "accepted" || status === "rejected") {
-    try {
-      const [{ data: agendaRow }, { data: adminProfile }] = await Promise.all([
-        service.from("agendas").select("title").eq("id", agendaId).maybeSingle(),
-        supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
-      ]);
-      const firstText =
-        appRow.responses && typeof appRow.responses === "object"
-          ? Object.values(appRow.responses as Record<string, unknown>).find(
-              (v) => typeof v === "string" && v.trim().length > 0 && !v.startsWith("http")
-            )
-          : null;
-      const applicantLabel =
-        (typeof firstText === "string" && firstText.trim()) ||
-        appRow.applicant_email ||
-        "Mahasiswa";
-      const adminName =
-        adminProfile?.full_name ||
-        (user.user_metadata?.full_name as string | undefined) ||
-        user.email ||
-        "Administrator BEM";
+    const userId = user.id;
+    const fallbackAdminName =
+      (user.user_metadata?.full_name as string | undefined) ||
+      user.email ||
+      "Administrator BEM";
+    const firstText =
+      appRow.responses && typeof appRow.responses === "object"
+        ? Object.values(appRow.responses as Record<string, unknown>).find(
+            (v) => typeof v === "string" && v.trim().length > 0 && !v.startsWith("http")
+          )
+        : null;
+    const applicantLabel =
+      (typeof firstText === "string" && firstText.trim()) ||
+      appRow.applicant_email ||
+      "Mahasiswa";
+    const itemName = appRow.item_name || null;
 
-      await sendVolunteerModeratedNotification({
-        agendaId,
-        agendaTitle: agendaRow?.title || "Kegiatan BEM",
-        status,
-        applicantLabel,
-        itemName: appRow.item_name || null,
-        adminName,
-      });
-    } catch (teleErr) {
-      console.warn("[updateVolunteerApplicationStatus] Telegram audit skipped:", teleErr);
-    }
+    after(async () => {
+      try {
+        const bgService = getServiceRoleClient();
+        const [{ data: agendaRow }, { data: adminProfile }] = await Promise.all([
+          bgService.from("agendas").select("title").eq("id", agendaId).maybeSingle(),
+          bgService.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
+        ]);
+
+        await sendVolunteerModeratedNotification({
+          agendaId,
+          agendaTitle: agendaRow?.title || "Kegiatan BEM",
+          status,
+          applicantLabel,
+          itemName,
+          adminName: adminProfile?.full_name || fallbackAdminName,
+        });
+      } catch (teleErr) {
+        console.warn("[updateVolunteerApplicationStatus] Telegram audit skipped:", teleErr);
+      }
+    });
   }
 
-  revalidateAllAgendaPaths(agendaId);
+  revalidateVolunteerApplicationPaths(agendaId);
   return { ok: true, status };
 }
 
@@ -575,40 +598,45 @@ export async function deleteVolunteerApplication(
     throw new Error(delErr.message);
   }
 
-  // Bersihkan foto pendaftaran di Supabase Storage jika tidak dipakai baris pendaftaran lain
-  try {
-    const responsesObj =
-      appRow.responses && typeof appRow.responses === "object"
-        ? (appRow.responses as Record<string, unknown>)
-        : {};
-    const storageUrls = Object.values(responsesObj).filter(
-      (val): val is string =>
-        typeof val === "string" && isOwnRegistrationStorageUrl(val)
-    );
+  // Bersihkan foto pendaftaran di Supabase Storage di background setelah respons dikirim
+  const responsesObj =
+    appRow.responses && typeof appRow.responses === "object"
+      ? (appRow.responses as Record<string, unknown>)
+      : {};
+  const storageUrls = Object.values(responsesObj).filter(
+    (val): val is string =>
+      typeof val === "string" && isOwnRegistrationStorageUrl(val)
+  );
 
-    for (const url of storageUrls) {
-      const parsed = new URL(url);
-      const marker = "/storage/v1/object/public/public_images/";
-      const storagePath = parsed.pathname.includes(marker)
-        ? decodeURIComponent(parsed.pathname.split(marker)[1] || "")
-        : "";
-      if (!storagePath) continue;
+  if (storageUrls.length > 0) {
+    after(async () => {
+      try {
+        const bgService = getServiceRoleClient();
+        for (const url of storageUrls) {
+          const parsed = new URL(url);
+          const marker = "/storage/v1/object/public/public_images/";
+          const storagePath = parsed.pathname.includes(marker)
+            ? decodeURIComponent(parsed.pathname.split(marker)[1] || "")
+            : "";
+          if (!storagePath) continue;
 
-      const { count } = await service
-        .from("volunteer_applications")
-        .select("id", { count: "exact", head: true })
-        .eq("agenda_id", agendaId)
-        .filter("responses::text", "ilike", `%${storagePath}%`);
+          const { count } = await bgService
+            .from("volunteer_applications")
+            .select("id", { count: "exact", head: true })
+            .eq("agenda_id", agendaId)
+            .filter("responses::text", "ilike", `%${storagePath}%`);
 
-      if ((count ?? 0) === 0) {
-        await service.storage.from("public_images").remove([storagePath]);
+          if ((count ?? 0) === 0) {
+            await bgService.storage.from("public_images").remove([storagePath]);
+          }
+        }
+      } catch (cleanupErr) {
+        console.warn("[deleteVolunteerApplication] Storage cleanup skipped:", cleanupErr);
       }
-    }
-  } catch (cleanupErr) {
-    console.warn("[deleteVolunteerApplication] Storage cleanup skipped:", cleanupErr);
+    });
   }
 
-  revalidateAllAgendaPaths(agendaId);
+  revalidateVolunteerApplicationPaths(agendaId);
   return { ok: true };
 }
 

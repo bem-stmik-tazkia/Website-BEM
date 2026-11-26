@@ -34,7 +34,7 @@ export default function Footer() {
             <div className="bg-surface p-2 rounded-xl mb-6 shadow-sm inline-block w-fit">
               <Image
                 alt="BEM STMIK Tazkia Logo"
-                src="/images/logo.webp"
+                src="/images/logo2.webp"
                 width={80}
                 height={80}
                 className="h-12 w-auto object-contain bg-surface rounded-lg p-1.5 shadow-sm"

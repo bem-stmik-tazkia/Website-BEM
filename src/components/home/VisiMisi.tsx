@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import LottieIcon from "@/components/ui/LottieIcon";
 import { useTranslations } from "next-intl";
+import { FiCheck } from "react-icons/fi";
 
 export default function VisiMisi() {
   const t = useTranslations("VisiMisi");
@@ -55,7 +56,7 @@ export default function VisiMisi() {
               {([t("misi0"), t("misi1"), t("misi2")] as string[]).map((misi, i) => (
                 <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-surface-container-lowest/50 hover:bg-surface-container-lowest transition-colors">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
-                    <span className="material-symbols-outlined text-primary text-sm font-bold">check</span>
+                    <FiCheck className="w-4 h-4 text-primary stroke-[2.5]" aria-hidden="true" />
                   </div>
                   <p className="text-on-surface-variant leading-relaxed">{misi}</p>
                 </div>

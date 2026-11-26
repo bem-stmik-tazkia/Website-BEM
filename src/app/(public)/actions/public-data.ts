@@ -19,6 +19,7 @@ export const getCachedBerita = unstable_cache(
     const { data: beritaData, error } = await supabase
       .from("berita")
       .select("id, title, slug, excerpt, category, created_at, image_url, views, likes")
+      .eq("is_published", true)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -47,6 +48,7 @@ export const getCachedAgenda = unstable_cache(
       .select(
         "id, title, slug, description, category, date, end_date, time_range, location, type, is_urgent, is_published, created_at, image_url, deadline, gallery, video_url, max_participants, allow_multiple_items"
       )
+      .eq("is_published", true)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -66,7 +68,7 @@ export const getCachedKabinet = unstable_cache(
     const supabase = createPublicClient();
     const { data, error } = await supabase
       .from("kabinet_profiles")
-      .select("id, periode, nama_kabinet, visi, misi, logo_url, is_active, created_at, updated_at")
+      .select("id, periode, nama_kabinet, visi, misi, pengurus_inti, proker_utama, departemen, is_active")
       .eq("is_active", true)
       .single();
 

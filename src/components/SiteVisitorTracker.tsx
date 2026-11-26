@@ -16,6 +16,20 @@ export default function SiteVisitorTracker() {
     if (pathname.startsWith("/admin") || pathname.startsWith("/login")) return;
 
     const today = new Date().toISOString().split("T")[0];
+    const trackedKey = "site_tracked_paths";
+    try {
+      const trackedRaw = sessionStorage.getItem(trackedKey);
+      if (trackedRaw) {
+        const trackedList = JSON.parse(trackedRaw) as string[];
+        if (Array.isArray(trackedList) && trackedList.includes(pathname)) {
+          trackedPaths.current.add(pathname);
+          return;
+        }
+      }
+    } catch {
+      // Abaikan jika sessionStorage tidak tersedia
+    }
+
     let sessionData = localStorage.getItem("site_session_data");
     let sessionId = "";
     
@@ -34,9 +48,23 @@ export default function SiteVisitorTracker() {
     }
 
     trackedPaths.current.add(pathname);
-    
-    // Call server action silently
-    recordSiteVisitor(sessionId, pathname).catch(() => {});
+    try {
+      const prevRaw = sessionStorage.getItem(trackedKey);
+      const prevList = prevRaw ? (JSON.parse(prevRaw) as string[]) : [];
+      sessionStorage.setItem(
+        trackedKey,
+        JSON.stringify([...(Array.isArray(prevList) ? prevList : []).slice(-25), pathname])
+      );
+    } catch {
+      // Abaikan
+    }
+
+    // Tunda pelacakan kunjungan agar tidak mengganggu hydration & prioritas render awal
+    const timer = setTimeout(() => {
+      recordSiteVisitor(sessionId, pathname).catch(() => {});
+    }, 1500);
+
+    return () => clearTimeout(timer);
 
   }, [pathname]);
 

@@ -4,7 +4,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import SafeLottie from "@/components/ui/SafeLottie";
 import { createClient } from "@/utils/supabase/client";
-import { getPublicMaintenanceSettings } from "@/actions/public-settings";
+import {
+  getPublicMaintenanceSettings,
+  getFreshPublicMaintenanceSettings,
+} from "@/actions/public-settings";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiTool, FiClock, FiRefreshCw,
@@ -164,79 +167,45 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
   const isAdminPath = pathname?.includes("/admin");
   // NOTE: /login is NO LONGER automatically excluded — only unlocked via Konami
 
-  const checkStatusAndUser = async () => {
+  const checkStatusAndUser = async (fresh = false) => {
     setIsChecking(true);
     try {
-      // 1. Check user role
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      // Ignore stale/invalid refresh token — treat as guest
-      if (authError && (authError as any).code === 'refresh_token_not_found') {
-        await supabase.auth.signOut({ scope: 'local' });
-      } else if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .maybeSingle();
-        if (profile?.role === "admin") {
-          setIsAdmin(true);
+      const pub = fresh
+        ? await getFreshPublicMaintenanceSettings()
+        : await getPublicMaintenanceSettings();
+
+      setMaintenanceMode(pub.maintenanceMode);
+      setEstimatedTime(pub.estimatedTime);
+      setCustomMessage(pub.message);
+
+      if (pub.releaseNotes) {
+        try {
+          const parsedNotes: ReleaseNotes = JSON.parse(pub.releaseNotes);
+          setReleaseNotes(parsedNotes);
+          if (!pub.maintenanceMode && parsedNotes.published && parsedNotes.version) {
+            const contentHash = pub.releaseNotes
+              .split("")
+              .reduce((h: number, c: string) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0)
+              .toString(36);
+            const seenKey = `seen_release_notes_${parsedNotes.version}_${contentHash}`;
+            if (!localStorage.getItem(seenKey)) {
+              setShowWhatsNew(true);
+            }
+          }
+        } catch (e) {
+          console.error("Error parsing release notes:", e);
         }
       }
 
-      // 2. Check system_settings
-      const { data: settings, error } = await supabase
-        .from("system_settings")
-        .select("key, value")
-        .in("key", ["maintenance_mode", "maintenance_estimated_time", "maintenance_message", "release_notes"]);
-
-      if (!error && settings && settings.length > 0) {
-        const mMode = settings.find((s) => s.key === "maintenance_mode")?.value === "true";
-        const mTime = settings.find((s) => s.key === "maintenance_estimated_time")?.value || "1-2 Jam";
-        const mMsg = settings.find((s) => s.key === "maintenance_message")?.value || "";
-        const rNotesStr = settings.find((s) => s.key === "release_notes")?.value;
-
-        setMaintenanceMode(mMode);
-        setEstimatedTime(mTime);
-        setCustomMessage(mMsg);
-
-        if (rNotesStr) {
-          try {
-            const parsedNotes: ReleaseNotes = JSON.parse(rNotesStr);
-            setReleaseNotes(parsedNotes);
-
-            // Check if user has already seen this exact release content.
-            // Key includes a simple hash of the full JSON so any change to
-            // version, title, date, or features will trigger the modal again.
-            if (!mMode && parsedNotes.published && parsedNotes.version) {
-              const contentHash = rNotesStr.split("").reduce((h: number, c: string) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0).toString(36);
-              const seenKey = `seen_release_notes_${parsedNotes.version}_${contentHash}`;
-              if (!localStorage.getItem(seenKey)) {
-                setShowWhatsNew(true);
-              }
-            }
-          } catch (e) {
-            console.error("Error parsing release notes:", e);
-          }
-        }
-      } else {
-        // Fallback via secure Server Action untuk pengunjung umum (non-admin)
-        const pub = await getPublicMaintenanceSettings();
-        setMaintenanceMode(pub.maintenanceMode);
-        setEstimatedTime(pub.estimatedTime);
-        setCustomMessage(pub.message);
-        if (pub.releaseNotes) {
-          try {
-            const parsedNotes: ReleaseNotes = JSON.parse(pub.releaseNotes);
-            setReleaseNotes(parsedNotes);
-            if (!pub.maintenanceMode && parsedNotes.published && parsedNotes.version) {
-              const contentHash = pub.releaseNotes.split("").reduce((h: number, c: string) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0).toString(36);
-              const seenKey = `seen_release_notes_${parsedNotes.version}_${contentHash}`;
-              if (!localStorage.getItem(seenKey)) {
-                setShowWhatsNew(true);
-              }
-            }
-          } catch (e) {
-            console.error("Error parsing release notes:", e);
+      // Hanya cek role admin saat maintenance aktif agar pengunjung biasa tidak dibebani query auth di setiap page
+      if (pub.maintenanceMode) {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError && (authError as { code?: string }).code === "refresh_token_not_found") {
+          await supabase.auth.signOut({ scope: "local" });
+        } else if (user) {
+          const { data: isRpcAdmin } = await supabase.rpc("is_admin");
+          if (isRpcAdmin === true) {
+            setIsAdmin(true);
           }
         }
       }
@@ -249,13 +218,13 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
   };
 
   useEffect(() => {
-    checkStatusAndUser();
+    checkStatusAndUser(false);
 
-    // Listen to realtime changes on system_settings
+    // Subscribe sekali per sesi browser (bukan per perpindahan rute)
     const channel = supabase
       .channel(`maintenance_check_${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "system_settings" }, () => {
-        checkStatusAndUser();
+        checkStatusAndUser(true);
       })
       .subscribe();
 
@@ -303,7 +272,8 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
       supabase.removeChannel(channel);
       window.removeEventListener("keydown", handleKonami);
     };
-  }, [supabase, pathname]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase]);
 
   const handleCloseWhatsNew = () => {
     if (releaseNotes?.version) {
@@ -392,7 +362,7 @@ export default function MaintenanceAndUpdatesWrapper({ children }: { children: R
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <button
-                  onClick={checkStatusAndUser}
+                  onClick={() => checkStatusAndUser(true)}
                   disabled={isChecking}
                   className="px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-on-surface bg-surface-variant hover:bg-outline-variant/40 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >

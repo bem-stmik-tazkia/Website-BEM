@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { sanitizeNextPath, STUDENT_ALLOWED_NEXT_PREFIXES } from "@/utils/auth-url";
+import { FiAlertCircle, FiArrowLeft, FiInfo, FiLoader } from "react-icons/fi";
 
 export default function MasukPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -71,7 +72,7 @@ export default function MasukPage() {
           href="/"
           className="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors text-sm font-semibold mb-6"
         >
-          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          <FiArrowLeft size={18} aria-hidden="true" />
           Kembali ke Beranda
         </Link>
 
@@ -79,7 +80,7 @@ export default function MasukPage() {
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-20 h-20 bg-primary/5 rounded-2xl flex items-center justify-center p-3 mb-5 shadow-inner">
             <Image
-              src="/images/logo.webp"
+              src="/images/logo2.webp"
               alt="Logo BEM STMIK Tazkia"
               width={80}
               height={80}
@@ -98,14 +99,14 @@ export default function MasukPage() {
         {/* Kotak Pesan Error Generik */}
         {error && (
           <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-600 text-sm flex items-start gap-2.5 animate-fade-in mb-6">
-            <span className="material-symbols-outlined text-[20px] shrink-0 mt-0.5">error</span>
+            <FiAlertCircle size={20} className="shrink-0 mt-0.5" aria-hidden="true" />
             <p className="leading-snug">{error}</p>
           </div>
         )}
 
         {/* Panduan akun kampus */}
         <div className="flex items-start gap-2.5 bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 mb-5">
-          <span className="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">info</span>
+          <FiInfo size={18} className="text-primary shrink-0 mt-0.5" aria-hidden="true" />
           <p className="text-sm text-on-surface-variant leading-snug">
             Gunakan akun Google kampus kamu untuk masuk ke portal ini.
           </p>
@@ -118,9 +119,7 @@ export default function MasukPage() {
           className="w-full bg-surface border border-outline-variant/40 text-on-background font-bold py-3.5 px-6 rounded-xl hover:bg-surface-variant/30 hover:border-outline-variant transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
         >
           {isLoading ? (
-            <span className="material-symbols-outlined text-[20px] animate-spin text-primary">
-              progress_activity
-            </span>
+            <FiLoader size={20} className="animate-spin text-primary" aria-hidden="true" />
           ) : (
             <svg className="shrink-0" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

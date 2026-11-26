@@ -2,6 +2,7 @@
 
 import { requireAdmin } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { sendDiscordBeritaNotification } from "@/lib/discord";
 
@@ -43,16 +44,20 @@ export async function saveBerita(formData: FormData) {
       .single();
 
     if (sendDiscord && inserted) {
-      try {
-        await sendDiscordBeritaNotification(inserted);
-      } catch (e) {
-        console.error("Gagal mengirim notif Discord saat saveBerita:", e);
-      }
+      after(async () => {
+        try {
+          await sendDiscordBeritaNotification(inserted);
+        } catch (e) {
+          console.error("Gagal mengirim notif Discord saat saveBerita:", e);
+        }
+      });
     }
   }
 
   revalidatePath("/admin/berita");
   revalidatePath("/berita");
+  revalidatePath("/[locale]", "page");
+  revalidatePath("/[locale]/berita", "page");
   revalidateTag("berita", "max");
   redirect("/admin/berita");
 }

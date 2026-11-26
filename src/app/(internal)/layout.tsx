@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
+import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import LayoutClientWrapper from "@/components/layout/LayoutClientWrapper";
 import { ToastProvider } from "@/components/ui/Toast";
-import { createClient } from "@/utils/supabase/server";
-import Script from "next/script";
 import NextTopLoader from "nextjs-toploader";
 import "../globals.css";
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
@@ -23,6 +34,11 @@ export const metadata: Metadata = {
     title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
     description: "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
   },
+  icons: {
+    icon: "/images/logo2.webp",
+    shortcut: "/images/logo2.webp",
+    apple: "/images/logo2.webp",
+  },
 };
 
 import { NextIntlClientProvider } from 'next-intl';
@@ -34,25 +50,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const messages = await getMessages();
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <html lang="id" className="light" suppressHydrationWarning>
+    <html lang="id" className={`light ${plusJakartaSans.variable} ${outfit.variable}`} suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
-          rel="stylesheet"
-        />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
       </head>
-      <body className="bg-background text-on-background font-sans antialiased transition-colors duration-300" suppressHydrationWarning>
+      <body className={`${plusJakartaSans.className} bg-background text-on-background font-sans antialiased transition-colors duration-300`} suppressHydrationWarning>
         <NextTopLoader
           color="#1b4086"
           initialPosition={0.1}
@@ -64,7 +68,7 @@ export default async function RootLayout({
         />
         <NextIntlClientProvider messages={messages}>
             <ToastProvider>
-              <LayoutClientWrapper isLoggedIn={!!user}>{children}</LayoutClientWrapper>
+              <LayoutClientWrapper>{children}</LayoutClientWrapper>
             </ToastProvider>
         </NextIntlClientProvider>
       </body>

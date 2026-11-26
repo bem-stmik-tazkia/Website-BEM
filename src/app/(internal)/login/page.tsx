@@ -6,6 +6,7 @@ import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 import { sanitizeNextPath, STUDENT_ALLOWED_NEXT_PREFIXES } from "@/utils/auth-url";
+import { FiAlertCircle, FiArrowLeft, FiLoader, FiShield } from "react-icons/fi";
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
   unauthorized: "Akses ditolak. Akun Google Anda tidak terdaftar sebagai administrator BEM.",
@@ -97,7 +98,7 @@ export default function LoginPage() {
 
         {/* Back Button */}
         <Link href="/" className="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md mb-6">
-          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          <FiArrowLeft size={18} aria-hidden="true" />
           Kembali
         </Link>
 
@@ -105,7 +106,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-20 h-20 bg-primary/5 rounded-2xl flex items-center justify-center p-3 mb-5 shadow-inner">
             <Image
-              src="/images/logo.webp"
+              src="/images/logo2.webp"
               alt="Logo BEM"
               width={80}
               height={80}
@@ -119,14 +120,14 @@ export default function LoginPage() {
         {/* Error Message */}
         {error && (
           <div className="p-3 bg-red-500/10 border border-red-500/50 rounded-xl text-red-600 text-sm flex items-start gap-2 animate-fade-in mb-6">
-            <span className="material-symbols-outlined text-[18px] shrink-0 mt-0.5">error</span>
+            <FiAlertCircle size={18} className="shrink-0 mt-0.5" aria-hidden="true" />
             <p>{error}</p>
           </div>
         )}
 
         {/* Admin Only Info Box */}
         <div className="p-3.5 bg-primary/5 border border-primary/20 rounded-xl text-xs text-on-surface-variant flex items-start gap-2.5 mb-6">
-          <span className="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">admin_panel_settings</span>
+          <FiShield size={18} className="text-primary shrink-0 mt-0.5" aria-hidden="true" />
           <div>
             <p className="font-bold text-primary mb-0.5">Khusus Pengurus BEM</p>
             <p>Halaman login ini hanya untuk administrator BEM STMIK Tazkia yang terdaftar.</p>
@@ -140,7 +141,7 @@ export default function LoginPage() {
           className="w-full bg-surface border border-outline-variant/40 text-on-background font-bold py-3.5 px-6 rounded-xl hover:bg-surface-variant/30 hover:border-outline-variant transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
         >
           {isLoading ? (
-            <span className="material-symbols-outlined text-[20px] animate-spin text-primary">progress_activity</span>
+            <FiLoader size={20} className="animate-spin text-primary" aria-hidden="true" />
           ) : (
             <svg className="shrink-0" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

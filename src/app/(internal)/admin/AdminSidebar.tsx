@@ -240,7 +240,7 @@ export default function AdminSidebar() {
         >
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200/80 dark:border-slate-700 flex items-center justify-center shrink-0">
-              <img src="/images/logo.webp" alt="Logo BEM" className="w-6 h-6 object-contain" />
+              <img src="/images/logo2.webp" alt="Logo BEM" className="w-8 h-8 object-contain p-0.5" />
             </div>
 
             {!isCollapsed && (

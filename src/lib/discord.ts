@@ -148,6 +148,7 @@ export async function sendDiscordWebhookMessage(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(bodyPayload),
+      signal: AbortSignal.timeout(6000),
     });
 
     if (!res.ok) {

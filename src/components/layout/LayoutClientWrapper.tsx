@@ -4,17 +4,14 @@ import React, { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import LoadingScreen from "./LoadingScreen";
 import MaintenanceAndUpdatesWrapper from "@/components/maintenance/MaintenanceAndUpdatesWrapper";
 import FloatingKaryaPrompt from "./FloatingKarya";
 import FloatingActionMenu from "./FloatingActionMenu";
 
 export default function LayoutClientWrapper({
   children,
-  isLoggedIn,
 }: {
   children: React.ReactNode;
-  isLoggedIn?: boolean;
 }) {
   const pathname = usePathname();
   const isLoginPage = pathname?.includes("/login") || false;
@@ -65,7 +62,6 @@ export default function LayoutClientWrapper({
 
   return (
     <MaintenanceAndUpdatesWrapper>
-      <LoadingScreen />
       {!hideLayout && <Navbar />}
       <main className={hideLayout ? "w-full max-w-full" : "flex-1 flex flex-col w-full max-w-full"}>
         {children}

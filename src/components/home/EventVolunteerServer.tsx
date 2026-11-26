@@ -1,12 +1,10 @@
-import { getKegiatans } from "@/app/(internal)/admin/kegiatan/actions";
+import { getCachedAgenda } from "@/app/(public)/actions/public-data";
 import { AgendaKegiatan } from "@/types/agenda";
 import { isDeadlinePassedJakarta } from "@/lib/registration-validation";
 import EventVolunteer from "./EventVolunteer";
-import { unstable_noStore as noStore } from "next/cache";
 
 export default async function EventVolunteerServer() {
-  noStore(); // Pastikan selalu di-render ulang, tidak pakai cache
-  const agendas = await getKegiatans();
+  const agendas = (await getCachedAgenda()) as AgendaKegiatan[];
   const publishedAgendas = agendas.filter((a) => a.is_published);
 
   // Server Vercel berjalan di UTC — gunakan waktu WIB (UTC+7) agar

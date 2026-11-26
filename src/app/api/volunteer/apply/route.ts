@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { getServiceRoleClient } from "@/lib/auth";
@@ -345,19 +345,21 @@ export async function POST(req: Request) {
     revalidatePath("/admin/kegiatan");
     revalidatePath(`/admin/kegiatan/${agendaId}/pendaftar`);
 
-    // 7. Kirim notifikasi teknis ke Telegram internal pengurus (non-blocking)
-    try {
-      await sendVolunteerAppliedNotification({
-        agendaId: agenda.id,
-        agendaTitle: agenda.title || "Kegiatan BEM",
-        agendaType: agenda.type,
-        selectedItems: itemNames,
-        fields: formattedFieldsForTelegram,
-        totalParticipants: totalAccepted,
-      });
-    } catch (teleErr) {
-      console.warn("[volunteer/apply] Gagal mengirim notif Telegram:", teleErr);
-    }
+    // 7. Kirim notifikasi teknis ke Telegram internal pengurus secara non-blocking setelah respons dikirim
+    after(async () => {
+      try {
+        await sendVolunteerAppliedNotification({
+          agendaId: agenda.id,
+          agendaTitle: agenda.title || "Kegiatan BEM",
+          agendaType: agenda.type,
+          selectedItems: itemNames,
+          fields: formattedFieldsForTelegram,
+          totalParticipants: totalAccepted,
+        });
+      } catch (teleErr) {
+        console.warn("[volunteer/apply] Gagal mengirim notif Telegram:", teleErr);
+      }
+    });
 
     return NextResponse.json(
       {

@@ -48,9 +48,8 @@ export default function SafeLottie({
       }
     });
 
-    // Small delay to avoid Turbopack dev server race condition on first render
-    const timer = setTimeout(() => setMounted(true), 60);
-    return () => clearTimeout(timer);
+    const frameId = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frameId);
   }, []);
 
   const handleRef = useCallback(
@@ -104,7 +103,7 @@ export default function SafeLottie({
       dotLottieRefCallback={handleRef}
       renderConfig={{
         autoResize: true,
-        devicePixelRatio: typeof window !== "undefined" ? Math.max(window.devicePixelRatio, 3) : 3
+        devicePixelRatio: typeof window !== "undefined" ? Math.min(Math.max(window.devicePixelRatio || 1, 1), 2) : 2
       }}
     />
   );

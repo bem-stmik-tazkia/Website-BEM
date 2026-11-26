@@ -91,7 +91,11 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
           return;
         }
         if (user) {
-          const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, role, bio, nim')
+            .eq('id', user.id)
+            .maybeSingle();
           let effectiveRole = profile?.role || 'mahasiswa';
           try {
             const { data: isRpcAdmin } = await supabase.rpc('is_admin');
@@ -145,9 +149,36 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
     router.prefetch("/dokumentasi");
   }, [router]);
 
-  // Cek apakah ada Agenda, Berita, atau Artikel terbaru yang belum dikunjungi (untuk dot merah bottom menu)
+  // Cek apakah ada Agenda, Berita, atau Artikel terbaru yang belum dikunjungi (cache 60 detik di sessionStorage)
   useEffect(() => {
     let cancelled = false;
+    const CACHE_KEY = "pub_latest_dates_cache";
+    const CACHE_TTL_MS = 60 * 1000;
+
+    if (typeof window !== "undefined") {
+      try {
+        const cachedRaw = sessionStorage.getItem(CACHE_KEY);
+        if (cachedRaw) {
+          const cached = JSON.parse(cachedRaw) as {
+            ts: number;
+            agenda: string | null;
+            berita: string | null;
+            artikel: string | null;
+          };
+          if (cached.ts && Date.now() - cached.ts < CACHE_TTL_MS) {
+            setLatestPublicDates({
+              agenda: cached.agenda,
+              berita: cached.berita,
+              artikel: cached.artikel,
+            });
+            return;
+          }
+        }
+      } catch {
+        // Abaikan cache korup
+      }
+    }
+
     const fetchLatestPublicDates = async () => {
       try {
         const [agRes, brRes, artRes] = await Promise.all([
@@ -174,11 +205,22 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
         ]);
 
         if (cancelled) return;
-        setLatestPublicDates({
+        const nextDates = {
           agenda: agRes.data?.created_at || null,
           berita: brRes.data?.created_at || null,
           artikel: artRes.data?.published_at || artRes.data?.created_at || null,
-        });
+        };
+        setLatestPublicDates(nextDates);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(
+              CACHE_KEY,
+              JSON.stringify({ ts: Date.now(), ...nextDates })
+            );
+          } catch {
+            // Abaikan error quota storage
+          }
+        }
       } catch {
         // abaikan gangguan jaringan sementara
       }
@@ -295,17 +337,9 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
       >
         <div className="flex justify-between items-center h-20 md:h-24 px-2.5 sm:px-4 md:px-6 lg:px-8 max-w-7xl mx-auto gap-1.5 sm:gap-4">
           <Link href="/" className="flex items-center gap-1.5 sm:gap-2 md:gap-3 group shrink-0">
-            <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
+            <div className="flex items-center shrink-0">
               <Image
-                alt="BEM STMIK Tazkia Logo 1"
-                src="/images/logo.webp"
-                width={64}
-                height={64}
-                priority
-                className="h-7 sm:h-9 md:h-12 lg:h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
-              />
-              <Image
-                alt="BEM STMIK Tazkia Logo 2"
+                alt="BEM STMIK Tazkia Logo"
                 src="/images/logo2.webp"
                 width={64}
                 height={64}

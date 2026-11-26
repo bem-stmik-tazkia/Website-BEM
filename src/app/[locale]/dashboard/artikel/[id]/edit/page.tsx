@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
-import { FiArrowLeft, FiAlertTriangle } from "react-icons/fi";
+import { FiArrowLeft, FiAlertTriangle, FiClock } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 import ArticleForm from "@/components/dashboard/artikel/ArticleForm";
 import { ArticleItem } from "@/components/dashboard/artikel/ArticleCard";
@@ -85,7 +85,7 @@ export default function EditArticlePage() {
     return (
       <div className="max-w-lg mx-auto py-16 px-4 text-center">
         <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-600 mx-auto flex items-center justify-center mb-4">
-          <span className="material-symbols-outlined text-3xl">hourglass_top</span>
+          <FiClock size={28} aria-hidden="true" />
         </div>
         <h2 className="text-xl font-bold text-on-surface mb-2">{t("pendingReviewTitle")}</h2>
         <p className="text-xs sm:text-sm text-on-surface-variant mb-6 leading-relaxed">

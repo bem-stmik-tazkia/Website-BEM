@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { FiX } from "react-icons/fi";
+import { FiArrowRight, FiX } from "react-icons/fi";
 import SafeLottie from "@/components/ui/SafeLottie";
 
 export default function FloatingKaryaPrompt() {
@@ -83,9 +83,9 @@ export default function FloatingKaryaPrompt() {
                   <motion.span 
                     animate={{ x: [0, 4, 0] }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                    className="material-symbols-outlined text-[14px]"
+                    className="inline-flex items-center"
                   >
-                    arrow_forward
+                    <FiArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                   </motion.span>
                 </p>
               </div>

@@ -124,7 +124,7 @@ export default function DokumentasiClient({ data }: { data: AgendaKegiatan[] }) 
           </div>
         ) : (
           <div className="text-center py-20 bg-surface border border-outline-variant/30 rounded-3xl shadow-sm">
-            <span className="material-symbols-outlined text-6xl text-primary/20 mb-4 block">photo_library</span>
+            <FiImage className="w-14 h-14 text-primary/25 mx-auto mb-4" aria-hidden="true" />
             <h3 className="text-xl font-bold text-primary mb-2">Belum Ada Dokumentasi</h3>
             <p className="text-on-surface-variant text-sm max-w-sm mx-auto">
               Saat ini belum ada dokumentasi kegiatan yang dipublikasikan.

@@ -400,6 +400,7 @@ export function aggregateAgendaItemsAndCounts<T extends Partial<AgendaKegiatan>>
     agenda_id: string;
     item_id?: string | null;
     status?: string | null;
+    row_count?: number;
   }>
 ): T[] {
   const itemAcceptedMap = new Map<string, number>();
@@ -408,20 +409,22 @@ export function aggregateAgendaItemsAndCounts<T extends Partial<AgendaKegiatan>>
   const agendaPendingMap = new Map<string, number>();
 
   for (const row of applications) {
+    const delta = typeof row.row_count === "number" ? Math.max(0, row.row_count) : 1;
+    if (delta === 0) continue;
     const isRejected = row.status === "rejected";
     if (row.status === "pending") {
-      agendaPendingMap.set(row.agenda_id, (agendaPendingMap.get(row.agenda_id) || 0) + 1);
+      agendaPendingMap.set(row.agenda_id, (agendaPendingMap.get(row.agenda_id) || 0) + delta);
     }
     if (!isRejected) {
       agendaAcceptedMap.set(
         row.agenda_id,
-        (agendaAcceptedMap.get(row.agenda_id) || 0) + 1
+        (agendaAcceptedMap.get(row.agenda_id) || 0) + delta
       );
       if (row.item_id) {
-        itemAcceptedMap.set(row.item_id, (itemAcceptedMap.get(row.item_id) || 0) + 1);
+        itemAcceptedMap.set(row.item_id, (itemAcceptedMap.get(row.item_id) || 0) + delta);
       }
     } else if (row.item_id) {
-      itemRejectedMap.set(row.item_id, (itemRejectedMap.get(row.item_id) || 0) + 1);
+      itemRejectedMap.set(row.item_id, (itemRejectedMap.get(row.item_id) || 0) + delta);
     }
   }
 

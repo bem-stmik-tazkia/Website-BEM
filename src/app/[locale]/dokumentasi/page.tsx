@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function DokumentasiPage() {
   const data = await getCachedAgenda();

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { FiTrash2, FiMessageSquare, FiEye, FiX, FiLink, FiHelpCircle, FiChevronDown, FiCopy, FiDownload, FiExternalLink } from "react-icons/fi";
+import { FiTrash2, FiMessageSquare, FiEye, FiX, FiLink, FiHelpCircle, FiChevronDown, FiCopy, FiDownload, FiExternalLink, FiShield } from "react-icons/fi";
 import { useToast } from "@/components/ui/Toast";
 import { getExcelViewUrl } from "./actions";
 
@@ -355,7 +355,7 @@ export default function SaranAduanAdminPage() {
               
               {/* Security Notice: App Secrets */}
               <div className="bg-sky-500/10 border border-sky-500/20 rounded-xl p-3.5 text-xs text-on-surface flex items-start gap-2.5">
-                <span className="material-symbols-outlined text-sky-500 text-[18px] shrink-0 mt-0.5">verified_user</span>
+                <FiShield size={18} className="text-sky-500 shrink-0 mt-0.5" aria-hidden="true" />
                 <div className="space-y-1">
                   <p className="font-bold">Kredensial Integrasi Dikelola via Pengaturan Sistem (App Secrets)</p>
                   <p className="text-[11px] text-on-surface-variant leading-relaxed">

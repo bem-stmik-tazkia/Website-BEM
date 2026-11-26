@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import LayoutClientWrapper from "@/components/layout/LayoutClientWrapper";
 import { ToastProvider } from "@/components/ui/Toast";
-import { createClient } from "@/utils/supabase/server";
 import Script from "next/script";
 import NextTopLoader from 'nextjs-toploader';
 import SiteVisitorTracker from "@/components/SiteVisitorTracker";
@@ -87,43 +86,9 @@ export default async function RootLayout({
   // side is the easiest way to get started
   const messages = await getMessages();
 
-  let user = null;
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.getUser();
-    // Ignore stale/expired refresh token — treat as guest
-    if (!error || (error as any).code === 'refresh_token_not_found') {
-      user = data.user || null;
-    }
-  } catch {
-    // Tangani error jaringan (walaupun getSession membaca cookie lokal)
-    user = null;
-  }
-
   return (
     <html lang={locale} dir="ltr" className={`light ${plusJakartaSans.variable} ${outfit.variable}`} suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="preload"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
-          as="style"
-        />
-        <Script id="load-material-symbols" strategy="afterInteractive">
-          {`
-            var l = document.createElement('link');
-            l.rel = 'stylesheet';
-            l.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap';
-            document.head.appendChild(l);
-          `}
-        </Script>
-        <noscript>
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
-          />
-        </noscript>
         <Script
           id="ld-json-website"
           type="application/ld+json"
@@ -173,7 +138,7 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
             <ToastProvider>
               <SiteVisitorTracker />
-              <LayoutClientWrapper isLoggedIn={!!user}>{children}</LayoutClientWrapper>
+              <LayoutClientWrapper>{children}</LayoutClientWrapper>
             </ToastProvider>
         </NextIntlClientProvider>
       </body>

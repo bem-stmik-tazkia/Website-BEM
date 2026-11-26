@@ -1,85 +1,29 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
+import { FiArrowRight } from "react-icons/fi";
 
 export default function Hero() {
   const t = useTranslations("Hero");
-  const containerRef = useRef<HTMLElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
-  const hoverRef = useRef(false);
-  const mouseXRef = useRef(0.5);
-
-  useEffect(() => {
-    const imageElement = imageRef.current;
-    const container = containerRef.current;
-    if (!imageElement || !container) return;
-
-    let animationFrameId: number;
-    let currentPanX = 50;
-    let isVisible = true;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isVisible = entry.isIntersecting;
-      },
-      { threshold: 0 }
-    );
-    observer.observe(container);
-
-    const update = () => {
-      if (isVisible) {
-        let targetPanX = 50;
-        if (hoverRef.current) {
-          targetPanX = mouseXRef.current * 100;
-        } else {
-          targetPanX = 50 + Math.sin(Date.now() / 6500) * 50;
-        }
-        currentPanX += (targetPanX - currentPanX) * 0.05;
-        imageElement.style.objectPosition = `${currentPanX}% center`;
-      }
-      animationFrameId = requestAnimationFrame(update);
-    };
-
-    imageElement.style.objectPosition = "50% center";
-    animationFrameId = requestAnimationFrame(update);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      observer.disconnect();
-    };
-  }, []);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    mouseXRef.current = x;
-  };
 
   return (
     <section
-      ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => { hoverRef.current = true; }}
-      onMouseLeave={() => { hoverRef.current = false; mouseXRef.current = 0.5; }}
       className="relative min-h-[90vh] flex items-center justify-center px-container-padding-mobile md:px-container-padding-desktop overflow-hidden pt-20 pb-24"
     >
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-10"></div>
         <Image
-          ref={imageRef}
           src="/images/image.webp"
           alt="BEM STMIK Tazkia Hero"
           fill
           priority
           fetchPriority="high"
-          quality={90}
+          quality={75}
           sizes="100vw"
-          className="object-cover origin-center will-change-[object-position]"
-          style={{ objectPosition: '50% center' }}
+          className="object-cover object-center animate-hero-pan"
         />
       </div>
 
@@ -97,7 +41,7 @@ export default function Hero() {
           <Link href="/agenda" className="group relative overflow-hidden bg-secondary text-white px-8 py-4 rounded-button font-label-md transition-all duration-300 shadow-glow hover:shadow-[0_0_40px_rgba(242,121,30,0.6)] hover:-translate-y-1.5 hover:scale-105 inline-flex items-center gap-2 w-full sm:w-auto justify-center cursor-pointer z-10">
             <span className="relative z-10 flex items-center font-bold gap-2">
               {t("viewAgenda")}
-              <span className="material-symbols-outlined group-hover:translate-x-1.5 transition-transform duration-300">arrow_forward</span>
+              <FiArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-300" aria-hidden="true" />
             </span>
             <div className="absolute inset-0 bg-surface/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-0"></div>
           </Link>

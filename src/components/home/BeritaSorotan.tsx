@@ -3,34 +3,20 @@ import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
 import { FiArrowRight } from "react-icons/fi";
 import SafeLottie from "@/components/ui/SafeLottie";
-import { createClient } from "@/utils/supabase/server";
+import { getCachedBerita } from "@/app/(public)/actions/public-data";
 import BeritaSorotanClient from "./BeritaSorotanClient";
 
 export default async function BeritaSorotan() {
   const t = await getTranslations("News");
 
-  let featuredNews = null;
+  type SorotanNews = React.ComponentProps<typeof BeritaSorotanClient>["news"];
+  let featuredNews: SorotanNews | null = null;
 
   try {
-    const supabase = await createClient();
-
-    // Fetch the latest published news
-    const { data, error } = await supabase
-      .from('berita')
-      .select('*')
-      .eq('is_published', true)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error && error.code !== 'PGRST116') {
-      // Supabase error objects tidak bisa di-serialize langsung via console.error
-      console.error("Error fetching sorotan:", JSON.stringify(error, null, 2));
-    } else {
-      featuredNews = data;
-    }
-  } catch (err: any) {
-    console.error("Unexpected error in BeritaSorotan:", err?.message ?? err);
+    const beritaList = await getCachedBerita();
+    featuredNews = beritaList.length > 0 ? (beritaList[0] as unknown as SorotanNews) : null;
+  } catch (err: unknown) {
+    console.error("Unexpected error in BeritaSorotan:", err instanceof Error ? err.message : err);
   }
 
   return (

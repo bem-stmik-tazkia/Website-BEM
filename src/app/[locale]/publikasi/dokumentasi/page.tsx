@@ -1,6 +1,7 @@
 import React from "react";
 import DokumentasiClient from "./DokumentasiClient";
-import { getKegiatans } from "@/app/(internal)/admin/kegiatan/actions";
+import { getCachedAgenda } from "@/app/(public)/actions/public-data";
+import { AgendaKegiatan } from "@/types/agenda";
 
 import { Metadata } from "next";
 
@@ -14,10 +15,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function DokumentasiPage() {
-  const kegiatans = await getKegiatans();
+  const kegiatans = (await getCachedAgenda()) as AgendaKegiatan[];
 
   return <DokumentasiClient data={kegiatans} />;
 }

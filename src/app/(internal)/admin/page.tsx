@@ -20,44 +20,54 @@ export default async function AdminDashboardPage() {
     serviceClient = supabase;
   }
 
-  // Fetch real count metrics from Supabase database in parallel
+  // Fetch metrics in lean parallel queries (gabung 5 query berita menjadi 1 + RPC agregasi pengunjung)
   const [
-    { count: beritaCount },
+    allBeritaRes,
     articlesDataRes,
     publishedViewRes,
     agendasRes,
-    beritaDatesRes,
-    topBeritaRes,
-    beritaViewsRes,
-    siteVisitorsRes,
-    latestBeritaRes,
+    visitorMonthlyRpcRes,
   ] = await Promise.all([
-    // 1. Berita resmi BEM
-    serviceClient.from("berita").select("*", { count: "exact", head: true }),
-    // 2. Artikel mahasiswa (dari tabel articles via service client untuk bypass RLS)
+    // 1. Berita lengkap (ringan tanpa konten HTML) untuk total, grafik, top berita, & berita terakhir
+    serviceClient
+      .from("berita")
+      .select("title, slug, views, created_at, is_published")
+      .order("created_at", { ascending: false }),
+    // 2. Artikel mahasiswa
     serviceClient.from("articles").select("id, title, status, created_at"),
     // Fallback: view published_articles
     serviceClient.from("published_articles").select("*", { count: "exact", head: true }),
     // 3. Agenda lengkap untuk hitung status aktif vs telah berakhir
     serviceClient.from("agendas").select("id, title, date, end_date, deadline, type, created_at"),
-    // 4. Data tanggal untuk grafik 6 bulan
-    serviceClient.from("berita").select("created_at"),
-    // 5. Top Berita & analitik
-    serviceClient.from("berita").select("title, views").order("views", { ascending: false }).limit(3),
-    serviceClient.from("berita").select("views, created_at"),
-    serviceClient.from("site_visitors").select("created_at"),
-    serviceClient.from("berita").select("title, created_at, slug").eq("is_published", true).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    // 4. Agregasi kumulatif pengunjung bulanan di Postgres (fallback ke raw query bila RPC belum ada)
+    serviceClient.rpc("get_monthly_site_visitor_totals", { p_months: 6 }),
   ]);
 
-  const latestBerita = latestBeritaRes?.data || null;
+  const allBerita = (allBeritaRes?.data || []) as Array<{
+    title: string;
+    slug: string;
+    views?: number | null;
+    created_at?: string | null;
+    is_published?: boolean | null;
+  }>;
+
+  const latestBeritaRow = allBerita.find((b) => b.is_published) || null;
+  const latestBerita = latestBeritaRow && latestBeritaRow.created_at
+    ? { title: latestBeritaRow.title, slug: latestBeritaRow.slug, created_at: latestBeritaRow.created_at }
+    : null;
   let daysSinceLastBerita = 0;
-  if (latestBerita && latestBerita.created_at) {
+  if (latestBerita?.created_at) {
     daysSinceLastBerita = getDaysSince(latestBerita.created_at);
   } else if (!latestBerita) {
     daysSinceLastBerita = 999;
   }
 
-  const bCount = beritaCount || 0;
+  const topBeritaData = [...allBerita]
+    .sort((a, b) => (b.views || 0) - (a.views || 0))
+    .slice(0, 3)
+    .map((b) => ({ title: b.title, views: b.views || 0 }));
+
+  const bCount = allBerita.length;
 
   // Analisa artikel mahasiswa
   const allArticles = articlesDataRes?.data || [];
@@ -108,12 +118,11 @@ export default async function AdminDashboardPage() {
   }
 
   const monthlyUploadData = months.map((m) => {
-    const countB =
-      beritaDatesRes.data?.filter((item: any) => {
-        if (!item.created_at) return false;
-        const dt = new Date(item.created_at);
-        return dt.getFullYear() === m.year && dt.getMonth() === m.monthIdx;
-      }).length || 0;
+    const countB = allBerita.filter((item) => {
+      if (!item.created_at) return false;
+      const dt = new Date(item.created_at);
+      return dt.getFullYear() === m.year && dt.getMonth() === m.monthIdx;
+    }).length;
 
     const countArt =
       allArticles.filter((item: any) => {
@@ -137,14 +146,32 @@ export default async function AdminDashboardPage() {
     };
   });
 
-  // Calculate visitor statistics
-  const siteVisitorsData = siteVisitorsRes ? siteVisitorsRes.data : null;
+  // Calculate visitor statistics (gunakan RPC agregasi bila tersedia, fallback ke tabel bila belum migrasi)
+  let siteVisitorsData: Array<{ created_at: string }> | null = null;
+  const rpcVisitors =
+    !visitorMonthlyRpcRes.error && Array.isArray(visitorMonthlyRpcRes.data)
+      ? (visitorMonthlyRpcRes.data as Array<{
+          year_num: number;
+          month_num: number;
+          cumulative_total: number;
+        }>)
+      : null;
+
+  if (!rpcVisitors) {
+    const fallbackVisitorsRes = await serviceClient.from("site_visitors").select("created_at");
+    siteVisitorsData = fallbackVisitorsRes?.data || null;
+  }
 
   const visitorData = months.map((m) => {
     let totalVisitors = 0;
 
-    if (siteVisitorsData && siteVisitorsData.length > 0) {
-      totalVisitors = siteVisitorsData.filter((v: any) => {
+    if (rpcVisitors && rpcVisitors.length > 0) {
+      const matched = rpcVisitors.find(
+        (r) => Number(r.year_num) === m.year && Number(r.month_num) === m.monthIdx + 1
+      );
+      totalVisitors = matched ? Number(matched.cumulative_total || 0) : 0;
+    } else if (siteVisitorsData && siteVisitorsData.length > 0) {
+      totalVisitors = siteVisitorsData.filter((v) => {
         if (!v.created_at) return false;
         const dt = new Date(v.created_at);
         return (
@@ -153,7 +180,7 @@ export default async function AdminDashboardPage() {
         );
       }).length;
     } else {
-      beritaViewsRes.data?.forEach((b: any) => {
+      allBerita.forEach((b) => {
         if (b.created_at) {
           const dt = new Date(b.created_at);
           if (
@@ -181,7 +208,7 @@ export default async function AdminDashboardPage() {
       publishedArticlesCount={pArtsCount}
       pendingArticlesCount={pendArtsCount}
       totalArticlesCount={tArtsCount}
-      topBerita={topBeritaRes.data}
+      topBerita={topBeritaData}
       monthlyUploadData={monthlyUploadData}
       visitorData={visitorData}
       latestBerita={latestBerita}

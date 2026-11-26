@@ -350,6 +350,21 @@ test("aggregateAgendaItemsAndCounts excludes rejected applications from filled_c
   assert.equal(enriched[1].items?.length, 0);
   assert.equal(enriched[1].accepted_count, 1);
   assert.equal(enriched[1].pending_count, 0);
+
+  // Verify pre-aggregated RPC rows with row_count match raw per-row tallies
+  const grouped = aggregateAgendaItemsAndCounts(agendas, items, [
+    { agenda_id: "ag-1", item_id: "pos-a", status: "accepted", row_count: 1 },
+    { agenda_id: "ag-1", item_id: "pos-a", status: "pending", row_count: 1 },
+    { agenda_id: "ag-1", item_id: "pos-a", status: "rejected", row_count: 1 },
+    { agenda_id: "ag-1", item_id: "pos-b", status: null, row_count: 2 },
+    { agenda_id: "ag-2", item_id: null, status: "accepted", row_count: 1 },
+    { agenda_id: "ag-2", item_id: null, status: "rejected", row_count: 1 },
+  ]);
+  assert.equal(grouped[0].items?.[0].filled_count, 2);
+  assert.equal(grouped[0].items?.[0].rejected_count, 1);
+  assert.equal(grouped[0].items?.[1].filled_count, 2);
+  assert.equal(grouped[0].pending_count, 1);
+  assert.equal(grouped[1].accepted_count, 1);
 });
 
 // -----------------------------------------------------------------------------

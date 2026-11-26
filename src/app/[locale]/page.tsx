@@ -11,8 +11,8 @@ import {
   EventVolunteerSkeleton,
 } from "@/components/home/HomeSkeleton";
 
-// Selalu render ulang setiap request agar status acara sesuai waktu nyata
-export const dynamic = "force-dynamic";
+// Revalidate setiap 60 detik atau langsung saat mutasi via revalidateTag("berita"/"agenda")
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;

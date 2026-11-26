@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
+import { FiArrowRight, FiCalendar } from "react-icons/fi";
 
 const MotionLink = motion(Link);
 
@@ -25,7 +26,7 @@ export default function Highlight() {
           </div>
           <Link href="/agenda" className="hidden md:flex items-center gap-2 text-primary font-semibold hover:text-secondary transition-colors group">
             {t("seeAll")}
-            <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+            <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
           </Link>
         </div>
 
@@ -42,7 +43,7 @@ export default function Highlight() {
             >
               <div className={`absolute inset-0 bg-gradient-to-br from-${item.color}/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
               <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-${item.color}-container text-${item.color} text-xs font-semibold mb-6 w-fit group-hover:scale-105 group-hover:bg-${item.color} group-hover:text-white transition-all duration-300 relative z-10`}>
-                <span className="material-symbols-outlined text-[14px]">calendar_month</span>
+                <FiCalendar className="w-3.5 h-3.5" aria-hidden="true" />
                 {t(`item${index}Date`)}
               </div>
               <h3 className={`text-xl font-bold text-on-background mb-4 group-hover:text-${item.color} transition-colors duration-300 line-clamp-3 relative z-10`}>
@@ -63,7 +64,7 @@ export default function Highlight() {
         </div>
 
         <Link href="/agenda" className="md:hidden w-full mt-8 flex justify-center items-center gap-2 text-primary bg-primary-container px-6 py-4 rounded-full font-semibold">
-          {t("seeAllAgenda")} <span className="material-symbols-outlined">arrow_forward</span>
+          {t("seeAllAgenda")} <FiArrowRight className="w-4 h-4" aria-hidden="true" />
         </Link>
       </div>
     </section>
