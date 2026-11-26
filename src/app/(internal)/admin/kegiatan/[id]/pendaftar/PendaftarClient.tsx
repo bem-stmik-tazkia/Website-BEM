@@ -4,7 +4,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  FiArrowDown,
   FiArrowLeft,
+  FiArrowUp,
   FiCheckCircle,
   FiClock,
   FiExternalLink,
@@ -348,6 +350,22 @@ function PrintableReportDocument({
   );
 }
 
+function getApplicantDisplayLabel(
+  app: VolunteerApplication,
+  fallback = "Pendaftar"
+): string {
+  const firstText = Object.values(app.responses || {}).find(
+    (v) =>
+      typeof v === "string" &&
+      v.trim().length > 0 &&
+      !v.startsWith("http")
+  );
+  if (typeof firstText === "string" && firstText.trim()) {
+    return firstText.trim();
+  }
+  return app.applicant_email || fallback;
+}
+
 export default function PendaftarClient({
   agenda,
   initialApplications,
@@ -364,10 +382,16 @@ export default function PendaftarClient({
   const [statusFilter, setStatusFilter] = useState<
     "all" | "pending" | "accepted" | "rejected"
   >("all");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [searchQuery, setSearchQuery] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmDeleteApp, setConfirmDeleteApp] =
     useState<VolunteerApplication | null>(null);
+  const [confirmStatusAction, setConfirmStatusAction] = useState<{
+    app: VolunteerApplication;
+    nextStatus: ApplicationStatus;
+    applicantLabel: string;
+  } | null>(null);
   const [detailApp, setDetailApp] = useState<VolunteerApplication | null>(null);
   const [zoomPhoto, setZoomPhoto] = useState<{
     src: string;
@@ -454,39 +478,45 @@ export default function PendaftarClient({
 
   const filteredApplications = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return applications.filter((app) => {
-      if (selectedItemId !== "all") {
-        if (selectedItemId === "none") {
-          if (app.item_id) return false;
-        } else if (app.item_id !== selectedItemId) {
+    return applications
+      .filter((app) => {
+        if (selectedItemId !== "all") {
+          if (selectedItemId === "none") {
+            if (app.item_id) return false;
+          } else if (app.item_id !== selectedItemId) {
+            return false;
+          }
+        }
+
+        const appStatus =
+          app.status === "rejected"
+            ? "rejected"
+            : app.status === "pending"
+              ? "pending"
+              : "accepted";
+        if (statusFilter !== "all" && appStatus !== statusFilter) {
           return false;
         }
-      }
 
-      const appStatus =
-        app.status === "rejected"
-          ? "rejected"
-          : app.status === "pending"
-            ? "pending"
-            : "accepted";
-      if (statusFilter !== "all" && appStatus !== statusFilter) {
-        return false;
-      }
+        if (q) {
+          const matchItem = (app.item_name || "").toLowerCase().includes(q);
+          const matchEmail = (app.applicant_email || "").toLowerCase().includes(q);
+          const matchResponses = Object.values(app.responses || {}).some((val) =>
+            String(val || "")
+              .toLowerCase()
+              .includes(q)
+          );
+          if (!matchItem && !matchEmail && !matchResponses) return false;
+        }
 
-      if (q) {
-        const matchItem = (app.item_name || "").toLowerCase().includes(q);
-        const matchEmail = (app.applicant_email || "").toLowerCase().includes(q);
-        const matchResponses = Object.values(app.responses || {}).some((val) =>
-          String(val || "")
-            .toLowerCase()
-            .includes(q)
-        );
-        if (!matchItem && !matchEmail && !matchResponses) return false;
-      }
-
-      return true;
-    });
-  }, [applications, selectedItemId, statusFilter, searchQuery]);
+        return true;
+      })
+      .sort((a, b) => {
+        const timeA = new Date(a.created_at).getTime() || 0;
+        const timeB = new Date(b.created_at).getTime() || 0;
+        return sortOrder === "desc" ? timeB - timeA : timeA - timeB;
+      });
+  }, [applications, selectedItemId, statusFilter, searchQuery, sortOrder]);
 
   const reportApplications = useMemo(() => {
     return applications.filter((app) => {
@@ -515,6 +545,7 @@ export default function PendaftarClient({
       setDetailApp((prev) =>
         prev && prev.id === app.id ? { ...prev, status: nextStatus } : prev
       );
+      setConfirmStatusAction(null);
       success(
         nextStatus === "rejected"
           ? "Pendaftar ditolak. Slot kuota otomatis terbuka kembali."
@@ -800,6 +831,37 @@ export default function PendaftarClient({
                   </button>
                 ))}
               </div>
+
+              <div
+                className="flex items-center bg-background border border-outline-variant/50 rounded-xl p-0.5 text-xs font-bold"
+                role="group"
+                aria-label="Urutkan waktu pendaftaran"
+              >
+                {(
+                  [
+                    ["desc", "Terbaru"],
+                    ["asc", "Terlama"],
+                  ] as const
+                ).map(([order, label]) => (
+                  <button
+                    key={order}
+                    type="button"
+                    onClick={() => setSortOrder(order)}
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${
+                      sortOrder === order
+                        ? "bg-primary text-white"
+                        : "text-on-surface-variant hover:text-on-surface"
+                    }`}
+                  >
+                    {order === "desc" ? (
+                      <FiArrowDown size={12} />
+                    ) : (
+                      <FiArrowUp size={12} />
+                    )}
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="text-xs text-on-surface-variant font-medium">
@@ -820,7 +882,27 @@ export default function PendaftarClient({
                 <thead>
                   <tr className="bg-surface-variant/20 text-on-surface-variant text-xs uppercase tracking-wider">
                     <th className="p-3.5 sm:p-4 font-bold">No</th>
-                    <th className="p-3.5 sm:p-4 font-bold">Waktu Submit</th>
+                    <th className="p-3.5 sm:p-4 font-bold">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
+                        }
+                        className="inline-flex items-center gap-1 uppercase tracking-wider hover:text-primary transition-colors cursor-pointer"
+                        title={
+                          sortOrder === "desc"
+                            ? "Diurutkan: Terbaru (klik untuk Terlama)"
+                            : "Diurutkan: Terlama (klik untuk Terbaru)"
+                        }
+                      >
+                        Waktu Submit
+                        {sortOrder === "desc" ? (
+                          <FiArrowDown size={12} className="text-primary" />
+                        ) : (
+                          <FiArrowUp size={12} className="text-primary" />
+                        )}
+                      </button>
+                    </th>
                     {hasItems && <th className="p-3.5 sm:p-4 font-bold">{itemLabel}</th>}
                     <th className="p-3.5 sm:p-4 font-bold">Status</th>
                     {tableFields.map((field) => (
@@ -848,15 +930,10 @@ export default function PendaftarClient({
                     const isRejected = app.status === "rejected";
                     const isPending = app.status === "pending";
                     const isBusy = busyId === app.id;
-                    const firstLabel =
-                      String(
-                        Object.values(app.responses || {}).find(
-                          (v) =>
-                            typeof v === "string" &&
-                            v.trim().length > 0 &&
-                            !v.startsWith("http")
-                        ) || `Pendaftar #${rowIdx + 1}`
-                      );
+                    const firstLabel = getApplicantDisplayLabel(
+                      app,
+                      `Pendaftar #${rowIdx + 1}`
+                    );
 
                     return (
                       <tr
@@ -990,7 +1067,13 @@ export default function PendaftarClient({
                               <button
                                 type="button"
                                 disabled={isBusy}
-                                onClick={() => handleStatusChange(app, "accepted")}
+                                onClick={() =>
+                                  setConfirmStatusAction({
+                                    app,
+                                    nextStatus: "accepted",
+                                    applicantLabel: firstLabel,
+                                  })
+                                }
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white text-xs font-bold transition-colors disabled:opacity-50"
                                 title="Terima pendaftar"
                               >
@@ -1001,7 +1084,13 @@ export default function PendaftarClient({
                               <button
                                 type="button"
                                 disabled={isBusy}
-                                onClick={() => handleStatusChange(app, "rejected")}
+                                onClick={() =>
+                                  setConfirmStatusAction({
+                                    app,
+                                    nextStatus: "rejected",
+                                    applicantLabel: firstLabel,
+                                  })
+                                }
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white text-xs font-bold transition-colors disabled:opacity-50"
                                 title="Tolak pendaftar & buka kembali 1 slot"
                               >
@@ -1045,13 +1134,9 @@ export default function PendaftarClient({
           const isRejected = detailApp.status === "rejected";
           const isPending = detailApp.status === "pending";
           const isBusy = busyId === detailApp.id;
-          const applicantTitle = String(
-            Object.values(detailApp.responses || {}).find(
-              (v) =>
-                typeof v === "string" &&
-                v.trim().length > 0 &&
-                !v.startsWith("http")
-            ) || "Detail Pendaftar"
+          const applicantTitle = getApplicantDisplayLabel(
+            detailApp,
+            "Detail Pendaftar"
           );
 
           return (
@@ -1188,7 +1273,13 @@ export default function PendaftarClient({
                       <button
                         type="button"
                         disabled={isBusy}
-                        onClick={() => handleStatusChange(detailApp, "accepted")}
+                        onClick={() =>
+                          setConfirmStatusAction({
+                            app: detailApp,
+                            nextStatus: "accepted",
+                            applicantLabel: applicantTitle,
+                          })
+                        }
                         className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-bold transition-colors disabled:opacity-50"
                       >
                         <FiCheckCircle size={14} /> Terima Pendaftar
@@ -1198,7 +1289,13 @@ export default function PendaftarClient({
                       <button
                         type="button"
                         disabled={isBusy}
-                        onClick={() => handleStatusChange(detailApp, "rejected")}
+                        onClick={() =>
+                          setConfirmStatusAction({
+                            app: detailApp,
+                            nextStatus: "rejected",
+                            applicantLabel: applicantTitle,
+                          })
+                        }
                         className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 text-white hover:bg-amber-600 text-xs font-bold transition-colors disabled:opacity-50"
                       >
                         <FiXCircle size={14} /> Tolak
@@ -1263,6 +1360,88 @@ export default function PendaftarClient({
             </div>
           </div>
         )}
+
+        {/* Confirm Accept / Reject Status Modal */}
+        {confirmStatusAction && (() => {
+          const isAccept = confirmStatusAction.nextStatus === "accepted";
+          const isConfirmBusy = busyId === confirmStatusAction.app.id;
+          return (
+            <div
+              className="fixed inset-0 z-[70] bg-black/55 backdrop-blur-xs flex items-center justify-center p-4"
+              onClick={() => {
+                if (!isConfirmBusy) setConfirmStatusAction(null);
+              }}
+            >
+              <div
+                className="bg-surface rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-outline-variant/30 text-center space-y-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div
+                  className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center ${
+                    isAccept
+                      ? "bg-emerald-100 text-emerald-600"
+                      : "bg-amber-100 text-amber-600"
+                  }`}
+                >
+                  {isAccept ? (
+                    <FiCheckCircle size={24} />
+                  ) : (
+                    <FiXCircle size={24} />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-on-surface">
+                    {isAccept
+                      ? "Yakin Terima Pendaftar?"
+                      : "Yakin Tolak Pendaftar?"}
+                  </h3>
+                  <p className="text-xs text-on-surface-variant mt-1.5 leading-relaxed">
+                    <strong className="text-on-surface">
+                      {confirmStatusAction.applicantLabel}
+                    </strong>
+                    {confirmStatusAction.app.item_name
+                      ? ` (${confirmStatusAction.app.item_name})`
+                      : ""}{" "}
+                    {isAccept
+                      ? "akan ditandai sebagai Diterima untuk kegiatan ini."
+                      : "akan ditolak. Slot kuota akan langsung terbuka kembali jika sebelumnya berstatus diterima."}
+                  </p>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    disabled={isConfirmBusy}
+                    onClick={() => setConfirmStatusAction(null)}
+                    className="flex-1 py-2.5 rounded-xl font-bold text-xs border border-outline-variant hover:bg-surface-variant/30 disabled:opacity-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isConfirmBusy}
+                    onClick={() =>
+                      handleStatusChange(
+                        confirmStatusAction.app,
+                        confirmStatusAction.nextStatus
+                      )
+                    }
+                    className={`flex-1 py-2.5 rounded-xl font-bold text-xs text-white disabled:opacity-50 transition-colors ${
+                      isAccept
+                        ? "bg-emerald-600 hover:bg-emerald-700"
+                        : "bg-amber-600 hover:bg-amber-700"
+                    }`}
+                  >
+                    {isConfirmBusy
+                      ? "Menyimpan..."
+                      : isAccept
+                        ? "Ya, Terima"
+                        : "Ya, Tolak"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Confirm Delete Modal */}
         {confirmDeleteApp && (
