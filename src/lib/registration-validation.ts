@@ -405,9 +405,13 @@ export function aggregateAgendaItemsAndCounts<T extends Partial<AgendaKegiatan>>
   const itemAcceptedMap = new Map<string, number>();
   const itemRejectedMap = new Map<string, number>();
   const agendaAcceptedMap = new Map<string, number>();
+  const agendaPendingMap = new Map<string, number>();
 
   for (const row of applications) {
     const isRejected = row.status === "rejected";
+    if (row.status === "pending") {
+      agendaPendingMap.set(row.agenda_id, (agendaPendingMap.get(row.agenda_id) || 0) + 1);
+    }
     if (!isRejected) {
       agendaAcceptedMap.set(
         row.agenda_id,
@@ -440,6 +444,7 @@ export function aggregateAgendaItemsAndCounts<T extends Partial<AgendaKegiatan>>
       ...agenda,
       items: itemsByAgenda.get(agenda.id) || [],
       accepted_count: agendaAcceptedMap.get(agenda.id) || 0,
+      pending_count: agendaPendingMap.get(agenda.id) || 0,
     };
   });
 }

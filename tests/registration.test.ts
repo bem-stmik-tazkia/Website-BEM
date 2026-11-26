@@ -329,6 +329,7 @@ test("aggregateAgendaItemsAndCounts excludes rejected applications from filled_c
 
   const apps = [
     { agenda_id: "ag-1", item_id: "pos-a", status: "accepted" },
+    { agenda_id: "ag-1", item_id: "pos-a", status: "pending" }, // pending counts toward active slot & pending_count
     { agenda_id: "ag-1", item_id: "pos-a", status: "rejected" }, // rejected frees slot!
     { agenda_id: "ag-1", item_id: "pos-b", status: "accepted" },
     { agenda_id: "ag-1", item_id: "pos-b", status: null }, // legacy null counts as filled
@@ -339,14 +340,16 @@ test("aggregateAgendaItemsAndCounts excludes rejected applications from filled_c
   const enriched = aggregateAgendaItemsAndCounts(agendas, items, apps);
 
   const ag1Items = enriched[0].items || [];
-  assert.equal(ag1Items[0].filled_count, 1); // 1 accepted (the 1 rejected does not consume quota)
+  assert.equal(ag1Items[0].filled_count, 2); // 1 accepted + 1 pending (rejected does not consume quota)
   assert.equal(ag1Items[0].rejected_count, 1);
   assert.equal(ag1Items[1].filled_count, 2);
   assert.equal(ag1Items[1].rejected_count, 0);
-  assert.equal(enriched[0].accepted_count, 3);
+  assert.equal(enriched[0].accepted_count, 4);
+  assert.equal(enriched[0].pending_count, 1);
 
   assert.equal(enriched[1].items?.length, 0);
   assert.equal(enriched[1].accepted_count, 1);
+  assert.equal(enriched[1].pending_count, 0);
 });
 
 // -----------------------------------------------------------------------------

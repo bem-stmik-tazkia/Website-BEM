@@ -37,7 +37,9 @@
     "profileSettings": "إعدادات الملف الشخصي",
     "menuArticlesDesc": "آراء وأبحاث الطلاب",
     "menuAgendaDesc": "الفعاليات ومعلومات التطوع",
-    "studentDashboard": "لوحة الطالب"
+    "studentDashboard": "لوحة الطالب",
+    "newUpdateLabel": "جديد",
+    "newContentAria": "يوجد محتوى أو تحديث جديد"
   },
   "Footer": {
     "description": "نحن رواد BEM مبتكرون ومتعاونون واستباقيون في التعبير عن التطلعات وتطوير إمكانات طلاب STMIK Tazkia.",
@@ -998,7 +1000,10 @@
     "alreadyRegisteredBadge": "مسجل بالفعل",
     "alreadyRegisteredTitle": "لقد قمت بالتسجيل بالفعل",
     "alreadyRegisteredDesc": "لقد أرسل حسابك طلباً لهذه الفعالية بالفعل. يرجى انتظار مراجعة اللجنة.",
-    "pendingStatusNotice": "سيتم تسجيل طلبك بحالة قيد المراجعة (Pending) وسيتم التحقق منه من قبل اللجنة."
+    "pendingStatusNotice": "سيتم تسجيل طلبك بحالة قيد المراجعة (Pending) وسيتم التحقق منه من قبل اللجنة.",
+    "statusPendingBadge": "الحالة: قيد المراجعة (Pending)",
+    "successPendingHint": "طلبك مسجل حالياً بحالة قيد المراجعة. يمكنك متابعة نتيجة القبول أو الرفض من اللجنة عبر لوحة الطالب.",
+    "viewStatusDashboard": "تحقق من الحالة في لوحة الطالب"
   },
   "NewsDetail": {
     "share": "مشاركة",
@@ -1373,7 +1378,7 @@
     "previewMinuteRead": "{min} دقائق للقراءة"
   },
   "StudentArticleNotification": {
-    "title": "إشعارات المقالات",
+    "title": "الإشعارات",
     "newBadge": "{count} جديد",
     "readBadge": "مقروء",
     "markAsRead": "تحديد كمقروء",
@@ -1381,14 +1386,16 @@
     "markAllReadTitle": "تحديد الكل كمقروء",
     "allReadTitle": "تمت قراءة جميع الإشعارات",
     "emptyTitle": "لا توجد إشعارات جديدة",
-    "emptyDesc": "ستظهر الإشعارات عند الموافقة على مقالك للنشر أو عندما يتطلب مراجعة/تعديل من المسؤول.",
+    "emptyDesc": "ستظهر الإشعارات عند تحديث حالة مقالك أو نتيجة تسجيلك في الفعاليات والتطوع.",
     "openDashboard": "فتح لوحة الطالب",
     "actionApproved": "تمت الموافقة على المقال ونشره 🎉",
     "actionRejected": "المقال يحتاج إلى مراجعة / مرفوض ⚠️",
     "actionPending": "في انتظار مراجعة المسؤول ⏳",
+    "actionUnpublished": "تم إرجاع المقال إلى مسودة 📁",
     "actionDefault": "تحديث حالة المقال 📝",
     "approvedDefaultNote": "تمت الموافقة على مقالك وهو متاح الآن للجمهور.",
     "rejectedDefaultNote": "يتطلب المقال مراجعة تقييمية قبل أن يتم نشره.",
+    "unpublishedDefaultNote": "تم إيقاف نشر مقالك مؤقتاً وإرجاعه إلى مسودة من قبل المسؤول.",
     "timeJustNow": "الآن",
     "timeMinutesAgo": "منذ {minutes} دقيقة",
     "timeHoursAgo": "منذ {hours} ساعة",
@@ -1427,7 +1434,9 @@
     "lockedFieldsHint": "البريد الجامعي ودور الحساب مقفلان من قبل النظام للأمان.",
     "personalInfoTitle": "الهوية والنبذة التعريفية",
     "emailLabel": "بريد الحساب",
-    "roleLabel": "الدور"
+    "roleLabel": "الدور",
+    "noChanges": "لا توجد تغييرات بعد",
+    "unsavedConfirm": "لم يتم حفظ تغييرات الملف الشخصي بعد. هل تريد المغادرة على أي حال؟"
   },
   "ImageUpload": {
     "tabUpload": "تحميل الصورة",

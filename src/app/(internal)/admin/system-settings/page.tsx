@@ -257,6 +257,7 @@ export default function SystemSettingsPage() {
   }, [isDirty, router]);
 
   const handleSaveMaintenance = async () => {
+    if (!isDirty || savingMaintenance) return;
     setSavingMaintenance(true);
     const releaseNotesObj = {
       version: rVersion.trim() || "v1.0.0",
@@ -1025,8 +1026,8 @@ export default function SystemSettingsPage() {
           <button
             type="button"
             onClick={handleSaveMaintenance}
-            disabled={savingMaintenance}
-            className={`px-8 py-3.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md disabled:opacity-50 ${
+            disabled={savingMaintenance || !isDirty}
+            className={`px-8 py-3.5 rounded-xl font-bold transition-all flex items-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
               isDirty
                 ? "bg-amber-500 hover:bg-amber-600 text-white ring-4 ring-amber-400/30"
                 : "bg-primary hover:bg-primary/90 text-white"

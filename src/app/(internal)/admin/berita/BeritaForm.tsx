@@ -147,6 +147,8 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (initialData && !isDirty) return;
+
     const errors = validate();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -440,8 +442,8 @@ export default function BeritaForm({ initialData = null }: { initialData?: any }
         </button>
         <button
           type="submit"
-          disabled={isLoading}
-          className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-60"
+          disabled={isLoading || (Boolean(initialData) && !isDirty)}
+          className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />

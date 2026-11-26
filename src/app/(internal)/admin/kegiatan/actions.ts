@@ -5,6 +5,7 @@ import { requireAdmin, getServiceRoleClient } from "@/lib/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { AgendaItemInput, AgendaKegiatan, ApplicationStatus, DynamicFormField, KegiatanFormInput } from "@/types/agenda";
 import { sendDiscordKegiatanNotification } from "@/lib/discord";
+import { sendVolunteerModeratedNotification } from "@/lib/telegram";
 import { enrichAgendasWithItemsAndCounts } from "@/lib/agenda-items-server";
 import {
   buildBaseAgendaSlug,
@@ -477,12 +478,12 @@ export async function updateVolunteerApplicationStatus(
   agendaId: string,
   status: ApplicationStatus
 ) {
-  await requireAdmin();
+  const { user, supabase } = await requireAdmin();
   const service = getServiceRoleClient();
 
   const { data: appRow, error: fetchErr } = await service
     .from("volunteer_applications")
-    .select("id, agenda_id")
+    .select("id, agenda_id, item_name, applicant_email, responses")
     .eq("id", applicationId)
     .eq("agenda_id", agendaId)
     .maybeSingle();
@@ -505,6 +506,41 @@ export async function updateVolunteerApplicationStatus(
       );
     }
     throw new Error(msg || "Gagal memperbarui status pendaftar.");
+  }
+
+  if (status === "accepted" || status === "rejected") {
+    try {
+      const [{ data: agendaRow }, { data: adminProfile }] = await Promise.all([
+        service.from("agendas").select("title").eq("id", agendaId).maybeSingle(),
+        supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+      ]);
+      const firstText =
+        appRow.responses && typeof appRow.responses === "object"
+          ? Object.values(appRow.responses as Record<string, unknown>).find(
+              (v) => typeof v === "string" && v.trim().length > 0 && !v.startsWith("http")
+            )
+          : null;
+      const applicantLabel =
+        (typeof firstText === "string" && firstText.trim()) ||
+        appRow.applicant_email ||
+        "Mahasiswa";
+      const adminName =
+        adminProfile?.full_name ||
+        (user.user_metadata?.full_name as string | undefined) ||
+        user.email ||
+        "Administrator BEM";
+
+      await sendVolunteerModeratedNotification({
+        agendaId,
+        agendaTitle: agendaRow?.title || "Kegiatan BEM",
+        status,
+        applicantLabel,
+        itemName: appRow.item_name || null,
+        adminName,
+      });
+    } catch (teleErr) {
+      console.warn("[updateVolunteerApplicationStatus] Telegram audit skipped:", teleErr);
+    }
   }
 
   revalidateAllAgendaPaths(agendaId);

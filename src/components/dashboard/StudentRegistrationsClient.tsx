@@ -15,6 +15,7 @@ import {
   FiXCircle,
 } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
+import { markStudentCategoryReadFromClient } from "@/lib/student-notifications";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import type { StudentRegistrationRecord } from "@/lib/student-dashboard";
 import {
@@ -54,8 +55,10 @@ export default function StudentRegistrationsClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
-  // Realtime listener saat panitia menyetujui atau menolak pendaftaran akun ini
+  // Tandai notifikasi pendaftaran terbaca saat halaman dibuka & listen realtime
   useEffect(() => {
+    markStudentCategoryReadFromClient(supabase, "registration");
+
     const channel = supabase
       .channel(`student_regs_${userId}_${Date.now()}`)
       .on(
@@ -243,7 +246,7 @@ export default function StudentRegistrationsClient({
             const agendaType = reg.agenda?.type === "volunteer" ? "volunteer" : "event";
             const poster = getKegiatanPosterUrl(reg.agenda?.image_url, agendaType);
             const isDefault = isDefaultPosterPath(poster);
-            const detailHref = `/agenda/${reg.agenda?.slug || reg.agenda_id}`;
+            const detailHref = `/agenda/${reg.agenda?.slug || reg.agenda_id}?from=dashboard-kegiatan`;
             const catLabel = dedupeCategoryLabel(displayCategory);
 
             const isAccepted = reg.status === "accepted";

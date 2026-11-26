@@ -27,17 +27,38 @@ export default function ProfileSettingsModal({
   const [fullName, setFullName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [bio, setBio] = useState("");
+  const [initialSnapshot, setInitialSnapshot] = useState({
+    fullName: "",
+    avatarUrl: "",
+    bio: "",
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (userProfile && isOpen) {
-      setFullName(userProfile.full_name || userProfile.user_metadata?.full_name || "");
-      setAvatarUrl(userProfile.avatar_url || userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || "");
-      setBio(userProfile.bio || "");
+      const initName = userProfile.full_name || userProfile.user_metadata?.full_name || "";
+      const initAvatar =
+        "avatar_url" in userProfile
+          ? userProfile.avatar_url || ""
+          : userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || "";
+      const initBio = userProfile.bio || "";
+      setFullName(initName);
+      setAvatarUrl(initAvatar);
+      setBio(initBio);
+      setInitialSnapshot({
+        fullName: initName.trim(),
+        avatarUrl: (initAvatar || "").trim(),
+        bio: initBio.trim(),
+      });
     }
   }, [userProfile, isOpen]);
 
   if (!isOpen) return null;
+
+  const hasChanges =
+    fullName.trim() !== initialSnapshot.fullName ||
+    (avatarUrl || "").trim() !== initialSnapshot.avatarUrl ||
+    bio.trim() !== initialSnapshot.bio;
 
   const googleAvatar =
     userProfile?.user_metadata?.avatar_url ||
@@ -54,6 +75,8 @@ export default function ProfileSettingsModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasChanges || isSubmitting) return;
+
     if (!fullName.trim()) {
       toast(t("fullNameRequired"), "error");
       return;
@@ -201,23 +224,28 @@ export default function ProfileSettingsModal({
             </div>
 
             {/* Actions */}
-            <div className="pt-3 border-t border-outline-variant/20 flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isSubmitting}
-                className="px-4 py-2 rounded-xl border border-outline-variant/40 text-on-surface hover:bg-surface-variant/30 text-xs font-bold transition-colors cursor-pointer"
-              >
-                {t("cancel")}
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-md shadow-primary/20 transition-all cursor-pointer disabled:opacity-50"
-              >
-                <FiCheck size={14} />
-                <span>{isSubmitting ? t("saving") : t("save")}</span>
-              </button>
+            <div className="pt-3 border-t border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <span className="text-[11px] text-on-surface-variant/80">
+                {!hasChanges ? t("noChanges") : ""}
+              </span>
+              <div className="flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 rounded-xl border border-outline-variant/40 text-on-surface hover:bg-surface-variant/30 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !hasChanges || !fullName.trim()}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-md shadow-primary/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FiCheck size={14} />
+                  <span>{isSubmitting ? t("saving") : t("save")}</span>
+                </button>
+              </div>
             </div>
           </form>
         </motion.div>

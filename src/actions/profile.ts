@@ -23,11 +23,19 @@ export async function updateMyProfile(input: UpdateProfileInput) {
 
     // 1. Sanitasi dan validasi keamanan
     const cleanName = input.full_name?.trim().slice(0, 80) || undefined;
-    const cleanBio = input.bio !== undefined ? (input.bio ? input.bio.trim().slice(0, 300) : null) : undefined;
+    const cleanBio = input.bio !== undefined ? (input.bio ? input.bio.trim().slice(0, 250) : null) : undefined;
     let cleanAvatar = input.avatar_url?.trim() || null;
 
-    if (cleanAvatar && !cleanAvatar.startsWith("http://") && !cleanAvatar.startsWith("https://")) {
-      return { error: "Format URL foto profil tidak valid." };
+    if (cleanAvatar) {
+      let validHttps = false;
+      try {
+        validHttps = new URL(cleanAvatar).protocol === "https:";
+      } catch {
+        validHttps = false;
+      }
+      if (!validHttps) {
+        return { error: "Format URL foto profil harus menggunakan https:// yang valid." };
+      }
     }
 
     const service = getServiceRoleClient();
@@ -67,6 +75,7 @@ export async function updateMyProfile(input: UpdateProfileInput) {
         data: {
           full_name: cleanName || user.user_metadata?.full_name,
           avatar_url: cleanAvatar,
+          avatar_cleared: cleanAvatar === null,
         },
       });
     } catch (metaErr) {

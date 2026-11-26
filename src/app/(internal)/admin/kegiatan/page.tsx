@@ -206,22 +206,36 @@ export default async function KegiatanAdminPage({
                           <p className="font-bold text-sm text-on-surface line-clamp-1">{item.title}</p>
                           <p className="text-xs text-on-surface-variant">{item.category}</p>
                           {item.items && item.items.length > 0 ? (
-                            <p className="text-[11px] font-semibold text-primary mt-0.5">
-                              {item.items.length} {item.type === "volunteer" ? "Posisi" : "Cabang Lomba"} •{" "}
-                              {(() => {
-                                const totalFilled = item.items.reduce((s, it) => s + (it.filled_count || 0), 0);
-                                const totalQuota = item.items.reduce((s, it) => s + (it.quota || 0), 0);
-                                const hasUnlimited = item.items.some((it) => it.quota == null);
-                                return hasUnlimited
-                                  ? `${totalFilled} Terisi`
-                                  : `${totalFilled}/${totalQuota} Terisi`;
-                              })()}
+                            <p className="text-[11px] font-semibold text-primary mt-0.5 flex flex-wrap items-center gap-x-1.5">
+                              <span>
+                                {item.items.length} {item.type === "volunteer" ? "Posisi" : "Cabang Lomba"} •{" "}
+                                {(() => {
+                                  const totalFilled = item.items.reduce((s, it) => s + (it.filled_count || 0), 0);
+                                  const totalQuota = item.items.reduce((s, it) => s + (it.quota || 0), 0);
+                                  const hasUnlimited = item.items.some((it) => it.quota == null);
+                                  return hasUnlimited
+                                    ? `${totalFilled} Terisi`
+                                    : `${totalFilled}/${totalQuota} Terisi`;
+                                })()}
+                              </span>
+                              {(item.pending_count || 0) > 0 && (
+                                <span className="text-red-600 font-bold">
+                                  • {item.pending_count} Menunggu
+                                </span>
+                              )}
                             </p>
                           ) : (item.type === "volunteer" || (item.form_schema && item.form_schema.length > 0)) ? (
-                            <p className="text-[11px] text-on-surface-variant mt-0.5">
-                              {item.max_participants
-                                ? `${item.accepted_count || 0}/${item.max_participants} Terisi`
-                                : `${item.accepted_count || 0} Pendaftar`}
+                            <p className="text-[11px] text-on-surface-variant mt-0.5 flex flex-wrap items-center gap-x-1.5">
+                              <span>
+                                {item.max_participants
+                                  ? `${item.accepted_count || 0}/${item.max_participants} Terisi`
+                                  : `${item.accepted_count || 0} Pendaftar`}
+                              </span>
+                              {(item.pending_count || 0) > 0 && (
+                                <span className="text-red-600 font-bold">
+                                  • {item.pending_count} Menunggu
+                                </span>
+                              )}
                             </p>
                           ) : null}
                         </div>
@@ -271,14 +285,19 @@ export default async function KegiatanAdminPage({
                         {(item.type === 'volunteer' || (item.type === 'event' && hasAnyFormQuestions(item.form_schema, item.items))) && (
                           <Link
                             href={`/admin/kegiatan/${item.id}/pendaftar`}
-                            className={`h-8 px-3 rounded-lg flex items-center justify-center transition-colors text-xs font-bold ${
+                            className={`h-8 px-3 rounded-lg inline-flex items-center justify-center gap-1.5 transition-colors text-xs font-bold whitespace-nowrap ${
                               item.type === 'event' 
                                 ? 'bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white' 
                                 : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'
                             }`}
                             title="Lihat Pendaftar"
                           >
-                            Pendaftar
+                            <span>Pendaftar</span>
+                            {(item.pending_count || 0) > 0 && (
+                              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-extrabold inline-flex items-center justify-center leading-none shadow-2xs">
+                                {item.pending_count}
+                              </span>
+                            )}
                           </Link>
                         )}
                         <BroadcastKegiatanButton

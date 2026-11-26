@@ -308,7 +308,7 @@ export default function StudentDashboardOverview({
                   reg.agenda?.type === "volunteer" ? "volunteer" : "event"
                 );
                 const isDefault = isDefaultPosterPath(poster);
-                const targetHref = `/agenda/${reg.agenda?.slug || reg.agenda_id}`;
+                const targetHref = `/agenda/${reg.agenda?.slug || reg.agenda_id}?from=dashboard`;
 
                 return (
                   <Link

@@ -24,6 +24,7 @@ import {
   FiLogOut,
   FiLock,
   FiLogIn,
+  FiGrid,
 } from "react-icons/fi";
 import { AgendaItem, AgendaKegiatan, DynamicFormField } from "@/types/agenda";
 import { hasAnyFormQuestions } from "@/lib/registration-validation";
@@ -337,6 +338,19 @@ export default function ApplyClientForm({
   const turnstileRef = useRef<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Setelah submit berhasil, form panjang digantikan tampilan sukses yang ringkas.
+  // Tanpa scroll ke atas, browser akan menjepit scroll ke bawah (area Footer).
+  useEffect(() => {
+    if (!isSuccess) return;
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    const frameId = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [isSuccess]);
   const [invalidFields, setInvalidFields] = useState<Record<string, string>>({});
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingTargetUrl, setPendingTargetUrl] = useState<string | null>(null);
@@ -895,20 +909,20 @@ export default function ApplyClientForm({
 
   if (isSuccess) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8 text-center">
-        <div className="w-48 h-48 mx-auto mb-2">
+      <div className="max-w-3xl mx-auto px-4 py-8 pb-24 lg:pb-8 text-center">
+        <div className="w-40 h-40 sm:w-48 sm:h-48 mx-auto mb-2">
           <SafeLottie src="/animations/Succes.lottie" autoplay />
         </div>
-        <h1 className="text-3xl font-extrabold text-on-surface mb-4">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-on-surface mb-4">
           {t("successTitle")}
         </h1>
-        <p className="text-on-surface-variant text-lg mb-4">
+        <p className="text-on-surface-variant text-base sm:text-lg mb-6">
           {t("successDescPart1")}{" "}
           <strong className="text-on-surface">{displayTitle}</strong>.{" "}
           {t("successDescPart2")}
         </p>
         {submittedItemNames.length > 0 && (
-          <div className="inline-flex flex-wrap items-center justify-center gap-2 mb-8 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-2xl">
+          <div className="inline-flex flex-wrap items-center justify-center gap-2 mb-6 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-2xl max-w-full">
             <span className="text-xs font-bold text-emerald-800">
               {isVolunteer ? t("selectedPositionsSummary") : t("selectedCompetitionsSummary")}
             </span>
@@ -922,10 +936,38 @@ export default function ApplyClientForm({
             ))}
           </div>
         )}
-        <div>
+        {currentUser && (
+          <div className="max-w-lg mx-auto mb-7 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-start flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+              <FiClock size={16} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-extrabold text-amber-900">
+                {t("statusPendingBadge")}
+              </p>
+              <p className="text-xs text-amber-800/90 mt-1 leading-relaxed">
+                {t("successPendingHint")}
+              </p>
+            </div>
+          </div>
+        )}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+          {currentUser && (
+            <Link
+              href="/dashboard/kegiatan"
+              className="inline-flex items-center justify-center gap-2 bg-primary text-white font-bold px-6 sm:px-7 py-3.5 rounded-xl hover:bg-primary/90 transition-all hover:-translate-y-0.5 hover:shadow-lg text-sm"
+            >
+              <FiGrid size={16} />
+              <span>{t("viewStatusDashboard")}</span>
+            </Link>
+          )}
           <Link
             href={`/agenda/${agenda.id}`}
-            className="inline-flex items-center justify-center bg-primary text-white font-bold px-8 py-3.5 rounded-xl hover:bg-primary/90 transition-all hover:-translate-y-1 hover:shadow-lg"
+            className={`inline-flex items-center justify-center font-bold px-6 sm:px-7 py-3.5 rounded-xl transition-all text-sm ${
+              currentUser
+                ? "bg-surface border border-outline-variant/40 text-on-surface hover:border-primary hover:text-primary"
+                : "bg-primary text-white hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-lg"
+            }`}
           >
             {t("backToDetail")}
           </Link>
@@ -1004,10 +1046,25 @@ export default function ApplyClientForm({
               </NativeLink>
             </div>
           ) : (!hasItems && hasExistingAgendaApplication) || (hasItems && !allowMultiple && appliedItemSet.size > 0) ? (
-            <div className="bg-emerald-50 text-emerald-800 p-6 rounded-2xl border border-emerald-200 flex flex-col items-center text-center gap-2">
+            <div className="bg-emerald-50 text-emerald-800 p-5 sm:p-6 rounded-2xl border border-emerald-200 flex flex-col items-center text-center gap-2">
               <FiCheckCircle size={32} className="text-emerald-600" />
               <h3 className="font-bold text-lg">{t("alreadyRegisteredTitle")}</h3>
               <p className="text-sm opacity-90 max-w-md">{t("alreadyRegisteredDesc")}</p>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 w-full sm:w-auto mt-3">
+                <Link
+                  href="/dashboard/kegiatan"
+                  className="inline-flex items-center justify-center gap-2 bg-primary text-white font-bold px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors text-xs sm:text-sm"
+                >
+                  <FiGrid size={15} />
+                  <span>{t("viewStatusDashboard")}</span>
+                </Link>
+                <Link
+                  href={`/agenda/${agenda.id}`}
+                  className="inline-flex items-center justify-center bg-white border border-emerald-300 text-emerald-900 font-bold px-5 py-2.5 rounded-xl hover:bg-emerald-100/60 transition-colors text-xs sm:text-sm"
+                >
+                  {t("backToDetail")}
+                </Link>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6" noValidate>

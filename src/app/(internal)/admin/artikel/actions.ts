@@ -122,37 +122,70 @@ export interface AdminPendingArticleNotif {
   author: string;
   created_at: string;
   href: string;
+  isRevision?: boolean;
 }
 
 export async function fetchPendingArticlesForBell(): Promise<AdminPendingArticleNotif[]> {
   try {
     await requireAdmin();
     const serviceClient = getServiceRoleClient();
-    const { data: articles, error } = await serviceClient
-      .from("articles")
-      .select(`
-        id,
-        title,
-        created_at,
-        author:profiles!articles_author_id_fkey(full_name)
-      `)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(10);
+    const [articlesRes, revisionsRes] = await Promise.all([
+      serviceClient
+        .from("articles")
+        .select(`
+          id,
+          title,
+          created_at,
+          submitted_at,
+          author:profiles!articles_author_id_fkey(full_name)
+        `)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(10),
+      serviceClient
+        .from("article_revisions")
+        .select(`
+          id,
+          title,
+          created_at,
+          submitted_at,
+          author:profiles!article_revisions_author_id_fkey(full_name)
+        `)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
 
-    if (error) {
-      console.warn("[actions:fetchPendingArticlesForBell] Error fetching:", error.message);
-      return [];
+    if (articlesRes.error) {
+      console.warn("[actions:fetchPendingArticlesForBell] Articles error:", articlesRes.error.message);
+    }
+    if (revisionsRes.error) {
+      console.warn("[actions:fetchPendingArticlesForBell] Revisions error:", revisionsRes.error.message);
     }
 
-    return (articles || []).map((a: any) => ({
+    const articleItems: AdminPendingArticleNotif[] = (articlesRes.data || []).map((a: any) => ({
       id: a.id,
       type: "artikel" as const,
       title: a.title,
       author: a.author?.full_name || "Mahasiswa",
-      created_at: a.created_at,
+      created_at: a.submitted_at || a.created_at,
       href: "/admin/artikel",
+      isRevision: false,
     }));
+
+    const revisionItems: AdminPendingArticleNotif[] = (revisionsRes.data || []).map((r: any) => ({
+      id: `rev-${r.id}`,
+      type: "artikel" as const,
+      title: `Revisi: ${r.title}`,
+      author: r.author?.full_name || "Mahasiswa",
+      created_at: r.submitted_at || r.created_at,
+      href: "/admin/artikel?tab=revisions",
+      isRevision: true,
+    }));
+
+    return [...articleItems, ...revisionItems]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 15);
   } catch (err) {
     console.warn("[actions:fetchPendingArticlesForBell] Error:", err);
     return [];

@@ -37,7 +37,9 @@
     "profileSettings": "Profile Settings",
     "menuArticlesDesc": "Student opinions & research",
     "menuAgendaDesc": "Events & volunteer info",
-    "studentDashboard": "Student Dashboard"
+    "studentDashboard": "Student Dashboard",
+    "newUpdateLabel": "New",
+    "newContentAria": "New content or status updates available"
   },
   "Footer": {
     "description": "Becoming an innovative, collaborative, and proactive BEM pioneer in voicing aspirations and developing the potential of STMIK Tazkia students.",
@@ -998,7 +1000,10 @@
     "alreadyRegisteredBadge": "Already Applied",
     "alreadyRegisteredTitle": "You Have Already Registered",
     "alreadyRegisteredDesc": "Your account has already submitted a registration for this activity. Please await confirmation from the committee.",
-    "pendingStatusNotice": "Your registration will be recorded as Pending Review and verified by the committee."
+    "pendingStatusNotice": "Your registration will be recorded as Pending Review and verified by the committee.",
+    "statusPendingBadge": "Status: Pending Review",
+    "successPendingHint": "Your registration is currently Pending Review. You can track the committee's decision (Accepted / Declined) anytime in your Student Dashboard.",
+    "viewStatusDashboard": "Check Status in Dashboard"
   },
   "NewsDetail": {
     "share": "Share",
@@ -1375,7 +1380,7 @@
     "previewMinuteRead": "{min} min read"
   },
   "StudentArticleNotification": {
-    "title": "Article Notifications",
+    "title": "Notifications",
     "newBadge": "{count} new",
     "readBadge": "Read",
     "markAsRead": "Mark as read",
@@ -1383,14 +1388,16 @@
     "markAllReadTitle": "Mark all as read",
     "allReadTitle": "All notifications are read",
     "emptyTitle": "No new notifications",
-    "emptyDesc": "Notifications will appear when your article is approved for publication or requires admin review/revision.",
+    "emptyDesc": "Notifications will appear when your article status or event / volunteer registration decision is updated.",
     "openDashboard": "Open Student Dashboard",
     "actionApproved": "Article Approved & Published 🎉",
     "actionRejected": "Article Needs Revision / Rejected ⚠️",
     "actionPending": "Waiting for Admin Review ⏳",
+    "actionUnpublished": "Article Returned to Draft 📁",
     "actionDefault": "Article Status Update 📝",
     "approvedDefaultNote": "Your article has been approved and is now live for the public.",
     "rejectedDefaultNote": "The article requires revision before it can be published.",
+    "unpublishedDefaultNote": "Your article has been temporarily unpublished back to draft by an administrator.",
     "timeJustNow": "Just now",
     "timeMinutesAgo": "{minutes}m ago",
     "timeHoursAgo": "{hours}h ago",
@@ -1429,7 +1436,9 @@
     "lockedFieldsHint": "Campus email and account role are locked by the system for security.",
     "personalInfoTitle": "Identity & Bio",
     "emailLabel": "Account Email",
-    "roleLabel": "Role"
+    "roleLabel": "Role",
+    "noChanges": "No changes yet",
+    "unsavedConfirm": "Your profile changes haven't been saved yet. Leave this page anyway?"
   },
   "ImageUpload": {
     "tabUpload": "Upload Photo",

@@ -22,6 +22,7 @@ import ArticlePreviewModal from "@/components/dashboard/artikel/ArticlePreviewMo
 import CancelSubmissionModal from "@/components/dashboard/artikel/CancelSubmissionModal";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { withdrawArticleSubmission } from "@/actions/article";
+import { markStudentCategoryReadFromClient } from "@/lib/student-notifications";
 
 export default function DashboardArtikelPage() {
   const t = useTranslations("DashboardArtikel");
@@ -73,6 +74,7 @@ export default function DashboardArtikelPage() {
 
   useEffect(() => {
     fetchArticles();
+    markStudentCategoryReadFromClient(supabase, "article");
 
     // Realtime subscription untuk memantau perubahan status artikel mahasiswa
     let channel: any = null;

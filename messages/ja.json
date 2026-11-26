@@ -37,7 +37,9 @@
     "profileSettings": "プロフィール設定",
     "menuArticlesDesc": "学生の意見・研究",
     "menuAgendaDesc": "イベント・ボランティア情報",
-    "studentDashboard": "学生ダッシュボード"
+    "studentDashboard": "学生ダッシュボード",
+    "newUpdateLabel": "新着",
+    "newContentAria": "新しいコンテンツまたは更新があります"
   },
   "Footer": {
     "description": "STMIK Tazkia の学生の可能性を開発し、願望を表明する上で革新的、協力的、そして積極的な BEM のパイオニアになること。",
@@ -998,7 +1000,10 @@
     "alreadyRegisteredBadge": "応募済み",
     "alreadyRegisteredTitle": "すでに応募済みです",
     "alreadyRegisteredDesc": "このアカウントはすでにこの活動へ応募済みです。運営委員会からの確認をお待ちください。",
-    "pendingStatusNotice": "応募は「審査待ち（Pending）」として登録され、運営委員会によって確認されます。"
+    "pendingStatusNotice": "応募は「審査待ち（Pending）」として登録され、運営委員会によって確認されます。",
+    "statusPendingBadge": "ステータス：審査待ち（Pending）",
+    "successPendingHint": "現在のお申し込み状況は「審査待ち」です。運営委員会による承認・結果の確認は学生ダッシュボードからいつでも行えます。",
+    "viewStatusDashboard": "ダッシュボードで状況を確認"
   },
   "NewsDetail": {
     "share": "シェア",
@@ -1373,7 +1378,7 @@
     "previewMinuteRead": "読了目安 {min} 分"
   },
   "StudentArticleNotification": {
-    "title": "記事通知",
+    "title": "通知",
     "newBadge": "{count}件の新規",
     "readBadge": "既読",
     "markAsRead": "既読にする",
@@ -1381,14 +1386,16 @@
     "markAllReadTitle": "すべて既読にする",
     "allReadTitle": "すべての通知が既読です",
     "emptyTitle": "新しい通知はありません",
-    "emptyDesc": "記事の公開が承認された場合、または管理者のレビュー／修正が必要な場合に通知が表示されます。",
+    "emptyDesc": "記事の審査結果やイベント・ボランティアの応募結果が更新されると、ここに通知が表示されます。",
     "openDashboard": "学生ダッシュボードを開く",
     "actionApproved": "記事が承認され公開されました 🎉",
     "actionRejected": "記事が要修正／却下されました ⚠️",
     "actionPending": "管理者レビュー待ち ⏳",
+    "actionUnpublished": "記事が下書きに戻されました 📁",
     "actionDefault": "記事ステータスの更新 📝",
     "approvedDefaultNote": "あなたの記事は承認され、現在一般公開されています。",
     "rejectedDefaultNote": "公開前に記事の修正が必要です。",
+    "unpublishedDefaultNote": "管理者により記事が一時的に非公開（下書き）へ戻されました。",
     "timeJustNow": "たった今",
     "timeMinutesAgo": "{minutes}分前",
     "timeHoursAgo": "{hours}時間前",
@@ -1427,7 +1434,9 @@
     "lockedFieldsHint": "大学メールとアカウント権限はセキュリティのためシステムで固定されています。",
     "personalInfoTitle": "プロフィール・自己紹介",
     "emailLabel": "アカウントメール",
-    "roleLabel": "権限"
+    "roleLabel": "権限",
+    "noChanges": "変更はありません",
+    "unsavedConfirm": "プロフィールの変更が保存されていません。このままページを離れますか？"
   },
   "ImageUpload": {
     "tabUpload": "写真をアップロード",

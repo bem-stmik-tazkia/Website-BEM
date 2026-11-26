@@ -146,15 +146,47 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
     e.preventDefault();
     if (from === "home") {
       router.push("/");
-    } else if (from === "agenda-event") {
-      router.push("/agenda?tab=event");
-    } else if (from === "agenda-volunteer") {
-      router.push("/agenda?tab=volunteer");
-    } else if (from === "dokumentasi") {
-      router.push("/dokumentasi");
-    } else {
-      router.push("/agenda");
+      return;
     }
+    if (from === "agenda-event") {
+      router.push("/agenda?tab=event");
+      return;
+    }
+    if (from === "agenda-volunteer") {
+      router.push("/agenda?tab=volunteer");
+      return;
+    }
+    if (from === "dokumentasi") {
+      router.push("/dokumentasi");
+      return;
+    }
+    if (from === "dashboard") {
+      router.push("/dashboard");
+      return;
+    }
+    if (from === "dashboard-kegiatan") {
+      router.push("/dashboard/kegiatan");
+      return;
+    }
+
+    // Mundur 1 langkah jika ada referrer internal aman (hindari loop balik ke /apply atau login/OAuth)
+    if (typeof window !== "undefined" && window.history.length > 1 && document.referrer) {
+      try {
+        const refUrl = new URL(document.referrer);
+        const blocked = ["/apply", "/masuk", "/login", "/auth/callback"];
+        if (
+          refUrl.origin === window.location.origin &&
+          !blocked.some((seg) => refUrl.pathname.includes(seg))
+        ) {
+          router.back();
+          return;
+        }
+      } catch {
+        // lanjut fallback
+      }
+    }
+
+    router.push("/agenda");
   };
 
   const getShareUrl = React.useCallback(() => {

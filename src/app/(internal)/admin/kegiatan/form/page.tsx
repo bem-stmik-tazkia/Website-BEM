@@ -1648,8 +1648,8 @@ export default function KegiatanFormPage() {
         <div className="bg-surface-container-lowest border-t border-outline-variant/30 p-6 flex justify-end">
           <button
             type="submit"
-            disabled={isLoading || isBlasting}
-            className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all hover:shadow-md disabled:opacity-70"
+            disabled={isLoading || isBlasting || (Boolean(id) && !isDirty)}
+            className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {(isLoading || isBlasting) ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

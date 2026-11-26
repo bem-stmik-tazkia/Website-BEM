@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { FiHome, FiLogOut, FiMenu, FiChevronRight } from "react-icons/fi";
@@ -10,6 +10,7 @@ import ProfileSettingsModal from "@/components/profile/ProfileSettingsModal";
 
 interface AdminTopbarProps {
   user?: any;
+  profile?: { full_name?: string | null; avatar_url?: string | null; bio?: string | null } | null;
 }
 
 const PAGE_NAMES: Record<string, string> = {
@@ -24,12 +25,29 @@ const PAGE_NAMES: Record<string, string> = {
   "/admin/system-settings": "Pengaturan Sistem",
 };
 
-export default function AdminTopbar({ user }: AdminTopbarProps) {
+export default function AdminTopbar({ user, profile }: AdminTopbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
   const [imgError, setImgError] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [mobileMenuBadgeTotal, setMobileMenuBadgeTotal] = useState(0);
+  const [localProfileOverride, setLocalProfileOverride] = useState<{
+    full_name?: string | null;
+    avatar_url?: string | null;
+    bio?: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    const handleSummary = (e: Event) => {
+      const total = (e as CustomEvent<{ total?: number }>).detail?.total;
+      if (typeof total === "number") {
+        setMobileMenuBadgeTotal(total);
+      }
+    };
+    window.addEventListener("admin:badge-summary", handleSummary);
+    return () => window.removeEventListener("admin:badge-summary", handleSummary);
+  }, []);
 
   const handleLogout = async () => {
     if (confirm("Apakah Anda yakin ingin keluar dari Admin Dashboard?")) {
@@ -39,8 +57,23 @@ export default function AdminTopbar({ user }: AdminTopbarProps) {
     }
   };
 
-  const fullName = user?.user_metadata?.full_name || "Admin BEM";
-  const avatarUrl = user?.user_metadata?.avatar_url;
+  const effectiveProfile = localProfileOverride || profile;
+  const fullName =
+    effectiveProfile?.full_name || user?.user_metadata?.full_name || "Admin BEM";
+  const avatarUrl =
+    effectiveProfile && "avatar_url" in effectiveProfile
+      ? effectiveProfile.avatar_url
+      : user?.user_metadata?.avatar_url;
+  const bio = effectiveProfile?.bio ?? "";
+  const mergedProfileForModal = user
+    ? {
+        ...user,
+        role: "admin",
+        full_name: fullName,
+        avatar_url: avatarUrl ?? null,
+        bio,
+      }
+    : null;
   const initial = (fullName.charAt(0) || "A").toUpperCase();
 
   // Find page title
@@ -58,10 +91,13 @@ export default function AdminTopbar({ user }: AdminTopbarProps) {
             onClick={() => {
               window.dispatchEvent(new CustomEvent("admin:toggle-mobile-sidebar"));
             }}
-            className="md:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="relative md:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label="Buka Menu"
           >
             <FiMenu size={20} />
+            {mobileMenuBadgeTotal > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900" />
+            )}
           </button>
 
           {/* Breadcrumb Display */}
@@ -135,8 +171,14 @@ export default function AdminTopbar({ user }: AdminTopbarProps) {
       <ProfileSettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        userProfile={user}
-        onProfileUpdated={() => {
+        userProfile={mergedProfileForModal}
+        onProfileUpdated={(updated) => {
+          setImgError(false);
+          setLocalProfileOverride({
+            full_name: updated.full_name,
+            avatar_url: updated.avatar_url,
+            bio: updated.bio,
+          });
           router.refresh();
         }}
       />

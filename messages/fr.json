@@ -37,7 +37,9 @@
     "profileSettings": "Paramètres du profil",
     "menuArticlesDesc": "Opinions et recherches étudiantes",
     "menuAgendaDesc": "Événements et bénévolat",
-    "studentDashboard": "Tableau de bord"
+    "studentDashboard": "Tableau de bord",
+    "newUpdateLabel": "Nouveau",
+    "newContentAria": "Nouveau contenu ou mise à jour disponible"
   },
   "Footer": {
     "description": "Devenir un pionnier du BEM innovant, collaboratif et proactif dans l'expression des aspirations et le développement du potentiel des étudiants de STMIK Tazkia.",
@@ -998,7 +1000,10 @@
     "alreadyRegisteredBadge": "Déjà inscrit",
     "alreadyRegisteredTitle": "Vous êtes déjà inscrit",
     "alreadyRegisteredDesc": "Votre compte a déjà soumis une inscription pour cette activité. Veuillez attendre la confirmation du comité.",
-    "pendingStatusNotice": "Votre inscription sera enregistrée avec le statut En attente de validation."
+    "pendingStatusNotice": "Votre inscription sera enregistrée avec le statut En attente de validation.",
+    "statusPendingBadge": "Statut : En attente (Pending)",
+    "successPendingHint": "Votre inscription est actuellement en attente de validation. Vous pouvez suivre la décision du comité depuis votre tableau de bord étudiant.",
+    "viewStatusDashboard": "Suivre sur le tableau de bord"
   },
   "NewsDetail": {
     "share": "Partager",
@@ -1373,7 +1378,7 @@
     "previewMinuteRead": "{min} min de lecture"
   },
   "StudentArticleNotification": {
-    "title": "Notifications d'articles",
+    "title": "Notifications",
     "newBadge": "{count} nouveau(x)",
     "readBadge": "Lu",
     "markAsRead": "Marquer comme lu",
@@ -1381,14 +1386,16 @@
     "markAllReadTitle": "Tout marquer comme lu",
     "allReadTitle": "Toutes les notifications sont lues",
     "emptyTitle": "Pas de nouvelles notifications",
-    "emptyDesc": "Les notifications apparaîtront lorsque votre article sera approuvé pour publication ou nécessitera une révision de l'administrateur.",
+    "emptyDesc": "Les notifications apparaîtront lorsque le statut de votre article ou de votre inscription aux activités sera mis à jour.",
     "openDashboard": "Ouvrir le tableau de bord",
     "actionApproved": "Article approuvé et publié 🎉",
     "actionRejected": "Article rejeté / Révision requise ⚠️",
     "actionPending": "En attente de révision de l'administrateur ⏳",
+    "actionUnpublished": "Article remis en brouillon 📁",
     "actionDefault": "Mise à jour du statut de l'article 📝",
     "approvedDefaultNote": "Votre article a été approuvé et est maintenant en ligne pour le public.",
     "rejectedDefaultNote": "L'article nécessite une révision avant de pouvoir être publié.",
+    "unpublishedDefaultNote": "Votre article a été temporairement retiré de la publication et remis en brouillon par un administrateur.",
     "timeJustNow": "À l'instant",
     "timeMinutesAgo": "Il y a {minutes} min",
     "timeHoursAgo": "Il y a {hours} h",
@@ -1427,7 +1434,9 @@
     "lockedFieldsHint": "L'e-mail du campus et le rôle sont verrouillés par le système pour la sécurité.",
     "personalInfoTitle": "Identité & Bio",
     "emailLabel": "E-mail du compte",
-    "roleLabel": "Rôle"
+    "roleLabel": "Rôle",
+    "noChanges": "Aucune modification",
+    "unsavedConfirm": "Vos modifications de profil n'ont pas été enregistrées. Quitter quand même ?"
   },
   "ImageUpload": {
     "tabUpload": "Télécharger une photo",

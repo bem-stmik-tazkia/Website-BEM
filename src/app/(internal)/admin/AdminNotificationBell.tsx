@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { FiBell, FiMessageSquare, FiCheck, FiBookOpen, FiUsers } from "react-icons/fi";
@@ -20,6 +20,7 @@ interface Notification {
   agendaType?: string;
   agendaTitle?: string;
   itemName?: string | null;
+  isRevision?: boolean;
 }
 
 type BellLocale = "id" | "en" | "ar" | "fr" | "ja";
@@ -194,7 +195,7 @@ const TYPE_CONFIG: Record<string, any> = {
 
 export default function AdminNotificationBell({ isScrolled, isHome, locale }: { isScrolled?: boolean; isHome?: boolean; locale?: string }) {
   const copy = BELL_I18N[resolveBellLocale(locale)];
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [seen, setSeen] = useState(false);
@@ -202,7 +203,7 @@ export default function AdminNotificationBell({ isScrolled, isHome, locale }: { 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(0);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       const lastViewedSaran = typeof window !== "undefined"
         ? (localStorage.getItem("admin_saran_last_viewed") || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
@@ -257,7 +258,7 @@ export default function AdminNotificationBell({ isScrolled, isHome, locale }: { 
     } catch (err) {
       console.warn("[AdminNotificationBell] Error fetching notifications:", err);
     }
-  };
+  }, [supabase]);
 
   useEffect(() => {
     fetchNotifications();
@@ -274,27 +275,34 @@ export default function AdminNotificationBell({ isScrolled, isHome, locale }: { 
       .on("postgres_changes", { event: "*", schema: "public", table: "articles" }, () => {
         fetchNotifications();
       })
-      .subscribe();
-
-    const channelVolunteer = supabase
-      .channel(`notif_bell_volunteer_${Date.now()}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "volunteer_applications" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "article_revisions" }, () => {
         fetchNotifications();
       })
       .subscribe();
 
-    const handleSaranRead = () => {
+    const channelVolunteer = supabase
+      .channel(`notif_bell_volunteer_${Date.now()}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "volunteer_applications" }, () => {
+        fetchNotifications();
+      })
+      .subscribe();
+
+    const handleRefresh = () => {
       fetchNotifications();
     };
-    window.addEventListener("saran_read", handleSaranRead);
+    window.addEventListener("saran_read", handleRefresh);
+    window.addEventListener("articles_moderation_updated", handleRefresh);
+    window.addEventListener("volunteer_status_updated", handleRefresh);
 
     return () => {
       supabase.removeChannel(channelSaran);
       supabase.removeChannel(channelArticles);
       supabase.removeChannel(channelVolunteer);
-      window.removeEventListener("saran_read", handleSaranRead);
+      window.removeEventListener("saran_read", handleRefresh);
+      window.removeEventListener("articles_moderation_updated", handleRefresh);
+      window.removeEventListener("volunteer_status_updated", handleRefresh);
     };
-  }, []);
+  }, [supabase, fetchNotifications]);
 
   // Close on outside click
   useEffect(() => {

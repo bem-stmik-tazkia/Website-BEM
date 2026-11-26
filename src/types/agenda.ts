@@ -72,6 +72,7 @@ export interface AgendaKegiatan {
   require_login?: boolean; // Require authenticated user account to register
   items?: AgendaItem[]; // Sub-positions (volunteer) or competitions (event)
   accepted_count?: number; // Live filled count across active registrations
+  pending_count?: number; // Live count of pending review registrations
 }
 
 export type KegiatanFormInput = Omit<Partial<AgendaKegiatan>, "items"> & {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
@@ -16,16 +16,16 @@ import {
   FiBookOpen,
   FiExternalLink,
   FiX,
-  FiCheckCircle,
 } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
+import { fetchAdminSidebarBadges } from "./badge-actions";
 
 const mainNavItems = [
   { name: "Dashboard", href: "/admin", icon: FiHome, badge: null },
   { name: "Profil Kabinet", href: "/admin/kabinet", icon: FiAward, badge: null },
   { name: "Moderasi Artikel", href: "/admin/artikel", icon: FiBookOpen, badge: "moderation" },
   { name: "Kelola Berita", href: "/admin/berita", icon: FiFileText, badge: null },
-  { name: "Kelola Kegiatan", href: "/admin/kegiatan", icon: FiCalendar, badge: null },
+  { name: "Kelola Kegiatan", href: "/admin/kegiatan", icon: FiCalendar, badge: "kegiatan" },
   { name: "Kelola Dokumentasi", href: "/admin/dokumentasi", icon: FiImage, badge: null },
   { name: "Kotak Saran", href: "/admin/saran-aduan", icon: FiMessageSquare, badge: "saran" },
 ];
@@ -44,7 +44,8 @@ export default function AdminSidebar() {
 
   const [unreadSaranCount, setUnreadSaranCount] = useState(0);
   const [pendingModerationCount, setPendingModerationCount] = useState(0);
-  const supabase = createClient();
+  const [pendingRegCount, setPendingRegCount] = useState(0);
+  const supabase = useMemo(() => createClient(), []);
 
   // Reset navigating state when pathname changes
   useEffect(() => {
@@ -64,80 +65,61 @@ export default function AdminSidebar() {
     };
   }, []);
 
+  const refreshBadges = useCallback(async () => {
+    try {
+      const lastViewedSaran =
+        typeof window !== "undefined"
+          ? localStorage.getItem("admin_saran_last_viewed") ||
+            new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+          : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const summary = await fetchAdminSidebarBadges(lastViewedSaran);
+      setPendingModerationCount(summary.pendingModeration);
+      setPendingRegCount(summary.pendingRegistrations);
+      setUnreadSaranCount(summary.unreadSaran);
+
+      const totalPending =
+        summary.pendingModeration + summary.pendingRegistrations + summary.unreadSaran;
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("admin:badge-summary", { detail: { total: totalPending } })
+        );
+      }
+    } catch {
+      // Ignore transient network errors
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchUnreadSaran = async () => {
-      try {
-        const lastViewedSaran =
-          typeof window !== "undefined"
-            ? localStorage.getItem("admin_saran_last_viewed") ||
-              new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-            : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    refreshBadges();
 
-        const { count, error } = await supabase
-          .from("saran_aduan")
-          .select("*", { count: "exact", head: true })
-          .gt("created_at", lastViewedSaran);
-
-        if (!error && count !== null) {
-          setUnreadSaranCount(count);
-        }
-      } catch (err) {
-        // Ignore network errors
-      }
-    };
-
-    const fetchPendingModeration = async () => {
-      try {
-        const [artsRes, revsRes] = await Promise.all([
-          supabase
-            .from("articles")
-            .select("*", { count: "exact", head: true })
-            .eq("status", "pending"),
-          supabase
-            .from("article_revisions")
-            .select("*", { count: "exact", head: true })
-            .eq("status", "pending"),
-        ]);
-        const total = (artsRes.count || 0) + (revsRes.count || 0);
-        setPendingModerationCount(total);
-      } catch (err) {
-        // Ignore network errors
-      }
-    };
-
-    fetchUnreadSaran();
-    fetchPendingModeration();
-
-    const channelSaran = supabase
-      .channel(`saran_sb_${Date.now()}`)
+    const channelAdminBadges = supabase
+      .channel(`admin_sidebar_badges_${Date.now()}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "saran_aduan" }, () => {
-        fetchUnreadSaran();
+        refreshBadges();
       })
-      .subscribe();
-
-    const channelModeration = supabase
-      .channel(`moderation_sb_${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "articles" }, () => {
-        fetchPendingModeration();
+        refreshBadges();
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "article_revisions" }, () => {
-        fetchPendingModeration();
+        refreshBadges();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "volunteer_applications" }, () => {
+        refreshBadges();
       })
       .subscribe();
 
-    const handleSaranRead = () => fetchUnreadSaran();
-    const handleModerationUpdate = () => fetchPendingModeration();
-
-    window.addEventListener("saran_read", handleSaranRead);
-    window.addEventListener("articles_moderation_updated", handleModerationUpdate);
+    window.addEventListener("saran_read", refreshBadges);
+    window.addEventListener("articles_moderation_updated", refreshBadges);
+    window.addEventListener("volunteer_status_updated", refreshBadges);
 
     return () => {
-      supabase.removeChannel(channelSaran);
-      supabase.removeChannel(channelModeration);
-      window.removeEventListener("saran_read", handleSaranRead);
-      window.removeEventListener("articles_moderation_updated", handleModerationUpdate);
+      supabase.removeChannel(channelAdminBadges);
+      window.removeEventListener("saran_read", refreshBadges);
+      window.removeEventListener("articles_moderation_updated", refreshBadges);
+      window.removeEventListener("volunteer_status_updated", refreshBadges);
     };
-  }, [supabase]);
+  }, [supabase, refreshBadges]);
 
   const renderNavItem = (item: (typeof mainNavItems)[0]) => {
     let isActive =
@@ -158,6 +140,8 @@ export default function AdminSidebar() {
         ? unreadSaranCount
         : item.badge === "moderation"
         ? pendingModerationCount
+        : item.badge === "kegiatan"
+        ? pendingRegCount
         : 0;
 
     return (
@@ -195,23 +179,21 @@ export default function AdminSidebar() {
         />
 
         {!isCollapsed && (
-          <span className="truncate flex-1 flex items-center justify-between">
-            <span className={isActive ? "text-white font-semibold" : ""}>{item.name}</span>
+          <span className="truncate flex-1 flex items-center justify-between gap-2">
+            <span className={isActive ? "text-white font-semibold truncate" : "truncate"}>
+              {item.name}
+            </span>
 
             {/* Notification Badge */}
             {count > 0 && (
               <span
-                className={`text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 shadow-xs ${
-                  item.badge === "saran"
-                    ? isActive
-                      ? "bg-white text-primary"
-                      : "bg-purple-600 text-white animate-pulse"
-                    : isActive
-                    ? "bg-white text-amber-600"
-                    : "bg-amber-500 text-white animate-pulse"
+                className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full shrink-0 shadow-xs ${
+                  isActive
+                    ? "bg-white text-red-600"
+                    : "bg-red-500 text-white animate-pulse"
                 }`}
               >
-                {count}
+                {count > 99 ? "99+" : count}
               </span>
             )}
           </span>
@@ -219,11 +201,7 @@ export default function AdminSidebar() {
 
         {/* Collapsed Badge Dot */}
         {isCollapsed && count > 0 && (
-          <span
-            className={`absolute top-2 right-2 w-2.5 h-2.5 rounded-full border-2 border-surface ${
-              item.badge === "saran" ? "bg-purple-500" : "bg-amber-500"
-            }`}
-          />
+          <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-surface" />
         )}
       </Link>
     );

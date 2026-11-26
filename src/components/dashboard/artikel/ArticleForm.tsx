@@ -772,9 +772,9 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             {/* Tombol Simpan Draf */}
             <button
               type="button"
-              disabled={isSubmitting}
+              disabled={isSubmitting || (isEdit && initialData?.status === "draft" && !isDirty)}
               onClick={() => handleSubmit("draft")}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-surface-variant/50 hover:bg-surface-variant text-on-surface border border-outline-variant/40 text-xs sm:text-sm font-bold transition-all disabled:opacity-50 cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-surface-variant/50 hover:bg-surface-variant text-on-surface border border-outline-variant/40 text-xs sm:text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <FiSave size={15} />
               <span>{isSubmitting ? t("savingDraft") : t("saveDraft")}</span>
@@ -783,7 +783,13 @@ export default function ArticleForm({ initialData, mode }: ArticleFormProps) {
             {/* Tombol Ajukan ke Admin */}
             <button
               type="button"
-              disabled={isSubmitting || !isTitleValid || !isContentValid || !isCoverValid}
+              disabled={
+                isSubmitting ||
+                !isTitleValid ||
+                !isContentValid ||
+                !isCoverValid ||
+                ((isRevision || (isEdit && initialData?.status === "rejected")) && !isDirty)
+              }
               onClick={() => handleSubmit("pending")}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >

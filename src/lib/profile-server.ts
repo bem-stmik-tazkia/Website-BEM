@@ -29,7 +29,8 @@ export async function getCurrentProfileData(): Promise<ProfilePageData | null> {
     (user.user_metadata?.name as string | undefined) ||
     user.email?.split("@")[0] ||
     "";
-  let avatarUrl = googleAvatar || "";
+  const isAvatarCleared = user.user_metadata?.avatar_cleared === true;
+  let avatarUrl = isAvatarCleared ? "" : (googleAvatar || "");
   let bio = "";
   let role = "mahasiswa";
 
@@ -42,7 +43,11 @@ export async function getCurrentProfileData(): Promise<ProfilePageData | null> {
 
     if (profile) {
       if (profile.full_name) fullName = profile.full_name;
-      if (profile.avatar_url) avatarUrl = profile.avatar_url;
+      if (profile.avatar_url) {
+        avatarUrl = profile.avatar_url;
+      } else if (isAvatarCleared) {
+        avatarUrl = "";
+      }
       if (profile.bio) bio = profile.bio;
       if (profile.role) role = profile.role;
     }

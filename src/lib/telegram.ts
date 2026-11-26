@@ -898,3 +898,61 @@ export async function sendVolunteerAppliedNotification(
 
   return await sendTelegramMessage(message, { inlineButtons });
 }
+
+export interface VolunteerModeratedNotificationPayload {
+  agendaId: string;
+  agendaTitle: string;
+  status: "accepted" | "rejected" | "pending";
+  applicantLabel: string;
+  itemName?: string | null;
+  adminName?: string;
+}
+
+/**
+ * Mengirim log audit ke Telegram internal saat admin memverifikasi/mengubah status pendaftar.
+ */
+export async function sendVolunteerModeratedNotification(
+  payload: VolunteerModeratedNotificationPayload
+): Promise<{ ok: boolean; error?: string }> {
+  if (payload.status === "pending") {
+    return { ok: true };
+  }
+
+  const config = await getTelegramConfig();
+  if (!config.isConfigured || !config.techNotifEnabled) {
+    return { ok: false, error: "Notifikasi teknis Telegram tidak aktif atau belum dikonfigurasi." };
+  }
+
+  const siteUrl = getBaseSiteUrl();
+  const isAccepted = payload.status === "accepted";
+  const header = isAccepted
+    ? "✅ <b>PENDAFTAR DITERIMA PANITIA</b>"
+    : "❌ <b>PENDAFTAR DITOLAK PANITIA</b>";
+
+  const safeAgenda = escapeHtml(payload.agendaTitle || "Kegiatan BEM");
+  const safeApplicant = escapeHtml(payload.applicantLabel || "Mahasiswa");
+  const safeAdmin = escapeHtml(payload.adminName || "Administrator BEM");
+  const itemLine = payload.itemName
+    ? `🏷️ <b>Posisi / Cabang:</b> ${escapeHtml(payload.itemName)}\n`
+    : "";
+  const timeStr = formatWibDateTime();
+
+  const message =
+    `${header}\n\n` +
+    `📌 <b>Kegiatan:</b> ${safeAgenda}\n` +
+    itemLine +
+    `👤 <b>Pendaftar:</b> ${safeApplicant}\n` +
+    `🛡️ <b>Diverifikasi Oleh:</b> ${safeAdmin}\n` +
+    `📅 <b>Waktu:</b> ${timeStr} WIB`;
+
+  const inlineButtons = [
+    [
+      {
+        text: "📋 Lihat Data Pendaftar",
+        url: `${siteUrl}/admin/kegiatan/${encodeURIComponent(payload.agendaId)}/pendaftar`,
+      },
+    ],
+  ];
+
+  return await sendTelegramMessage(message, { inlineButtons });
+}

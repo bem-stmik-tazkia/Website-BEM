@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Link } from "@/i18n/routing";
 import NativeLink from "next/link";
 import Image from "next/image";
@@ -10,8 +10,25 @@ import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
-import StudentNotificationBell from "@/components/notifications/StudentNotificationBell";
+import StudentNotificationBell, { type StudentUnreadCounts } from "@/components/notifications/StudentNotificationBell";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
+
+const PUBLIC_NEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const PUB_SEEN_KEYS = {
+  agenda: "pub_last_seen_agenda_at",
+  berita: "pub_last_seen_berita_at",
+  artikel: "pub_last_seen_artikel_at",
+} as const;
+
+function isFreshUnseenTimestamp(latestIso: string | null | undefined, seenKey: string): boolean {
+  if (!latestIso || typeof window === "undefined") return false;
+  const latestMs = new Date(latestIso).getTime();
+  if (Number.isNaN(latestMs) || Date.now() - latestMs > PUBLIC_NEW_WINDOW_MS) return false;
+  const seenRaw = localStorage.getItem(seenKey);
+  if (!seenRaw) return true;
+  const seenMs = new Date(seenRaw).getTime();
+  return Number.isNaN(seenMs) ? true : latestMs > seenMs;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UserProfile = Record<string, any>;
@@ -28,13 +45,38 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
 
 
   const [pendingPath, setPendingPath] = useState<string | null>(null);
+  const [studentUnread, setStudentUnread] = useState<StudentUnreadCounts>({
+    total: 0,
+    articles: 0,
+    registrations: 0,
+  });
+  const [publicNewFlags, setPublicNewFlags] = useState({
+    agenda: false,
+    berita: false,
+    artikel: false,
+  });
+  const [latestPublicDates, setLatestPublicDates] = useState<{
+    agenda: string | null;
+    berita: string | null;
+    artikel: string | null;
+  }>({ agenda: null, berita: null, artikel: null });
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
   const locale = useLocale();
   const isHome = pathname === "/";
   const isDashboard = pathname.startsWith("/dashboard");
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+
+  const handleUnreadChange = useCallback((counts: StudentUnreadCounts) => {
+    setStudentUnread((prev) =>
+      prev.total === counts.total &&
+      prev.articles === counts.articles &&
+      prev.registrations === counts.registrations
+        ? prev
+        : counts
+    );
+  }, []);
 
   const currentPath = pendingPath || pathname;
 
@@ -61,10 +103,15 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
           } catch {
             // Biarkan fallback ke profile?.role jika RPC offline
           }
-          // Auto-sinkronisasi avatar akun ke public.profiles hanya bila avatar_url masih kosong
+          // Auto-sinkronisasi avatar akun ke public.profiles hanya bila avatar_url belum diset & tidak sengaja dikosongkan
           const userAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
 
-          if (userAvatar && profile && !profile.avatar_url) {
+          if (
+            userAvatar &&
+            profile &&
+            !profile.avatar_url &&
+            user.user_metadata?.avatar_cleared !== true
+          ) {
             await supabase.from('profiles').update({ avatar_url: userAvatar }).eq('id', user.id);
             profile.avatar_url = userAvatar;
           }
@@ -98,6 +145,69 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
     router.prefetch("/dokumentasi");
   }, [router]);
 
+  // Cek apakah ada Agenda, Berita, atau Artikel terbaru yang belum dikunjungi (untuk dot merah bottom menu)
+  useEffect(() => {
+    let cancelled = false;
+    const fetchLatestPublicDates = async () => {
+      try {
+        const [agRes, brRes, artRes] = await Promise.all([
+          supabase
+            .from("agendas")
+            .select("created_at")
+            .eq("is_published", true)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("berita")
+            .select("created_at")
+            .eq("is_published", true)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("published_articles")
+            .select("published_at, created_at")
+            .order("published_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        ]);
+
+        if (cancelled) return;
+        setLatestPublicDates({
+          agenda: agRes.data?.created_at || null,
+          berita: brRes.data?.created_at || null,
+          artikel: artRes.data?.published_at || artRes.data?.created_at || null,
+        });
+      } catch {
+        // abaikan gangguan jaringan sementara
+      }
+    };
+    fetchLatestPublicDates();
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
+
+  // Tandai sudah dibuka saat berpindah ke /agenda, /berita, atau /artikel & hitung flag dot merah
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const nowIso = new Date().toISOString();
+    const onAgenda = pathname.startsWith("/agenda");
+    const onBerita = pathname.startsWith("/berita");
+    const onArtikel = pathname.startsWith("/artikel");
+
+    if (onAgenda) localStorage.setItem(PUB_SEEN_KEYS.agenda, nowIso);
+    if (onBerita) localStorage.setItem(PUB_SEEN_KEYS.berita, nowIso);
+    if (onArtikel) localStorage.setItem(PUB_SEEN_KEYS.artikel, nowIso);
+
+    setPublicNewFlags({
+      agenda: !onAgenda && isFreshUnseenTimestamp(latestPublicDates.agenda, PUB_SEEN_KEYS.agenda),
+      berita: !onBerita && isFreshUnseenTimestamp(latestPublicDates.berita, PUB_SEEN_KEYS.berita),
+      artikel: !onArtikel && isFreshUnseenTimestamp(latestPublicDates.artikel, PUB_SEEN_KEYS.artikel),
+    });
+  }, [pathname, latestPublicDates]);
+
 
 
   // Handle click outside for profile dropdown & nav dropdowns
@@ -117,6 +227,7 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUserProfile(null);
+    setStudentUnread({ total: 0, articles: 0, registrations: 0 });
     setShowProfileMenu(false);
     setShowLogoutConfirm(false);
     window.location.href = '/';
@@ -140,10 +251,10 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
   const tDash = useTranslations("StudentDashboard");
 
   const dashboardNavItems = [
-    { name: t("home"), path: "/", icon: FiHome, active: false },
-    { name: tDash("tabOverview"), path: "/dashboard", icon: FiGrid, active: currentPath === "/dashboard" || currentPath === "/dashboard/" },
-    { name: tDash("tabActivities"), path: "/dashboard/kegiatan", icon: FiCalendar, active: currentPath.startsWith("/dashboard/kegiatan") },
-    { name: tDash("tabArticles"), path: "/dashboard/artikel", icon: FiEdit3, active: currentPath.startsWith("/dashboard/artikel") },
+    { name: t("home"), path: "/", icon: FiHome, active: false, badgeCount: 0 },
+    { name: tDash("tabOverview"), path: "/dashboard", icon: FiGrid, active: currentPath === "/dashboard" || currentPath === "/dashboard/", badgeCount: 0 },
+    { name: tDash("tabActivities"), path: "/dashboard/kegiatan", icon: FiCalendar, active: currentPath.startsWith("/dashboard/kegiatan"), badgeCount: studentUnread.registrations },
+    { name: tDash("tabArticles"), path: "/dashboard/artikel", icon: FiEdit3, active: currentPath.startsWith("/dashboard/artikel"), badgeCount: studentUnread.articles },
   ];
 
   const navItems = [
@@ -225,19 +336,30 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                 <Link
                   key={item.path}
                   href={item.path}
-                  className={`relative py-2 transition-colors duration-300 after:absolute after:bottom-[-4px] after:left-0 after:h-1 after:rounded-full after:transition-all after:duration-300 ${
+                  className={`relative py-2 inline-flex items-center gap-1.5 transition-colors duration-300 after:absolute after:bottom-[-4px] after:left-0 after:h-1 after:rounded-full after:transition-all after:duration-300 ${
                     item.active
                       ? "font-bold text-primary after:w-full after:bg-secondary"
                       : "text-on-surface-variant after:w-0 hover:after:w-full after:bg-primary hover:text-primary"
                   }`}
                 >
-                  {item.name}
+                  <span>{item.name}</span>
+                  {item.badgeCount > 0 && (
+                    <span
+                      className="min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-extrabold inline-flex items-center justify-center leading-none shadow-xs"
+                      aria-label={t("newContentAria")}
+                    >
+                      {item.badgeCount > 9 ? "9+" : item.badgeCount}
+                    </span>
+                  )}
                 </Link>
               ))
             ) : navItems.map((item) => {
               if (item.type === "dropdown") {
                 const isAnyChildActive = item.items?.some((sub) => pathname.startsWith(sub.path));
                 const isOpen = openDropdown === item.id;
+                const parentHasNew =
+                  (item.id === "activities" && publicNewFlags.agenda) ||
+                  (item.id === "publications" && (publicNewFlags.berita || publicNewFlags.artikel));
                 return (
                   <div
                     key={item.id}
@@ -259,6 +381,12 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                       }`}
                     >
                       <span>{item.name}</span>
+                      {parentHasNew && (
+                        <span
+                          className="w-2 h-2 rounded-full bg-red-500 shrink-0"
+                          aria-label={t("newContentAria")}
+                        />
+                      )}
                       <FiChevronDown className={`transition-transform duration-200 text-xs ${isOpen ? "rotate-180" : ""}`} />
                     </button>
 
@@ -273,6 +401,10 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                         >
                           {item.items?.map((sub) => {
                             const isSubActive = pathname.startsWith(sub.path);
+                            const subHasNew =
+                              (sub.path === "/agenda" && publicNewFlags.agenda) ||
+                              (sub.path === "/berita" && publicNewFlags.berita) ||
+                              (sub.path === "/artikel" && publicNewFlags.artikel);
                             return (
                               <Link
                                 key={sub.path}
@@ -284,7 +416,14 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                                     : "hover:bg-surface-variant/40 text-on-surface"
                                 }`}
                               >
-                                <p className="text-xs font-bold leading-tight">{sub.name}</p>
+                                <p className="text-xs font-bold leading-tight flex items-center justify-between gap-2">
+                                  <span>{sub.name}</span>
+                                  {subHasNew && (
+                                    <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-red-500 text-white uppercase">
+                                      {t("newUpdateLabel")}
+                                    </span>
+                                  )}
+                                </p>
                                 <p className="text-[10px] text-on-surface-variant mt-0.5 line-clamp-1">{sub.desc}</p>
                               </Link>
                             );
@@ -325,7 +464,11 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
               <AdminNotificationBell isScrolled={isScrolled} isHome={isHome} locale={locale} />
             )}
             {userProfile && userProfile.role === 'mahasiswa' && (
-              <StudentNotificationBell isScrolled={isScrolled} isHome={isHome} />
+              <StudentNotificationBell
+                isScrolled={isScrolled}
+                isHome={isHome}
+                onUnreadChange={handleUnreadChange}
+              />
             )}
             {userProfile ? (
               <div className="relative shrink-0" ref={profileMenuRef}>
@@ -341,18 +484,28 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                     }`}
                 >
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 overflow-hidden shadow-sm ring-1 ring-white/20">
-                    {userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || userProfile.raw_user_meta_data?.avatar_url || userProfile.raw_user_meta_data?.picture ? (
-                      <Image
-                        src={userProfile.user_metadata?.avatar_url || userProfile.user_metadata?.picture || userProfile.raw_user_meta_data?.avatar_url || userProfile.raw_user_meta_data?.picture}
-                        alt="Profile"
-                        width={32}
-                        height={32}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      userProfile.full_name ? userProfile.full_name.charAt(0).toUpperCase() : 'U'
-                    )}
+                    {(() => {
+                      const navAvatar =
+                        "avatar_url" in userProfile
+                          ? userProfile.avatar_url
+                          : userProfile.user_metadata?.avatar_url ||
+                            userProfile.user_metadata?.picture ||
+                            userProfile.raw_user_meta_data?.avatar_url ||
+                            userProfile.raw_user_meta_data?.picture ||
+                            null;
+                      return navAvatar ? (
+                        <Image
+                          src={navAvatar}
+                          alt="Profile"
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        userProfile.full_name ? userProfile.full_name.charAt(0).toUpperCase() : 'U'
+                      );
+                    })()}
                   </div>
                   <div className="hidden md:flex flex-col items-start max-w-[120px] lg:max-w-[160px] leading-tight">
                     <span className="text-xs font-bold truncate w-full block">{userProfile.full_name || 'User'}</span>
@@ -498,7 +651,17 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                 onClick={() => { setPendingPath("/dashboard/kegiatan"); setActiveBottomSheet(null); }}
                 className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/dashboard/kegiatan") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
               >
-                <FiCalendar size={20} className={currentPath.startsWith("/dashboard/kegiatan") ? "fill-secondary/20" : ""} />
+                <span className="relative inline-flex">
+                  <FiCalendar size={20} className={currentPath.startsWith("/dashboard/kegiatan") ? "fill-secondary/20" : ""} />
+                  {studentUnread.registrations > 0 && (
+                    <span
+                      className="absolute -top-1 -right-2 min-w-[15px] h-[15px] px-1 rounded-full bg-red-500 text-white text-[9px] font-extrabold inline-flex items-center justify-center leading-none ring-2 ring-surface"
+                      aria-label={t("newContentAria")}
+                    >
+                      {studentUnread.registrations > 9 ? "9+" : studentUnread.registrations}
+                    </span>
+                  )}
+                </span>
                 <span className="text-[9px] font-bold">{tDash("tabActivitiesShort")}</span>
               </Link>
 
@@ -507,7 +670,17 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                 onClick={() => { setPendingPath("/dashboard/artikel"); setActiveBottomSheet(null); }}
                 className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/dashboard/artikel") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
               >
-                <FiEdit3 size={20} className={currentPath.startsWith("/dashboard/artikel") ? "fill-secondary/20" : ""} />
+                <span className="relative inline-flex">
+                  <FiEdit3 size={20} className={currentPath.startsWith("/dashboard/artikel") ? "fill-secondary/20" : ""} />
+                  {studentUnread.articles > 0 && (
+                    <span
+                      className="absolute -top-1 -right-2 min-w-[15px] h-[15px] px-1 rounded-full bg-red-500 text-white text-[9px] font-extrabold inline-flex items-center justify-center leading-none ring-2 ring-surface"
+                      aria-label={t("newContentAria")}
+                    >
+                      {studentUnread.articles > 9 ? "9+" : studentUnread.articles}
+                    </span>
+                  )}
+                </span>
                 <span className="text-[9px] font-bold">{tDash("tabArticlesShort")}</span>
               </Link>
 
@@ -536,7 +709,15 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                 onClick={() => { setPendingPath("/agenda"); setActiveBottomSheet(null); }}
                 className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/agenda") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
               >
-                <FiCalendar size={20} className={currentPath.startsWith("/agenda") ? "fill-secondary/20" : ""} />
+                <span className="relative inline-flex">
+                  <FiCalendar size={20} className={currentPath.startsWith("/agenda") ? "fill-secondary/20" : ""} />
+                  {publicNewFlags.agenda && (
+                    <span
+                      className="absolute -top-0.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-surface"
+                      aria-label={t("newContentAria")}
+                    />
+                  )}
+                </span>
                 <span className="text-[9px] font-bold">{t("agenda")}</span>
               </Link>
 
@@ -545,7 +726,15 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                 onClick={() => { setPendingPath("/berita"); setActiveBottomSheet(null); }}
                 className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/berita") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
               >
-                <FiBookOpen size={20} className={currentPath.startsWith("/berita") ? "fill-secondary/20" : ""} />
+                <span className="relative inline-flex">
+                  <FiBookOpen size={20} className={currentPath.startsWith("/berita") ? "fill-secondary/20" : ""} />
+                  {publicNewFlags.berita && (
+                    <span
+                      className="absolute -top-0.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-surface"
+                      aria-label={t("newContentAria")}
+                    />
+                  )}
+                </span>
                 <span className="text-[9px] font-bold">{t("menuNews")}</span>
               </Link>
 
@@ -554,7 +743,15 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                 onClick={() => { setPendingPath("/artikel"); setActiveBottomSheet(null); }}
                 className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/artikel") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
               >
-                <FiEdit3 size={20} className={currentPath.startsWith("/artikel") ? "fill-secondary/20" : ""} />
+                <span className="relative inline-flex">
+                  <FiEdit3 size={20} className={currentPath.startsWith("/artikel") ? "fill-secondary/20" : ""} />
+                  {publicNewFlags.artikel && (
+                    <span
+                      className="absolute -top-0.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-surface"
+                      aria-label={t("newContentAria")}
+                    />
+                  )}
+                </span>
                 <span className="text-[9px] font-bold">{t("studentArticles")}</span>
               </Link>
 

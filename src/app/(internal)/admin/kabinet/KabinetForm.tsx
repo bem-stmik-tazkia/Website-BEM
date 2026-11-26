@@ -12,6 +12,7 @@ import DynamicDepartemen from "./DynamicDepartemen";
 
 export default function KabinetForm({ initialData }: { initialData: KabinetProfile }) {
   const [formData, setFormData] = useState<KabinetProfile>(initialData);
+  const [savedSnapshot, setSavedSnapshot] = useState<KabinetProfile>(initialData);
   const [isLoading, setIsLoading] = useState(false);
   const { success, error: showError, toast } = useToast();
   const toastShown = React.useRef(false);
@@ -33,7 +34,7 @@ export default function KabinetForm({ initialData }: { initialData: KabinetProfi
     localStorage.setItem("kabinet_draft", JSON.stringify(formData));
   }, [formData]);
 
-  const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
+  const isDirty = JSON.stringify(formData) !== JSON.stringify(savedSnapshot);
 
   React.useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -47,6 +48,7 @@ export default function KabinetForm({ initialData }: { initialData: KabinetProfi
   }, [isDirty]);
 
   const handleSave = async () => {
+    if (!isDirty || isLoading) return;
     setIsLoading(true);
     
     try {
@@ -56,6 +58,7 @@ export default function KabinetForm({ initialData }: { initialData: KabinetProfi
         return;
       }
       localStorage.removeItem("kabinet_draft");
+      setSavedSnapshot(JSON.parse(JSON.stringify(formData)));
       success("Profil Kabinet berhasil disimpan!");
     } catch (e: any) {
       console.error(e);
@@ -128,11 +131,14 @@ export default function KabinetForm({ initialData }: { initialData: KabinetProfi
 
       </div>
 
-      <div className="bg-surface-container-lowest border-t border-outline-variant/30 p-6 flex justify-end sticky bottom-0 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <div className="bg-surface-container-lowest border-t border-outline-variant/30 p-6 flex items-center justify-end gap-3 sticky bottom-0 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        {!isDirty && (
+          <span className="text-xs text-on-surface-variant/75">Belum ada perubahan</span>
+        )}
         <button
           onClick={handleSave}
-          disabled={isLoading}
-          className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-70 disabled:hover:translate-y-0"
+          disabled={isLoading || !isDirty}
+          className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

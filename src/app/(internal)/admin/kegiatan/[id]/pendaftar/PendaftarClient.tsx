@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -435,6 +435,13 @@ export default function PendaftarClient({
       ).length,
     [applications]
   );
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("admin_volunteer_last_viewed", new Date().toISOString());
+      window.dispatchEvent(new Event("volunteer_status_updated"));
+    }
+  }, [agenda.id]);
   const totalPending = useMemo(
     () => applications.filter((a) => a.status === "pending").length,
     [applications]
@@ -516,6 +523,10 @@ export default function PendaftarClient({
             : "Pendaftar diterima! Status tercatat sebagai Diterima."
       );
       router.refresh();
+      if (typeof window !== "undefined") {
+        localStorage.setItem("admin_volunteer_last_viewed", new Date().toISOString());
+        window.dispatchEvent(new Event("volunteer_status_updated"));
+      }
     } catch (err: any) {
       showError(err?.message || "Gagal memperbarui status pendaftar.");
     } finally {
@@ -533,6 +544,10 @@ export default function PendaftarClient({
       setConfirmDeleteApp(null);
       success("Data pendaftar dihapus. Slot kuota otomatis diperbarui.");
       router.refresh();
+      if (typeof window !== "undefined") {
+        localStorage.setItem("admin_volunteer_last_viewed", new Date().toISOString());
+        window.dispatchEvent(new Event("volunteer_status_updated"));
+      }
     } catch (err: any) {
       showError(err?.message || "Gagal menghapus data pendaftar.");
     } finally {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useRouter } from "@/i18n/routing";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -36,6 +36,31 @@ export default function ProfileSettingsForm({
   const [avatarUrl, setAvatarUrl] = useState(initialProfile.avatarUrl);
   const [bio, setBio] = useState(initialProfile.bio);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const savedSuccessfullyRef = useRef(false);
+
+  const hasChanges =
+    fullName.trim() !== initialProfile.fullName.trim() ||
+    (avatarUrl || "").trim() !== (initialProfile.avatarUrl || "").trim() ||
+    bio.trim() !== initialProfile.bio.trim();
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasChanges && !isSubmitting && !savedSuccessfullyRef.current) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasChanges, isSubmitting]);
+
+  const handleLeaveCheck = (e: React.MouseEvent) => {
+    if (hasChanges && !isSubmitting && !savedSuccessfullyRef.current) {
+      if (!window.confirm(t("unsavedConfirm"))) {
+        e.preventDefault();
+      }
+    }
+  };
 
   const initials = (fullName || initialProfile.email || "U")
     .split(" ")
@@ -52,6 +77,8 @@ export default function ProfileSettingsForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasChanges || isSubmitting) return;
+
     if (!fullName.trim()) {
       toast(t("fullNameRequired"), "error");
       return;
@@ -69,12 +96,14 @@ export default function ProfileSettingsForm({
         throw new Error(res.error);
       }
 
+      savedSuccessfullyRef.current = true;
       toast(t("saveSuccess"), "success");
       if (typeof window !== "undefined" && res.profile) {
         window.dispatchEvent(
           new CustomEvent("profile_updated", { detail: res.profile })
         );
       }
+      router.push(backHref);
       router.refresh();
     } catch (err: any) {
       toast(`${t("saveError")}${err?.message || ""}`, "error");
@@ -89,6 +118,7 @@ export default function ProfileSettingsForm({
       <div className="flex flex-col gap-3">
         <Link
           href={backHref}
+          onClick={handleLeaveCheck}
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-on-surface-variant hover:text-primary transition-colors w-fit"
         >
           <FiArrowLeft size={15} />
@@ -263,21 +293,27 @@ export default function ProfileSettingsForm({
         </div>
 
         {/* Actions */}
-        <div className="pt-4 border-t border-outline-variant/20 flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3">
-          <Link
-            href={backHref}
-            className="w-full sm:w-auto px-5 py-3 rounded-xl border border-outline-variant/40 text-on-surface hover:bg-surface-variant/30 text-xs sm:text-sm font-bold transition-colors text-center"
-          >
-            {t("cancel")}
-          </Link>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 transition-all cursor-pointer disabled:opacity-50"
-          >
-            <FiCheck size={16} />
-            <span>{isSubmitting ? t("saving") : t("save")}</span>
-          </button>
+        <div className="pt-4 border-t border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <span className="text-xs text-on-surface-variant/80">
+            {!hasChanges ? t("noChanges") : ""}
+          </span>
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3 w-full sm:w-auto">
+            <Link
+              href={backHref}
+              onClick={handleLeaveCheck}
+              className="w-full sm:w-auto px-5 py-3 rounded-xl border border-outline-variant/40 text-on-surface hover:bg-surface-variant/30 text-xs sm:text-sm font-bold transition-colors text-center"
+            >
+              {t("cancel")}
+            </Link>
+            <button
+              type="submit"
+              disabled={isSubmitting || !hasChanges || !fullName.trim()}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-sm font-bold shadow-md shadow-primary/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiCheck size={16} />
+              <span>{isSubmitting ? t("saving") : t("save")}</span>
+            </button>
+          </div>
         </div>
       </form>
     </div>

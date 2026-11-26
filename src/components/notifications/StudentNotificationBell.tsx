@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Link } from "@/i18n/routing";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
@@ -16,16 +16,23 @@ import {
   FiX,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  clearAllStudentNotifs,
+  computeStudentUnreadCounts,
+  dismissStudentNotif,
+  fetchStudentNotificationFeed,
+  isStudentNotificationUnread,
+  isStudentNotificationVisible,
+  markAllStudentNotifsRead,
+  markStudentNotifRead,
+  readStudentNotifPrefs,
+  STUDENT_NOTIF_UPDATED_EVENT,
+  type StudentNotification,
+  type StudentNotifPrefs,
+  type StudentUnreadCounts,
+} from "@/lib/student-notifications";
 
-export interface StudentNotification {
-  id: string | number;
-  article_id: string | null;
-  article_title: string;
-  action: string;
-  note: string | null;
-  created_at: string;
-  href?: string;
-}
+export type { StudentNotification, StudentUnreadCounts };
 
 function timeAgo(dateStr: string, locale: string, t: any): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -35,7 +42,7 @@ function timeAgo(dateStr: string, locale: string, t: any): string {
   if (mins < 1) return t("timeJustNow");
   if (mins < 60) return t("timeMinutesAgo", { minutes: mins });
   if (hours < 24) return t("timeHoursAgo", { hours: hours });
-  if (days < 7) return t("timeDaysAgo", { days: days });
+  if (days < 7) return t("timeDaysAgo", { days });
   return new Date(dateStr).toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
@@ -83,6 +90,16 @@ function getActionMeta(action: string, t: any) {
       dot: "bg-rose-500",
     };
   }
+  if (action === "status_draft") {
+    return {
+      title: t("actionUnpublished"),
+      icon: FiFileText,
+      iconColor: "text-amber-600",
+      bg: "bg-amber-500/10",
+      border: "border-amber-500/20",
+      dot: "bg-amber-500",
+    };
+  }
   if (action === "created_pending" || action === "revision_created_pending") {
     return {
       title: t("actionPending"),
@@ -117,6 +134,9 @@ function getDisplayNote(action: string, rawNote: string | null, t: any): string 
     if (action === "status_rejected" || action === "revision_rejected") {
       return t("rejectedDefaultNote");
     }
+    if (action === "status_draft") {
+      return t("unpublishedDefaultNote");
+    }
     return null;
   }
 
@@ -132,6 +152,9 @@ function getDisplayNote(action: string, rawNote: string | null, t: any): string 
     if (action === "status_rejected" || action === "revision_rejected") {
       return t("rejectedDefaultNote");
     }
+    if (action === "status_draft") {
+      return t("unpublishedDefaultNote");
+    }
   }
 
   return rawNote;
@@ -140,21 +163,30 @@ function getDisplayNote(action: string, rawNote: string | null, t: any): string 
 export default function StudentNotificationBell({
   isScrolled,
   isHome,
+  onUnreadChange,
 }: {
   isScrolled?: boolean;
   isHome?: boolean;
+  onUnreadChange?: (counts: StudentUnreadCounts) => void;
 }) {
   const t = useTranslations("StudentArticleNotification");
   const locale = useLocale();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [notifications, setNotifications] = useState<StudentNotification[]>([]);
+  const [prefs, setPrefs] = useState<StudentNotifPrefs>({
+    lastViewed: "",
+    readIds: [],
+    dismissedIds: [],
+    clearedAt: "",
+  });
   const [open, setOpen] = useState(false);
-  const [lastViewed, setLastViewed] = useState<string>("");
-  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
-  const [clearedAt, setClearedAt] = useState<string>("");
   const [animating, setAnimating] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(0);
+
+  const syncPrefsFromStorage = useCallback(() => {
+    setPrefs(readStudentNotifPrefs());
+  }, []);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -163,90 +195,16 @@ export default function StudentNotificationBell({
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Ambil riwayat audit log artikel dan status pendaftaran user secara bersamaan
-      const [auditRes, articlesRes, appsRes] = await Promise.all([
-        supabase
-          .from("article_audit_log")
-          .select("id, article_id, article_title, action, note, created_at")
-          .eq("author_id", user.id)
-          .in("action", [
-            "status_published",
-            "revision_approved",
-            "status_rejected",
-            "revision_rejected",
-          ])
-          .order("created_at", { ascending: false })
-          .limit(20),
-        supabase
-          .from("articles")
-          .select("id")
-          .eq("author_id", user.id),
-        supabase
-          .from("volunteer_applications")
-          .select("id, agenda_id, item_name, status, created_at, agendas(title)")
-          .eq("user_id", user.id)
-          .in("status", ["accepted", "rejected"])
-          .order("created_at", { ascending: false })
-          .limit(15),
-      ]);
+      const list = await fetchStudentNotificationFeed(supabase, user.id);
+      const nextPrefs = readStudentNotifPrefs();
+      const counts = computeStudentUnreadCounts(list, nextPrefs);
 
-      const existingArticleIds = new Set((articlesRes.data || []).map((a: any) => a.id));
-
-      const articleList: StudentNotification[] =
-        !auditRes.error && Array.isArray(auditRes.data)
-          ? auditRes.data
-              .filter((item) => item.article_id && existingArticleIds.has(item.article_id))
-              .map((item) => ({
-                id: item.id,
-                article_id: item.article_id,
-                article_title: item.article_title || "Artikel Mahasiswa",
-                action: item.action,
-                note: item.note,
-                created_at: item.created_at,
-                href: "/dashboard/artikel",
-              }))
-          : [];
-
-      const regList: StudentNotification[] =
-        !appsRes.error && Array.isArray(appsRes.data)
-          ? appsRes.data.map((row: any) => ({
-              id: `reg-${row.id}-${row.status}`,
-              article_id: null,
-              article_title: row.agendas?.title || "Kegiatan BEM",
-              action: row.status === "accepted" ? "reg_accepted" : "reg_rejected",
-              note: row.item_name || null,
-              created_at: row.created_at,
-              href: "/dashboard/kegiatan",
-            }))
-          : [];
-
-      const list: StudentNotification[] = [...articleList, ...regList].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      const storedViewed = localStorage.getItem("student_notif_last_viewed") || "";
-      let storedDismissed: string[] = [];
-      try {
-        storedDismissed = JSON.parse(localStorage.getItem("student_notif_dismissed_ids") || "[]");
-      } catch {}
-      const storedCleared = localStorage.getItem("student_notif_cleared_at") || "";
-
-      setLastViewed(storedViewed);
-      setDismissedIds(storedDismissed);
-      setClearedAt(storedCleared);
-
-      const unreadCount = list.filter(
-        (n) =>
-          !storedDismissed.includes(String(n.id)) &&
-          (!storedCleared || new Date(n.created_at) > new Date(storedCleared)) &&
-          (!storedViewed || new Date(n.created_at) > new Date(storedViewed))
-      ).length;
-
-      if (unreadCount > prevCountRef.current && prevCountRef.current !== 0) {
+      if (counts.total > prevCountRef.current && prevCountRef.current !== 0) {
         setAnimating(true);
         setTimeout(() => setAnimating(false), 1000);
       }
-      prevCountRef.current = unreadCount;
+      prevCountRef.current = counts.total;
+      setPrefs(nextPrefs);
       setNotifications(list);
     } catch (err) {
       console.error("[StudentNotificationBell] Error:", err);
@@ -256,7 +214,6 @@ export default function StudentNotificationBell({
   useEffect(() => {
     fetchNotifications();
 
-    // Dapatkan ID user untuk Realtime channel
     let channel: any = null;
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
@@ -290,16 +247,19 @@ export default function StudentNotificationBell({
         .subscribe();
     });
 
-    const handleCustomRefresh = () => fetchNotifications();
-    window.addEventListener("student_articles_updated", handleCustomRefresh);
+    const handleArticlesRefresh = () => fetchNotifications();
+    const handlePrefsSync = () => syncPrefsFromStorage();
+
+    window.addEventListener("student_articles_updated", handleArticlesRefresh);
+    window.addEventListener(STUDENT_NOTIF_UPDATED_EVENT, handlePrefsSync);
 
     return () => {
       if (channel) supabase.removeChannel(channel);
-      window.removeEventListener("student_articles_updated", handleCustomRefresh);
+      window.removeEventListener("student_articles_updated", handleArticlesRefresh);
+      window.removeEventListener(STUDENT_NOTIF_UPDATED_EVENT, handlePrefsSync);
     };
-  }, [supabase, fetchNotifications]);
+  }, [supabase, fetchNotifications, syncPrefsFromStorage]);
 
-  // Tutup dropdown jika klik di luar
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -310,45 +270,35 @@ export default function StudentNotificationBell({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const visibleNotifications = useMemo(
+    () => notifications.filter((n) => isStudentNotificationVisible(n, prefs)),
+    [notifications, prefs]
+  );
+
+  const unreadCounts = useMemo(
+    () => computeStudentUnreadCounts(notifications, prefs),
+    [notifications, prefs]
+  );
+  const unreadCount = unreadCounts.total;
+
+  useEffect(() => {
+    onUnreadChange?.(unreadCounts);
+  }, [unreadCounts, onUnreadChange]);
+
   const handleMarkAllRead = () => {
-    const nowIso = new Date().toISOString();
-    localStorage.setItem("student_notif_last_viewed", nowIso);
-    setLastViewed(nowIso);
+    markAllStudentNotifsRead(notifications);
   };
 
   const handleClearAll = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const nowIso = new Date().toISOString();
-    localStorage.setItem("student_notif_cleared_at", nowIso);
-    localStorage.setItem("student_notif_last_viewed", nowIso);
-    setClearedAt(nowIso);
-    setLastViewed(nowIso);
+    clearAllStudentNotifs(notifications);
   };
 
-  const handleDismissItem = (e: React.MouseEvent, id: string | number) => {
+  const handleDismissItem = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const updated = Array.from(new Set([...dismissedIds, String(id)]));
-    try {
-      localStorage.setItem("student_notif_dismissed_ids", JSON.stringify(updated));
-    } catch {}
-    setDismissedIds(updated);
+    dismissStudentNotif(id);
   };
-
-  const handleOpen = () => {
-    setOpen((prev) => !prev);
-  };
-
-  const visibleNotifications = notifications.filter((n) => {
-    if (dismissedIds.includes(String(n.id))) return false;
-    if (clearedAt && new Date(n.created_at) <= new Date(clearedAt)) return false;
-    return true;
-  });
-
-  const unreadItems = visibleNotifications.filter(
-    (n) => !lastViewed || new Date(n.created_at) > new Date(lastViewed)
-  );
-  const unreadCount = unreadItems.length;
 
   // Animasi getar berkala jika ada notifikasi belum dibaca
   useEffect(() => {
@@ -369,7 +319,7 @@ export default function StudentNotificationBell({
     <div className="relative" ref={dropdownRef}>
       {/* Bell Button */}
       <button
-        onClick={handleOpen}
+        onClick={() => setOpen((prev) => !prev)}
         type="button"
         title={t("title")}
         aria-label={t("title")}
@@ -423,7 +373,7 @@ export default function StudentNotificationBell({
             style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.15)" }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 border-b border-outline-variant/20 bg-surface-variant/20">
+            <div className="flex items-center justify-between gap-2 px-3.5 sm:px-4 py-2.5 sm:py-3 border-b border-outline-variant/20 bg-surface-variant/20">
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                 <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   <FiBell size={13} />
@@ -481,29 +431,34 @@ export default function StudentNotificationBell({
                 visibleNotifications.map((item) => {
                   const meta = getActionMeta(item.action, t);
                   const Icon = meta.icon;
-                  const isItemUnread =
-                    !lastViewed || new Date(item.created_at) > new Date(lastViewed);
+                  const isItemUnread = isStudentNotificationUnread(item, prefs);
                   const noteToDisplay = getDisplayNote(item.action, item.note, t);
 
                   return (
                     <div key={item.id} className="relative group">
                       <Link
-                        href={item.href || "/dashboard/artikel"}
-                        onClick={() => setOpen(false)}
+                        href={item.href || "/dashboard"}
+                        onClick={() => {
+                          markStudentNotifRead(item.id);
+                          setOpen(false);
+                        }}
                         className={`block p-3.5 pr-8 hover:bg-surface-variant/30 transition-colors ${
-                          isItemUnread ? "bg-primary/[0.03]" : ""
+                          isItemUnread ? "bg-primary/[0.04]" : ""
                         }`}
                       >
                         <div className="flex items-start gap-3">
                           <div
-                            className={`w-9 h-9 rounded-xl ${meta.bg} ${meta.border} border flex items-center justify-center shrink-0 mt-0.5`}
+                            className={`relative w-9 h-9 rounded-xl ${meta.bg} ${meta.border} border flex items-center justify-center shrink-0 mt-0.5`}
                           >
                             <Icon size={16} className={meta.iconColor} />
+                            {isItemUnread && (
+                              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-surface" />
+                            )}
                           </div>
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-1 mb-0.5 pr-4">
-                              <span className="text-[11px] font-bold text-on-surface leading-tight">
+                              <span className="text-[11px] font-bold text-on-surface leading-tight truncate">
                                 {meta.title}
                               </span>
                               <span className="text-[10px] text-on-surface-variant/70 shrink-0">
@@ -556,4 +511,3 @@ export default function StudentNotificationBell({
     </div>
   );
 }
-
