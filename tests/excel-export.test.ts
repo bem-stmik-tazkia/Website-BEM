@@ -31,6 +31,11 @@ test("buildXlsxBytes generates valid PKZIP OOXML workbook with escaped XML and f
   assert.equal(bytes[3], 0x04);
 
   const asciiText = new TextDecoder("utf-8").decode(bytes);
+  assert.ok(
+    asciiText.includes(
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"
+    )
+  );
   assert.ok(asciiText.includes("xl/workbook.xml"));
   assert.ok(asciiText.includes("xl/worksheets/sheet1.xml"));
   assert.ok(asciiText.includes("xl/worksheets/sheet2.xml"));

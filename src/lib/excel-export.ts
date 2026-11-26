@@ -70,17 +70,17 @@ function computeColumnWidths(
   rows: Array<Array<string | number | boolean | null | undefined>>
 ): number[] {
   return headers.map((header, colIdx) => {
-    let maxLen = Math.max(10, String(header || "").length + 4);
+    let maxLen = Math.max(7, String(header || "").length + 4);
     for (const row of rows) {
       const cellStr = String(row[colIdx] ?? "");
       const lines = cellStr.split(/\r?\n/);
       for (const line of lines) {
-        if (line.length + 2 > maxLen) {
-          maxLen = line.length + 2;
+        if (line.length + 3 > maxLen) {
+          maxLen = line.length + 3;
         }
       }
     }
-    return Math.min(46, Math.max(12, maxLen));
+    return Math.min(48, Math.max(7, maxLen));
   });
 }
 
@@ -104,7 +104,7 @@ function estimateRowHeight(
   return Math.min(220, Math.max(22, maxVisualLines * 15 + 8));
 }
 
-function buildWorksheetXml(sheet: ExcelSheetInput): string {
+function buildWorksheetXml(sheet: ExcelSheetInput, sheetIndex: number): string {
   const colWidths = computeColumnWidths(sheet.headers, sheet.rows);
   const colCount = Math.max(1, sheet.headers.length);
   const lastCol = toColLetter(colCount);
@@ -145,15 +145,19 @@ function buildWorksheetXml(sheet: ExcelSheetInput): string {
     );
   });
 
+  const tabSelectedAttr = sheetIndex === 0 ? ' tabSelected="1"' : "";
+
   return (
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
     `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">` +
-    `<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>` +
+    `<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>` +
+    `<sheetViews><sheetView${tabSelectedAttr} workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>` +
     `<sheetFormatPr defaultRowHeight="20"/>` +
     `<cols>${colsXml}</cols>` +
     `<sheetData>${rowsXmlParts.join("")}</sheetData>` +
     `<autoFilter ref="A1:${lastCol}${totalRows}"/>` +
-    `<pageSetup orientation="landscape" paperSize="9" fitToWidth="1" fitToHeight="0"/>` +
+    `<pageMargins left="0.5" right="0.5" top="0.7" bottom="0.7" header="0.3" footer="0.3"/>` +
+    `<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>` +
     `</worksheet>`
   );
 }
@@ -188,6 +192,8 @@ function buildStylesXml(): string {
     `<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center" wrapText="1"/></xf>` +
     `<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>` +
     `</cellXfs>` +
+    `<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>` +
+    `<dxfs count="0"/>` +
     `</styleSheet>`
   );
 }
@@ -204,7 +210,7 @@ function buildStoredZip(entries: ZipEntrySpec[]): Uint8Array {
 
   const dosTime = 0x0000;
   const dosDate = 0x5c21; // 2026-01-01
-  const utf8Flags = 0x0800;
+  const zipFlags = 0x0000; // Entries are strictly ASCII paths
 
   for (const entry of entries) {
     const nameBytes = textEncoder.encode(entry.name);
@@ -215,7 +221,7 @@ function buildStoredZip(entries: ZipEntrySpec[]): Uint8Array {
     const ldv = new DataView(localHeader.buffer);
     ldv.setUint32(0, 0x04034b50, true);
     ldv.setUint16(4, 20, true);
-    ldv.setUint16(6, utf8Flags, true);
+    ldv.setUint16(6, zipFlags, true);
     ldv.setUint16(8, 0, true); // compression = STORE
     ldv.setUint16(10, dosTime, true);
     ldv.setUint16(12, dosDate, true);
@@ -231,7 +237,7 @@ function buildStoredZip(entries: ZipEntrySpec[]): Uint8Array {
     cdv.setUint32(0, 0x02014b50, true);
     cdv.setUint16(4, 20, true);
     cdv.setUint16(6, 20, true);
-    cdv.setUint16(8, utf8Flags, true);
+    cdv.setUint16(8, zipFlags, true);
     cdv.setUint16(10, 0, true);
     cdv.setUint16(12, dosTime, true);
     cdv.setUint16(14, dosDate, true);
@@ -311,7 +317,7 @@ export function buildXlsxBytes(sheetsInput: ExcelSheetInput[]): Uint8Array {
     `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
     `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
     `<Default Extension="xml" ContentType="application/xml"/>` +
-    `<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.workbook+xml"/>` +
+    `<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>` +
     `<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>` +
     sheetOverrides +
     `</Types>`;
@@ -332,6 +338,7 @@ export function buildXlsxBytes(sheetsInput: ExcelSheetInput[]): Uint8Array {
   const workbookXml =
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
     `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">` +
+    `<bookViews><workbookView xWindow="0" yWindow="0" windowWidth="24000" windowHeight="12000"/></bookViews>` +
     `<sheets>${workbookSheetsXml}</sheets>` +
     `</workbook>`;
 
@@ -357,7 +364,7 @@ export function buildXlsxBytes(sheetsInput: ExcelSheetInput[]): Uint8Array {
     { name: "xl/styles.xml", content: textEncoder.encode(buildStylesXml()) },
     ...sheets.map((s, idx) => ({
       name: `xl/worksheets/sheet${idx + 1}.xml`,
-      content: textEncoder.encode(buildWorksheetXml(s)),
+      content: textEncoder.encode(buildWorksheetXml(s, idx)),
     })),
   ];
 
