@@ -1146,21 +1146,14 @@
       "grid_desc": "Click on one of these albums (cards) to see the full photo collection of that event. The number of photos is shown in the top right corner of the card."
     }
   },
-  "Subscribe": {
-    "title": "Don't Miss Out!",
-    "desc": "Get the latest news, committee info, and volunteer opportunities from BEM STMIK Tazkia right to your inbox.",
-    "placeholder": "Enter campus email (@student.stmik.tazkia.ac.id)",
-    "errorEmpty": "Email cannot be empty",
-    "errorDomain": "Please use a valid campus email (@student.stmik.tazkia.ac.id or @stmik.tazkia.ac.id)",
-    "errorCaptcha": "Please complete the security verification",
-    "captchaError": "Captcha error. Please reload the page.",
-    "btnLoading": "Processing...",
-    "btnSubscribe": "Subscribe Now",
-    "successMsg": "Success! Please check your inbox for the verification link.",
-    "privacy": "We respect your privacy. You can unsubscribe at any time.",
-    "developmentTitle": "Feature in Development",
-    "developmentDesc": "The subscription feature is not available at the moment. Stay tuned for updates!",
-    "comingSoon": "Coming Soon"
+  "DiscordCommunity": {
+    "title": "Get Info & Notifications on Discord!",
+    "desc": "Latest campus news, official announcements, BEM STMIK Tazkia events & volunteer openings, and portal system update notifications are broadcast directly in our official Discord server.",
+    "tagUpdates": "News, Events & Volunteers",
+    "tagSystem": "System & Update Notifications",
+    "cardTitle": "BEM STMIK Tazkia Discord Server",
+    "cardDesc": "Join the official server to receive announcements and real-time system notifications.",
+    "joinBtn": "Join Discord Now"
   },
   "Spinner": {
     "title": "Randomizer Tool",

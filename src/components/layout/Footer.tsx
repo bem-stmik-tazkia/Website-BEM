@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { FiMapPin, FiMail } from "react-icons/fi";
 import { SiInstagram, SiYoutube, SiDiscord, SiTiktok } from "react-icons/si";
-import SubscribeForm from "@/components/home/SubscribeForm";
+import DiscordCommunityCard from "@/components/home/DiscordCommunityCard";
 
 export default function Footer() {
   const t = useTranslations("Footer");
@@ -26,8 +26,7 @@ export default function Footer() {
 
         <div className="px-5 md:px-10 max-w-7xl mx-auto flex flex-col gap-12 relative z-10">
           
-          {/* Karya BEM Banner Removed in favor of FloatingKaryaPrompt */}
-          <SubscribeForm />
+          <DiscordCommunityCard />
 
         {/* Main Footer Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
