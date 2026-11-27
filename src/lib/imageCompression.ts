@@ -12,7 +12,8 @@ import imageCompression from 'browser-image-compression';
 export async function compressImage(
   file: File,
   maxSizeMB: number = 1,
-  maxWidthOrHeight: number = 1920
+  maxWidthOrHeight: number = 1920,
+  initialQuality: number = 0.9
 ): Promise<File> {
   // Hanya proses jika file adalah gambar (jangan kompres PDF dll)
   if (!file.type.startsWith('image/')) {
@@ -23,6 +24,7 @@ export async function compressImage(
   const options = {
     maxSizeMB: maxSizeMB,
     maxWidthOrHeight: maxWidthOrHeight,
+    initialQuality: initialQuality,
     useWebWorker: true,
     fileType: file.type // pertahankan format asli (misal png/jpeg)
   };

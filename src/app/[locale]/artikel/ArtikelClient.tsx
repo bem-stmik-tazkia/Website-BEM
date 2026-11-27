@@ -17,6 +17,7 @@ import {
 } from "react-icons/fi";
 import { useLocale, useTranslations } from "next-intl";
 import LikeButton from "@/components/ui/LikeButton";
+import UserAvatar from "@/components/ui/UserAvatar";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import { createClient } from "@/utils/supabase/client";
 
@@ -379,15 +380,14 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
                   <div className="pt-3 sm:pt-3.5 border-t border-outline-variant/20 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden text-[11px] sm:text-xs shrink-0 ring-1 ring-outline-variant/20">
-                        {getAuthorAvatar(featuredArticle.author) ? (
-                          <img
-                            src={getAuthorAvatar(featuredArticle.author)!}
-                            alt="Author"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span>{featuredArticle.author?.full_name?.charAt(0) || "M"}</span>
-                        )}
+                        <UserAvatar
+                          src={getAuthorAvatar(featuredArticle.author)}
+                          alt={featuredArticle.author?.full_name || "Author"}
+                          size={32}
+                          fit={getAuthorAvatar(featuredArticle.author) === "/images/logo2.webp" ? "contain" : "cover"}
+                          imgClassName={getAuthorAvatar(featuredArticle.author) === "/images/logo2.webp" ? "p-1" : undefined}
+                          fallback={<span>{featuredArticle.author?.full_name?.charAt(0) || "M"}</span>}
+                        />
                       </div>
                       <span className="text-xs font-bold text-on-surface truncate max-w-[200px] sm:max-w-[260px] lg:max-w-[320px]">
                         {featuredArticle.author?.full_name || "Mahasiswa Tazkia"}
@@ -469,12 +469,15 @@ export default function ArtikelClient({ initialArticles }: { initialArticles: Pu
 
                       <div className="pt-3 border-t border-outline-variant/20 flex items-center justify-between mt-auto gap-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden text-[10px] shrink-0 ring-1 ring-outline-variant/20">
-                            {avatar ? (
-                              <img src={avatar} alt="Author" className="w-full h-full object-cover" />
-                            ) : (
-                              <span>{art.author?.full_name?.charAt(0) || "M"}</span>
-                            )}
+                          <div className="w-7 h-7 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden text-[10px] shrink-0 ring-1 ring-outline-variant/20">
+                            <UserAvatar
+                              src={avatar}
+                              alt={art.author?.full_name || "Author"}
+                              size={28}
+                              fit={avatar === "/images/logo2.webp" ? "contain" : "cover"}
+                              imgClassName={avatar === "/images/logo2.webp" ? "p-1" : undefined}
+                              fallback={<span>{art.author?.full_name?.charAt(0) || "M"}</span>}
+                            />
                           </div>
                           <span className="text-xs text-on-surface font-medium truncate max-w-[140px] sm:max-w-[180px]">
                             {art.author?.full_name || "Mahasiswa"}

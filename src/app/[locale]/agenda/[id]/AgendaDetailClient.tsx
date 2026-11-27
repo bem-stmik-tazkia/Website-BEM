@@ -32,6 +32,7 @@ import {
 } from "react-icons/fi";
 import { SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/components/ui/Toast";
+import UserAvatar from "@/components/ui/UserAvatar";
 import { AgendaKegiatan } from "@/types/agenda";
 import { hasAnyFormQuestions, isDeadlinePassedJakarta } from "@/lib/registration-validation";
 import { formatDateToIndo, formatDateLocalized, formatDeadlineWib } from "@/utils/dateFormatter";
@@ -1012,13 +1013,16 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
               {translatedSpeakers.map((speaker, idx) => (
                 <div key={idx} className="bg-surface rounded-2xl md:rounded-3xl p-5 md:p-6 border border-outline-variant/30 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-6">
                   <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0 border-2 border-primary/20">
-                    {speaker.photo ? (
-                      <img src={speaker.photo} alt={speaker.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-2xl md:text-3xl font-black text-primary">
-                        {speaker.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
-                      </span>
-                    )}
+                    <UserAvatar
+                      src={speaker.photo}
+                      alt={speaker.name}
+                      size={96}
+                      fallback={
+                        <span className="text-2xl md:text-3xl font-black text-primary">
+                          {speaker.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                        </span>
+                      }
+                    />
                   </div>
                   <div className="text-center sm:text-left flex-grow flex flex-col justify-center">
                     <h3 className="text-lg md:text-xl font-bold text-on-background mb-1">{speaker.name}</h3>
@@ -1190,13 +1194,16 @@ function AgendaDetailClientContent({ agenda: rawAgenda, participantCount }: { ag
               {translatedSpeakers.map((speaker, idx) => (
                 <div key={idx} className="bg-surface rounded-2xl p-6 border border-outline-variant/30 shadow-sm flex flex-col items-center text-center transition-all hover:border-primary/30">
                   <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden mb-3 border-2 border-primary/20 shadow-sm">
-                    {speaker.photo ? (
-                      <img src={speaker.photo} alt={speaker.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-2xl font-black text-primary">
-                        {speaker.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
-                      </span>
-                    )}
+                    <UserAvatar
+                      src={speaker.photo}
+                      alt={speaker.name}
+                      size={80}
+                      fallback={
+                        <span className="text-2xl font-black text-primary">
+                          {speaker.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                        </span>
+                      }
+                    />
                   </div>
                   <h3 className="text-base font-bold text-on-background mb-1">{speaker.name}</h3>
                   {speaker.role && (

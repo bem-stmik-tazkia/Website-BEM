@@ -7,6 +7,7 @@ import { FiHome, FiLogOut, FiMenu, FiChevronRight } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "./AdminNotificationBell";
 import ProfileSettingsModal from "@/components/profile/ProfileSettingsModal";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 interface AdminTopbarProps {
   user?: any;
@@ -29,7 +30,6 @@ export default function AdminTopbar({ user, profile }: AdminTopbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
-  const [imgError, setImgError] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [mobileMenuBadgeTotal, setMobileMenuBadgeTotal] = useState(0);
   const [localProfileOverride, setLocalProfileOverride] = useState<{
@@ -134,18 +134,14 @@ export default function AdminTopbar({ user, profile }: AdminTopbarProps) {
             className="flex items-center gap-2.5 p-1 sm:pr-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all group text-left"
             title="Ubah Profil Admin"
           >
-            {avatarUrl && !imgError ? (
-              <img
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 group-hover:border-primary/50 transition-colors shadow-2xs bg-gradient-to-br from-primary to-blue-700 text-white flex items-center justify-center font-bold text-xs sm:text-sm">
+              <UserAvatar
                 src={avatarUrl}
                 alt={fullName}
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-cover border border-slate-200 dark:border-slate-700 group-hover:border-primary/50 transition-colors shadow-2xs"
-                onError={() => setImgError(true)}
+                size={36}
+                fallback={initial}
               />
-            ) : (
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-primary to-blue-700 text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-xs shadow-primary/20">
-                {initial}
-              </div>
-            )}
+            </div>
             <div className="hidden sm:block">
               <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight group-hover:text-primary transition-colors">
                 {fullName}
@@ -173,7 +169,6 @@ export default function AdminTopbar({ user, profile }: AdminTopbarProps) {
         onClose={() => setShowSettings(false)}
         userProfile={mergedProfileForModal}
         onProfileUpdated={(updated) => {
-          setImgError(false);
           setLocalProfileOverride({
             full_name: updated.full_name,
             avatar_url: updated.avatar_url,

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { FiSearch, FiUser } from "react-icons/fi";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 interface Profile {
   user_id: string;
@@ -81,11 +82,12 @@ export default function TeamMemberAutocomplete({ value, onChange, mahasiswaList,
                   className="flex items-center gap-3 px-3 py-2 hover:bg-surface-variant/30 cursor-pointer rounded-lg transition-colors"
                 >
                   <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-primary/10 flex items-center justify-center border border-outline-variant/30">
-                    {m.avatar_url ? (
-                      <img src={m.avatar_url} alt={m.full_name} className="w-full h-full object-cover" />
-                    ) : (
-                      <FiUser className="text-primary" />
-                    )}
+                    <UserAvatar
+                      src={m.avatar_url}
+                      alt={m.full_name}
+                      size={32}
+                      fallback={<FiUser className="text-primary" />}
+                    />
                   </div>
                   <div>
                     <p className="text-sm font-bold text-on-surface line-clamp-1">{m.full_name}</p>

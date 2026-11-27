@@ -31,6 +31,7 @@ import {
   isDefaultPosterPath,
   isSvgImageUrl,
 } from "@/lib/default-posters";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 function formatShortDate(dateStr: string | null | undefined, locale: string): string {
   if (!dateStr) return "-";
@@ -140,17 +141,12 @@ export default function StudentDashboardOverview({
       <div className="bg-surface border border-outline-variant/30 rounded-3xl p-5 sm:p-7 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-5">
         <div className="flex items-center gap-4 min-w-0">
           <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-black text-lg sm:text-xl overflow-hidden shrink-0">
-            {user.avatarUrl ? (
-              <Image
-                src={user.avatarUrl}
-                alt={user.fullName}
-                width={64}
-                height={64}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              initials
-            )}
+            <UserAvatar
+              src={user.avatarUrl}
+              alt={user.fullName}
+              size={64}
+              fallback={initials}
+            />
           </div>
           <div className="min-w-0">
             <span className="inline-block bg-primary/10 text-primary text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full mb-1">

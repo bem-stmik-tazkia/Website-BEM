@@ -25,6 +25,7 @@ import { notifyDiscordArticlePublished } from "@/actions/discord-notifications";
 import { unpublishArticleAdmin, deleteArticleAdmin } from "@/app/(internal)/admin/artikel/actions";
 import DOMPurify from "isomorphic-dompurify";
 import { processQuillHtml, isHtmlContent } from "@/utils/quill";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 export interface ModerationArticle {
   id: string;
@@ -304,11 +305,14 @@ export default function ArticleModerationModal({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-surface-variant/20 border border-outline-variant/20">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden shrink-0 border border-primary/20">
-                  {authorAvatar ? (
-                    <img src={authorAvatar} alt="Author" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-base">{author?.full_name?.charAt(0) || "M"}</span>
-                  )}
+                  <UserAvatar
+                    src={authorAvatar}
+                    alt={author?.full_name || "Author"}
+                    size={44}
+                    fit={!author?.avatar_url && isOfficialBem ? "contain" : "cover"}
+                    imgClassName={!author?.avatar_url && isOfficialBem ? "p-1.5" : undefined}
+                    fallback={<span className="text-base">{author?.full_name?.charAt(0) || "M"}</span>}
+                  />
                 </div>
                 <div className="min-w-0">
                   <p className="font-bold text-sm text-on-surface truncate">{author?.full_name || "Mahasiswa Tazkia"}</p>

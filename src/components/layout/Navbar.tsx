@@ -12,6 +12,7 @@ import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
 import StudentNotificationBell, { type StudentUnreadCounts } from "@/components/notifications/StudentNotificationBell";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 const PUBLIC_NEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const PUB_SEEN_KEYS = {
@@ -529,17 +530,16 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                             userProfile.raw_user_meta_data?.avatar_url ||
                             userProfile.raw_user_meta_data?.picture ||
                             null;
-                      return navAvatar ? (
-                        <Image
+                      const navInitial = userProfile.full_name
+                        ? userProfile.full_name.charAt(0).toUpperCase()
+                        : "U";
+                      return (
+                        <UserAvatar
                           src={navAvatar}
                           alt="Profile"
-                          width={32}
-                          height={32}
-                          className="w-full h-full object-cover"
-                          unoptimized
+                          size={32}
+                          fallback={navInitial}
                         />
-                      ) : (
-                        userProfile.full_name ? userProfile.full_name.charAt(0).toUpperCase() : 'U'
                       );
                     })()}
                   </div>

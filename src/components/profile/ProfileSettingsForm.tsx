@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useRouter } from "@/i18n/routing";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import {
   FiArrowLeft,
@@ -15,6 +14,7 @@ import {
   FiUser,
 } from "react-icons/fi";
 import ImageUpload from "@/components/ui/ImageUpload";
+import UserAvatar from "@/components/ui/UserAvatar";
 import { updateMyProfile } from "@/actions/profile";
 import { useToast } from "@/components/ui/Toast";
 import type { ProfilePageData } from "@/lib/profile-server";
@@ -144,18 +144,12 @@ export default function ProfileSettingsForm({
       <div className="bg-surface border border-outline-variant/30 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-black text-xl overflow-hidden shrink-0">
-            {avatarUrl ? (
-              <Image
-                src={avatarUrl}
-                alt={fullName || "Avatar"}
-                width={64}
-                height={64}
-                unoptimized
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              initials
-            )}
+            <UserAvatar
+              src={avatarUrl}
+              alt={fullName || "Avatar"}
+              size={64}
+              fallback={initials}
+            />
           </div>
           <div className="min-w-0">
             <p className="text-base sm:text-lg font-extrabold text-on-surface truncate">

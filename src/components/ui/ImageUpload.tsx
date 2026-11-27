@@ -85,6 +85,7 @@ export default function ImageUpload({
   label,
 }: ImageUploadProps) {
   const t = useTranslations("ImageUpload");
+  const isAvatarUpload = folder === "avatars";
   const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
   const [urlInput, setUrlInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -120,9 +121,11 @@ export default function ImageUpload({
       setError(null);
       setImageLoadError(false);
 
-      // Kompres file sebelum upload (max 1MB, 1920px)
+      // Kompres file sebelum upload (avatar max 0.5MB / 512px agar tajam & ringan; cover max 1MB / 1920px)
       // Kompresi via HTML5 Canvas ini otomatis membuang payload EXIF / script jahat yang disisipkan
-      const compressedFile = await compressImage(file, 1, 1920);
+      const compressedFile = isAvatarUpload
+        ? await compressImage(file, 0.5, 512, 0.92)
+        : await compressImage(file, 1, 1920);
 
       // Kirim ke API endpoint /api/upload
       const formData = new FormData();
@@ -255,7 +258,13 @@ export default function ImageUpload({
       {/* Jika sudah ada gambar terpilih, tampilkan Thumbnail Preview */}
       {value ? (
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full min-w-0 overflow-hidden">
-          <div className="relative group rounded-xl overflow-hidden border border-outline-variant/30 aspect-video w-full max-w-[200px] bg-surface-variant/30 flex items-center justify-center shadow-xs shrink-0">
+          <div
+            className={`relative group overflow-hidden border border-outline-variant/30 bg-surface-variant/30 flex items-center justify-center shadow-xs shrink-0 ${
+              isAvatarUpload
+                ? "rounded-2xl aspect-square w-24 h-24 sm:w-28 sm:h-28"
+                : "rounded-xl aspect-video w-full max-w-[200px]"
+            }`}
+          >
             {imageLoadError ? (
               <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-rose-500/10 text-rose-500 gap-1.5">
                 <FiAlertTriangle size={22} />
@@ -266,8 +275,8 @@ export default function ImageUpload({
             ) : (
               <img
                 src={value}
-                alt="Preview Cover"
-                className="w-full h-full object-cover"
+                alt={isAvatarUpload ? "Preview Avatar" : "Preview Cover"}
+                className={`w-full h-full object-cover ${isAvatarUpload ? "object-[50%_20%]" : ""}`}
                 onError={() => setImageLoadError(true)}
                 onLoad={() => setImageLoadError(false)}
               />

@@ -24,6 +24,7 @@ import { useTranslatedContent } from "@/hooks/useTranslatedContent";
 import { PublishedArticleItem } from "../ArtikelClient";
 import DOMPurify from "isomorphic-dompurify";
 import { processQuillHtml, isHtmlContent } from "@/utils/quill";
+import UserAvatar from "@/components/ui/UserAvatar";
 
 interface Props {
   article: PublishedArticleItem;
@@ -276,13 +277,16 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 py-3 sm:py-4 border-y border-outline-variant/20">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden shrink-0 border border-primary/20 shadow-xs">
-              {article.author?.avatar_url ? (
-                <img src={article.author.avatar_url} alt={article.author?.full_name || "Author"} className="w-full h-full object-cover" />
-              ) : isBemAdmin ? (
-                <img src="/images/logo2.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-1.5" />
-              ) : (
-                <span className="text-sm sm:text-base">{article.author?.full_name?.charAt(0) || "M"}</span>
-              )}
+              <UserAvatar
+                src={article.author?.avatar_url || (isBemAdmin ? "/images/logo2.webp" : null)}
+                alt={article.author?.avatar_url ? article.author?.full_name || "Author" : isBemAdmin ? "BEM STMIK Tazkia" : "Author"}
+                size={44}
+                fit={!article.author?.avatar_url && isBemAdmin ? "contain" : "cover"}
+                imgClassName={!article.author?.avatar_url && isBemAdmin ? "p-1.5" : undefined}
+                fallback={
+                  <span className="text-sm sm:text-base">{article.author?.full_name?.charAt(0) || "M"}</span>
+                }
+              />
             </div>
             <div className="min-w-0">
               <p className="font-bold text-xs sm:text-sm text-on-surface leading-tight truncate">
@@ -383,13 +387,16 @@ export default function ArtikelDetailClient({ article, relatedArticles }: Props)
       <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-surface border border-outline-variant/30 mb-8 sm:mb-12 shadow-xs">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 sm:gap-4">
           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 text-primary font-bold flex items-center justify-center overflow-hidden shrink-0 border border-primary/20">
-            {article.author?.avatar_url ? (
-              <img src={article.author.avatar_url} alt={article.author?.full_name || "Author"} className="w-full h-full object-cover" />
-            ) : isBemAdmin ? (
-              <img src="/images/logo2.webp" alt="BEM STMIK Tazkia" className="w-full h-full object-contain p-2" />
-            ) : (
-              <span className="text-lg sm:text-xl">{article.author?.full_name?.charAt(0) || "M"}</span>
-            )}
+            <UserAvatar
+              src={article.author?.avatar_url || (isBemAdmin ? "/images/logo2.webp" : null)}
+              alt={article.author?.avatar_url ? article.author?.full_name || "Author" : isBemAdmin ? "BEM STMIK Tazkia" : "Author"}
+              size={56}
+              fit={!article.author?.avatar_url && isBemAdmin ? "contain" : "cover"}
+              imgClassName={!article.author?.avatar_url && isBemAdmin ? "p-2" : undefined}
+              fallback={
+                <span className="text-lg sm:text-xl">{article.author?.full_name?.charAt(0) || "M"}</span>
+              }
+            />
           </div>
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-md">
