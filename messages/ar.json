@@ -51,6 +51,7 @@
     "ctaDesc": "اعرض أفضل أعمالك لمجتمع STMIK Tazkia الأكاديمي بأكمله. قم بتسجيل الدخول ببريدك الإلكتروني الجامعي وقم بتحميل مشروعك!",
     "ctaBtn": "تحميل المشروع",
     "feedbackBox": "صندوق الاقتراحات والشكاوى",
+    "verifyCertificate": "التحقق من الشهادة",
     "newPlatform": "منصة جديدة"
   },
   "Hero": {
@@ -1399,7 +1400,9 @@
     "regApproved": "تم قبول التسجيل",
     "regRejected": "تم رفض التسجيل",
     "regApprovedNote": "تهانينا! تمت الموافقة على تسجيلك من قبل اللجنة.",
-    "regRejectedNote": "للأسف، لم يتم قبول تسجيلك هذه المرة."
+    "regRejectedNote": "للأسف، لم يتم قبول تسجيلك هذه المرة.",
+    "certIssued": "صدرت الشهادة الإلكترونية الرسمية 🎓",
+    "certIssuedNote": "شهادتك الإلكترونية الرسمية جاهزة للتحميل."
   },
   "ProfileSettingsModal": {
     "title": "إعدادات الملف الشخصي",
@@ -1514,6 +1517,49 @@
     "untitledAgenda": "فعالية BEM",
     "tabActivitiesShort": "الفعاليات",
     "tabArticlesShort": "المقالات",
-    "editProfileBtn": "تعديل الملف"
+    "editProfileBtn": "تعديل الملف",
+    "tabCertificates": "الشهادات الإلكترونية",
+    "tabCertificatesShort": "الشهادات",
+    "kpiCertAvailable": "متاحة",
+    "kpiCertEmptyBadge": "لم تصدر بعد",
+    "kpiCertSubActive": "جاهزة للتحميل وموثقة برمز QR",
+    "certificateNotIssued": "لم تصدر بعد",
+    "certificateIssuedBtn": "تحميل الشهادة",
+    "certificatesPageTitle": "شهاداتي الإلكترونية",
+    "certificatesPageSubtitle": "حمّل شهاداتك الإلكترونية الرسمية من BEM STMIK Tazkia برقم الشهادة ورمز التحقق QR.",
+    "certificatesSearchPlaceholder": "ابحث باسم الفعالية أو الدور أو الرمز...",
+    "emptyCertificatesTitle": "لا توجد شهادات إلكترونية صادرة بعد",
+    "emptyCertificatesDesc": "ستظهر شهاداتك تلقائياً هنا فور إصدارها من قبل لجنة BEM.",
+    "certStatusIssued": "موثقة وصحيحة",
+    "certStatusRevoked": "ملغاة",
+    "certRoleLabel": "الدور / التقدير",
+    "certNumberLabel": "الرقم",
+    "certCodeLabel": "رمز QR",
+    "certDownloadBtn": "عرض وتحميل",
+    "certVerifyBtn": "فحص QR"
+  },
+  "CertificateVerify": {
+    "badgeOfficial": "بوابة التحقق الرسمية • BEM STMIK Tazkia",
+    "pageTitle": "التحقق من صحة الشهادة الإلكترونية",
+    "pageSubtitle": "أدخل رمز التحقق الفريد أو امسح رمز QR المطبوع على الشهادة للتحقق من صحتها.",
+    "inputPlaceholder": "مثال: TZK-2026-ABCDEF1234",
+    "verifyBtn": "تحقق الآن",
+    "serviceUnavailable": "خدمة التحقق من الشهادات قيد التهيئة حالياً.",
+    "rateLimitedTitle": "محاولات تحقق كثيرة جداً",
+    "rateLimitedDesc": "لحماية النظام، يرجى الانتظار بضع دقائق قبل التحقق من رمز آخر.",
+    "notFoundTitle": "الشهادة غير موجودة",
+    "notFoundDesc": "رمز التحقق \"{code}\" غير مسجل في قاعدة بيانات BEM STMIK Tazkia الرسمية.",
+    "statusValid": "شهادة موثقة وصحيحة",
+    "statusValidDesc": "هذه الشهادة مسجلة رسمياً في سجل BEM STMIK Tazkia.",
+    "statusRevoked": "الشهادة ملغاة / غير صالحة",
+    "statusRevokedDesc": "تم إلغاء هذه الشهادة من قبل اللجنة.",
+    "recipientLabel": "اسم المستلم",
+    "nimLabel": "الرقم الجامعي / الجهة",
+    "roleLabel": "الدور / الإنجاز",
+    "numberLabel": "الرقم",
+    "activityDateLabel": "تاريخ الفعالية",
+    "issuedAtLabel": "تاريخ الإصدار",
+    "signersLabel": "توقيع",
+    "backToHome": "العودة إلى الرئيسية"
   }
 }

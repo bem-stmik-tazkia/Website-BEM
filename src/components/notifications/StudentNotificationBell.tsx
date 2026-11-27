@@ -5,6 +5,7 @@ import { Link } from "@/i18n/routing";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/utils/supabase/client";
 import {
+  FiAward,
   FiBell,
   FiCheckCircle,
   FiXCircle,
@@ -50,6 +51,16 @@ function timeAgo(dateStr: string, locale: string, t: any): string {
 }
 
 function getActionMeta(action: string, t: any) {
+  if (action === "cert_issued") {
+    return {
+      title: t("certIssued"),
+      icon: FiAward,
+      iconColor: "text-indigo-600",
+      bg: "bg-indigo-500/10",
+      border: "border-indigo-500/20",
+      dot: "bg-indigo-600",
+    };
+  }
   if (action === "reg_accepted") {
     return {
       title: t("regApproved"),
@@ -121,6 +132,9 @@ function getActionMeta(action: string, t: any) {
 }
 
 function getDisplayNote(action: string, rawNote: string | null, t: any): string | null {
+  if (action === "cert_issued") {
+    return rawNote || t("certIssuedNote");
+  }
   if (action === "reg_accepted") {
     return rawNote || t("regApprovedNote");
   }
@@ -239,6 +253,17 @@ export default function StudentNotificationBell({
             schema: "public",
             table: "volunteer_applications",
             filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            fetchNotifications();
+          }
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "certificates",
           },
           () => {
             fetchNotifications();

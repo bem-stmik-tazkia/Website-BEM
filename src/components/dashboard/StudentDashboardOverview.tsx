@@ -24,6 +24,7 @@ import type {
   StudentDashboardUser,
   StudentRegistrationRecord,
 } from "@/lib/student-dashboard";
+import type { CertificateRecord } from "@/types/certificate";
 import {
   getDefaultPosterBgClass,
   getKegiatanPosterUrl,
@@ -46,10 +47,12 @@ export default function StudentDashboardOverview({
   user,
   registrations,
   articles,
+  certificates = [],
 }: {
   user: StudentDashboardUser;
   registrations: StudentRegistrationRecord[];
   articles: StudentArticleSummary[];
+  certificates?: CertificateRecord[];
 }) {
   const t = useTranslations("StudentDashboard");
   const locale = useLocale();
@@ -80,6 +83,15 @@ export default function StudentDashboardOverview({
         },
         () => router.refresh()
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "certificates",
+        },
+        () => router.refresh()
+      )
       .subscribe();
 
     return () => {
@@ -89,6 +101,7 @@ export default function StudentDashboardOverview({
 
   const pendingCount = registrations.filter((r) => r.status === "pending").length;
   const acceptedCount = registrations.filter((r) => r.status === "accepted").length;
+  const issuedCertificatesCount = certificates.filter((c) => c.status === "issued").length;
   const publishedArticlesCount = articles.filter((a) => a.status === "published").length;
 
   const recentRegs = registrations.slice(0, 3);
@@ -221,21 +234,32 @@ export default function StudentDashboardOverview({
           <p className="text-[11px] text-on-surface-variant mt-0.5">{t("kpiAcceptedSub")}</p>
         </Link>
 
-        <div className="bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-2xs">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+        <Link
+          href="/dashboard/sertifikat"
+          className="bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 shadow-2xs hover:border-indigo-400/50 transition-all group min-w-0"
+        >
+          <div className="flex items-center justify-between gap-1.5 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
               <FiAward size={18} />
             </div>
-            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200/70">
-              {t("kpiCertSoon")}
+            <span
+              className={`text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full border whitespace-nowrap truncate ${
+                issuedCertificatesCount > 0
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-indigo-50 text-indigo-600 border-indigo-200/70"
+              }`}
+            >
+              {issuedCertificatesCount > 0 ? t("kpiCertAvailable") : t("kpiCertEmptyBadge")}
             </span>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-on-surface">0</p>
+          <p className="text-2xl sm:text-3xl font-black text-indigo-600">
+            {issuedCertificatesCount}
+          </p>
           <p className="text-xs sm:text-sm font-bold text-on-surface mt-0.5">
             {t("kpiCertTitle")}
           </p>
-          <p className="text-[11px] text-on-surface-variant mt-0.5">{t("kpiCertSub")}</p>
-        </div>
+          <p className="text-[11px] text-on-surface-variant mt-0.5">{t("kpiCertSubActive")}</p>
+        </Link>
 
         <Link
           href="/dashboard/artikel"

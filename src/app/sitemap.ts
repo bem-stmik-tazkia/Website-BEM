@@ -31,6 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/artikel',
     '/agenda',
     '/dokumentasi',
+    '/sertifikat',
     '/tools/acak-nama',
   ];
 

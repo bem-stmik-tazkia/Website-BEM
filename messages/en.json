@@ -51,6 +51,7 @@
     "ctaDesc": "Showcase your best work to the entire STMIK Tazkia academic community. Log in with your campus email and upload your project!",
     "ctaBtn": "Upload Project",
     "feedbackBox": "Feedback & Complaints",
+    "verifyCertificate": "Verify E-Certificate",
     "newPlatform": "New Platform"
   },
   "Hero": {
@@ -1401,7 +1402,9 @@
     "regApproved": "Registration Accepted",
     "regRejected": "Registration Declined",
     "regApprovedNote": "Congratulations! Your registration has been approved by the committee.",
-    "regRejectedNote": "Unfortunately, your registration was not accepted this time."
+    "regRejectedNote": "Unfortunately, your registration was not accepted this time.",
+    "certIssued": "Official E-Certificate Issued 🎓",
+    "certIssuedNote": "Your official e-certificate is issued and ready to download."
   },
   "ProfileSettingsModal": {
     "title": "Profile Settings",
@@ -1516,6 +1519,49 @@
     "untitledAgenda": "BEM Activity",
     "tabActivitiesShort": "Activities",
     "tabArticlesShort": "Articles",
-    "editProfileBtn": "Edit Profile"
+    "editProfileBtn": "Edit Profile",
+    "tabCertificates": "E-Certificates",
+    "tabCertificatesShort": "Certificates",
+    "kpiCertAvailable": "Available",
+    "kpiCertEmptyBadge": "Not Issued",
+    "kpiCertSubActive": "Ready to download & QR verified",
+    "certificateNotIssued": "Not Issued Yet",
+    "certificateIssuedBtn": "Download E-Certificate",
+    "certificatesPageTitle": "My E-Certificates",
+    "certificatesPageSubtitle": "Download your official BEM STMIK Tazkia e-certificates with certificate numbers and verification QR codes.",
+    "certificatesSearchPlaceholder": "Search activity, role, code, or certificate number...",
+    "emptyCertificatesTitle": "No e-certificates issued yet",
+    "emptyCertificatesDesc": "E-certificates from events, committees, or competitions will automatically appear here once issued by the BEM committee.",
+    "certStatusIssued": "Verified Valid",
+    "certStatusRevoked": "Revoked",
+    "certRoleLabel": "Role / Award",
+    "certNumberLabel": "Number",
+    "certCodeLabel": "QR Code",
+    "certDownloadBtn": "View & Download",
+    "certVerifyBtn": "Verify QR"
+  },
+  "CertificateVerify": {
+    "badgeOfficial": "Official Verification Portal • BEM STMIK Tazkia",
+    "pageTitle": "E-Certificate Authenticity Verification",
+    "pageSubtitle": "Enter the unique verification code or scan the QR code printed on a certificate to verify its authenticity.",
+    "inputPlaceholder": "Example: TZK-2026-ABCDEF1234",
+    "verifyBtn": "Verify",
+    "serviceUnavailable": "Certificate verification service is currently being initialized.",
+    "rateLimitedTitle": "Too Many Verification Attempts",
+    "rateLimitedDesc": "For security protection, please wait a few minutes before checking another certificate code.",
+    "notFoundTitle": "Certificate Not Found",
+    "notFoundDesc": "Verification code \"{code}\" is not registered in the official BEM STMIK Tazkia database.",
+    "statusValid": "Verified Valid Certificate",
+    "statusValidDesc": "This certificate is officially recorded in the BEM STMIK Tazkia registry.",
+    "statusRevoked": "Certificate Revoked / Invalid",
+    "statusRevokedDesc": "This certificate has been revoked by the committee/administrators.",
+    "recipientLabel": "Recipient Name",
+    "nimLabel": "Student ID / Affiliation",
+    "roleLabel": "Role / Achievement",
+    "numberLabel": "Number",
+    "activityDateLabel": "Event Date",
+    "issuedAtLabel": "Issued",
+    "signersLabel": "Signed By",
+    "backToHome": "Back to Home"
   }
 }

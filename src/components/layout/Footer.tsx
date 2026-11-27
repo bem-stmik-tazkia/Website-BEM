@@ -73,6 +73,7 @@ export default function Footer() {
             <div className="flex flex-col gap-3 text-white/80 text-sm">
               <Link href="/kabinet" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{nav("cabinet")}</Link>
               <Link href="/berita" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{nav("news")}</Link>
+              <Link href="/sertifikat" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{t("verifyCertificate")}</Link>
               <Link href="/#saran" className="hover:text-white hover:-translate-y-0.5 transition-all duration-300">{t("feedbackBox")}</Link>
             </div>
           </div>

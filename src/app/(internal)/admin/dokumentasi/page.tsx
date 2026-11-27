@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { getKegiatans, deleteKegiatan } from "@/app/(internal)/admin/kegiatan/actions";
 import { requireAdmin } from "@/lib/auth";
-import { FiPlus, FiEdit2, FiTrash2, FiAlertTriangle, FiCheckCircle } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiTrash2, FiAlertTriangle, FiCheckCircle, FiAward } from "react-icons/fi";
 import { revalidatePath } from "next/cache";
 import DeleteButton from "@/app/(internal)/admin/kegiatan/DeleteButton";
 import BroadcastKegiatanButton from "@/app/(internal)/admin/kegiatan/BroadcastKegiatanButton";
@@ -157,6 +157,13 @@ export default async function DokumentasiAdminPage() {
                           title={item.title}
                           isPublished={item.is_published}
                         />
+                        <Link
+                          href={`/admin/sertifikat?agendaId=${item.id}`}
+                          className="h-8 px-3 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white inline-flex items-center justify-center gap-1.5 text-xs font-bold transition-colors"
+                          title="Kelola E-Sertifikat"
+                        >
+                          <FiAward size={14} /> Sertifikat
+                        </Link>
                         <Link
                           href={`/admin/kegiatan/form?id=${item.id}&from=dokumentasi`}
                           className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-bold transition-colors ${

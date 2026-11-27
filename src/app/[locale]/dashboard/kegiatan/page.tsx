@@ -11,7 +11,7 @@ export default async function StudentDashboardKegiatanPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const { user, registrations } = await getStudentDashboardData();
+  const { user, registrations, certificates } = await getStudentDashboardData();
 
   if (!user) {
     redirect(`/masuk?next=${encodeURIComponent(`/${locale}/dashboard/kegiatan`)}`);
@@ -21,6 +21,7 @@ export default async function StudentDashboardKegiatanPage({
     <StudentRegistrationsClient
       userId={user.id}
       registrations={registrations}
+      certificates={certificates}
     />
   );
 }

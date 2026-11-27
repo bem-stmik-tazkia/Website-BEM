@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface StudentNotification {
   id: string;
-  category: "article" | "registration";
+  category: "article" | "registration" | "certificate";
   article_id: string | null;
   article_title: string;
   action: string;
@@ -25,6 +25,7 @@ export interface StudentUnreadCounts {
   total: number;
   articles: number;
   registrations: number;
+  certificates: number;
 }
 
 export const STUDENT_NOTIF_UPDATED_EVENT = "student_notif_state_updated";
@@ -109,18 +110,26 @@ export function computeStudentUnreadCounts(
 ): StudentUnreadCounts {
   let articles = 0;
   let registrations = 0;
+  let certificates = 0;
 
   for (const item of items) {
     if (!isStudentNotificationVisible(item, prefs)) continue;
     if (!isStudentNotificationUnread(item, prefs)) continue;
     if (item.category === "registration") {
       registrations++;
+    } else if (item.category === "certificate") {
+      certificates++;
     } else {
       articles++;
     }
   }
 
-  return { total: articles + registrations, articles, registrations };
+  return {
+    total: articles + registrations + certificates,
+    articles,
+    registrations,
+    certificates,
+  };
 }
 
 export function markAllStudentNotifsRead(items: StudentNotification[]) {
@@ -166,7 +175,7 @@ export function clearAllStudentNotifs(items: StudentNotification[]) {
 
 export async function markStudentCategoryReadFromClient(
   supabase: SupabaseClient,
-  category: "article" | "registration"
+  category: "article" | "registration" | "certificate"
 ) {
   try {
     const {
@@ -177,7 +186,18 @@ export async function markStudentCategoryReadFromClient(
     const existingRead = readIdArray(KEY_READ_IDS);
     const idsToAdd: string[] = [];
 
-    if (category === "registration") {
+    if (category === "certificate") {
+      const { data } = await supabase
+        .from("certificates")
+        .select("id")
+        .eq("status", "issued")
+        .limit(30);
+      if (Array.isArray(data)) {
+        for (const row of data) {
+          idsToAdd.push(`cert-${row.id}`);
+        }
+      }
+    } else if (category === "registration") {
       const { data } = await supabase
         .from("volunteer_applications")
         .select("id, status")
@@ -322,7 +342,32 @@ export async function fetchStudentNotificationFeed(
     href: "/dashboard/kegiatan",
   }));
 
-  return [...articleList, ...regList].sort(
+  let certList: StudentNotification[] = [];
+  try {
+    const certsRes = await supabase
+      .from("certificates")
+      .select("id, activity_title, role_title, certificate_code, issued_at")
+      .eq("status", "issued")
+      .order("issued_at", { ascending: false })
+      .limit(15);
+
+    if (!certsRes.error && Array.isArray(certsRes.data)) {
+      certList = certsRes.data.map((cert: any) => ({
+        id: `cert-${cert.id}`,
+        category: "certificate" as const,
+        article_id: null,
+        article_title: cert.activity_title || "E-Sertifikat BEM",
+        action: "cert_issued",
+        note: `${cert.role_title || "Peserta"} • ${cert.certificate_code}`,
+        created_at: cert.issued_at,
+        href: "/dashboard/sertifikat",
+      }));
+    }
+  } catch {
+    // non-fatal jika tabel sertifikat belum dimigrasi
+  }
+
+  return [...articleList, ...regList, ...certList].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 }

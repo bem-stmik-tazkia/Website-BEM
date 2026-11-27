@@ -6,7 +6,7 @@ import NativeLink from "next/link";
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/routing";
-import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid, FiEdit3, FiSettings } from "react-icons/fi";
+import { FiHome, FiCalendar, FiBookOpen, FiUser, FiLogOut, FiChevronDown, FiGrid, FiEdit3, FiSettings, FiAward } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import AdminNotificationBell from "@/app/(internal)/admin/AdminNotificationBell";
@@ -49,6 +49,7 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
     total: 0,
     articles: 0,
     registrations: 0,
+    certificates: 0,
   });
   const [publicNewFlags, setPublicNewFlags] = useState({
     agenda: false,
@@ -269,7 +270,7 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUserProfile(null);
-    setStudentUnread({ total: 0, articles: 0, registrations: 0 });
+    setStudentUnread({ total: 0, articles: 0, registrations: 0, certificates: 0 });
     setShowProfileMenu(false);
     setShowLogoutConfirm(false);
     window.location.href = '/';
@@ -296,6 +297,7 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
     { name: t("home"), path: "/", icon: FiHome, active: false, badgeCount: 0 },
     { name: tDash("tabOverview"), path: "/dashboard", icon: FiGrid, active: currentPath === "/dashboard" || currentPath === "/dashboard/", badgeCount: 0 },
     { name: tDash("tabActivities"), path: "/dashboard/kegiatan", icon: FiCalendar, active: currentPath.startsWith("/dashboard/kegiatan"), badgeCount: studentUnread.registrations },
+    { name: tDash("tabCertificates"), path: "/dashboard/sertifikat", icon: FiAward, active: currentPath.startsWith("/dashboard/sertifikat"), badgeCount: studentUnread.certificates },
     { name: tDash("tabArticles"), path: "/dashboard/artikel", icon: FiEdit3, active: currentPath.startsWith("/dashboard/artikel"), badgeCount: studentUnread.articles },
   ];
 
@@ -674,16 +676,16 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
               <Link
                 href="/dashboard"
                 onClick={() => { setPendingPath("/dashboard"); setActiveBottomSheet(null); }}
-                className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath === "/dashboard" || currentPath === "/dashboard/" ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+                className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath === "/dashboard" || currentPath === "/dashboard/" ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
               >
                 <FiGrid size={20} className={currentPath === "/dashboard" || currentPath === "/dashboard/" ? "fill-secondary/20" : ""} />
-                <span className="text-[9px] font-bold">{tDash("tabOverview")}</span>
+                <span className="text-[9px] font-bold truncate max-w-full px-0.5 text-center">{tDash("tabOverview")}</span>
               </Link>
 
               <Link
                 href="/dashboard/kegiatan"
                 onClick={() => { setPendingPath("/dashboard/kegiatan"); setActiveBottomSheet(null); }}
-                className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/dashboard/kegiatan") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+                className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/dashboard/kegiatan") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
               >
                 <span className="relative inline-flex">
                   <FiCalendar size={20} className={currentPath.startsWith("/dashboard/kegiatan") ? "fill-secondary/20" : ""} />
@@ -696,13 +698,13 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                     </span>
                   )}
                 </span>
-                <span className="text-[9px] font-bold">{tDash("tabActivitiesShort")}</span>
+                <span className="text-[9px] font-bold truncate max-w-full px-0.5 text-center">{tDash("tabActivitiesShort")}</span>
               </Link>
 
               <Link
                 href="/dashboard/artikel"
                 onClick={() => { setPendingPath("/dashboard/artikel"); setActiveBottomSheet(null); }}
-                className={`flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/dashboard/artikel") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+                className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/dashboard/artikel") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
               >
                 <span className="relative inline-flex">
                   <FiEdit3 size={20} className={currentPath.startsWith("/dashboard/artikel") ? "fill-secondary/20" : ""} />
@@ -715,16 +717,35 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
                     </span>
                   )}
                 </span>
-                <span className="text-[9px] font-bold">{tDash("tabArticlesShort")}</span>
+                <span className="text-[9px] font-bold truncate max-w-full px-0.5 text-center">{tDash("tabArticlesShort")}</span>
+              </Link>
+
+              <Link
+                href="/dashboard/sertifikat"
+                onClick={() => { setPendingPath("/dashboard/sertifikat"); setActiveBottomSheet(null); }}
+                className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 transition-transform active:scale-95 ${currentPath.startsWith("/dashboard/sertifikat") ? "text-secondary" : "text-on-surface-variant hover:text-primary"}`}
+              >
+                <span className="relative inline-flex">
+                  <FiAward size={20} className={currentPath.startsWith("/dashboard/sertifikat") ? "fill-secondary/20" : ""} />
+                  {studentUnread.certificates > 0 && (
+                    <span
+                      className="absolute -top-1 -right-2 min-w-[15px] h-[15px] px-1 rounded-full bg-red-500 text-white text-[9px] font-extrabold inline-flex items-center justify-center leading-none ring-2 ring-surface"
+                      aria-label={t("newContentAria")}
+                    >
+                      {studentUnread.certificates > 9 ? "9+" : studentUnread.certificates}
+                    </span>
+                  )}
+                </span>
+                <span className="text-[9px] font-bold truncate max-w-full px-0.5 text-center">{tDash("tabCertificatesShort")}</span>
               </Link>
 
               <Link
                 href="/"
                 onClick={() => { setPendingPath("/"); setActiveBottomSheet(null); }}
-                className="flex-1 flex flex-col items-center gap-0.5 transition-transform active:scale-95 text-on-surface-variant hover:text-primary"
+                className="flex-1 min-w-0 flex flex-col items-center gap-0.5 transition-transform active:scale-95 text-on-surface-variant hover:text-primary"
               >
                 <FiHome size={20} />
-                <span className="text-[9px] font-bold">{t("home")}</span>
+                <span className="text-[9px] font-bold truncate max-w-full px-0.5 text-center">{t("home")}</span>
               </Link>
             </>
           ) : (

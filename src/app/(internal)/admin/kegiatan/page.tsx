@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { getKegiatans, deleteKegiatan } from "./actions";
 import { requireAdmin } from "@/lib/auth";
-import { FiPlus, FiEdit2, FiCalendar, FiCheckCircle, FiXCircle, FiUsers } from "react-icons/fi";
+import { FiPlus, FiEdit2, FiCalendar, FiCheckCircle, FiXCircle, FiUsers, FiAward } from "react-icons/fi";
 import { revalidatePath } from "next/cache";
 import DeleteButton from "./DeleteButton";
 import BroadcastKegiatanButton from "./BroadcastKegiatanButton";
@@ -305,6 +305,13 @@ export default async function KegiatanAdminPage({
                           title={item.title}
                           isPublished={item.is_published}
                         />
+                        <Link
+                          href={`/admin/sertifikat?agendaId=${item.id}`}
+                          className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors"
+                          title="Kelola E-Sertifikat Kegiatan"
+                        >
+                          <FiAward size={14} />
+                        </Link>
                         <Link
                           href={`/admin/kegiatan/form?id=${item.id}`}
                           className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors"

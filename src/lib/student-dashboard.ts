@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@/utils/supabase/server";
 import { getServiceRoleClient } from "@/lib/auth";
 import type { ApplicationStatus } from "@/types/agenda";
+import type { CertificateRecord } from "@/types/certificate";
 
 export interface StudentRegistrationRecord {
   id: string;
@@ -46,6 +47,7 @@ export async function getStudentDashboardData(): Promise<{
   user: StudentDashboardUser | null;
   registrations: StudentRegistrationRecord[];
   articles: StudentArticleSummary[];
+  certificates: CertificateRecord[];
 }> {
   const supabase = await createClient();
   const {
@@ -53,7 +55,7 @@ export async function getStudentDashboardData(): Promise<{
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { user: null, registrations: [], articles: [] };
+    return { user: null, registrations: [], articles: [], certificates: [] };
   }
 
   let profileRole = "mahasiswa";
@@ -84,11 +86,12 @@ export async function getStudentDashboardData(): Promise<{
 
   let registrations: StudentRegistrationRecord[] = [];
   let articles: StudentArticleSummary[] = [];
+  let certificates: CertificateRecord[] = [];
 
   try {
     const service = getServiceRoleClient();
 
-    const [appsRes, articlesRes] = await Promise.all([
+    const [appsRes, articlesRes, certsRes] = await Promise.all([
       service
         .from("volunteer_applications")
         .select("id, agenda_id, item_id, item_name, status, applicant_email, created_at")
@@ -98,10 +101,19 @@ export async function getStudentDashboardData(): Promise<{
         .from("my_articles")
         .select("id, title, status, created_at, updated_at")
         .order("created_at", { ascending: false }),
+      service
+        .from("certificates")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("issued_at", { ascending: false }),
     ]);
 
     if (!articlesRes.error && Array.isArray(articlesRes.data)) {
       articles = articlesRes.data as StudentArticleSummary[];
+    }
+
+    if (!certsRes.error && Array.isArray(certsRes.data)) {
+      certificates = certsRes.data as CertificateRecord[];
     }
 
     if (!appsRes.error && Array.isArray(appsRes.data) && appsRes.data.length > 0) {
@@ -150,5 +162,6 @@ export async function getStudentDashboardData(): Promise<{
     },
     registrations,
     articles,
+    certificates,
   };
 }

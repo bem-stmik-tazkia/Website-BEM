@@ -37,3 +37,32 @@ export function isValidImageSignature(buffer: Buffer): boolean {
 
   return false;
 }
+
+/**
+ * Validasi Magic Bytes biner PDF (%PDF-).
+ */
+export function isValidPdfSignature(buffer: Buffer): boolean {
+  if (buffer.length < 5) return false;
+  return (
+    buffer[0] === 0x25 && // %
+    buffer[1] === 0x50 && // P
+    buffer[2] === 0x44 && // D
+    buffer[3] === 0x46 && // F
+    buffer[4] === 0x2d    // -
+  );
+}
+
+/**
+ * Validasi PDF aman: memastikan header %PDF- valid dan bebas dari action/skrip aktif
+ * berbahaya (/JavaScript, /Launch, /RichMedia, /SubmitForm).
+ */
+export function isSafePdfBuffer(buffer: Buffer): boolean {
+  if (!isValidPdfSignature(buffer)) return false;
+  const dangerousMarkers = ["/JavaScript", "/Launch", "/RichMedia", "/SubmitForm"];
+  for (const marker of dangerousMarkers) {
+    if (buffer.includes(Buffer.from(marker, "ascii"))) {
+      return false;
+    }
+  }
+  return true;
+}

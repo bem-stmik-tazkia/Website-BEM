@@ -11,7 +11,8 @@ export default async function StudentDashboardPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const { user, registrations, articles } = await getStudentDashboardData();
+  const { user, registrations, articles, certificates } =
+    await getStudentDashboardData();
 
   if (!user) {
     redirect(`/masuk?next=${encodeURIComponent(`/${locale}/dashboard`)}`);
@@ -22,6 +23,7 @@ export default async function StudentDashboardPage({
       user={user}
       registrations={registrations}
       articles={articles}
+      certificates={certificates}
     />
   );
 }

@@ -16,6 +16,7 @@ import {
   FiBookOpen,
   FiExternalLink,
   FiX,
+  FiShield,
 } from "react-icons/fi";
 import { createClient } from "@/utils/supabase/client";
 import { fetchAdminSidebarBadges } from "./badge-actions";
@@ -27,6 +28,7 @@ const mainNavItems = [
   { name: "Kelola Berita", href: "/admin/berita", icon: FiFileText, badge: null },
   { name: "Kelola Kegiatan", href: "/admin/kegiatan", icon: FiCalendar, badge: "kegiatan" },
   { name: "Kelola Dokumentasi", href: "/admin/dokumentasi", icon: FiImage, badge: null },
+  { name: "E-Sertifikat", href: "/admin/sertifikat", icon: FiShield, badge: null },
   { name: "Kotak Saran", href: "/admin/saran-aduan", icon: FiMessageSquare, badge: "saran" },
 ];
 

@@ -51,6 +51,7 @@
     "ctaDesc": "Tunjukkan karya terbaikmu kepada seluruh civitas akademika STMIK Tazkia. Masuk dengan akun email kampus dan unggah karyamu!",
     "ctaBtn": "Unggah Karya",
     "feedbackBox": "Kotak Saran & Aduan",
+    "verifyCertificate": "Verifikasi E-Sertifikat",
     "newPlatform": "Platform Baru"
   },
   "Hero": {
@@ -1401,7 +1402,9 @@
     "regApproved": "Pendaftaran Diterima",
     "regRejected": "Pendaftaran Ditolak",
     "regApprovedNote": "Selamat! Pendaftaran kamu telah disetujui panitia.",
-    "regRejectedNote": "Pendaftaran belum dapat diterima pada kesempatan ini."
+    "regRejectedNote": "Pendaftaran belum dapat diterima pada kesempatan ini.",
+    "certIssued": "E-Sertifikat Resmi Terbit 🎓",
+    "certIssuedNote": "E-sertifikat resmi kamu telah terbit dan siap diunduh."
   },
   "ProfileSettingsModal": {
     "title": "Pengaturan Profil",
@@ -1516,6 +1519,49 @@
     "untitledAgenda": "Kegiatan BEM",
     "tabActivitiesShort": "Kegiatan",
     "tabArticlesShort": "Artikel",
-    "editProfileBtn": "Edit Profil"
+    "editProfileBtn": "Edit Profil",
+    "tabCertificates": "E-Sertifikat",
+    "tabCertificatesShort": "Sertifikat",
+    "kpiCertAvailable": "Tersedia",
+    "kpiCertEmptyBadge": "Belum Terbit",
+    "kpiCertSubActive": "Siap diunduh & terverifikasi QR",
+    "certificateNotIssued": "Belum Terbit",
+    "certificateIssuedBtn": "Unduh E-Sertifikat",
+    "certificatesPageTitle": "E-Sertifikat Saya",
+    "certificatesPageSubtitle": "Unduh e-sertifikat resmi BEM STMIK Tazkia lengkap dengan nomor sertifikat dan QR code verifikasi.",
+    "certificatesSearchPlaceholder": "Cari nama acara, peran, kode, atau nomor sertifikat...",
+    "emptyCertificatesTitle": "Belum ada e-sertifikat yang terbit",
+    "emptyCertificatesDesc": "E-sertifikat dari kegiatan, kepanitiaan, atau kejuaraan yang kamu ikuti akan otomatis muncul di sini setelah diterbitkan oleh panitia BEM.",
+    "certStatusIssued": "Terverifikasi Sah",
+    "certStatusRevoked": "Dicabut",
+    "certRoleLabel": "Peran / Predikat",
+    "certNumberLabel": "Nomor",
+    "certCodeLabel": "Kode QR",
+    "certDownloadBtn": "Lihat & Unduh",
+    "certVerifyBtn": "Cek QR"
+  },
+  "CertificateVerify": {
+    "badgeOfficial": "Portal Verifikasi Resmi BEM STMIK Tazkia",
+    "pageTitle": "Verifikasi Keaslian E-Sertifikat",
+    "pageSubtitle": "Masukkan kode verifikasi unik atau pindai QR Code pada sertifikat untuk memeriksa keabsahannya.",
+    "inputPlaceholder": "Contoh: TZK-2026-ABCDEF1234",
+    "verifyBtn": "Cek Sertifikat",
+    "serviceUnavailable": "Layanan verifikasi sertifikat sedang dalam persiapan database.",
+    "rateLimitedTitle": "Terlalu Banyak Percobaan Verifikasi",
+    "rateLimitedDesc": "Demi keamanan sistem, silakan tunggu beberapa menit sebelum memeriksa kode sertifikat kembali.",
+    "notFoundTitle": "Sertifikat Tidak Ditemukan",
+    "notFoundDesc": "Kode verifikasi \"{code}\" tidak terdaftar dalam sistem resmi BEM STMIK Tazkia.",
+    "statusValid": "Sertifikat Terverifikasi Sah",
+    "statusValidDesc": "Data sertifikat ini tercatat resmi di basis data BEM STMIK Tazkia.",
+    "statusRevoked": "Sertifikat Tidak Berlaku / Dicabut",
+    "statusRevokedDesc": "Sertifikat ini telah dicabut oleh pengurus/panitia.",
+    "recipientLabel": "Nama Penerima",
+    "nimLabel": "NIM / Identitas",
+    "roleLabel": "Peran / Predikat",
+    "numberLabel": "Nomor",
+    "activityDateLabel": "Tanggal Acara",
+    "issuedAtLabel": "Diterbitkan",
+    "signersLabel": "Disahkan Oleh",
+    "backToHome": "Kembali ke Beranda"
   }
 }

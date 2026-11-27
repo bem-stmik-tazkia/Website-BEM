@@ -10,6 +10,7 @@ import {
   FiCalendar,
   FiCheckCircle,
   FiClock,
+  FiDownload,
   FiRefreshCw,
   FiSearch,
   FiXCircle,
@@ -18,6 +19,8 @@ import { createClient } from "@/utils/supabase/client";
 import { markStudentCategoryReadFromClient } from "@/lib/student-notifications";
 import { useTranslatedList } from "@/hooks/useTranslatedContent";
 import type { StudentRegistrationRecord } from "@/lib/student-dashboard";
+import type { CertificateRecord } from "@/types/certificate";
+import CertificatePreviewModal from "@/components/certificates/CertificatePreviewModal";
 import {
   dedupeCategoryLabel,
   getDefaultPosterBgClass,
@@ -42,9 +45,11 @@ function formatShortDate(dateStr: string | null | undefined, locale: string): st
 export default function StudentRegistrationsClient({
   userId,
   registrations,
+  certificates = [],
 }: {
   userId: string;
   registrations: StudentRegistrationRecord[];
+  certificates?: CertificateRecord[];
 }) {
   const t = useTranslations("StudentDashboard");
   const locale = useLocale();
@@ -54,6 +59,7 @@ export default function StudentRegistrationsClient({
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [previewCert, setPreviewCert] = useState<CertificateRecord | null>(null);
 
   // Tandai notifikasi pendaftaran terbaca saat halaman dibuka & listen realtime
   useEffect(() => {
@@ -251,6 +257,19 @@ export default function StudentRegistrationsClient({
 
             const isAccepted = reg.status === "accepted";
             const isRejected = reg.status === "rejected";
+            const matchedCertificate = isAccepted
+              ? certificates.find(
+                  (c) =>
+                    c.status === "issued" &&
+                    (c.application_id === reg.id ||
+                      (!c.application_id && c.agenda_id && c.agenda_id === reg.agenda_id))
+                ) ||
+                certificates.find(
+                  (c) =>
+                    c.status === "issued" && c.agenda_id && c.agenda_id === reg.agenda_id
+                ) ||
+                null
+              : null;
 
             return (
               <div
@@ -368,18 +387,29 @@ export default function StudentRegistrationsClient({
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0">
                       {isAccepted && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 text-[11px] font-bold">
-                          <FiAward size={13} />
-                          <span>
-                            {t("certificateLabel")}: {t("certificatePending")}
+                        matchedCertificate ? (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewCert(matchedCertificate)}
+                            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-2xs transition-colors cursor-pointer"
+                          >
+                            <FiDownload size={13} />
+                            <span>{t("certificateIssuedBtn")}</span>
+                          </button>
+                        ) : (
+                          <span className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 text-[11px] font-bold">
+                            <FiAward size={13} />
+                            <span>
+                              {t("certificateLabel")}: {t("certificateNotIssued")}
+                            </span>
                           </span>
-                        </span>
+                        )
                       )}
                       <Link
                         href={detailHref}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface-variant/40 hover:bg-primary hover:text-white text-on-surface text-xs font-bold transition-colors"
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-surface-variant/40 hover:bg-primary hover:text-white text-on-surface text-xs font-bold transition-colors"
                       >
                         {t("viewDetailBtn")} <FiArrowRight size={12} />
                       </Link>
@@ -391,6 +421,12 @@ export default function StudentRegistrationsClient({
           })}
         </div>
       )}
+
+      <CertificatePreviewModal
+        certificate={previewCert}
+        isOpen={Boolean(previewCert)}
+        onClose={() => setPreviewCert(null)}
+      />
     </div>
   );
 }

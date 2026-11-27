@@ -51,6 +51,7 @@
     "ctaDesc": "STMIK Tazkia の学術コミュニティ全体にあなたの最高の作品を披露しましょう。大学のメールアドレスでログインして、プロジェクトをアップロードしてください！",
     "ctaBtn": "プロジェクトをアップロード",
     "feedbackBox": "フィードバックと苦情箱",
+    "verifyCertificate": "電子証明書を確認",
     "newPlatform": "新プラットフォーム"
   },
   "Hero": {
@@ -1399,7 +1400,9 @@
     "regApproved": "応募が承認されました",
     "regRejected": "応募は見送りとなりました",
     "regApprovedNote": "おめでとうございます！運営委員会により承認されました。",
-    "regRejectedNote": "誠に残念ながら、今回は採用を見送らせていただきました。"
+    "regRejectedNote": "誠に残念ながら、今回は採用を見送らせていただきました。",
+    "certIssued": "公式電子証明書が発行されました 🎓",
+    "certIssuedNote": "公式の電子証明書が発行され、ダウンロード可能になりました。"
   },
   "ProfileSettingsModal": {
     "title": "プロフィール設定",
@@ -1514,6 +1517,49 @@
     "untitledAgenda": "BEM活動",
     "tabActivitiesShort": "活動",
     "tabArticlesShort": "記事",
-    "editProfileBtn": "プロフィール編集"
+    "editProfileBtn": "プロフィール編集",
+    "tabCertificates": "電子証明書",
+    "tabCertificatesShort": "証明書",
+    "kpiCertAvailable": "発行済み",
+    "kpiCertEmptyBadge": "未発行",
+    "kpiCertSubActive": "ダウンロード＆QR認証対応",
+    "certificateNotIssued": "未発行",
+    "certificateIssuedBtn": "電子証明書を取得",
+    "certificatesPageTitle": "マイ電子証明書",
+    "certificatesPageSubtitle": "公式番号および確認用QRコード付きのBEM STMIK Tazkia電子証明書をダウンロードできます。",
+    "certificatesSearchPlaceholder": "イベント名、役割、コード、証明書番号で検索...",
+    "emptyCertificatesTitle": "発行された電子証明書はまだありません",
+    "emptyCertificatesDesc": "参加したイベントや委員会の電子証明書は、BEM運営委員会により発行され次第ここに表示されます。",
+    "certStatusIssued": "認証済み（有効）",
+    "certStatusRevoked": "失効済み",
+    "certRoleLabel": "役割 / 表彰",
+    "certNumberLabel": "番号",
+    "certCodeLabel": "QRコード",
+    "certDownloadBtn": "表示・ダウンロード",
+    "certVerifyBtn": "QR確認"
+  },
+  "CertificateVerify": {
+    "badgeOfficial": "公式認証ポータル • BEM STMIK Tazkia",
+    "pageTitle": "電子証明書 真正性確認",
+    "pageSubtitle": "固有の確認コードを入力するか、証明書に印刷されたQRコードをスキャンして有効性を確認できます。",
+    "inputPlaceholder": "例: TZK-2026-ABCDEF1234",
+    "verifyBtn": "確認する",
+    "serviceUnavailable": "証明書確認サービスは現在準備中です。",
+    "rateLimitedTitle": "確認試行回数が多すぎます",
+    "rateLimitedDesc": "セキュリティ保護のため、数分待ってから再度ご確認ください。",
+    "notFoundTitle": "証明書が見つかりません",
+    "notFoundDesc": "確認コード「{code}」はBEM STMIK Tazkia公式データベースに登録されていません。",
+    "statusValid": "有効な公式証明書です",
+    "statusValidDesc": "この電子証明書はBEM STMIK Tazkiaの公式記録に登録されています。",
+    "statusRevoked": "無効・失効済みの証明書",
+    "statusRevokedDesc": "この証明書は運営委員会により取り消されました。",
+    "recipientLabel": "受賞者・氏名",
+    "nimLabel": "学籍番号 / 所属",
+    "roleLabel": "役割 / 受賞内容",
+    "numberLabel": "証明書番号",
+    "activityDateLabel": "開催日",
+    "issuedAtLabel": "発行日",
+    "signersLabel": "署名",
+    "backToHome": "ホームへ戻る"
   }
 }

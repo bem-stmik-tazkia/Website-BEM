@@ -19,6 +19,7 @@ import {
   FiTrendingUp,
   FiCheckCircle,
   FiClock,
+  FiShield,
 } from "react-icons/fi";
 import AdminDashboardCharts from "./AdminDashboardCharts";
 import AdminMonitoringSection from "./AdminMonitoringSection";
@@ -90,6 +91,14 @@ export default function AdminDashboardClient({
       icon: FiCalendar,
       iconColor: "text-emerald-600 bg-emerald-500/10",
       accent: "hover:border-emerald-500/40",
+    },
+    {
+      title: "Kelola E-Sertifikat",
+      desc: "Terbitkan sertifikat otomatis, template Canva & verifikasi QR",
+      href: "/admin/sertifikat",
+      icon: FiShield,
+      iconColor: "text-indigo-600 bg-indigo-500/10",
+      accent: "hover:border-indigo-500/40",
     },
     {
       title: "Kotak Saran & Aspirasi",

@@ -7,6 +7,7 @@ import {
   FiArrowDown,
   FiArrowLeft,
   FiArrowUp,
+  FiAward,
   FiCheckCircle,
   FiClock,
   FiExternalLink,
@@ -755,6 +756,12 @@ export default function PendaftarClient({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              href={`/admin/sertifikat?agendaId=${agenda.id}`}
+              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors shadow-sm"
+            >
+              <FiAward size={16} /> E-Sertifikat
+            </Link>
             <button
               type="button"
               onClick={() => setShowReportModal(true)}
