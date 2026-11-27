@@ -1,20 +1,25 @@
 import React from "react";
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/public";
 import { getTranslations } from "next-intl/server";
+import { buildPageMetadata } from "@/utils/seo";
 import ArtikelClient, { PublishedArticleItem } from "./ArtikelClient";
+
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "ArticleList" });
-  return {
+  return buildPageMetadata({
+    locale,
+    path: "/artikel",
     title: `${t("pageTitle")} - BEM STMIK Tazkia`,
     description: t("pageSubtitle"),
-  };
+  });
 }
 
 async function getPublishedArticles(): Promise<PublishedArticleItem[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     // Mengambil dari view publik aman public.published_articles
     const { data: articles, error } = await supabase
       .from("published_articles")
@@ -25,6 +30,8 @@ async function getPublishedArticles(): Promise<PublishedArticleItem[]> {
       console.error("[ArtikelPage] Error fetching articles:", error);
       return [];
     }
+
+    if (articles.length === 0) return [];
 
     // Ambil profil penulis dari author_profiles view
     const authorIds = Array.from(new Set(articles.map((a) => a.author_id)));
@@ -50,4 +57,3 @@ export default async function ArtikelPage() {
 
   return <ArtikelClient initialArticles={articles} />;
 }
-

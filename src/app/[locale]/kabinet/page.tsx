@@ -4,18 +4,21 @@ import { KabinetProfile } from "@/types/kabinet";
 import KabinetContentClient from "@/components/kabinet/KabinetContentClient";
 import { getTranslations } from "next-intl/server";
 import { Metadata } from "next";
+import { buildPageMetadata } from "@/utils/seo";
 
 export const revalidate = 600;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'KabinetPage' });
-  const { getAlternates } = await import('@/utils/seo');
-  return {
+  return buildPageMetadata({
+    locale,
+    path: '/kabinet',
     title: `${t("pageTitle") || "Kabinet"} - BEM STMIK Tazkia`,
-    alternates: getAlternates('/kabinet', locale),
-  };
+    description: t("heroSubtitle"),
+  });
 }
+
 export default async function KabinetPage() {
   const t = await getTranslations("KabinetPage");
   const kabinet = await getCachedKabinet();

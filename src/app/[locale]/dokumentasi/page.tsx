@@ -2,13 +2,17 @@ import React from "react";
 import DokumentasiClient from "./DokumentasiClient";
 import { getCachedAgenda } from "@/app/(public)/actions/public-data";
 import { getTranslations } from "next-intl/server";
+import { buildPageMetadata } from "@/utils/seo";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
-  const t = await getTranslations("DokumentasiPage");
-  return {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "DokumentasiPage" });
+  return buildPageMetadata({
+    locale,
+    path: "/dokumentasi",
     title: `${t("heroTitlePart1")} ${t("heroTitlePart2")} - BEM STMIK Tazkia`,
     description: t("heroSubtitle"),
-  };
+  });
 }
 
 export const revalidate = 60;

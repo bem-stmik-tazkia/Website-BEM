@@ -10,7 +10,7 @@ export default function NotFound() {
   const t = useTranslations("NotFound");
   return (
     <>
-      <main className="fixed inset-0 z-[9999] bg-white dark:bg-surface flex flex-col items-center justify-center px-4 py-8 overflow-y-auto overflow-x-hidden">
+      <div className="fixed inset-0 z-[9999] bg-white dark:bg-surface flex flex-col items-center justify-center px-4 py-8 overflow-y-auto overflow-x-hidden">
         {/* Spinning border wrapper */}
         <div className="relative w-full max-w-xl mx-auto rounded-3xl p-[3px] overflow-hidden shadow-2xl">
           {/* Spinning conic gradient border */}
@@ -61,7 +61,7 @@ export default function NotFound() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </>
   );
 }

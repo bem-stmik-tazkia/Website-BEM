@@ -6,7 +6,7 @@ export default function Loading() {
       {/* Background decoration */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-primary/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 
-      <main className="px-container-padding-mobile md:px-container-padding-desktop max-w-7xl mx-auto w-full pt-8">
+      <div className="px-container-padding-mobile md:px-container-padding-desktop max-w-7xl mx-auto w-full pt-8">
         
         {/* Hero Section Skeleton */}
         <div className="flex flex-col lg:flex-row gap-12 items-center mb-24 animate-pulse">
@@ -64,7 +64,7 @@ export default function Loading() {
           ))}
         </div>
 
-      </main>
+      </div>
     </div>
   );
 }

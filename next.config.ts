@@ -71,6 +71,26 @@ const nextConfig: NextConfig = {
         destination: '/:locale/agenda?tab=volunteer',
         permanent: true,
       },
+      {
+        source: '/volunteer/:id',
+        destination: '/agenda?tab=volunteer',
+        permanent: true,
+      },
+      {
+        source: '/:locale(en|id|ar|ja|fr)/volunteer/:id',
+        destination: '/:locale/agenda?tab=volunteer',
+        permanent: true,
+      },
+      {
+        source: '/publikasi/dokumentasi',
+        destination: '/dokumentasi',
+        permanent: true,
+      },
+      {
+        source: '/:locale(en|id|ar|ja|fr)/publikasi/dokumentasi',
+        destination: '/:locale/dokumentasi',
+        permanent: true,
+      },
     ];
   },
   async rewrites() {
@@ -96,6 +116,51 @@ const nextConfig: NextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // Cegah file pendaftaran peserta & berkas sertifikat terindeks di Google Search / Google Images
+        source: '/storage/:bucket/pendaftaran/:path*',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow, noarchive',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'private, no-store',
+          },
+        ],
+      },
+      {
+        source: '/storage/pendaftaran/:path*',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow, noarchive',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'private, no-store',
+          },
+        ],
+      },
+      {
+        source: '/storage/:bucket/certificates/:path*',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow, noarchive',
+          },
+        ],
+      },
+      {
+        source: '/storage/certificates/:path*',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow, noarchive',
           },
         ],
       },

@@ -30,7 +30,7 @@ import DOMPurify from "isomorphic-dompurify";
 import { formatDateLocalized } from "@/utils/dateFormatter";
 import { useTranslatedContent, useTranslatedList } from "@/hooks/useTranslatedContent";
 
-interface NewsDetail {
+export interface NewsDetail {
   id: string;
   title: string;
   slug: string;
@@ -44,7 +44,40 @@ interface NewsDetail {
   content: string;
 }
 
-export default function BeritaDetailPage() {
+// Konversi class Quill alignment ke inline style agar 100% tampil di semua browser
+function processQuillHtml(html: string): string {
+  if (!html) return "";
+  return html
+    // 1. Ganti semua non-breaking space (&nbsp; dan \u00A0) menjadi spasi normal
+    // agar kata tidak terpotong acak di tengah kata
+    .replace(/&nbsp;/g, " ")
+    .replace(/\u00A0/g, " ")
+    // 2. Normalisasi paragraf kosong
+    .replace(/<p>\s*(<br\s*\/?>)?\s*<\/p>/gi, "<p><br /></p>")
+    // 3. Konversi class alignment Quill ke inline style
+    .replace(/class="ql-align-center"/g, 'style="text-align:center"')
+    .replace(/class="ql-align-right"/g, 'style="text-align:right"')
+    .replace(/class="ql-align-justify"/g, 'style="text-align:justify"')
+    .replace(/class="ql-align-left"/g, 'style="text-align:left"');
+}
+
+function normalizeNewsDetail(detail: NewsDetail): NewsDetail {
+  return {
+    ...detail,
+    category: detail.category === 'Artikel' ? 'Berita' : detail.category,
+    tags: Array.isArray(detail.tags) ? detail.tags : [],
+    author: detail.author || 'BEM STMIK Tazkia',
+    content: processQuillHtml(detail.content || ''),
+  };
+}
+
+export default function BeritaDetailClient({
+  initialNews = null,
+  initialRelatedNews = [],
+}: {
+  initialNews?: NewsDetail | null;
+  initialRelatedNews?: NewsDetail[];
+}) {
   const params = useParams();
   const { toast } = useToast();
   const t = useTranslations("NewsDetail");
@@ -67,13 +100,14 @@ export default function BeritaDetailPage() {
     return cat;
   };
 
+  const processedInitial = initialNews ? normalizeNewsDetail(initialNews) : null;
   const [liked, setLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
-  const [viewCount, setViewCount] = useState(0);
-  const [likeCount, setLikeCount] = useState(0);
-  const [newsDetail, setNewsDetail] = useState<NewsDetail | null>(null);
-  const [relatedNews, setRelatedNews] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [viewCount, setViewCount] = useState(processedInitial?.views || 0);
+  const [likeCount, setLikeCount] = useState(processedInitial?.likes || 0);
+  const [newsDetail, setNewsDetail] = useState<NewsDetail | null>(processedInitial);
+  const [relatedNews, setRelatedNews] = useState<NewsDetail[]>(initialRelatedNews);
+  const [isLoading, setIsLoading] = useState(!processedInitial);
 
   // Auto-translate berita utama & berita terkait sesuai bahasa aktif
   const { data: displayNews } = useTranslatedContent(
@@ -138,44 +172,27 @@ export default function BeritaDetailPage() {
     }
   };
 
-  // Konversi class Quill alignment ke inline style agar 100% tampil di semua browser
-  function processQuillHtml(html: string): string {
-    if (!html) return "";
-    return html
-      // 1. Ganti semua non-breaking space (&nbsp; dan \u00A0) menjadi spasi normal
-      // agar kata tidak terpotong acak di tengah kata
-      .replace(/&nbsp;/g, " ")
-      .replace(/\u00A0/g, " ")
-      // 2. Normalisasi paragraf kosong
-      .replace(/<p>\s*(<br\s*\/?>)?\s*<\/p>/gi, "<p><br /></p>")
-      // 3. Konversi class alignment Quill ke inline style
-      .replace(/class="ql-align-center"/g, 'style="text-align:center"')
-      .replace(/class="ql-align-right"/g, 'style="text-align:right"')
-      .replace(/class="ql-align-justify"/g, 'style="text-align:justify"')
-      .replace(/class="ql-align-left"/g, 'style="text-align:left"');
-  }
-
   useEffect(() => {
     async function fetchDetail() {
-      setIsLoading(true);
+      if (!initialNews) {
+        setIsLoading(true);
+      }
       const supabase = createClient();
 
-      const { data: detailData } = await supabase
+      const { data: freshData } = await supabase
         .from('berita')
         .select('*')
         .eq('slug', params.id)
-        .single();
+        .eq('is_published', true)
+        .maybeSingle();
+
+      const detailData = freshData || initialNews;
 
       if (detailData) {
-        // Proses HTML untuk memastikan formatting tampil dengan benar
-        const processedData = {
-          ...detailData,
-          category: detailData.category === 'Artikel' ? 'Berita' : detailData.category,
-          content: processQuillHtml(detailData.content || '')
-        };
+        const processedData = normalizeNewsDetail(detailData as NewsDetail);
         setNewsDetail(processedData);
-        setViewCount(detailData.views || 0);
-        setLikeCount(detailData.likes || 0);
+        setViewCount(processedData.views || 0);
+        setLikeCount(processedData.likes || 0);
 
         // Check authenticated user
         const { data: { user } } = await supabase.auth.getUser();
@@ -186,7 +203,7 @@ export default function BeritaDetailPage() {
 
         // Check if already liked via RPC (Bypass RLS on logs)
         const { data: isLiked } = await supabase.rpc('check_berita_liked', {
-          p_berita_id: detailData.id,
+          p_berita_id: processedData.id,
           p_device_id: deviceId,
           p_user_id: userId
         });
@@ -197,26 +214,26 @@ export default function BeritaDetailPage() {
 
         // Anti-Spam View Tracking: localStorage (24h) sebagai fast guard,
         // DB-level cooldown sebagai fallback jika localStorage dihapus user.
-        const viewKey = userId ? `viewed_berita_${detailData.id}_${userId}` : `viewed_berita_${detailData.id}`;
-        const lastViewedAt = localStorage.getItem(viewKey) || localStorage.getItem(`viewed_berita_${detailData.id}`);
+        const viewKey = userId ? `viewed_berita_${processedData.id}_${userId}` : `viewed_berita_${processedData.id}`;
+        const lastViewedAt = localStorage.getItem(viewKey) || localStorage.getItem(`viewed_berita_${processedData.id}`);
         const cooldownMs = 24 * 60 * 60 * 1000; // 24 jam
         const now = Date.now();
         // Jika views di DB masih 0, izinkan hit ke DB untuk memulihkan view yang sempat tertahan bug
         const isStillInCooldown = Boolean(
           lastViewedAt &&
           (now - parseInt(lastViewedAt, 10)) < cooldownMs &&
-          (detailData.views > 0)
+          (processedData.views > 0)
         );
 
         if (!isStillInCooldown) {
           // Kirim ke DB — RPC `record_berita_view` juga cek cooldown 24 jam di DB
-          const counted = await recordView('berita', detailData.id, deviceId);
+          const counted = await recordView('berita', processedData.id, deviceId);
           if (counted) {
             setViewCount(prev => prev + 1);
             // Simpan timestamp di localStorage sebagai fast guard
             localStorage.setItem(viewKey, String(now));
             if (userId) {
-              localStorage.setItem(`viewed_berita_${detailData.id}`, String(now));
+              localStorage.setItem(`viewed_berita_${processedData.id}`, String(now));
             }
           } else if (!lastViewedAt) {
             // DB bilang masih cooldown padahal localStorage kosong (user hapus data),
@@ -225,15 +242,17 @@ export default function BeritaDetailPage() {
           }
         }
 
-        // Fetch related based on category
-        const { data: relatedData } = await supabase
-          .from('berita')
-          .select('*')
-          .eq('category', detailData.category)
-          .neq('id', detailData.id)
-          .limit(2);
+        if (initialRelatedNews.length === 0) {
+          const { data: relatedData } = await supabase
+            .from('berita')
+            .select('*')
+            .eq('is_published', true)
+            .eq('category', detailData.category)
+            .neq('id', detailData.id)
+            .limit(2);
 
-        if (relatedData) setRelatedNews(relatedData);
+          if (relatedData) setRelatedNews(relatedData as NewsDetail[]);
+        }
       }
       setIsLoading(false);
     }
@@ -241,6 +260,7 @@ export default function BeritaDetailPage() {
     if (params.id) {
       fetchDetail();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const handleToggleLike = async () => {
@@ -344,7 +364,7 @@ export default function BeritaDetailPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-[10px] uppercase font-extrabold text-[var(--color-primary)] tracking-wider">{t("author")}</span>
-              <span className="font-bold text-on-background text-sm">{newsDetail.author.replace(/Humas\s+/i, '')}</span>
+              <span className="font-bold text-on-background text-sm">{(newsDetail.author || "BEM STMIK Tazkia").replace(/Humas\s+/i, '')}</span>
             </div>
           </div>
         </div>
@@ -428,8 +448,8 @@ export default function BeritaDetailPage() {
               <FiTag className="text-[var(--color-primary)]" /> {t("relatedTags")}
             </h4>
             <div className="flex flex-wrap gap-2">
-              {newsDetail.tags.filter((tag: string) => tag.length <= 25).map((tag) => (
-                <Link key={tag} href={`/berita?tag=${tag.toLowerCase()}`} className="px-4 py-2 rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-sm font-medium text-on-surface-variant hover:border-[var(--color-primary)]/50 hover:text-[var(--color-primary)] transition-colors">
+              {(newsDetail.tags || []).filter((tag: string) => tag.length <= 25).map((tag) => (
+                <Link key={tag} href={`/berita?tag=${encodeURIComponent(tag.toLowerCase())}`} className="px-4 py-2 rounded-xl bg-surface-container-lowest border border-outline-variant/30 text-sm font-medium text-on-surface-variant hover:border-[var(--color-primary)]/50 hover:text-[var(--color-primary)] transition-colors">
                   #{tag}
                 </Link>
               ))}

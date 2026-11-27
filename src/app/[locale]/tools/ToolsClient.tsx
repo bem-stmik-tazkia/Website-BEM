@@ -247,7 +247,7 @@ export default function ToolsClient() {
   });
 
   return (
-    <main className="min-h-screen pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-background relative overflow-hidden">
+    <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-background relative overflow-hidden">
       {/* Background Ambience */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-96 pointer-events-none overflow-hidden z-0">
         <div className="absolute top-10 left-1/4 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
@@ -700,7 +700,7 @@ export default function ToolsClient() {
         </div>
 
       </div>
-    </main>
+    </div>
   );
 }
 

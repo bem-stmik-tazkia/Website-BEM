@@ -38,12 +38,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <AdminSidebar />
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 flex flex-col print:block">
+      <div className="flex-1 min-w-0 flex flex-col print:block">
         <AdminTopbar user={user} profile={adminProfile} />
         <div className="p-4 sm:p-6 lg:p-8 print:p-0 flex-1">
           {children}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

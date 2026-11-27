@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { Link } from "@/i18n/routing";
 import NativeLink from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   FiSearch,
   FiCalendar,
@@ -42,15 +43,26 @@ interface NewsItem {
   detailUrl?: string;
 }
 
-export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] }) {
+function BeritaClientContent({ initialNews }: { initialNews: NewsItem[] }) {
   const t = useTranslations("BeritaPage");
   const locale = useLocale();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const searchParams = useSearchParams();
+  const initialQueryParam = (searchParams.get("q") || searchParams.get("tag") || "").trim();
+  const [searchQuery, setSearchQuery] = useState(initialQueryParam);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(initialQueryParam);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
   const [copyNotice, setCopyNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    const urlQuery = (searchParams.get("q") || searchParams.get("tag") || "").trim();
+    if (urlQuery) {
+      setSearchQuery(urlQuery);
+      setDebouncedSearchQuery(urlQuery);
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
 
   const [allNews, setAllNews] = useState<NewsItem[]>(initialNews);
   const isLoading = false;
@@ -306,7 +318,7 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
       </AnimatePresence>
 
       {/* Main Container */}
-      <main className="px-container-padding-mobile md:px-container-padding-desktop max-w-7xl mx-auto w-full pt-8">
+      <div className="px-container-padding-mobile md:px-container-padding-desktop max-w-7xl mx-auto w-full pt-8">
 
         {/* Header */}
         <header id="tour-berita-header" className="mb-8 md:mb-10 text-left">
@@ -732,9 +744,17 @@ export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] 
 
         </div>
 
-      </main>
+      </div>
 
       <BeritaTourClient />
     </div>
+  );
+}
+
+export default function BeritaClient({ initialNews }: { initialNews: NewsItem[] }) {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background pt-24 pb-20" />}>
+      <BeritaClientContent initialNews={initialNews} />
+    </Suspense>
   );
 }

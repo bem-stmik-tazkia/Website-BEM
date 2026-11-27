@@ -4,7 +4,7 @@ export const DEFAULT_POSTERS = {
 } as const;
 
 export const DEFAULT_OG_RASTER_IMAGE =
-  "https://bem.stmik.tazkia.ac.id/images/logo2.webp";
+  "https://bem.stmik.tazkia.ac.id/images/og-banner.png";
 
 /**
  * Returns the built-in animated SVG poster path tailored to the agenda type.

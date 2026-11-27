@@ -60,7 +60,7 @@ export default function MasukPage() {
   };
 
   return (
-    <main className="min-h-screen bg-surface-variant/30 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-surface-variant/30 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/4 pointer-events-none" />
@@ -135,6 +135,6 @@ export default function MasukPage() {
           Dengan masuk, Anda menyetujui pedoman penulisan dan kebijakan publikasi BEM STMIK Tazkia.
         </p>
       </div>
-    </main>
+    </div>
   );
 }

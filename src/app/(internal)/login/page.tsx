@@ -87,7 +87,7 @@ export default function LoginPage() {
   if (!isUnlocked) return null;
 
   return (
-    <main className="min-h-screen bg-surface-variant/30 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-surface-variant/30 flex items-center justify-center p-4 relative overflow-hidden">
 
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
@@ -154,6 +154,6 @@ export default function LoginPage() {
         </button>
 
       </div>
-    </main>
+    </div>
   );
 }

@@ -12,13 +12,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { getAlternates } = await import("@/utils/seo");
   const hasRegistration = hasAnyFormQuestions(agenda?.form_schema, agenda?.items);
 
-  if (!agenda || (agenda.type !== "volunteer" && !(agenda.type === "event" && hasRegistration))) {
-    return { title: "Pendaftaran Tidak Ditemukan - BEM STMIK Tazkia" };
+  if (!agenda || !agenda.is_published || (agenda.type !== "volunteer" && !(agenda.type === "event" && hasRegistration))) {
+    return {
+      title: "Pendaftaran Tidak Ditemukan - BEM STMIK Tazkia",
+      robots: { index: false, follow: false },
+    };
   }
+  const canonicalSlug = agenda.slug || id;
   return {
     title: `Daftar ${agenda.title} - BEM STMIK Tazkia`,
     description: `Formulir pendaftaran untuk ${agenda.title}`,
-    alternates: getAlternates(`/agenda/${id}/apply`, locale),
+    alternates: getAlternates(`/agenda/${canonicalSlug}/apply`, locale),
+    robots: {
+      index: false,
+      follow: false,
+    },
   };
 }
 
@@ -36,7 +44,7 @@ export default async function ApplyPage({
   const agenda = await getKegiatanById(id);
   const hasRegistration = hasAnyFormQuestions(agenda?.form_schema, agenda?.items);
 
-  if (!agenda || (agenda.type !== "volunteer" && !(agenda.type === "event" && hasRegistration))) {
+  if (!agenda || !agenda.is_published || (agenda.type !== "volunteer" && !(agenda.type === "event" && hasRegistration))) {
     notFound();
   }
 

@@ -5,7 +5,7 @@ export default function LoadingBerita() {
     <div className="relative flex flex-col min-h-screen bg-background pt-24 pb-32 font-sans overflow-x-hidden w-full">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-primary/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 
-      <main className="px-container-padding-mobile md:px-container-padding-desktop max-w-7xl mx-auto w-full pt-8">
+      <div className="px-container-padding-mobile md:px-container-padding-desktop max-w-7xl mx-auto w-full pt-8">
         
         {/* Header Skeleton */}
         <header className="mb-8 md:mb-10 text-left animate-pulse">
@@ -91,7 +91,7 @@ export default function LoadingBerita() {
           </aside>
           
         </div>
-      </main>
+      </div>
     </div>
   );
 }

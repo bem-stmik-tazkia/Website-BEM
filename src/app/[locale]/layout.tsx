@@ -2,9 +2,13 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Outfit } from "next/font/google";
 import LayoutClientWrapper from "@/components/layout/LayoutClientWrapper";
 import { ToastProvider } from "@/components/ui/Toast";
-import Script from "next/script";
 import NextTopLoader from 'nextjs-toploader';
 import SiteVisitorTracker from "@/components/SiteVisitorTracker";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { notFound } from 'next/navigation';
+import { routing } from '@/i18n/routing';
+import { SITE_NAME, SITE_URL, getOgLocale, safeJsonLdStringify } from '@/utils/seo';
 import "../globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -19,42 +23,69 @@ const outfit = Outfit({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://bem.stmik.tazkia.ac.id"),
-  title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
-  description: "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
-  keywords: ["BEM STMIK Tazkia", "Badan Eksekutif Mahasiswa", "STMIK Tazkia", "Agenda", "Berita", "Dokumentasi", "Kabinet"],
-  openGraph: {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const activeLocale = routing.locales.includes(locale as (typeof routing.locales)[number])
+    ? locale
+    : routing.defaultLocale;
+  const ogLocale = getOgLocale(activeLocale);
+
+  return {
+    metadataBase: new URL(SITE_URL),
     title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
-    description: "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
-    url: "https://bem.stmik.tazkia.ac.id",
-    siteName: "BEM STMIK Tazkia",
-    locale: "id_ID",
-    type: "website",
-    images: [
-      {
-        url: "/images/logo2.webp",
-        width: 1200,
-        height: 630,
-        alt: "Logo BEM STMIK Tazkia",
-      }
-    ]
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
-    description: "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
-    images: ["/images/logo2.webp"],
-  },
-  icons: {
-    icon: "/images/logo2.webp",
-    shortcut: "/images/logo2.webp",
-    apple: "/images/logo2.webp",
-  },
-  verification: {
-    google: "NKdorF0xIjBVNflNzjeJir-GhYKYleLPm3C-OVY1gqM",
-  },
-};
+    description:
+      "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, artikel mahasiswa, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
+    keywords: [
+      "BEM STMIK Tazkia",
+      "Badan Eksekutif Mahasiswa",
+      "STMIK Tazkia",
+      "Agenda",
+      "Berita",
+      "Artikel Mahasiswa",
+      "Dokumentasi",
+      "Kabinet",
+    ],
+    openGraph: {
+      title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
+      description:
+        "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, artikel mahasiswa, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
+      url: `${SITE_URL}/${activeLocale}`,
+      siteName: SITE_NAME,
+      locale: ogLocale,
+      alternateLocale: routing.locales
+        .filter((l) => l !== activeLocale)
+        .map((l) => getOgLocale(l)),
+      type: "website",
+      images: [
+        {
+          url: "/images/og-banner.png",
+          width: 1200,
+          height: 630,
+          alt: "BEM STMIK Tazkia - Badan Eksekutif Mahasiswa",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "BEM STMIK Tazkia | Badan Eksekutif Mahasiswa",
+      description:
+        "Website Resmi BEM STMIK Tazkia — Portal informasi agenda, berita, artikel mahasiswa, dokumentasi, dan kegiatan mahasiswa STMIK Tazkia.",
+      images: ["/images/og-banner.png"],
+    },
+    icons: {
+      icon: "/images/logo2.webp",
+      shortcut: "/images/logo2.webp",
+      apple: "/images/logo2.webp",
+    },
+    verification: {
+      google: "NKdorF0xIjBVNflNzjeJir-GhYKYleLPm3C-OVY1gqM",
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -63,10 +94,48 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-import { routing } from '@/i18n/routing';
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE_NAME,
+  alternateName: "Badan Eksekutif Mahasiswa STMIK Tazkia",
+  url: SITE_URL,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${SITE_URL}/id/berita?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
+  },
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: SITE_NAME,
+  alternateName: "Badan Eksekutif Mahasiswa STMIK Tazkia",
+  url: SITE_URL,
+  logo: `${SITE_URL}/images/logo2.webp`,
+  email: "bem@stmik.tazkia.ac.id",
+  description: "Badan Eksekutif Mahasiswa (BEM) STMIK Tazkia",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Jalan Raya Dramaga Km.7, Kelurahan Margajaya, Kecamatan Bogor Barat",
+    addressLocality: "Kota Bogor",
+    addressRegion: "Jawa Barat",
+    postalCode: "16680",
+    addressCountry: "ID",
+  },
+  sameAs: [
+    "https://www.instagram.com/bem_stmiktazkia",
+    "https://www.youtube.com/@ofcbemstmiktazkia",
+    "https://www.tiktok.com/@bem.stmik.tazkia",
+    "https://discord.gg/dFVN24ZMXU",
+  ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    email: "bem@stmik.tazkia.ac.id",
+    contactType: "customer support",
+  },
+};
 
 export default async function RootLayout({
   children,
@@ -76,54 +145,24 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>;
 }>) {
   const { locale } = await params;
-  
+
   // Ensure that the incoming `locale` is valid
-  if (!routing.locales.includes(locale as any)) {
+  if (!routing.locales.includes(locale as (typeof routing.locales)[number])) {
     notFound();
   }
- 
-  // Providing all messages to the client
-  // side is the easiest way to get started
+
   const messages = await getMessages();
 
   return (
     <html lang={locale} dir="ltr" className={`light ${plusJakartaSans.variable} ${outfit.variable}`} suppressHydrationWarning>
       <head>
-        <Script
-          id="ld-json-website"
+        <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              "name": "BEM STMIK Tazkia",
-              "alternateName": "Badan Eksekutif Mahasiswa STMIK Tazkia",
-              "url": "https://bem.stmik.tazkia.ac.id",
-              "potentialAction": {
-                "@type": "SearchAction",
-                "target": "https://bem.stmik.tazkia.ac.id/id/berita?q={search_term_string}",
-                "query-input": "required name=search_term_string"
-              }
-            })
-          }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(websiteJsonLd) }}
         />
-        <Script
-          id="ld-json-org"
+        <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": "BEM STMIK Tazkia",
-              "url": "https://bem.stmik.tazkia.ac.id",
-              "logo": "https://bem.stmik.tazkia.ac.id/images/logo2.webp",
-              "description": "Badan Eksekutif Mahasiswa (BEM) STMIK Tazkia",
-              "contactPoint": {
-                "@type": "ContactPoint",
-                "contactType": "customer support"
-              }
-            })
-          }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(organizationJsonLd) }}
         />
       </head>
       <body className={`${plusJakartaSans.className} bg-background text-on-background antialiased transition-colors duration-300 overflow-x-hidden w-full`} suppressHydrationWarning>
@@ -145,4 +184,3 @@ export default async function RootLayout({
     </html>
   );
 }
-

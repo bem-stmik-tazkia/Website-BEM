@@ -6,6 +6,7 @@ import SaranAduan from "@/components/home/SaranAduan";
 import BeritaSorotan from "@/components/home/BeritaSorotan";
 import EventVolunteerServer from "@/components/home/EventVolunteerServer";
 import HomeTourClient from "@/components/home/HomeTourClient";
+import { buildPageMetadata } from "@/utils/seo";
 import {
   BeritaSkeleton,
   EventVolunteerSkeleton,
@@ -17,12 +18,12 @@ export const revalidate = 60;
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'LandingPage' });
-  const { getAlternates } = await import('@/utils/seo');
-  return {
+  return buildPageMetadata({
+    locale,
+    path: '',
     title: t('title'),
     description: t('desc'),
-    alternates: getAlternates('', locale),
-  };
+  });
 }
 
 export default function Home() {

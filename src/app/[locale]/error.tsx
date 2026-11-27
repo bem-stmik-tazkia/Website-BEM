@@ -24,7 +24,7 @@ export default function ErrorBoundary({
   return (
     <>
       <Navbar />
-      <main className="min-h-[80vh] bg-background flex items-center justify-center pt-24 pb-16 px-4 relative overflow-hidden">
+      <div className="min-h-[80vh] bg-background flex items-center justify-center pt-24 pb-16 px-4 relative overflow-hidden">
         {/* Background Gradients */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/5 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -78,7 +78,7 @@ export default function ErrorBoundary({
             </Link>
           </div>
         </div>
-      </main>
+      </div>
     </>
   );
 }

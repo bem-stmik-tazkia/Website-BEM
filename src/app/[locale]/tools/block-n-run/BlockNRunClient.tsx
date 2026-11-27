@@ -1730,7 +1730,7 @@ export default function BlockNRunClient() {
       {/* ==========================================
           AREA TENGAH: PAPAN KAYU 2D FLAT (7x7 BUKAN MIRING)
          ========================================== */}
-      <main className="flex-1 flex flex-col items-center justify-center relative py-4 sm:py-6 px-3 sm:px-4 z-10">
+      <div className="flex-1 flex flex-col items-center justify-center relative py-4 sm:py-6 px-3 sm:px-4 z-10">
         {/* Glow Halus Lantai */}
         <div className="pointer-events-none absolute w-[300px] sm:w-[460px] h-[300px] sm:h-[460px] rounded-full bg-amber-500/8 blur-3xl" />
 
@@ -1874,7 +1874,7 @@ export default function BlockNRunClient() {
               })}
           </div>
         </div>
-      </main>
+      </div>
 
       {/* ==========================================
           3. HUD KONTROL KHUSUS MOBILE (< lg)

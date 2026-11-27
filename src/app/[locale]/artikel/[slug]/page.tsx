@@ -1,13 +1,24 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/public";
 import { getTranslations } from "next-intl/server";
 import ArtikelDetailClient from "./ArtikelDetailClient";
 import { PublishedArticleItem } from "../ArtikelClient";
+import {
+  SITE_NAME,
+  SITE_URL,
+  buildBreadcrumbJsonLd,
+  buildPageMetadata,
+  resolveValidOgImage,
+  safeJsonLdStringify,
+  stripHtmlAndMarkdown,
+} from "@/utils/seo";
+
+export const revalidate = 60;
 
 async function getArticleBySlug(slug: string): Promise<PublishedArticleItem | null> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data: article, error } = await supabase
       .from("published_articles")
       .select("*")
@@ -52,7 +63,7 @@ async function getRelatedArticles(
   category: string | null
 ): Promise<PublishedArticleItem[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     let query = supabase
       .from("published_articles")
       .select("*")
@@ -83,44 +94,38 @@ export async function generateMetadata({
     const t = await getTranslations({ locale, namespace: "ArticleDetail" });
     return {
       title: `${t("notFound")} - BEM STMIK Tazkia`,
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
-  const cleanDescription = (article.content || "").replace(/<[^>]*>?/gm, "").replace(/[#*_`]/g, "");
-  const excerpt = cleanDescription.substring(0, 160) + (cleanDescription.length > 160 ? "..." : "");
+  const excerpt =
+    stripHtmlAndMarkdown(article.content, 160) ||
+    "Baca artikel mahasiswa pilihan di portal intelektual BEM STMIK Tazkia.";
+  const authorName = article.author?.full_name || "Mahasiswa STMIK Tazkia";
 
-  return {
+  return buildPageMetadata({
+    locale,
+    path: `/artikel/${article.slug}`,
     title: `${article.title} - BEM STMIK Tazkia`,
     description: excerpt,
-    openGraph: {
-      title: article.title,
-      description: excerpt,
-      url: `https://bem.stmik.tazkia.ac.id/${locale}/artikel/${article.slug}`,
-      images: article.cover_url
-        ? [
-            {
-              url: article.cover_url,
-              alt: article.title,
-            },
-          ]
-        : [],
-      type: "article",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: article.title,
-      description: excerpt,
-      images: article.cover_url ? [article.cover_url] : [],
-    },
-  };
+    image: article.cover_url,
+    imageAlt: article.title,
+    type: "article",
+    publishedTime: article.published_at || article.created_at,
+    modifiedTime: (article as any).updated_at || article.published_at || article.created_at,
+    authors: [authorName],
+  });
 }
 
 export default async function ArtikelDetailPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; locale: string }>;
 }) {
-  const { slug } = await params;
+  const { slug, locale } = await params;
   const article = await getArticleBySlug(slug);
 
   if (!article) {
@@ -128,7 +133,55 @@ export default async function ArtikelDetailPage({
   }
 
   const related = await getRelatedArticles(article.id, article.category);
+  const pageUrl = `${SITE_URL}/${locale}/artikel/${article.slug}`;
+  const ogImage = resolveValidOgImage(article.cover_url);
+  const authorName = article.author?.full_name || "Mahasiswa STMIK Tazkia";
+  const description = stripHtmlAndMarkdown(article.content, 200);
 
-  return <ArtikelDetailClient article={article} relatedArticles={related} />;
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description,
+    image: [ogImage],
+    datePublished: article.published_at || article.created_at,
+    dateModified: (article as any).updated_at || article.published_at || article.created_at,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": pageUrl,
+    },
+    author: {
+      "@type": "Person",
+      name: authorName,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/images/logo2.webp`,
+      },
+    },
+    ...(article.category ? { articleSection: article.category } : {}),
+  };
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Beranda", url: `${SITE_URL}/${locale}` },
+    { name: "Artikel", url: `${SITE_URL}/${locale}/artikel` },
+    { name: article.title, url: pageUrl },
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(articleJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
+      />
+      <ArtikelDetailClient article={article} relatedArticles={related} />
+    </>
+  );
 }
-

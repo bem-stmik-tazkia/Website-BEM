@@ -9,7 +9,7 @@ export default function LoadingKabinet() {
       {/* Background decoration */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-primary/5 rounded-full blur-3xl -z-10 pointer-events-none"></div>
       
-      <main className="w-full relative z-10 pb-20 animate-pulse">
+      <div className="w-full relative z-10 pb-20 animate-pulse">
         
         {/* Hero Section */}
         <div className="w-full flex items-center justify-center px-4 md:px-0 pt-10 md:pt-16 lg:pt-20">
@@ -74,7 +74,7 @@ export default function LoadingKabinet() {
 
         </div>
 
-      </main>
+      </div>
     </div>
   );
 }

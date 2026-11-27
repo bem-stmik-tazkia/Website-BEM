@@ -543,7 +543,7 @@ export default function AcakNamaClient() {
         </header>
 
         {/* 3. MAIN TWO-COLUMN WORKSPACE CARD */}
-        <main className="bg-surface rounded-3xl border border-outline-variant/30 shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
+        <div className="bg-surface rounded-3xl border border-outline-variant/30 shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
           
           {/* LEFT SIDEBAR: PARTICIPANT INPUT & CONTROLS (4 Cols on LG) */}
           <aside className="lg:col-span-4 bg-surface-container-low border-b lg:border-b-0 lg:border-r border-outline-variant/30 p-5 sm:p-6 flex flex-col justify-between">
@@ -1031,7 +1031,7 @@ export default function AcakNamaClient() {
             )}
 
           </section>
-        </main>
+        </div>
 
       </div>
     </div>

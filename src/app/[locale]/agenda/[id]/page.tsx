@@ -3,81 +3,120 @@ import { notFound } from "next/navigation";
 import { getKegiatanById, getVolunteerParticipantCount } from "@/app/(internal)/admin/kegiatan/actions";
 import AgendaDetailClient from "./AgendaDetailClient";
 import {
-  DEFAULT_OG_RASTER_IMAGE,
-  isDefaultPosterPath,
-  isSvgImageUrl,
-} from "@/lib/default-posters";
+  SITE_URL,
+  buildBreadcrumbJsonLd,
+  buildPageMetadata,
+  resolveValidOgImage,
+  safeJsonLdStringify,
+  stripHtmlAndMarkdown,
+} from "@/utils/seo";
 
-function getValidOgImage(url?: string | null): string {
-  if (!url || isDefaultPosterPath(url) || isSvgImageUrl(url)) {
-    return DEFAULT_OG_RASTER_IMAGE;
-  }
-  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//i);
-  if (driveMatch && driveMatch[1]) {
-    return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w1200`;
-  }
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
-  }
-  return `https://bem.stmik.tazkia.ac.id${url.startsWith("/") ? "" : "/"}${url}`;
-}
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string; locale: string }> }) {
   const { id, locale } = await params;
   const agenda = await getKegiatanById(id);
-  const { getAlternates } = await import('@/utils/seo');
 
-  if (!agenda) {
+  if (!agenda || !agenda.is_published) {
     return {
       title: "Kegiatan Tidak Ditemukan - BEM STMIK Tazkia",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
-  const cleanDescription = (agenda.description || "").replace(/<[^>]*>?/gm, '').trim();
-  const excerpt = cleanDescription.length > 160
-    ? cleanDescription.substring(0, 160) + "..."
-    : (cleanDescription || "Lihat detail agenda kegiatan di website BEM STMIK Tazkia.");
-  const imageUrl = getValidOgImage(agenda.image_url);
-  const targetUrl = `https://bem.stmik.tazkia.ac.id/${locale}/agenda/${agenda.slug || id}`;
+  const excerpt =
+    stripHtmlAndMarkdown(agenda.description, 160) ||
+    "Lihat detail agenda kegiatan di website BEM STMIK Tazkia.";
+  const canonicalSlug = agenda.slug || id;
 
-  return {
+  return buildPageMetadata({
+    locale,
+    path: `/agenda/${canonicalSlug}`,
     title: `${agenda.title} - BEM STMIK Tazkia`,
     description: excerpt,
-    alternates: getAlternates(`/agenda/${agenda.slug || id}`, locale),
-    openGraph: {
-      title: agenda.title,
-      description: excerpt,
-      url: targetUrl,
-      siteName: "BEM STMIK Tazkia",
-      locale: locale,
-      type: "article",
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: agenda.title,
-        }
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: agenda.title,
-      description: excerpt,
-      images: [imageUrl],
-    }
-  };
+    image: agenda.image_url,
+    imageAlt: agenda.title,
+    type: "article",
+    publishedTime: agenda.created_at,
+  });
 }
 
-export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function EventDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string; locale: string }>;
+}) {
+  const { id, locale } = await params;
   const agenda = await getKegiatanById(id);
 
-  if (!agenda) {
+  if (!agenda || !agenda.is_published) {
     notFound();
   }
 
   const participantCount = await getVolunteerParticipantCount(agenda.id);
+  const canonicalSlug = agenda.slug || id;
+  const pageUrl = `${SITE_URL}/${locale}/agenda/${canonicalSlug}`;
+  const ogImage = resolveValidOgImage(agenda.image_url);
+  const description =
+    stripHtmlAndMarkdown(agenda.description, 260) ||
+    "Informasi agenda dan kegiatan mahasiswa BEM STMIK Tazkia.";
+  const locationName = (agenda.location || "").trim();
+  const isOnlineEvent = /online|zoom|google meet|gmeet|discord|daring|virtual/i.test(locationName);
 
-  return <AgendaDetailClient agenda={agenda} participantCount={participantCount} />;
+  const eventJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: agenda.title,
+    description,
+    image: [ogImage],
+    url: pageUrl,
+    ...(agenda.date ? { startDate: agenda.date } : agenda.created_at ? { startDate: agenda.created_at } : {}),
+    ...(agenda.end_date ? { endDate: agenda.end_date } : agenda.date ? { endDate: agenda.date } : {}),
+    eventAttendanceMode: isOnlineEvent
+      ? "https://schema.org/OnlineEventAttendanceMode"
+      : "https://schema.org/OfflineEventAttendanceMode",
+    location: isOnlineEvent
+      ? {
+          "@type": "VirtualLocation",
+          url: pageUrl,
+        }
+      : {
+          "@type": "Place",
+          name: locationName || "Kampus STMIK Tazkia",
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Bogor",
+            addressRegion: "Jawa Barat",
+            addressCountry: "ID",
+          },
+        },
+    organizer: {
+      "@type": "Organization",
+      name: "BEM STMIK Tazkia",
+      url: SITE_URL,
+    },
+  };
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Beranda", url: `${SITE_URL}/${locale}` },
+    { name: "Agenda", url: `${SITE_URL}/${locale}/agenda` },
+    { name: agenda.title, url: pageUrl },
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(eventJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
+      />
+      <AgendaDetailClient agenda={agenda} participantCount={participantCount} />
+    </>
+  );
 }

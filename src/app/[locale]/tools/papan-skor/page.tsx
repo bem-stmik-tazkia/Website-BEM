@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import PapanSkorClient from "./PapanSkorClient";
-import { getAlternates } from "@/utils/seo";
+import { buildPageMetadata } from "@/utils/seo";
 
 export async function generateMetadata({
   params,
@@ -17,9 +17,12 @@ export async function generateMetadata({
     ? "Papan skor digital online gratis dan responsif untuk pertandingan futsal, badminton, basket, kuis, atau e-sport kampus. Dilengkapi timer waktu, mode layar penuh (fullscreen), dan tombol tukar lapangan."
     : "Free online digital scoreboard for futsal, badminton, basketball, quizzes, and esports. Featuring match timers, full-screen projector mode, and side swap.";
 
-  return {
+  return buildPageMetadata({
+    locale,
+    path: "/tools/papan-skor",
     title,
     description,
+    imageAlt: "Papan Skor Digital BEM STMIK Tazkia",
     keywords: [
       "Papan skor online",
       "Digital scoreboard free",
@@ -30,33 +33,9 @@ export async function generateMetadata({
       "Timer pertandingan olahraga",
       "BEM STMIK Tazkia",
     ],
-    openGraph: {
-      title,
-      description,
-      url: `https://bem.stmik.tazkia.ac.id/${locale}/tools/papan-skor`,
-      siteName: "BEM STMIK Tazkia",
-      images: [
-        {
-          url: "/images/logo2.webp",
-          width: 1200,
-          height: 630,
-          alt: "Papan Skor Digital BEM STMIK Tazkia",
-        },
-      ],
-      locale: isId ? "id_ID" : "en_US",
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: ["/images/logo2.webp"],
-    },
-    alternates: getAlternates("/tools/papan-skor", locale),
-  };
+  });
 }
 
 export default function PapanSkorPage() {
   return <PapanSkorClient />;
 }
-
