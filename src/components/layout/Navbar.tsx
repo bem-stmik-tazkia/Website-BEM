@@ -340,7 +340,15 @@ export default function Navbar({ isLoggedIn: _isLoggedIn }: { isLoggedIn?: boole
       >
         <div className="flex justify-between items-center h-20 md:h-24 px-2.5 sm:px-4 md:px-6 lg:px-8 max-w-7xl mx-auto gap-1.5 sm:gap-4">
           <Link href="/" className="flex items-center gap-1.5 sm:gap-2 md:gap-3 group shrink-0">
-            <div className="flex items-center shrink-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
+              <Image
+                alt="STMIK Tazkia Logo"
+                src="/images/logo.webp"
+                width={64}
+                height={64}
+                priority
+                className="h-7 sm:h-9 md:h-12 lg:h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
+              />
               <Image
                 alt="BEM STMIK Tazkia Logo"
                 src="/images/logo2.webp"

@@ -425,22 +425,25 @@ button:hover .game-tools-logo .pad-part {
 
 @keyframes heroSlowPan {
   0%, 100% {
-    transform: scale(1.06) translate3d(-1.2%, 0, 0);
+    transform: translate3d(calc((100cqw - 100%) / 2), 0, 0);
   }
-  50% {
-    transform: scale(1.08) translate3d(1.2%, 0, 0);
+  25% {
+    transform: translate3d(0, 0, 0);
+  }
+  75% {
+    transform: translate3d(calc(100cqw - 100%), 0, 0);
   }
 }
 
 .animate-hero-pan {
-  animation: heroSlowPan 22s ease-in-out infinite;
+  animation: heroSlowPan 30s ease-in-out infinite;
   will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-hero-pan {
     animation: none;
-    transform: none;
+    transform: translate3d(calc((100cqw - 100%) / 2), 0, 0);
   }
 }
 

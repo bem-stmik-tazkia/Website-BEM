@@ -13,17 +13,18 @@ export default function Hero() {
     <section
       className="relative min-h-[90vh] flex items-center justify-center px-container-padding-mobile md:px-container-padding-desktop overflow-hidden pt-20 pb-24"
     >
-      <div className="absolute inset-0 z-0 overflow-hidden">
+      <div className="absolute inset-0 z-0 overflow-hidden [container-type:inline-size]">
         <div className="absolute inset-0 bg-black/40 z-10"></div>
         <Image
           src="/images/image.webp"
           alt="BEM STMIK Tazkia Hero"
-          fill
+          width={2560}
+          height={1085}
           priority
           fetchPriority="high"
           quality={75}
-          sizes="100vw"
-          className="object-cover object-center animate-hero-pan"
+          sizes="(max-width: 768px) 220vw, 135vw"
+          className="h-full w-auto max-w-none min-w-[102%] object-cover object-center animate-hero-pan"
         />
       </div>
 
